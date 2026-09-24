@@ -74,6 +74,13 @@ Los ciudadanos también tienen libre comercio: compran casas, terrenos y bienes.
 - El mundo 3D renderiza solo el país activo.
 - Todos los países con presencia del jugador se simulan completos. El resto, en modo NPC resumido.
 
+## Aviones dentro y fuera del país
+- Los aviones de carga (hangar propio o vuelos comerciales) sirven también para rutas **dentro del país**, entre aeropuertos o pistas de distintos municipios: más rápidos que los camiones y más caros por unidad.
+- Entre países, la carga va **solo** por avión (o por barco, si se añade después).
+
+## Compra de zonas
+- Al comprar una zona o chunk, se une al instante a lo que ya tienes: queda revelada, es tuya y forma un solo mapa continuo, sin cargas ni teletransporte.
+
 ## Vehículos y depósitos (se aplica desde ya)
 - Cada tipo de vehículo se compra y se mantiene en su edificio:
   - Caballeriza: caballos, mulas y carretas.
