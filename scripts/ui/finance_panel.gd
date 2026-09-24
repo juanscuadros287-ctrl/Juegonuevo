@@ -72,18 +72,31 @@ func _pct(v: float) -> String:
 
 
 func _loans_section() -> void:
-	body.add_child(UIKit.label("Préstamos · %s" % BankSim.ext_cfg().get("label", "Banco"), 16, UIKit.ACCENT))
+	body.add_child(UIKit.label("Créditos", 16, UIKit.ACCENT))
+	# Bienes raíces: crédito con banco, tipo de pago, plazo y tabla antes de firmar.
+	body.add_child(UIKit.button("Pedir crédito (banco, tipo, plazo y tabla)…", func(): LoanDialog.open(hud, refresh)))
 	for l in BankSim.player_loans(GameState):
 		var row := HBoxContainer.new()
-		var info := UIKit.label("%s al %.1f%% · saldo %s · cuota %s · %d/%d meses%s" % [Fmt.money(float(l["principal"])), float(l["rate"]) * 100.0, Fmt.money(float(l["balance"])), Fmt.money(float(l["payment"])), int(l["months_paid"]), int(l["term_months"]), " · MORA %d" % int(l["missed"]) if int(l["missed"]) > 0 else ""], 13)
+		var kind := LoanContract.type_label(str(l.get("type", "")))
+		var extra := " · cupo %s, desembolsado %s" % [Fmt.money(float(l.get("limit", 0.0))), Fmt.money(float(l.get("disbursed", 0.0)))] if str(l.get("type", "")) == "constructor" else ""
+		var info := UIKit.label("%s · %s\n%s al %.1f%% · saldo %s · cuota %s · %d/%d meses%s%s" % [LoanContract.lender_label(GameState, str(l["lender"])), kind, Fmt.money(float(l["principal"])), float(l["rate"]) * 100.0, Fmt.money(float(l["balance"])), Fmt.money(float(l["payment"])), int(l["months_paid"]), int(l["term_months"]), extra, " · MORA %d" % int(l["missed"]) if int(l["missed"]) > 0 else ""], 13)
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(info)
 		var lid := int(l["id"])
+		var ll: Dictionary = l
+		var pre := UIKit.spin(0, maxf(1.0, float(l["balance"])), 10, minf(float(l["balance"]), 100.0 * GameState.price_level()), func(_v): pass, 90)
+		pre.tooltip_text = "Monto del pago anticipado (abono a capital)"
+		row.add_child(pre)
+		row.add_child(UIKit.button("Abonar", func():
+			message.emit(LoanContract.prepay(GameState, lid, pre.value), "jugador")
+			refresh()))
+		row.add_child(UIKit.button("Tabla", func(): LoanDialog.show_schedule(hud, ll)))
 		row.add_child(UIKit.button("Pagar todo", func():
 			message.emit(BankSim.repay_loan(GameState, lid), "jugador")
 			refresh()))
 		body.add_child(row)
+	body.add_child(UIKit.label("Préstamo rápido · %s (cuota fija)" % BankSim.ext_cfg().get("label", "Banco"), 14, UIKit.ACCENT))
 	var lim := BankSim.credit_limit(GameState)
 	body.add_child(UIKit.label("Tasa ofrecida: %.1f%% anual · Límite disponible: %s" % [BankSim.player_rate(GameState) * 100.0, Fmt.money(lim)], 13, UIKit.TEXT_DIM))
 	var row2 := HBoxContainer.new()

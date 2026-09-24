@@ -35,11 +35,14 @@ var player_panel: PlayerPanel
 var finance_panel: FinancePanel
 var stats_panel: StatsPanel
 var research_screen: ResearchScreen
+var goods_catalog: GoodsCatalog
 var government_panel: GovernmentPanel
 var logistics_panel: LogisticsPanel
 var trade_panel: TradePanel
 var contracts_panel: ContractsPanel
 var tourism_panel: TourismPanel
+var realestate_panel: RealEstatePanel   # Bienes raíces
+var utilities_panel: UtilitiesPanel
 var era_lbl: Label
 
 # Interior
@@ -91,6 +94,9 @@ func _ready() -> void:
 	research_screen = ResearchScreen.new()
 	root.add_child(research_screen)
 	research_screen.setup()
+	goods_catalog = GoodsCatalog.new()
+	root.add_child(goods_catalog)
+	goods_catalog.setup()
 	hint_lbl = UIKit.label("", 15, UIKit.ACCENT)
 	hint_lbl.anchor_left = 0.5
 	hint_lbl.anchor_right = 0.5
@@ -236,6 +242,7 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Mi Personaje", func(): _show_dock("player"), 160))
 	box.add_child(UIKit.button("Construir", func(): _show_dock("build"), 160))
 	box.add_child(UIKit.button("Mis Empresas", func(): _show_dock("companies"), 160))
+	box.add_child(UIKit.button("Bienes raíces", func(): _show_dock("realestate"), 160))
 	box.add_child(UIKit.button("Finanzas", func(): _show_dock("finance"), 160))
 	box.add_child(UIKit.button("Estadísticas", func(): _show_dock("stats"), 160))
 	box.add_child(UIKit.button("Población", _open_population, 160))
@@ -248,6 +255,8 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Comercio exterior", func(): _show_dock("trade"), 160))
 	box.add_child(UIKit.button("Contratos", func(): _show_dock("contracts"), 160))
 	box.add_child(UIKit.button("Turismo y publicidad", func(): _show_dock("tourism"), 160))
+	box.add_child(UIKit.button("Servicios públicos", func(): _show_dock("utilities"), 160))
+	box.add_child(UIKit.button("Catálogo de bienes", func(): goods_catalog.open(), 160))
 
 
 # --- Notificaciones -----------------------------------------------------------------
@@ -352,8 +361,10 @@ func _build_dock() -> void:
 	logistics_panel = LogisticsPanel.new()
 	trade_panel = TradePanel.new()
 	tourism_panel = TourismPanel.new()
+	realestate_panel = RealEstatePanel.new()
+	utilities_panel = UtilitiesPanel.new()
 	contracts_panel = ContractsPanel.new()
-	for panel in [logistics_panel, trade_panel, tourism_panel, contracts_panel]:
+	for panel in [logistics_panel, trade_panel, tourism_panel, realestate_panel, utilities_panel, contracts_panel]:
 		panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 		stack.add_child(panel)
 		panel.setup(self)
@@ -379,7 +390,13 @@ func _show_dock(mode: String) -> void:
 	trade_panel.visible = mode == "trade"
 	tourism_panel.visible = mode == "tourism"
 	contracts_panel.visible = mode == "contracts"
+	realestate_panel.visible = mode == "realestate"
+	utilities_panel.visible = mode == "utilities"
 	match mode:
+		"realestate":
+			realestate_panel.refresh()
+		"utilities":
+			utilities_panel.refresh()
 		"logistics":
 			logistics_panel.refresh()
 		"trade":
@@ -876,7 +893,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var key: Key = event.keycode
 	if key == KEY_ESCAPE:
-		if research_screen.visible:
+		if goods_catalog.visible:
+			goods_catalog.close()
+		elif research_screen.visible:
 			research_screen.close()
 		elif pause_modal["root"].visible:
 			_close_pause()

@@ -1,0 +1,104 @@
+{
+ "_nota": "Redes de servicios públicos (GridSim / WaterSim, docs/REDES.md). Tramos rectos como las carreteras: un edificio queda conectado si un tramo pasa a menos de 'reach' metros de su borde. Costos × dificultad × inflación. Tarifas = multiplicador del precio de mercado (electricidad) o del precio base del agua.",
+ "grid": {
+  "reach": 12.0,
+  "snap": 3.0,
+  "touch": 1.5,
+  "min_length": 2.0,
+  "max_length": 60.0,
+  "tie_reach": 14.0,
+  "max_loss": 0.25,
+  "grace_days": 120,
+  "tariff_default": 1.0,
+  "tariff_min": 0.5,
+  "tariff_max": 2.5,
+  "hookup": {"vivienda": 20.0, "negocio": 30.0},
+  "home_min_level": 4,
+  "home_tech": "electricidad",
+  "missing": {"quality": -0.6, "value_mult": 0.7, "leave_chance": 0.3, "happiness_day": -0.3},
+  "storm_weather": "tormenta",
+  "repair_days": 2,
+  "repair_cost_share": 0.15
+ },
+ "water": {
+  "good": "agua",
+  "wells_base": 1,
+  "people_per_well": 80.0,
+  "well_min_quality": 0.55,
+  "scarcity_disease": 0.5,
+  "reach": 12.0,
+  "tariff_default": 1.2,
+  "tariff_min": 0.5,
+  "tariff_max": 3.0,
+  "hookup": {"vivienda": 15.0, "negocio": 20.0},
+  "home_min_level": 4,
+  "home_tech": "potabilizacion",
+  "piped_quality_add": 0.2,
+  "piped_disease": 0.8,
+  "piped_bonus": 0.6,
+  "missing": {"quality": -0.6, "value_mult": 0.7, "leave_chance": 0.3, "happiness_day": -0.2},
+  "fresh_water_reach": 25.0,
+  "fresh_water_maps": ["rio", "interior", "montana"]
+ },
+ "kinds": {
+  "aereo": {
+   "label": "Tendido aéreo (postes y cable)",
+   "short": "aéreo",
+   "action": "Tender postes y cable",
+   "layer": "power",
+   "order": 0,
+   "tech": "dinamo",
+   "cost_per_m": 1.6,
+   "upkeep_per_m": 0.015,
+   "loss_per_100m": 0.015,
+   "storm_break_per_100m": 0.04,
+   "visible": true,
+   "color": [0.95, 0.75, 0.2]
+  },
+  "subterraneo": {
+   "label": "Cable subterráneo",
+   "short": "subterráneo",
+   "action": "Tender cable subterráneo",
+   "layer": "power",
+   "order": 1,
+   "tech": "redes_electricas",
+   "cost_per_m": 6.0,
+   "upkeep_per_m": 0.008,
+   "loss_per_100m": 0.004,
+   "storm_break_per_100m": 0.0,
+   "visible": false,
+   "color": [1.0, 0.5, 0.15]
+  },
+  "tuberia": {
+   "label": "Tubería de agua (subterránea)",
+   "short": "tubería",
+   "action": "Tender tubería",
+   "layer": "water",
+   "order": 2,
+   "tech": "potabilizacion",
+   "cost_per_m": 3.5,
+   "upkeep_per_m": 0.01,
+   "loss_per_100m": 0.0,
+   "storm_break_per_100m": 0.0,
+   "visible": false,
+   "color": [0.25, 0.6, 1.0]
+  }
+ },
+ "models": {
+  "pole": [
+   {"s": "cyl", "size": [0.14, 5.2, 0.18], "pos": [0, 2.6, 0], "c": [0.36, 0.25, 0.15]},
+   {"s": "box", "size": [1.8, 0.14, 0.14], "pos": [0, 4.9, 0], "c": [0.33, 0.23, 0.14]},
+   {"s": "cyl", "size": [0.07, 0.22, 0.07], "pos": [-0.75, 5.07, 0], "c": [0.85, 0.88, 0.9]},
+   {"s": "cyl", "size": [0.07, 0.22, 0.07], "pos": [0.75, 5.07, 0], "c": [0.85, 0.88, 0.9]},
+   {"s": "cyl", "size": [0.07, 0.22, 0.07], "pos": [0, 5.07, 0], "c": [0.85, 0.88, 0.9]}
+  ],
+  "manhole": [
+   {"s": "cyl", "size": [0.55, 0.08, 0.55], "pos": [0, 0.04, 0], "c": [0.3, 0.3, 0.32]},
+   {"s": "box", "size": [0.4, 0.3, 0.4], "pos": [0, 0.15, 0], "c": [0.8, 0.45, 0.12]}
+  ],
+  "valve": [
+   {"s": "cyl", "size": [0.5, 0.08, 0.5], "pos": [0, 0.04, 0], "c": [0.25, 0.3, 0.38]},
+   {"s": "cyl", "size": [0.12, 0.5, 0.12], "pos": [0, 0.3, 0], "c": [0.2, 0.45, 0.85]}
+  ]
+ }
+}

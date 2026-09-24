@@ -155,7 +155,10 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 		var ofp: float = gs.footprint_of(b)
 		if Vector2(x, z).distance_to(Vector2(float(b["x"]), float(b["z"]))) < (fp + ofp) * 0.5 + 0.8:
 			return "Se superpone con otro edificio"
-	return RegionSim.deposit_block_reason(gs, type_id, x, z)   # Fase 6: minas junto a su yacimiento.
+	var dep := RegionSim.deposit_block_reason(gs, type_id, x, z)   # Fase 6: minas junto a su yacimiento.
+	if dep != "":
+		return dep
+	return WaterSim.placement_block_reason(gs, type_id, x, z)   # Redes: la toma de río va junto al agua dulce.
 
 
 # --- Acciones del jugador ------------------------------------------------------------
@@ -217,6 +220,9 @@ static func start_upgrade(gs, b: Dictionary) -> String:
 	if reason != "":
 		return reason
 	reason = upgrade_space_reason(gs, b, next)
+	if reason != "":
+		return reason
+	reason = GridSim.upgrade_block_reason(gs, b, next)   # Redes: casas altas exigen cable/tubería cerca.
 	if reason != "":
 		return reason
 	var cost := cost_for(gs, str(b["type"]), next, true, str(b.get("tier", "normal")))
@@ -303,8 +309,8 @@ static func demolish(gs, b: Dictionary) -> void:
 static func daily(gs) -> void:
 	var sites := []
 	for b in gs.buildings:
-		if b["status"] == "construccion" or b["status"] == "mejorando":
-			sites.append(b)
+		if (b["status"] == "construccion" or b["status"] == "mejorando") and not bool(b.get("paused", false)):
+			sites.append(b)   # Bienes raíces: una obra sin la etapa pagada queda en pausa.
 	if sites.is_empty():
 		return
 	var wage: float = float(GameData.game.get("construction_day_wage", 2.2)) * gs.price_mult()
@@ -382,6 +388,8 @@ static func _complete(gs, b: Dictionary, crew: Array) -> void:
 		var td := Housing.tier_def(b)
 		b["rent"] = maxf(float(b["rent"]), float(ld.get("rent", 0.0)) * float(td.get("rent_mult", 1.0)))
 		b["sale_price"] = maxf(float(b["sale_price"]), float(ld.get("sale_price", 0.0)) * float(td.get("sale_mult", 1.0)))
+	if Housing.is_home(b):
+		RealEstateSim.on_building_ready(gs, b)   # Bienes raíces: unidades, entregas de preventa.
 	gs.notify("%s: %s." % ["Mejora terminada" if upgraded else "Construcción terminada", gs.building_label(b) if b["name"] != "" else ld.get("label", "")], "construccion")
 	EventBus.building_changed.emit(int(b["id"]))
 

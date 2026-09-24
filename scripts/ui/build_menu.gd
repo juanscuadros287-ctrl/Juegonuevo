@@ -60,7 +60,7 @@ func refresh() -> void:
 		if ld.has("jobs"):
 			extra = " · %d empleos · produce %s" % [int(ld["jobs"]), GameData.good_label(str(def.get("product", "")))]
 		elif ld.has("capacity"):
-			extra = " · %d personas · renta %s" % [int(ld["capacity"]), Fmt.money(float(ld.get("rent", 0)) * float(Housing.tier_def_by_id(tier).get("rent_mult", 1.0)))]
+			extra = " · %d personas · renta %s" % [GameData.capacity(type_id, 1, tier), Fmt.money(float(ld.get("rent", 0)) * float(Housing.tier_def_by_id(tier).get("rent_mult", 1.0)))]
 		var info := UIKit.label("%s · %d días · %d trabajadores%s\n%s" % [Fmt.money(cost["total"]), int(cost["days"]), int(cost["workers"]), extra, ", ".join(mats)], 12, UIKit.TEXT_DIM)
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info.tooltip_text = str(def.get("description", ""))
@@ -70,8 +70,32 @@ func refresh() -> void:
 		b.disabled = reason != ""
 		v.add_child(b)
 		list.add_child(panel)
+	_projects_section(tier)   # Bienes raíces: multifamiliares con su ficha de factibilidad.
 	list.add_child(UIKit.label("Terreno", 16, UIKit.ACCENT))
 	var note := UIKit.label("Las zonas oscuras son terreno del gobierno. Para construir ahí, primero cómpralo (debe ser vecino de un terreno tuyo).", 12, UIKit.TEXT_DIM)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	list.add_child(note)
 	list.add_child(UIKit.button("Comprar terreno al gobierno (%s)" % Fmt.money(ConstructionSim.zone_cost(GameState)), func(): EventBus.zone_mode_requested.emit()))
+
+
+## Bienes raíces: apartamentos, edificios y rascacielos como obra nueva pagada por etapas.
+func _projects_section(tier: String) -> void:
+	list.add_child(UIKit.label("Proyectos inmobiliarios (por unidades)", 16, UIKit.ACCENT))
+	for lvl in range(1, GameData.max_level("vivienda") + 1):
+		if not RealEstateSim.is_multi_level(lvl):
+			continue
+		var panel := PanelContainer.new()
+		panel.add_theme_stylebox_override("panel", UIKit.panel_style(UIKit.BG_LIGHT, 6, 8))
+		var v := VBoxContainer.new()
+		panel.add_child(v)
+		var f := RealEstateSim.feasibility(GameState, lvl, tier)
+		var ficha := UIKit.rich()
+		ficha.text = RealEstateSim.feasibility_text(f)
+		v.add_child(ficha)
+		var reason := RealEstateSim.project_block_reason(GameState, lvl, tier)
+		var level := lvl
+		var b := UIKit.button("Colocar proyecto (sin crédito)" if reason == "" else reason, func(): EventBus.project_mode_requested.emit(level, tier, {}))
+		b.disabled = reason != ""
+		b.tooltip_text = "Con crédito constructor: panel «Bienes raíces» → Nuevo proyecto."
+		v.add_child(b)
+		list.add_child(panel)

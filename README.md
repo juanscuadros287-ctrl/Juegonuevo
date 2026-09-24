@@ -18,8 +18,20 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 | 7 | Otros pueblos, rutas comerciales, comercio exterior, inmigración y transporte externo | ✅ |
 | 8 | Turismo, publicidad, industria avanzada y dinastía | ✅ |
 
+### Redes de servicios públicos
+Ver `docs/REDES.md`. Incluye tendido aéreo y cable subterráneo por tramos, reparto de energía por red,
+industria que exige electricidad, casas altas que necesitan luz y agua, facturas mensuales, pozos
+comunitarios, toma de río, planta de agua con tuberías y la capa verde/roja en el mundo (botón
+*Servicios públicos*).
+
 ### Fases 6, 7 y 8
 Ver `docs/FASE6.md` (recursos, almacén, recetas, rutas, carreteras), `docs/FASE7.md` (pueblos, rutas comerciales, exportación/importación, inmigración, transporte externo) y `docs/FASE8.md` (turismo, publicidad, industria avanzada, herencia y dinastía).
+
+### Bienes raíces y crédito bancario
+Apartamentos, edificios residenciales y rascacielos divididos en **unidades** que se arriendan o venden por separado
+(precio y renta por unidad según nivel, calidad, época, demanda y piso), **ficha de factibilidad**, obra **pagada por
+etapas**, **preventa sobre planos**, **crédito constructor**, créditos con banco/tipo de pago/tabla de amortización
+(francés, alemán, bullet, gracia) e **hipotecas** para los ciudadanos. Ver `docs/BIENES_RAICES.md`.
 
 ### Fase 5 incluye
 - **Gobierno** (botón *Gobierno*): en la colonia, virreyes por decreto que cambian cada 15–25 años; desde la república, **elecciones** cada 4 años donde votan los ciudadanos (pobres y ricos prefieren políticas distintas) y puedes **financiar campañas**. Cada gobierno trae sus políticas.
@@ -107,6 +119,8 @@ godot --headless res://tests/economy_diag.tscn  # inflación y precios a 30 año
 godot --headless res://tests/test_fase6.tscn    # recursos y logística
 godot --headless res://tests/test_fase7.tscn    # comercio exterior
 godot --headless res://tests/test_fase8.tscn    # turismo, publicidad, industria, dinastía
+godot --headless res://tests/test_bienes_raices.tscn  # unidades, proyectos por etapas, preventa, créditos, hipotecas
+godot --headless res://tests/test_redes.tscn    # redes eléctricas y de agua
 ```
 
 Ideas acordadas para próximas fases: ver `docs/ROADMAP.md`.

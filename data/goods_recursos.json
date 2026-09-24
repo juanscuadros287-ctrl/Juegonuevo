@@ -6,7 +6,20 @@
   "import_price": 21.0,
   "storable": true,
   "raw": true,
-  "order": 20
+  "order": 20,
+  "category": "materia_prima",
+  "era": 1,
+  "export": true,
+  "volatility": 0.04,
+  "description": "Metal precioso: joyas, relojes y componentes electrónicos.",
+  "model": [
+   {"s": "box", "size": [0.5, 0.14, 0.24], "pos": [-0.27, 0.07, 0.0], "c": [0.98, 0.78, 0.18]},
+   {"s": "box", "size": [0.4, 0.06, 0.16], "pos": [-0.27, 0.17, 0.0], "c": [1.0, 0.858, 0.198]},
+   {"s": "box", "size": [0.5, 0.14, 0.24], "pos": [0.27, 0.07, 0.0], "c": [0.98, 0.78, 0.18]},
+   {"s": "box", "size": [0.4, 0.06, 0.16], "pos": [0.27, 0.17, 0.0], "c": [1.0, 0.858, 0.198]},
+   {"s": "box", "size": [0.5, 0.14, 0.24], "pos": [0.0, 0.27, 0.0], "c": [0.98, 0.78, 0.18]},
+   {"s": "box", "size": [0.4, 0.06, 0.16], "pos": [0.0, 0.37, 0.0], "c": [1.0, 0.858, 0.198]}
+  ]
  },
  "plata": {
   "label": "Plata",
@@ -14,7 +27,20 @@
   "import_price": 9.0,
   "storable": true,
   "raw": true,
-  "order": 21
+  "order": 21,
+  "category": "materia_prima",
+  "era": 1,
+  "export": true,
+  "volatility": 0.04,
+  "description": "Metal precioso: joyas, relojes y contactos electrónicos.",
+  "model": [
+   {"s": "box", "size": [0.5, 0.14, 0.24], "pos": [-0.27, 0.07, 0.0], "c": [0.85, 0.87, 0.9]},
+   {"s": "box", "size": [0.4, 0.06, 0.16], "pos": [-0.27, 0.17, 0.0], "c": [0.935, 0.957, 0.99]},
+   {"s": "box", "size": [0.5, 0.14, 0.24], "pos": [0.27, 0.07, 0.0], "c": [0.85, 0.87, 0.9]},
+   {"s": "box", "size": [0.4, 0.06, 0.16], "pos": [0.27, 0.17, 0.0], "c": [0.935, 0.957, 0.99]},
+   {"s": "box", "size": [0.5, 0.14, 0.24], "pos": [0.0, 0.27, 0.0], "c": [0.85, 0.87, 0.9]},
+   {"s": "box", "size": [0.4, 0.06, 0.16], "pos": [0.0, 0.37, 0.0], "c": [0.935, 0.957, 0.99]}
+  ]
  },
  "carbon": {
   "label": "Carbón",
@@ -22,7 +48,24 @@
   "import_price": 1.6,
   "storable": true,
   "raw": true,
-  "order": 22
+  "order": 22,
+  "category": "materia_prima",
+  "era": 1,
+  "export": true,
+  "volatility": 0.03,
+  "description": "Combustible de fraguas, hornos, altos hornos y centrales térmicas.",
+  "model": [
+   {"s": "box", "size": [0.8, 0.12, 0.5], "pos": [0.0, 0.06, 0.0], "c": [0.55, 0.36, 0.2]},
+   {"s": "sphere", "size": [0.24, 0.192, 0.24], "pos": [0.038, 0.276, 0.06], "c": [0.1, 0.1, 0.11]},
+   {"s": "sphere", "size": [0.288, 0.192, 0.24], "pos": [-0.118, 0.276, -0.031], "c": [0.1, 0.1, 0.11]},
+   {"s": "sphere", "size": [0.336, 0.192, 0.24], "pos": [0.14, 0.096, -0.073], "c": [0.1, 0.1, 0.11]},
+   {"s": "sphere", "size": [0.24, 0.192, 0.24], "pos": [-0.063, 0.096, 0.176], "c": [0.1, 0.1, 0.11]},
+   {"s": "sphere", "size": [0.288, 0.192, 0.24], "pos": [-0.082, 0.096, -0.196], "c": [0.1, 0.1, 0.11]},
+   {"s": "sphere", "size": [0.336, 0.192, 0.24], "pos": [0.213, 0.096, 0.098], "c": [0.1, 0.1, 0.11]},
+   {"s": "sphere", "size": [0.24, 0.192, 0.24], "pos": [-0.243, 0.096, 0.077], "c": [0.1, 0.1, 0.11]},
+   {"s": "sphere", "size": [0.288, 0.192, 0.24], "pos": [0.136, 0.096, -0.238], "c": [0.1, 0.1, 0.11]},
+   {"s": "sphere", "size": [0.336, 0.192, 0.24], "pos": [0.064, 0.096, 0.284], "c": [0.1, 0.1, 0.11]}
+  ]
  },
  "hierro": {
   "label": "Hierro",
@@ -30,7 +73,23 @@
   "import_price": 2.5,
   "storable": true,
   "raw": true,
-  "order": 23
+  "order": 23,
+  "category": "materia_prima",
+  "era": 1,
+  "export": true,
+  "volatility": 0.03,
+  "description": "Mineral de hierro: herramientas, utensilios y acero.",
+  "model": [
+   {"s": "sphere", "size": [0.3, 0.24, 0.3], "pos": [-0.036, 0.3, 0.079], "c": [0.62, 0.3, 0.2]},
+   {"s": "sphere", "size": [0.36, 0.24, 0.3], "pos": [-0.046, 0.3, -0.143], "c": [0.62, 0.3, 0.2]},
+   {"s": "sphere", "size": [0.42, 0.24, 0.3], "pos": [0.168, 0.12, 0.096], "c": [0.62, 0.3, 0.2]},
+   {"s": "sphere", "size": [0.3, 0.24, 0.3], "pos": [-0.223, 0.12, 0.051], "c": [0.62, 0.3, 0.2]},
+   {"s": "sphere", "size": [0.36, 0.24, 0.3], "pos": [0.148, 0.12, -0.214], "c": [0.62, 0.3, 0.2]},
+   {"s": "sphere", "size": [0.42, 0.24, 0.3], "pos": [0.039, 0.12, 0.285], "c": [0.62, 0.3, 0.2]},
+   {"s": "sphere", "size": [0.2, 0.16, 0.2], "pos": [0.023, 0.26, -0.078], "c": [0.35, 0.3, 0.3]},
+   {"s": "sphere", "size": [0.24, 0.16, 0.2], "pos": [0.062, 0.26, 0.127], "c": [0.35, 0.3, 0.3]},
+   {"s": "sphere", "size": [0.28, 0.16, 0.2], "pos": [-0.17, 0.08, -0.067], "c": [0.35, 0.3, 0.3]}
+  ]
  },
  "trigo": {
   "label": "Trigo",
@@ -38,7 +97,27 @@
   "import_price": 0.55,
   "storable": true,
   "raw": true,
-  "order": 24
+  "order": 24,
+  "category": "materia_prima",
+  "era": 1,
+  "export": true,
+  "volatility": 0.04,
+  "description": "Cereal cosechado en campos; el molino lo vuelve harina.",
+  "model": [
+   {"s": "cyl", "size": [0.3, 0.6, 0.36], "pos": [0.0, 0.3, 0.0], "c": [0.78, 0.66, 0.45]},
+   {"s": "sphere", "size": [0.55, 0.28, 0.55], "pos": [0.0, 0.6, 0.0], "c": [0.78, 0.66, 0.45]},
+   {"s": "cyl", "size": [0.07, 0.12, 0.09], "pos": [0.0, 0.74, 0.0], "c": [0.5, 0.35, 0.2]},
+   {"s": "cyl", "size": [0.02, 0.4, 0.02], "pos": [-0.1, 0.9, 0.0], "c": [0.9, 0.78, 0.35], "rz": -28.0},
+   {"s": "cyl", "size": [0.02, 0.4, 0.02], "pos": [-0.05, 0.9, 0.03], "c": [0.9, 0.78, 0.35], "rz": -20.0},
+   {"s": "cyl", "size": [0.02, 0.4, 0.02], "pos": [0.0, 0.9, 0.0], "c": [0.9, 0.78, 0.35], "rz": -12.0},
+   {"s": "cyl", "size": [0.02, 0.4, 0.02], "pos": [0.05, 0.9, 0.03], "c": [0.9, 0.78, 0.35], "rz": -4.0},
+   {"s": "cyl", "size": [0.02, 0.4, 0.02], "pos": [0.1, 0.9, 0.0], "c": [0.9, 0.78, 0.35], "rz": 4.0},
+   {"s": "sphere", "size": [0.06, 0.14, 0.06], "pos": [-0.12, 1.1, 0.0], "c": [0.95, 0.8, 0.3]},
+   {"s": "sphere", "size": [0.06, 0.14, 0.06], "pos": [-0.06, 1.1, 0.03], "c": [0.95, 0.8, 0.3]},
+   {"s": "sphere", "size": [0.06, 0.14, 0.06], "pos": [0.0, 1.1, 0.0], "c": [0.95, 0.8, 0.3]},
+   {"s": "sphere", "size": [0.06, 0.14, 0.06], "pos": [0.06, 1.1, 0.03], "c": [0.95, 0.8, 0.3]},
+   {"s": "sphere", "size": [0.06, 0.14, 0.06], "pos": [0.12, 1.1, 0.0], "c": [0.95, 0.8, 0.3]}
+  ]
  },
  "algodon": {
   "label": "Algodón",
@@ -46,7 +125,20 @@
   "import_price": 1.2,
   "storable": true,
   "raw": true,
-  "order": 25
+  "order": 25,
+  "category": "materia_prima",
+  "era": 1,
+  "export": true,
+  "volatility": 0.04,
+  "description": "Fibra vegetal para hilar tela.",
+  "model": [
+   {"s": "cyl", "size": [0.03, 0.6, 0.03], "pos": [0.0, 0.3, 0.0], "c": [0.4, 0.3, 0.2]},
+   {"s": "sphere", "size": [0.2, 0.18, 0.2], "pos": [0.18, 0.55, 0.0], "c": [0.94, 0.93, 0.9]},
+   {"s": "sphere", "size": [0.2, 0.18, 0.2], "pos": [-0.091, 0.63, 0.155], "c": [0.94, 0.93, 0.9]},
+   {"s": "sphere", "size": [0.2, 0.18, 0.2], "pos": [-0.088, 0.55, -0.157], "c": [0.94, 0.93, 0.9]},
+   {"s": "sphere", "size": [0.2, 0.18, 0.2], "pos": [0.097, 0.63, 0.151], "c": [0.94, 0.93, 0.9]},
+   {"s": "sphere", "size": [0.22, 0.2, 0.22], "pos": [0.0, 0.7, 0.0], "c": [0.94, 0.93, 0.9]}
+  ]
  },
  "lana": {
   "label": "Lana",
@@ -54,14 +146,39 @@
   "import_price": 1.35,
   "storable": true,
   "raw": true,
-  "order": 26
+  "order": 26,
+  "category": "materia_prima",
+  "era": 1,
+  "export": true,
+  "volatility": 0.03,
+  "description": "Fibra de oveja para tejer paños.",
+  "model": [
+   {"s": "box", "size": [0.7, 0.45, 0.45], "pos": [0.0, 0.225, 0.0], "c": [0.93, 0.9, 0.82]},
+   {"s": "box", "size": [0.72, 0.05, 0.05], "pos": [0.0, 0.46, 0.1], "c": [0.5, 0.35, 0.2]},
+   {"s": "box", "size": [0.72, 0.05, 0.05], "pos": [0.0, 0.46, -0.1], "c": [0.5, 0.35, 0.2]},
+   {"s": "sphere", "size": [0.2, 0.14, 0.2], "pos": [-0.2, 0.47, 0.0], "c": [0.95, 0.93, 0.86]},
+   {"s": "sphere", "size": [0.2, 0.14, 0.2], "pos": [0.18, 0.47, 0.05], "c": [0.95, 0.93, 0.86]},
+   {"s": "sphere", "size": [0.2, 0.14, 0.2], "pos": [0.0, 0.47, -0.12], "c": [0.95, 0.93, 0.86]}
+  ]
  },
  "harina": {
   "label": "Harina",
   "base_price": 1.25,
   "import_price": 1.8,
   "storable": true,
-  "order": 30
+  "order": 30,
+  "category": "intermedio",
+  "era": 1,
+  "export": true,
+  "volatility": 0.02,
+  "description": "Trigo molido: materia del pan.",
+  "intermediate": true,
+  "model": [
+   {"s": "cyl", "size": [0.3, 0.6, 0.36], "pos": [0.0, 0.3, 0.0], "c": [0.94, 0.93, 0.9]},
+   {"s": "sphere", "size": [0.55, 0.28, 0.55], "pos": [0.0, 0.6, 0.0], "c": [0.94, 0.93, 0.9]},
+   {"s": "cyl", "size": [0.07, 0.12, 0.09], "pos": [0.0, 0.74, 0.0], "c": [0.3, 0.45, 0.7]},
+   {"s": "box", "size": [0.3, 0.2, 0.02], "pos": [0.0, 0.35, 0.33], "c": [0.3, 0.45, 0.7]}
+  ]
  },
  "tela": {
   "label": "Tela",
@@ -70,7 +187,19 @@
   "storable": true,
   "order": 31,
   "intermediate": true,
-  "export": true
+  "export": true,
+  "category": "intermedio",
+  "era": 1,
+  "volatility": 0.02,
+  "description": "Paño y lienzo tejidos: ropa, muebles tapizados, autos y aviones.",
+  "model": [
+   {"s": "cyl", "size": [0.16, 0.9, 0.16], "pos": [0.0, 0.16, -0.18], "c": [0.75, 0.2, 0.2], "rz": 90.0},
+   {"s": "cyl", "size": [0.04, 1.0, 0.04], "pos": [0.0, 0.16, -0.18], "c": [0.55, 0.36, 0.2], "rz": 90.0},
+   {"s": "cyl", "size": [0.16, 0.9, 0.16], "pos": [0.0, 0.16, 0.16], "c": [0.2, 0.4, 0.7], "rz": 90.0},
+   {"s": "cyl", "size": [0.04, 1.0, 0.04], "pos": [0.0, 0.16, 0.16], "c": [0.55, 0.36, 0.2], "rz": 90.0},
+   {"s": "cyl", "size": [0.16, 0.9, 0.16], "pos": [0.0, 0.44, 0.0], "c": [0.9, 0.85, 0.7], "rz": 90.0},
+   {"s": "cyl", "size": [0.04, 1.0, 0.04], "pos": [0.0, 0.44, 0.0], "c": [0.55, 0.36, 0.2], "rz": 90.0}
+  ]
  },
  "ropa": {
   "label": "Ropa",
@@ -78,7 +207,18 @@
   "import_price": 12.0,
   "storable": true,
   "shop_sale": true,
-  "order": 32
+  "order": 32,
+  "category": "producto",
+  "era": 1,
+  "export": true,
+  "volatility": 0.01,
+  "description": "Ropa de diario. Los vecinos la renuevan cada pocos meses.",
+  "model": [
+   {"s": "box", "size": [0.5, 0.6, 0.18], "pos": [0.0, 0.4, 0.0], "c": [0.35, 0.45, 0.7]},
+   {"s": "box", "size": [0.18, 0.42, 0.14], "pos": [-0.33, 0.48, 0.0], "c": [0.35, 0.45, 0.7], "rz": -35.0},
+   {"s": "box", "size": [0.18, 0.42, 0.14], "pos": [0.33, 0.48, 0.0], "c": [0.35, 0.45, 0.7], "rz": 35.0},
+   {"s": "box", "size": [0.24, 0.07, 0.2], "pos": [0.0, 0.72, 0.0], "c": [0.9, 0.9, 0.85]}
+  ]
  },
  "herramientas": {
   "label": "Herramientas",
@@ -88,7 +228,19 @@
   "shop_sale": true,
   "order": 33,
   "intermediate": true,
-  "export": true
+  "export": true,
+  "category": "producto",
+  "era": 1,
+  "volatility": 0.01,
+  "description": "Martillos, azadas y sierras: las compran los trabajadores y la industria.",
+  "model": [
+   {"s": "box", "size": [0.06, 0.7, 0.06], "pos": [-0.15, 0.35, 0.0], "c": [0.76, 0.58, 0.36], "rz": -15.0},
+   {"s": "box", "size": [0.28, 0.1, 0.1], "pos": [-0.24, 0.68, 0.0], "c": [0.42, 0.4, 0.4], "rz": -15.0},
+   {"s": "box", "size": [0.06, 0.8, 0.06], "pos": [0.2, 0.4, 0.0], "c": [0.76, 0.58, 0.36], "rz": 15.0},
+   {"s": "box", "size": [0.22, 0.26, 0.03], "pos": [0.32, 0.05, 0.0], "c": [0.55, 0.58, 0.62], "rz": 15.0},
+   {"s": "box", "size": [0.5, 0.12, 0.03], "pos": [0.0, 0.1, 0.25], "c": [0.55, 0.58, 0.62]},
+   {"s": "box", "size": [0.14, 0.14, 0.05], "pos": [-0.28, 0.1, 0.25], "c": [0.55, 0.36, 0.2]}
+  ]
  },
  "joyas": {
   "label": "Joyas",
@@ -97,7 +249,21 @@
   "storable": true,
   "shop_sale": true,
   "order": 34,
-  "export": true
+  "export": true,
+  "category": "producto",
+  "era": 1,
+  "volatility": 0.02,
+  "description": "Anillos y collares de oro y plata para los ricos y la exportación.",
+  "model": [
+   {"s": "cyl", "size": [0.2, 0.04, 0.2], "pos": [0.0, 0.2, 0.0], "c": [0.98, 0.78, 0.18], "rx": 70.0},
+   {"s": "sphere", "size": [0.12, 0.12, 0.12], "pos": [0.0, 0.4, 0.06], "c": [0.2, 0.8, 0.45]},
+   {"s": "box", "size": [0.5, 0.1, 0.4], "pos": [0.0, 0.05, 0.0], "c": [0.4, 0.1, 0.15]},
+   {"s": "sphere", "size": [0.06, 0.06, 0.06], "pos": [0.25, 0.12, 0.0], "c": [0.85, 0.87, 0.9]},
+   {"s": "sphere", "size": [0.06, 0.06, 0.06], "pos": [0.191, 0.12, 0.116], "c": [0.85, 0.87, 0.9]},
+   {"s": "sphere", "size": [0.06, 0.06, 0.06], "pos": [0.042, 0.12, 0.177], "c": [0.85, 0.87, 0.9]},
+   {"s": "sphere", "size": [0.06, 0.06, 0.06], "pos": [-0.126, 0.12, 0.155], "c": [0.85, 0.87, 0.9]},
+   {"s": "sphere", "size": [0.06, 0.06, 0.06], "pos": [-0.236, 0.12, 0.06], "c": [0.85, 0.87, 0.9]}
+  ]
  },
  "transporte": {
   "label": "Transporte",

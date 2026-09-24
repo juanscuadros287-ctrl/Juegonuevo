@@ -163,6 +163,15 @@ func _model_width(ld: Dictionary) -> float:
 	return w * 2.0
 
 
+## Personas que caben (camas) según nivel y calidad: "capacity_by_tier" o "capacity".
+func capacity(type_id: String, level: int, tier := "normal") -> int:
+	var ld := level_def(type_id, level)
+	var bt: Dictionary = ld.get("capacity_by_tier", {})
+	if bt.has(tier):
+		return int(bt[tier])
+	return int(ld.get("capacity", 0))
+
+
 func max_level(type_id: String) -> int:
 	return building_def(type_id).get("levels", []).size()
 

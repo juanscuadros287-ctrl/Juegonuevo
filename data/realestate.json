@@ -1,0 +1,65 @@
+{
+ "_nota": "Bienes raíces: unidades por edificio multifamiliar, precios, proyectos por etapas, preventa, crédito constructor, bancos y tipos de crédito. Lo lee RealEstateSim/LoanContract con GameData.extra(\"realestate\"). Ver docs/BIENES_RAICES.md.",
+ "family_capacity": 10,
+ "unit_types": {
+  "estudio": {"label": "Estudio", "area": 38, "capacity": 2},
+  "familiar": {"label": "Familiar (2 alcobas)", "area": 65, "capacity": 4},
+  "amplio": {"label": "Amplio (3 alcobas)", "area": 95, "capacity": 6}
+ },
+ "_levels": "Distribución por nivel de vivienda: pisos y tipos de unidad de cada piso (la suma de capacidades = capacidad del edificio). Cualquier otra vivienda con capacidad > family_capacity se divide automáticamente en unidades familiares de 2 por piso.",
+ "levels": {
+  "4": {"floors": 3, "per_floor": ["familiar", "familiar", "estudio"]},
+  "5": {"floors": 8, "per_floor": ["familiar", "familiar", "estudio"]},
+  "6": {"floors": 25, "per_floor": ["amplio", "familiar"]}
+ },
+ "pricing": {
+  "_nota": "Valor total del edificio = costo de reposición (obra nueva con materiales importados) × (1 + margen del promotor) × demanda × época. Renta mensual = precio × tasa de capitalización / 12. Los pisos altos valen más (floor_premium por piso) sin cambiar el total.",
+  "developer_margin": 0.24,
+  "floor_premium": 0.015,
+  "demand_min": 0.9,
+  "demand_max": 1.15,
+  "era_value_mult": {"1": 0.96, "2": 1.0, "3": 1.04},
+  "era_cap_rate": {"1": 0.085, "2": 0.07, "3": 0.06}
+ },
+ "stages": [
+  {"id": "cimentacion", "label": "Cimentación", "share": 0.2},
+  {"id": "estructura", "label": "Estructura", "share": 0.45},
+  {"id": "acabados", "label": "Acabados", "share": 0.35}
+ ],
+ "presale": {
+  "_nota": "Preventa sobre planos: cuota inicial al firmar, cuotas mensuales durante la obra (hasta completar during_share) y el saldo al entregar (con ahorros o hipoteca). Si la obra se cancela, se devuelve todo.",
+  "down_share": 0.1,
+  "during_share": 0.2,
+  "default_missed": 3,
+  "monthly_chance": 0.35
+ },
+ "constructor_credit": {
+  "_nota": "Crédito constructor: financia hasta max_ratio del costo; se desembolsa por etapas (intereses solo sobre lo desembolsado, mensuales); cada venta entregada abona sales_sweep de su precio; el saldo vence extra_months después de la obra estimada.",
+  "max_ratio": 0.6,
+  "spread": -0.005,
+  "sales_sweep": 0.7,
+  "extra_months": 12
+ },
+ "mortgage": {
+  "down_share": 0.2,
+  "max_payment_income_ratio": 0.35,
+  "external_spread": 0.03,
+  "term_months_by_era": {"1": 120, "2": 180, "3": 240},
+  "monthly_buy_chance": 0.35,
+  "foreclosure_resale": 0.85
+ },
+ "condo_fee_share": 1.0,
+ "era_rate_add": {"1": 0.02, "2": 0.0, "3": -0.01},
+ "loan_types": {
+  "frances": {"label": "Cuota fija (francés)", "desc": "Misma cuota todos los meses; al inicio pagas más intereses y al final más capital."},
+  "aleman": {"label": "Abono constante a capital (alemán)", "desc": "Abonas lo mismo a capital cada mes; la cuota empieza alta y baja con el saldo."},
+  "bullet": {"label": "Solo intereses, capital al final", "desc": "Pagas solo intereses cada mes y todo el capital en la última cuota."},
+  "gracia": {"label": "Con período de gracia", "desc": "Los primeros N meses pagas solo intereses; luego cuota fija por el resto del plazo."}
+ },
+ "terms_months": [12, 24, 36, 60, 120, 180, 240],
+ "banks": [
+  {"id": "comercial", "label": "Banco Comercial de la Provincia", "spread": -0.005, "limit_mult": 0.8, "min_era": 1, "desc": "Tasa algo menor, cupo más estricto."},
+  {"id": "cooperativa", "label": "Caja Cooperativa de Ahorro", "spread": 0.015, "limit_mult": 1.2, "min_era": 1, "desc": "Presta más, pero más caro."},
+  {"id": "hipotecario", "label": "Banco Hipotecario Nacional", "spread": -0.015, "limit_mult": 1.0, "min_era": 2, "desc": "Especializado en vivienda (desde la Revolución industrial)."}
+ ]
+}
