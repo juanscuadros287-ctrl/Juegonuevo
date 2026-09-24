@@ -27,6 +27,7 @@ static func create_player(gs) -> void:
 	gs.player_id = c.id
 	gs.player = {"relations": {}, "talked": {}, "family_planning": true, "doctor_until": -1,
 		"try_child_until": -1, "heir_id": -1}
+	DynastySim.ensure(gs)
 
 
 static func migrate_v1_player(gs, old: Dictionary) -> void:
@@ -331,6 +332,7 @@ static func monthly(gs) -> void:
 		else:
 			rel[k] = maxf(0.0, float(rel[k]) - decay)
 	gs.player["talked"] = {}
+	DynastySim.monthly(gs)
 
 
 ## Llamado cuando muere el personaje. Pasa el control al heredero o termina la partida.
@@ -340,6 +342,7 @@ static func on_player_death(gs, dead: Citizen) -> void:
 		if gs.citizens.has(id):
 			heirs.append(gs.citizens[id])
 	if heirs.is_empty():
+		DynastySim.on_dynasty_end(gs, dead)
 		gs.running = false
 		gs.notify("Has muerto sin herederos. Fin de la dinastía.", "jugador")
 		EventBus.player_died.emit()
@@ -361,8 +364,10 @@ static func on_player_death(gs, dead: Citizen) -> void:
 		chosen.job_id = -1
 		chosen.job_kind = ""
 		chosen.wage = 0.0
-	# El heredero hereda empresas, dinero y deudas (todo lo del jugador).
+	# El heredero hereda empresas, dinero y deudas (los préstamos del jugador siguen a su nombre),
+	# y paga el impuesto a la herencia (Fase 8).
 	gs.money += chosen.money
 	chosen.money = 0.0
-	gs.notify("%s murió. Tu heredero(a) %s (%d años) toma el control de la familia." % [dead.full_name(), chosen.full_name(), chosen.age_years(gs.today())], "jugador")
+	var inheritance := DynastySim.on_succession(gs, dead, chosen)
+	gs.notify("%s murió. Tu heredero(a) %s (%d años) toma el control de la familia. %s" % [dead.full_name(), chosen.full_name(), chosen.age_years(gs.today()), inheritance], "jugador")
 	EventBus.player_changed.emit()

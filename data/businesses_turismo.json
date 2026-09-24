@@ -1,0 +1,4002 @@
+{
+ "_nota": "Fase 8 — atracciones turísticas, hospedaje y medios de comunicación. Campos propios: tourism (atraccion|hotel|medio), attraction (puntos de atractivo), ticket_value (multiplicador del precio de referencia de la entrada o de la noche), map_bonus (atractivo extra por tipo de mapa), media_channel y ad_discount (medios). Capacidad diaria (visitas, camas o espacios publicitarios) = empleados × prod_per_worker.",
+ "mirador": {
+  "label": "Mirador",
+  "category": "negocio",
+  "sector": "Turismo",
+  "order": 40,
+  "product": "entrada",
+  "skill": "comercio",
+  "base_wage": 2.0,
+  "footprint": 4.5,
+  "tourism": "atraccion",
+  "description": "Atracción turística sencilla: los visitantes pagan una entrada por la vista. Más atractiva en montaña y costa. Los habitantes también la visitan con sus ahorros.",
+  "levels": [
+   {
+    "label": "Mirador del pueblo",
+    "cost": 350,
+    "materials": {
+     "madera": 15,
+     "piedra": 10
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 1,
+    "prod_per_worker": 40,
+    "quality": 1.0,
+    "upkeep": 0.1,
+    "unit_cost": 0.005,
+    "tech": "",
+    "attraction": 8,
+    "ticket_value": 1.0,
+    "model": [
+     {
+      "s": "cyl",
+      "size": [
+       2.2,
+       0.6,
+       2.4
+      ],
+      "pos": [
+       0,
+       0.3,
+       0
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.2,
+       2.2,
+       0.2
+      ],
+      "pos": [
+       1.5,
+       1.7,
+       1.5
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.2,
+       2.2,
+       0.2
+      ],
+      "pos": [
+       -1.5,
+       1.7,
+       1.5
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.2,
+       2.2,
+       0.2
+      ],
+      "pos": [
+       1.5,
+       1.7,
+       -1.5
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.2,
+       2.2,
+       0.2
+      ],
+      "pos": [
+       -1.5,
+       1.7,
+       -1.5
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       3.6,
+       1.2,
+       3.6
+      ],
+      "pos": [
+       0,
+       3.4,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       3.2,
+       0.5,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.9,
+       1.6
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Mirador con jardines",
+    "cost": 1400,
+    "materials": {
+     "madera": 20,
+     "piedra": 50
+    },
+    "build_days": 25,
+    "workers": 3,
+    "jobs": 2,
+    "prod_per_worker": 60,
+    "quality": 1.3,
+    "upkeep": 0.4,
+    "unit_cost": 0.005,
+    "tech": "ladrillo",
+    "attraction": 16,
+    "ticket_value": 1.4,
+    "model": [
+     {
+      "s": "cyl",
+      "size": [
+       2.6,
+       1.2,
+       2.8
+      ],
+      "pos": [
+       0,
+       0.6,
+       0
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       1.2,
+       3.0,
+       1.4
+      ],
+      "pos": [
+       0,
+       2.7,
+       0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       1.8,
+       0.3,
+       1.8
+      ],
+      "pos": [
+       0,
+       4.35,
+       0
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       3.0,
+       1.4,
+       3.0
+      ],
+      "pos": [
+       0,
+       5.2,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       1.4,
+       1.4,
+       1.4
+      ],
+      "pos": [
+       3.2,
+       0.7,
+       2.2
+      ],
+      "c": [
+       0.3,
+       0.55,
+       0.28
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       1.2,
+       1.2,
+       1.2
+      ],
+      "pos": [
+       -3.2,
+       0.6,
+       2.4
+      ],
+      "c": [
+       0.3,
+       0.55,
+       0.28
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       1.3,
+       1.3,
+       1.3
+      ],
+      "pos": [
+       3.0,
+       0.65,
+       -2.6
+      ],
+      "c": [
+       0.3,
+       0.55,
+       0.28
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.0,
+       0.06,
+       7.0
+      ],
+      "pos": [
+       0,
+       0.03,
+       0
+      ],
+      "c": [
+       0.4,
+       0.62,
+       0.3
+      ]
+     }
+    ]
+   }
+  ],
+  "map_bonus": {
+   "montana": 1.5,
+   "costa": 1.25
+  }
+ },
+ "feria": {
+  "label": "Feria",
+  "category": "negocio",
+  "sector": "Turismo",
+  "order": 41,
+  "product": "entrada",
+  "skill": "comercio",
+  "base_wage": 2.0,
+  "footprint": 6.5,
+  "tourism": "atraccion",
+  "description": "Feria con puestos, juegos y espectáculos. Evoluciona a feria ganadera y, con electricidad, a parque de diversiones.",
+  "levels": [
+   {
+    "label": "Feria del pueblo",
+    "cost": 600,
+    "materials": {
+     "madera": 40
+    },
+    "build_days": 12,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 40,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.01,
+    "tech": "",
+    "attraction": 12,
+    "ticket_value": 1.2,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6.5,
+       0.06,
+       5.0
+      ],
+      "pos": [
+       0,
+       0.03,
+       0
+      ],
+      "c": [
+       0.85,
+       0.78,
+       0.55
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       2.2,
+       1.4,
+       2.2
+      ],
+      "pos": [
+       -2.0,
+       1.9,
+       -1.0
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.0,
+       1.2,
+       2.0
+      ],
+      "pos": [
+       -2.0,
+       0.6,
+       -1.0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       2.2,
+       1.4,
+       2.2
+      ],
+      "pos": [
+       1.8,
+       1.9,
+       -1.0
+      ],
+      "c": [
+       0.9,
+       0.75,
+       0.25
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.0,
+       1.2,
+       2.0
+      ],
+      "pos": [
+       1.8,
+       0.6,
+       -1.0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.15,
+       3.0,
+       0.15
+      ],
+      "pos": [
+       0,
+       1.5,
+       1.6
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       4.0,
+       0.5,
+       0.05
+      ],
+      "pos": [
+       0,
+       2.8,
+       1.6
+      ],
+      "c": [
+       0.25,
+       0.45,
+       0.75
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Feria de ganado y artesanías",
+    "cost": 2500,
+    "materials": {
+     "madera": 60,
+     "piedra": 30
+    },
+    "build_days": 25,
+    "workers": 4,
+    "jobs": 6,
+    "prod_per_worker": 50,
+    "quality": 1.2,
+    "upkeep": 0.6,
+    "unit_cost": 0.01,
+    "tech": "contabilidad",
+    "attraction": 22,
+    "ticket_value": 1.6,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       8.0,
+       0.06,
+       6.5
+      ],
+      "pos": [
+       0,
+       0.03,
+       0
+      ],
+      "c": [
+       0.85,
+       0.78,
+       0.55
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       2.6,
+       1.8,
+       2.6
+      ],
+      "pos": [
+       -2.6,
+       2.3,
+       -1.6
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       1.4,
+       2.4
+      ],
+      "pos": [
+       -2.6,
+       0.7,
+       -1.6
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       2.6,
+       1.8,
+       2.6
+      ],
+      "pos": [
+       0.4,
+       2.3,
+       -1.6
+      ],
+      "c": [
+       0.9,
+       0.75,
+       0.25
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       1.4,
+       2.4
+      ],
+      "pos": [
+       0.4,
+       0.7,
+       -1.6
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       2.6,
+       1.8,
+       2.6
+      ],
+      "pos": [
+       3.2,
+       2.3,
+       -1.6
+      ],
+      "c": [
+       0.25,
+       0.45,
+       0.75
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       1.4,
+       2.4
+      ],
+      "pos": [
+       3.2,
+       0.7,
+       -1.6
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       3.0,
+       1.0,
+       1.6
+      ],
+      "pos": [
+       -2.0,
+       0.5,
+       2.0
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.15,
+       3.2,
+       0.15
+      ],
+      "pos": [
+       1.5,
+       1.6,
+       2.4
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       3.5,
+       0.6,
+       0.05
+      ],
+      "pos": [
+       1.5,
+       3.0,
+       2.4
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Parque de diversiones",
+    "cost": 14000,
+    "materials": {
+     "madera": 60,
+     "piedra": 200
+    },
+    "build_days": 70,
+    "workers": 10,
+    "jobs": 14,
+    "prod_per_worker": 90,
+    "quality": 1.6,
+    "upkeep": 3.0,
+    "unit_cost": 0.02,
+    "tech": "electricidad",
+    "attraction": 60,
+    "ticket_value": 3.0,
+    "pollution": 1,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       12.0,
+       0.06,
+       10.0
+      ],
+      "pos": [
+       0,
+       0.03,
+       0
+      ],
+      "c": [
+       0.5,
+       0.6,
+       0.45
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.3,
+       7.0,
+       0.4
+      ],
+      "pos": [
+       -3.0,
+       3.5,
+       -2.0
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       3.4,
+       0.25,
+       3.4
+      ],
+      "pos": [
+       -3.0,
+       7.0,
+       -2.0
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ],
+      "rx": 90
+     },
+     {
+      "s": "cyl",
+      "size": [
+       2.6,
+       0.3,
+       2.6
+      ],
+      "pos": [
+       -3.0,
+       7.0,
+       -2.0
+      ],
+      "c": [
+       0.9,
+       0.75,
+       0.25
+      ],
+      "rx": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       6.0,
+       0.3,
+       0.6
+      ],
+      "pos": [
+       2.5,
+       2.5,
+       1.0
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ],
+      "rz": 20
+     },
+     {
+      "s": "box",
+      "size": [
+       0.3,
+       3.0,
+       0.3
+      ],
+      "pos": [
+       0.2,
+       1.5,
+       1.0
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.3,
+       4.5,
+       0.3
+      ],
+      "pos": [
+       5.0,
+       2.25,
+       1.0
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       2.2,
+       1.2,
+       2.4
+      ],
+      "pos": [
+       3.0,
+       0.6,
+       -3.0
+      ],
+      "c": [
+       0.25,
+       0.45,
+       0.75
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.6,
+       1.6,
+       4.6
+      ],
+      "pos": [
+       3.0,
+       2.0,
+       -3.0
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.2,
+       1.4
+      ],
+      "pos": [
+       -4.0,
+       1.1,
+       3.8
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.4,
+       1.8,
+       0.1
+      ],
+      "pos": [
+       -4.0,
+       0.9,
+       4.55
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "plaza_toros": {
+  "label": "Plaza de toros / Estadio",
+  "category": "negocio",
+  "sector": "Turismo",
+  "order": 42,
+  "product": "entrada",
+  "skill": "comercio",
+  "base_wage": 2.0,
+  "footprint": 8.0,
+  "tourism": "atraccion",
+  "description": "Gran recinto de espectáculos: plaza de toros en la colonia, coliseo en la época industrial y estadio en la moderna. Atrae muchos visitantes.",
+  "levels": [
+   {
+    "label": "Plaza de toros",
+    "cost": 3000,
+    "materials": {
+     "madera": 40,
+     "piedra": 120
+    },
+    "build_days": 45,
+    "workers": 5,
+    "jobs": 6,
+    "prod_per_worker": 60,
+    "quality": 1.2,
+    "upkeep": 0.8,
+    "unit_cost": 0.01,
+    "tech": "ladrillo",
+    "attraction": 25,
+    "ticket_value": 2.0,
+    "model": [
+     {
+      "s": "cyl",
+      "size": [
+       4.6,
+       3.2,
+       4.8
+      ],
+      "pos": [
+       0,
+       1.6,
+       0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       3.4,
+       0.2,
+       3.4
+      ],
+      "pos": [
+       0,
+       3.3,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       3.2,
+       0.1,
+       3.2
+      ],
+      "pos": [
+       0,
+       0.06,
+       0
+      ],
+      "c": [
+       0.85,
+       0.78,
+       0.55
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.6,
+       2.4,
+       0.2
+      ],
+      "pos": [
+       0,
+       1.2,
+       4.7
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.2,
+       1.2,
+       0.2
+      ],
+      "pos": [
+       0,
+       4.0,
+       4.6
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.8,
+       0.5,
+       0.05
+      ],
+      "pos": [
+       0.4,
+       4.3,
+       4.6
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Coliseo de espectáculos",
+    "cost": 8000,
+    "materials": {
+     "madera": 30,
+     "piedra": 250
+    },
+    "build_days": 70,
+    "workers": 8,
+    "jobs": 10,
+    "prod_per_worker": 90,
+    "quality": 1.4,
+    "upkeep": 2.0,
+    "unit_cost": 0.01,
+    "tech": "acero_estructural",
+    "attraction": 40,
+    "ticket_value": 2.5,
+    "model": [
+     {
+      "s": "cyl",
+      "size": [
+       5.6,
+       5.0,
+       5.8
+      ],
+      "pos": [
+       0,
+       2.5,
+       0
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       4.2,
+       0.1,
+       4.2
+      ],
+      "pos": [
+       0,
+       0.06,
+       0
+      ],
+      "c": [
+       0.85,
+       0.78,
+       0.55
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       5.9,
+       0.4,
+       5.9
+      ],
+      "pos": [
+       0,
+       5.2,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.0,
+       3.0,
+       0.3
+      ],
+      "pos": [
+       0,
+       1.5,
+       5.7
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.2,
+       1.6,
+       0.2
+      ],
+      "pos": [
+       2.5,
+       6.2,
+       4.9
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.2,
+       1.6,
+       0.2
+      ],
+      "pos": [
+       -2.5,
+       6.2,
+       4.9
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Estadio",
+    "cost": 25000,
+    "materials": {
+     "madera": 50,
+     "piedra": 500
+    },
+    "build_days": 120,
+    "workers": 14,
+    "jobs": 20,
+    "prod_per_worker": 150,
+    "quality": 1.8,
+    "upkeep": 5.0,
+    "unit_cost": 0.02,
+    "tech": "television",
+    "attraction": 90,
+    "ticket_value": 4.0,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       14.0,
+       5.5,
+       3.0
+      ],
+      "pos": [
+       0,
+       2.75,
+       -5.5
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       14.0,
+       5.5,
+       3.0
+      ],
+      "pos": [
+       0,
+       2.75,
+       5.5
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       3.0,
+       5.5,
+       8.0
+      ],
+      "pos": [
+       -5.5,
+       2.75,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       3.0,
+       5.5,
+       8.0
+      ],
+      "pos": [
+       5.5,
+       2.75,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.0,
+       0.08,
+       8.0
+      ],
+      "pos": [
+       0,
+       0.04,
+       0
+      ],
+      "c": [
+       0.3,
+       0.62,
+       0.3
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.5,
+       0.1,
+       8.0
+      ],
+      "pos": [
+       0,
+       0.09,
+       0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       14.4,
+       0.4,
+       3.6
+      ],
+      "pos": [
+       0,
+       7.2,
+       -5.6
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ],
+      "rx": -12
+     },
+     {
+      "s": "box",
+      "size": [
+       0.3,
+       9.0,
+       0.3
+      ],
+      "pos": [
+       -6.8,
+       4.5,
+       -6.8
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.6,
+       0.8,
+       0.3
+      ],
+      "pos": [
+       -6.8,
+       9.0,
+       -6.8
+      ],
+      "c": [
+       0.95,
+       0.95,
+       0.8
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.3,
+       9.0,
+       0.3
+      ],
+      "pos": [
+       6.8,
+       4.5,
+       6.8
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.6,
+       0.8,
+       0.3
+      ],
+      "pos": [
+       6.8,
+       9.0,
+       6.8
+      ],
+      "c": [
+       0.95,
+       0.95,
+       0.8
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "termas": {
+  "label": "Termas",
+  "category": "negocio",
+  "sector": "Turismo",
+  "order": 43,
+  "product": "entrada",
+  "skill": "comercio",
+  "base_wage": 2.0,
+  "footprint": 7.0,
+  "tourism": "atraccion",
+  "description": "Baños de aguas termales. Mucho más atractivas en mapas de montaña.",
+  "levels": [
+   {
+    "label": "Baños termales",
+    "cost": 1800,
+    "materials": {
+     "madera": 20,
+     "piedra": 60
+    },
+    "build_days": 30,
+    "workers": 3,
+    "jobs": 3,
+    "prod_per_worker": 25,
+    "quality": 1.3,
+    "upkeep": 0.5,
+    "unit_cost": 0.02,
+    "tech": "acueductos",
+    "attraction": 18,
+    "ticket_value": 2.0,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6.0,
+       0.4,
+       5.0
+      ],
+      "pos": [
+       0,
+       0.2,
+       0
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       4.4,
+       0.1,
+       3.2
+      ],
+      "pos": [
+       0,
+       0.42,
+       0.4
+      ],
+      "c": [
+       0.25,
+       0.5,
+       0.7
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       6.0,
+       2.4,
+       1.2
+      ],
+      "pos": [
+       0,
+       1.4,
+       -2.2
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.4,
+       1.2,
+       1.8
+      ],
+      "pos": [
+       0,
+       3.2,
+       -2.2
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ],
+      "rot": 0
+     },
+     {
+      "s": "sphere",
+      "size": [
+       0.8,
+       0.5,
+       0.8
+      ],
+      "pos": [
+       1.2,
+       0.7,
+       0.6
+      ],
+      "c": [
+       0.92,
+       0.92,
+       0.95
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Balneario",
+    "cost": 6000,
+    "materials": {
+     "madera": 30,
+     "piedra": 180
+    },
+    "build_days": 50,
+    "workers": 6,
+    "jobs": 8,
+    "prod_per_worker": 35,
+    "quality": 1.6,
+    "upkeep": 1.5,
+    "unit_cost": 0.03,
+    "tech": "plomeria_moderna",
+    "attraction": 35,
+    "ticket_value": 3.0,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       8.0,
+       0.4,
+       6.5
+      ],
+      "pos": [
+       0,
+       0.2,
+       0
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       5.0,
+       0.1,
+       3.6
+      ],
+      "pos": [
+       0,
+       0.42,
+       1.2
+      ],
+      "c": [
+       0.25,
+       0.5,
+       0.7
+      ]
+     },
+     {
+      "s": "floors",
+      "size": [
+       8.0,
+       5.0,
+       2.6
+      ],
+      "pos": [
+       0,
+       0.2,
+       -2.3
+      ],
+      "floors": 2,
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ],
+      "c2": [
+       0.55,
+       0.35,
+       0.25
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       8.4,
+       1.4,
+       3.0
+      ],
+      "pos": [
+       0,
+       5.9,
+       -2.3
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.25,
+       2.0,
+       0.25
+      ],
+      "pos": [
+       -3.2,
+       1.2,
+       2.8
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.25,
+       2.0,
+       0.25
+      ],
+      "pos": [
+       3.2,
+       1.2,
+       2.8
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Spa termal",
+    "cost": 16000,
+    "materials": {
+     "madera": 20,
+     "piedra": 350
+    },
+    "build_days": 80,
+    "workers": 10,
+    "jobs": 14,
+    "prod_per_worker": 50,
+    "quality": 2.0,
+    "upkeep": 3.5,
+    "unit_cost": 0.04,
+    "tech": "electricidad",
+    "attraction": 55,
+    "ticket_value": 5.0,
+    "min_education": 1,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       10.0,
+       0.4,
+       8.0
+      ],
+      "pos": [
+       0,
+       0.2,
+       0
+      ],
+      "c": [
+       0.85,
+       0.85,
+       0.82
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       6.0,
+       0.1,
+       4.0
+      ],
+      "pos": [
+       -1.0,
+       0.42,
+       1.6
+      ],
+      "c": [
+       0.25,
+       0.5,
+       0.7
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       1.4,
+       0.1,
+       1.4
+      ],
+      "pos": [
+       3.2,
+       0.45,
+       2.2
+      ],
+      "c": [
+       0.25,
+       0.5,
+       0.7
+      ]
+     },
+     {
+      "s": "floors",
+      "size": [
+       10.0,
+       7.0,
+       3.0
+      ],
+      "pos": [
+       0,
+       0.2,
+       -2.6
+      ],
+      "floors": 3,
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       10.4,
+       0.3,
+       3.4
+      ],
+      "pos": [
+       0,
+       7.35,
+       -2.6
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       1.2,
+       1.2,
+       1.2
+      ],
+      "pos": [
+       4.2,
+       0.9,
+       -0.4
+      ],
+      "c": [
+       0.3,
+       0.55,
+       0.28
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       1.2,
+       1.2,
+       1.2
+      ],
+      "pos": [
+       -4.4,
+       0.9,
+       -0.2
+      ],
+      "c": [
+       0.3,
+       0.55,
+       0.28
+      ]
+     }
+    ]
+   }
+  ],
+  "map_bonus": {
+   "montana": 1.6,
+   "rio": 1.2
+  }
+ },
+ "teatro_turistico": {
+  "label": "Teatro de temporada",
+  "category": "negocio",
+  "sector": "Turismo",
+  "order": 44,
+  "product": "entrada",
+  "skill": "comercio",
+  "base_wage": 2.0,
+  "footprint": 7.0,
+  "tourism": "atraccion",
+  "description": "Espectáculos para visitantes y vecinos: corral de comedias, teatro de ópera y luego teatro y cine.",
+  "levels": [
+   {
+    "label": "Corral de comedias",
+    "cost": 1500,
+    "materials": {
+     "madera": 50,
+     "piedra": 20
+    },
+    "build_days": 25,
+    "workers": 3,
+    "jobs": 4,
+    "prod_per_worker": 40,
+    "quality": 1.2,
+    "upkeep": 0.4,
+    "unit_cost": 0.01,
+    "tech": "arte_escenico",
+    "attraction": 15,
+    "ticket_value": 1.5,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6.0,
+       3.6,
+       5.0
+      ],
+      "pos": [
+       0,
+       1.8,
+       0
+      ],
+      "c": [
+       0.8,
+       0.7,
+       0.55
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.4,
+       1.6,
+       5.4
+      ],
+      "pos": [
+       0,
+       4.4,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       6.2,
+       0.4,
+       0.8
+      ],
+      "pos": [
+       0,
+       2.6,
+       2.8
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.6,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       2.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.8,
+       0.8,
+       0.05
+      ],
+      "pos": [
+       0,
+       3.1,
+       2.55
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Teatro de ópera",
+    "cost": 7000,
+    "materials": {
+     "madera": 40,
+     "piedra": 200
+    },
+    "build_days": 70,
+    "workers": 8,
+    "jobs": 10,
+    "prod_per_worker": 60,
+    "quality": 1.6,
+    "upkeep": 2.0,
+    "unit_cost": 0.02,
+    "tech": "gas",
+    "attraction": 35,
+    "ticket_value": 2.5,
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       8.0,
+       8.0,
+       7.0
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.92,
+       0.86,
+       0.72
+      ],
+      "c2": [
+       0.55,
+       0.2,
+       0.2
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       8.4,
+       1.8,
+       7.4
+      ],
+      "pos": [
+       0,
+       8.9,
+       0
+      ],
+      "c": [
+       0.3,
+       0.45,
+       0.4
+      ],
+      "rot": 90
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.35,
+       5.0,
+       0.35
+      ],
+      "pos": [
+       -2.5,
+       2.5,
+       3.9
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.35,
+       5.0,
+       0.35
+      ],
+      "pos": [
+       -0.8,
+       2.5,
+       3.9
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.35,
+       5.0,
+       0.35
+      ],
+      "pos": [
+       0.8,
+       2.5,
+       3.9
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.35,
+       5.0,
+       0.35
+      ],
+      "pos": [
+       2.5,
+       2.5,
+       3.9
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       7.0,
+       1.2,
+       1.2
+      ],
+      "pos": [
+       0,
+       5.6,
+       3.9
+      ],
+      "c": [
+       0.92,
+       0.86,
+       0.72
+      ],
+      "rot": 0
+     }
+    ]
+   },
+   {
+    "label": "Teatro y cine",
+    "cost": 15000,
+    "materials": {
+     "madera": 30,
+     "piedra": 300
+    },
+    "build_days": 80,
+    "workers": 10,
+    "jobs": 14,
+    "prod_per_worker": 100,
+    "quality": 1.8,
+    "upkeep": 3.0,
+    "unit_cost": 0.02,
+    "tech": "electricidad",
+    "attraction": 50,
+    "ticket_value": 2.0,
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       9.0,
+       9.0,
+       8.0
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 3,
+      "c": [
+       0.85,
+       0.82,
+       0.78
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       9.4,
+       0.4,
+       8.4
+      ],
+      "pos": [
+       0,
+       9.2,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       6.0,
+       1.6,
+       0.4
+      ],
+      "pos": [
+       0,
+       6.0,
+       4.2
+      ],
+      "c": [
+       0.95,
+       0.85,
+       0.35
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       5.6,
+       1.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       6.0,
+       4.42
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.0,
+       0.3,
+       2.0
+      ],
+      "pos": [
+       0,
+       3.4,
+       5.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.6,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.3,
+       4.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "museo": {
+  "label": "Museo",
+  "category": "negocio",
+  "sector": "Turismo",
+  "order": 45,
+  "product": "entrada",
+  "skill": "ciencia",
+  "base_wage": 2.3,
+  "footprint": 8.5,
+  "tourism": "atraccion",
+  "description": "Colecciones de historia y ciencia. Sus niveles exigen personal con estudios.",
+  "levels": [
+   {
+    "label": "Gabinete de curiosidades",
+    "cost": 1200,
+    "materials": {
+     "madera": 20,
+     "piedra": 40
+    },
+    "build_days": 20,
+    "workers": 3,
+    "jobs": 2,
+    "prod_per_worker": 30,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0.005,
+    "tech": "metodo_cientifico",
+    "attraction": 12,
+    "ticket_value": 1.0,
+    "min_education": 1,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6.0,
+       3.8,
+       5.0
+      ],
+      "pos": [
+       0,
+       1.9,
+       0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.4,
+       1.4,
+       5.4
+      ],
+      "pos": [
+       0,
+       4.5,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       1.4,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       2.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.9,
+       1.0,
+       0.1
+      ],
+      "pos": [
+       -1.8,
+       2.2,
+       2.53
+      ],
+      "c": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.9,
+       1.0,
+       0.1
+      ],
+      "pos": [
+       1.8,
+       2.2,
+       2.53
+      ],
+      "c": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Museo",
+    "cost": 6000,
+    "materials": {
+     "madera": 20,
+     "piedra": 200
+    },
+    "build_days": 60,
+    "workers": 6,
+    "jobs": 5,
+    "prod_per_worker": 60,
+    "quality": 1.4,
+    "upkeep": 1.2,
+    "unit_cost": 0.01,
+    "tech": "investigacion_moderna",
+    "attraction": 30,
+    "ticket_value": 1.8,
+    "min_education": 1,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       9.0,
+       5.0,
+       7.0
+      ],
+      "pos": [
+       0,
+       2.5,
+       0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.8
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       9.4,
+       0.5,
+       7.4
+      ],
+      "pos": [
+       0,
+       5.25,
+       0
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       7.0,
+       1.6,
+       1.8
+      ],
+      "pos": [
+       0,
+       6.3,
+       3.3
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.8
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.35,
+       5.0,
+       0.35
+      ],
+      "pos": [
+       -3.0,
+       2.5,
+       4.0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.35,
+       5.0,
+       0.35
+      ],
+      "pos": [
+       -1.0,
+       2.5,
+       4.0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.35,
+       5.0,
+       0.35
+      ],
+      "pos": [
+       1.0,
+       2.5,
+       4.0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.35,
+       5.0,
+       0.35
+      ],
+      "pos": [
+       3.0,
+       2.5,
+       4.0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.0,
+       0.5,
+       1.6
+      ],
+      "pos": [
+       0,
+       0.25,
+       4.6
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Museo nacional",
+    "cost": 18000,
+    "materials": {
+     "madera": 30,
+     "piedra": 400
+    },
+    "build_days": 100,
+    "workers": 10,
+    "jobs": 10,
+    "prod_per_worker": 100,
+    "quality": 1.8,
+    "upkeep": 3.0,
+    "unit_cost": 0.01,
+    "tech": "television",
+    "attraction": 60,
+    "ticket_value": 2.5,
+    "min_education": 2,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       12.0,
+       6.0,
+       9.0
+      ],
+      "pos": [
+       0,
+       3.0,
+       0
+      ],
+      "c": [
+       0.92,
+       0.92,
+       0.9
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       6.0,
+       3.6,
+       6.0
+      ],
+      "pos": [
+       0,
+       6.2,
+       0
+      ],
+      "c": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       4.0,
+       3.0,
+       0.2
+      ],
+      "pos": [
+       0,
+       1.5,
+       4.55
+      ],
+      "c": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       12.0,
+       0.4,
+       2.0
+      ],
+      "pos": [
+       0,
+       0.2,
+       5.5
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.4,
+       2.0,
+       0.4
+      ],
+      "pos": [
+       -4.5,
+       1.2,
+       6.0
+      ],
+      "c": [
+       0.8,
+       0.6,
+       0.3
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       1.0,
+       1.0,
+       1.0
+      ],
+      "pos": [
+       -4.5,
+       2.6,
+       6.0
+      ],
+      "c": [
+       0.8,
+       0.6,
+       0.3
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "balneario_playa": {
+  "label": "Playa y balneario",
+  "category": "negocio",
+  "sector": "Turismo",
+  "order": 46,
+  "product": "entrada",
+  "skill": "comercio",
+  "base_wage": 2.0,
+  "footprint": 7.5,
+  "tourism": "atraccion",
+  "description": "Casetas de playa, paseo marítimo y club de playa. Solo en mapas de costa.",
+  "levels": [
+   {
+    "label": "Casetas de playa",
+    "cost": 500,
+    "materials": {
+     "madera": 30
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 50,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.005,
+    "tech": "",
+    "attraction": 14,
+    "ticket_value": 0.8,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       7.0,
+       0.06,
+       5.0
+      ],
+      "pos": [
+       0,
+       0.03,
+       0
+      ],
+      "c": [
+       0.85,
+       0.78,
+       0.55
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.6,
+       2.0,
+       1.6
+      ],
+      "pos": [
+       -2.2,
+       1.0,
+       -1.2
+      ],
+      "c": [
+       0.3,
+       0.55,
+       0.7
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.6,
+       2.0,
+       1.6
+      ],
+      "pos": [
+       0,
+       1.0,
+       -1.2
+      ],
+      "c": [
+       0.9,
+       0.9,
+       0.9
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.6,
+       2.0,
+       1.6
+      ],
+      "pos": [
+       2.2,
+       1.0,
+       -1.2
+      ],
+      "c": [
+       0.8,
+       0.3,
+       0.3
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.05,
+       2.0,
+       0.05
+      ],
+      "pos": [
+       1.0,
+       1.0,
+       1.5
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       1.2,
+       0.3,
+       0.05
+      ],
+      "pos": [
+       1.0,
+       2.0,
+       1.5
+      ],
+      "c": [
+       0.9,
+       0.75,
+       0.25
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Paseo marítimo",
+    "cost": 5000,
+    "materials": {
+     "madera": 30,
+     "piedra": 150
+    },
+    "build_days": 50,
+    "workers": 6,
+    "jobs": 6,
+    "prod_per_worker": 80,
+    "quality": 1.4,
+    "upkeep": 1.2,
+    "unit_cost": 0.01,
+    "tech": "ferrocarril",
+    "attraction": 35,
+    "ticket_value": 1.5,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       10.0,
+       0.06,
+       6.0
+      ],
+      "pos": [
+       0,
+       0.03,
+       0
+      ],
+      "c": [
+       0.85,
+       0.78,
+       0.55
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       10.0,
+       0.5,
+       1.8
+      ],
+      "pos": [
+       0,
+       0.25,
+       -2.0
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       4.0,
+       3.0,
+       2.4
+      ],
+      "pos": [
+       -2.5,
+       1.5,
+       -2.0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.4,
+       1.2,
+       2.8
+      ],
+      "pos": [
+       -2.5,
+       3.6,
+       -2.0
+      ],
+      "c": [
+       0.25,
+       0.45,
+       0.75
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.05,
+       2.2,
+       0.05
+      ],
+      "pos": [
+       2.0,
+       1.1,
+       1.0
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       1.3,
+       0.3,
+       0.05
+      ],
+      "pos": [
+       2.0,
+       2.2,
+       1.0
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.05,
+       2.2,
+       0.05
+      ],
+      "pos": [
+       4.0,
+       1.1,
+       1.5
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       1.3,
+       0.3,
+       0.05
+      ],
+      "pos": [
+       4.0,
+       2.2,
+       1.5
+      ],
+      "c": [
+       0.9,
+       0.75,
+       0.25
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Club de playa",
+    "cost": 15000,
+    "materials": {
+     "madera": 30,
+     "piedra": 300
+    },
+    "build_days": 80,
+    "workers": 10,
+    "jobs": 12,
+    "prod_per_worker": 120,
+    "quality": 1.8,
+    "upkeep": 3.0,
+    "unit_cost": 0.02,
+    "tech": "aviacion",
+    "attraction": 65,
+    "ticket_value": 3.0,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       12.0,
+       0.06,
+       8.0
+      ],
+      "pos": [
+       0,
+       0.03,
+       0
+      ],
+      "c": [
+       0.85,
+       0.78,
+       0.55
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       5.0,
+       0.1,
+       3.0
+      ],
+      "pos": [
+       -2.5,
+       0.12,
+       1.5
+      ],
+      "c": [
+       0.25,
+       0.5,
+       0.7
+      ]
+     },
+     {
+      "s": "floors",
+      "size": [
+       7.0,
+       6.0,
+       3.0
+      ],
+      "pos": [
+       1.5,
+       0,
+       -2.5
+      ],
+      "floors": 2,
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.4,
+       0.3,
+       3.4
+      ],
+      "pos": [
+       1.5,
+       6.15,
+       -2.5
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.05,
+       2.2,
+       0.05
+      ],
+      "pos": [
+       3.5,
+       1.1,
+       2.0
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       1.3,
+       0.3,
+       0.05
+      ],
+      "pos": [
+       3.5,
+       2.2,
+       2.0
+      ],
+      "c": [
+       0.25,
+       0.45,
+       0.75
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       1.0,
+       2.2,
+       1.0
+      ],
+      "pos": [
+       -5.0,
+       1.5,
+       -3.0
+      ],
+      "c": [
+       0.3,
+       0.55,
+       0.28
+      ]
+     }
+    ]
+   }
+  ],
+  "map_types": [
+   "costa"
+  ]
+ },
+ "hospedaje": {
+  "label": "Hospedaje",
+  "category": "negocio",
+  "sector": "Turismo",
+  "order": 47,
+  "product": "alojamiento",
+  "skill": "comercio",
+  "base_wage": 2.0,
+  "footprint": 5.0,
+  "tourism": "hotel",
+  "description": "Alojamiento para turistas que pasan la noche (camas = empleados × camas por empleado). Sin camas, muchos visitantes de pueblos lejanos no vienen. El precio es por noche.",
+  "levels": [
+   {
+    "label": "Mesón de viajeros",
+    "cost": 700,
+    "materials": {
+     "madera": 35,
+     "piedra": 10
+    },
+    "build_days": 14,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 6,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.05,
+    "tech": "",
+    "attraction": 3,
+    "ticket_value": 1.0,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5.5,
+       3.0,
+       4.5
+      ],
+      "pos": [
+       0,
+       1.5,
+       0
+      ],
+      "c": [
+       0.82,
+       0.72,
+       0.55
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.0,
+       1.6,
+       5.0
+      ],
+      "pos": [
+       0,
+       3.8,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       1.2,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       2.28
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.5,
+       0.05
+      ],
+      "pos": [
+       0,
+       2.5,
+       2.3
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.1,
+       1.2,
+       1.2
+      ],
+      "pos": [
+       3.0,
+       0.6,
+       1.5
+      ],
+      "c": [
+       0.45,
+       0.3,
+       0.18
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Hotel",
+    "cost": 4000,
+    "materials": {
+     "madera": 40,
+     "piedra": 120
+    },
+    "build_days": 40,
+    "workers": 5,
+    "jobs": 6,
+    "prod_per_worker": 8,
+    "quality": 1.4,
+    "upkeep": 0.8,
+    "unit_cost": 0.08,
+    "tech": "arquitectura_urbana",
+    "attraction": 8,
+    "ticket_value": 2.0,
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       7.0,
+       9.0,
+       5.5
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 3,
+      "c": [
+       0.85,
+       0.75,
+       0.6
+      ],
+      "c2": [
+       0.35,
+       0.3,
+       0.25
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.4,
+       0.4,
+       5.9
+      ],
+      "pos": [
+       0,
+       9.2,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.6,
+       2.4,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.2,
+       2.78
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       3.0,
+       0.2,
+       1.2
+      ],
+      "pos": [
+       0,
+       2.8,
+       3.3
+      ],
+      "c": [
+       0.75,
+       0.2,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       0.6,
+       0.05
+      ],
+      "pos": [
+       0,
+       7.0,
+       2.8
+      ],
+      "c": [
+       0.9,
+       0.75,
+       0.25
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Gran hotel",
+    "cost": 12000,
+    "materials": {
+     "madera": 40,
+     "piedra": 300
+    },
+    "build_days": 70,
+    "workers": 10,
+    "jobs": 14,
+    "prod_per_worker": 10,
+    "quality": 1.8,
+    "upkeep": 2.2,
+    "unit_cost": 0.12,
+    "tech": "electricidad",
+    "attraction": 15,
+    "ticket_value": 3.5,
+    "min_education": 1,
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       9.0,
+       16.0,
+       7.0
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 5,
+      "c": [
+       0.9,
+       0.85,
+       0.75
+      ],
+      "c2": [
+       0.25,
+       0.35,
+       0.5
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       9.4,
+       0.5,
+       7.4
+      ],
+      "pos": [
+       0,
+       16.25,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       4.0,
+       0.3,
+       2.2
+      ],
+      "pos": [
+       0,
+       3.0,
+       4.4
+      ],
+      "c": [
+       0.6,
+       0.15,
+       0.15
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.0,
+       2.6,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.3,
+       3.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       3.2,
+       1.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       14.0,
+       3.55
+      ],
+      "c": [
+       0.9,
+       0.75,
+       0.25
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Hotel resort",
+    "cost": 30000,
+    "materials": {
+     "madera": 40,
+     "piedra": 600
+    },
+    "build_days": 120,
+    "workers": 16,
+    "jobs": 25,
+    "prod_per_worker": 12,
+    "quality": 2.2,
+    "upkeep": 5.0,
+    "unit_cost": 0.2,
+    "tech": "aviacion",
+    "attraction": 30,
+    "ticket_value": 6.0,
+    "min_education": 1,
+    "required_profession": "administrador",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       10.0,
+       30.0,
+       8.0
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 10,
+      "c": [
+       0.92,
+       0.92,
+       0.95
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       10.4,
+       0.6,
+       8.4
+      ],
+      "pos": [
+       0,
+       30.3,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.0,
+       0.1,
+       4.0
+      ],
+      "pos": [
+       0,
+       0.1,
+       7.5
+      ],
+      "c": [
+       0.25,
+       0.5,
+       0.7
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.0,
+       0.3,
+       5.0
+      ],
+      "pos": [
+       0,
+       0.05,
+       7.5
+      ],
+      "c": [
+       0.85,
+       0.85,
+       0.82
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       1.2,
+       2.5,
+       1.2
+      ],
+      "pos": [
+       -4.5,
+       1.25,
+       8.0
+      ],
+      "c": [
+       0.3,
+       0.55,
+       0.28
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       1.2,
+       2.5,
+       1.2
+      ],
+      "pos": [
+       4.5,
+       1.25,
+       8.0
+      ],
+      "c": [
+       0.3,
+       0.55,
+       0.28
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.8,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.4,
+       4.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "medios": {
+  "label": "Medios de comunicación",
+  "category": "negocio",
+  "sector": "Medios",
+  "order": 48,
+  "product": "publicidad",
+  "skill": "comercio",
+  "base_wage": 2.4,
+  "footprint": 5.0,
+  "tourism": "medio",
+  "description": "Periódico → emisora de radio → canal de televisión. Tus campañas en ese medio (y en los anteriores) cuestan menos, y vende espacios publicitarios a anunciantes de los pueblos conectados (dinero que entra de afuera).",
+  "levels": [
+   {
+    "label": "Periódico",
+    "cost": 1500,
+    "materials": {
+     "madera": 20,
+     "piedra": 40
+    },
+    "build_days": 25,
+    "workers": 3,
+    "jobs": 4,
+    "prod_per_worker": 3,
+    "quality": 1.0,
+    "upkeep": 0.4,
+    "unit_cost": 0.02,
+    "tech": "periodico",
+    "media_channel": "periodico",
+    "ad_discount": 0.5,
+    "min_education": 1,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5.5,
+       3.6,
+       4.5
+      ],
+      "pos": [
+       0,
+       1.8,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       5.9,
+       0.4,
+       4.9
+      ],
+      "pos": [
+       0,
+       3.8,
+       0
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.56
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.2,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       2.28
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       3.0,
+       0.7,
+       0.05
+      ],
+      "pos": [
+       0,
+       2.9,
+       2.28
+      ],
+      "c": [
+       0.95,
+       0.93,
+       0.85
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.3,
+       1.2,
+       0.3
+      ],
+      "pos": [
+       2.0,
+       4.6,
+       -1.5
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Emisora de radio",
+    "cost": 6000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 50,
+    "workers": 6,
+    "jobs": 8,
+    "prod_per_worker": 4,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0.03,
+    "tech": "radio",
+    "media_channel": "radio",
+    "ad_discount": 0.6,
+    "min_education": 1,
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       6.0,
+       6.0,
+       5.0
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.85,
+       0.85,
+       0.8
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       6.4,
+       0.3,
+       5.4
+      ],
+      "pos": [
+       0,
+       6.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.25,
+       12.0,
+       0.25
+      ],
+      "pos": [
+       1.8,
+       12.3,
+       -1.5
+      ],
+      "c": [
+       0.8,
+       0.2,
+       0.2
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.6,
+       0.1,
+       0.1
+      ],
+      "pos": [
+       1.8,
+       16.0,
+       -1.5
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.2,
+       0.1,
+       0.1
+      ],
+      "pos": [
+       1.8,
+       13.0,
+       -1.5
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       0.5,
+       0.5,
+       0.5
+      ],
+      "pos": [
+       1.8,
+       18.4,
+       -1.5
+      ],
+      "c": [
+       1.0,
+       0.3,
+       0.2
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Canal de televisión",
+    "cost": 20000,
+    "materials": {
+     "madera": 30,
+     "piedra": 350
+    },
+    "build_days": 90,
+    "workers": 10,
+    "jobs": 16,
+    "prod_per_worker": 5,
+    "quality": 1.0,
+    "upkeep": 3.5,
+    "unit_cost": 0.05,
+    "tech": "television",
+    "media_channel": "television",
+    "ad_discount": 0.7,
+    "min_education": 2,
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       8.0,
+       12.0,
+       6.0
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 4,
+      "c": [
+       0.9,
+       0.9,
+       0.92
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.4,
+       0.4,
+       6.4
+      ],
+      "pos": [
+       0,
+       12.2,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.3,
+       16.0,
+       0.3
+      ],
+      "pos": [
+       2.5,
+       20.4,
+       -2.0
+      ],
+      "c": [
+       0.85,
+       0.85,
+       0.85
+      ]
+     },
+     {
+      "s": "sphere",
+      "size": [
+       2.4,
+       0.6,
+       2.4
+      ],
+      "pos": [
+       0,
+       13.0,
+       1.0
+      ],
+      "c": [
+       0.9,
+       0.88,
+       0.82
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.3,
+       0.3,
+       0.3
+      ],
+      "pos": [
+       2.5,
+       28.5,
+       -2.0
+      ],
+      "c": [
+       1.0,
+       0.2,
+       0.2
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

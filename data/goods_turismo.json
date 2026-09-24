@@ -1,0 +1,28 @@
+{
+ "_nota": "Fase 8 — servicios turísticos y de medios (no almacenables: la capacidad del día que no se vende se pierde).",
+ "entrada": {
+  "label": "Entradas a atracciones",
+  "base_price": 0.5,
+  "import_price": 0,
+  "storable": false,
+  "order": 30,
+  "discretionary": true,
+  "tourism": true
+ },
+ "alojamiento": {
+  "label": "Alojamiento (noches)",
+  "base_price": 1.3,
+  "import_price": 0,
+  "storable": false,
+  "order": 31,
+  "tourism": true
+ },
+ "publicidad": {
+  "label": "Espacio publicitario",
+  "base_price": 1.5,
+  "import_price": 0,
+  "storable": false,
+  "order": 32,
+  "internal": true
+ }
+}

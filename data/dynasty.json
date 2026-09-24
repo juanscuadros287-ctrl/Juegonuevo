@@ -1,0 +1,11 @@
+{
+ "_nota": "Fase 8 — herencia y dinastía. Impuesto a la herencia: usa 'inheritance_tax' del gobierno si existe; si no, se interpola entre min y max según el campo 'social' del gobierno (0 = liberal, 1 = muy social). Se cobra sobre el patrimonio neto que supera la exención (× dificultad × inflación); lo que no alcance a pagarse en efectivo queda como deuda con el tesoro en cuotas mensuales.",
+ "inheritance_tax_default": 0.1,
+ "inheritance_tax_min": 0.05,
+ "inheritance_tax_max": 0.3,
+ "exempt_amount": 3000,
+ "installment_months": 12,
+ "installment_surcharge": 0.02,
+ "old_age_warning": 60,
+ "warning_every_years": 2
+}

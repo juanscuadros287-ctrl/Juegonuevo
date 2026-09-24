@@ -1,0 +1,2693 @@
+{
+ "_nota": "Fase 8 — industria avanzada (solo datos). Esquema acordado con la Fase 6: en cada nivel inputs {bien: cantidad por unidad} se consumen del almacén, output 'warehouse' envía el producto al almacén, product = bien producido. Los productos caros se exportan en la Fase 7.",
+ "textil": {
+  "label": "Industria textil",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 60,
+  "product": "tela",
+  "skill": "artesania",
+  "base_wage": 2.0,
+  "footprint": 6.0,
+  "industrial": true,
+  "output": "warehouse",
+  "description": "Hila y teje lana o algodón del almacén para producir tela (insumo de la confección y de autos y aviones).",
+  "levels": [
+   {
+    "label": "Taller de telares",
+    "cost": 900,
+    "materials": {
+     "madera": 30,
+     "piedra": 20
+    },
+    "build_days": 20,
+    "workers": 3,
+    "jobs": 5,
+    "prod_per_worker": 1.6,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0.0,
+    "tech": "telares",
+    "inputs": {
+     "lana": 1.2
+    },
+    "pollution": 0,
+    "product": "tela",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5.9,
+       3.2,
+       5
+      ],
+      "pos": [
+       0.0,
+       1.6,
+       0
+      ],
+      "c": [
+       0.8,
+       0.72,
+       0.58
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.0,
+       1.4,
+       5.2
+      ],
+      "pos": [
+       0.0,
+       3.9000000000000004,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       2.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Fábrica textil",
+    "cost": 4500,
+    "materials": {
+     "madera": 40,
+     "piedra": 140
+    },
+    "build_days": 45,
+    "workers": 6,
+    "jobs": 12,
+    "prod_per_worker": 2.6,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0.0,
+    "tech": "fabricas",
+    "inputs": {
+     "algodon": 1.0
+    },
+    "pollution": 2,
+    "product": "tela",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4.9,
+       5,
+       7
+      ],
+      "pos": [
+       -2.5,
+       2.5,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.0,
+       1.4,
+       7.2
+      ],
+      "pos": [
+       -2.5,
+       5.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       4.9,
+       5,
+       7
+      ],
+      "pos": [
+       2.5,
+       2.5,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.0,
+       1.4,
+       7.2
+      ],
+      "pos": [
+       2.5,
+       5.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       10.0,
+       0.6
+      ],
+      "pos": [
+       4.0,
+       5.0,
+       -2.5
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       10.0,
+       0.6
+      ],
+      "pos": [
+       2.4,
+       5.0,
+       -2.5
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       3.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Textil moderna",
+    "cost": 14000,
+    "materials": {
+     "madera": 30,
+     "piedra": 300
+    },
+    "build_days": 80,
+    "workers": 10,
+    "jobs": 20,
+    "prod_per_worker": 4.0,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "inputs": {
+     "algodon": 1.0
+    },
+    "pollution": 2,
+    "required_profession": "ingeniero",
+    "product": "tela",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       12,
+       7,
+       8
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.85,
+       0.85,
+       0.82
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       12.4,
+       0.3,
+       8.4
+      ],
+      "pos": [
+       0,
+       7.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.4,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.2,
+       4.03
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "confeccion": {
+  "label": "Confección de ropa",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 61,
+  "product": "ropa_fina",
+  "skill": "artesania",
+  "base_wage": 2.1,
+  "footprint": 5.0,
+  "industrial": true,
+  "output": "warehouse",
+  "description": "Corta y cose tela del almacén para producir ropa fina, un producto de exportación.",
+  "levels": [
+   {
+    "label": "Taller de sastrería",
+    "cost": 800,
+    "materials": {
+     "madera": 25,
+     "piedra": 15
+    },
+    "build_days": 15,
+    "workers": 2,
+    "jobs": 4,
+    "prod_per_worker": 0.8,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0.0,
+    "tech": "tapiceria_industrial",
+    "inputs": {
+     "tela": 1.5
+    },
+    "pollution": 0,
+    "product": "ropa_fina",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4.9,
+       3.0,
+       4.5
+      ],
+      "pos": [
+       0.0,
+       1.5,
+       0
+      ],
+      "c": [
+       0.85,
+       0.8,
+       0.7
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.0,
+       1.4,
+       4.7
+      ],
+      "pos": [
+       0.0,
+       3.7,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       2.28
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Fábrica de confección",
+    "cost": 5000,
+    "materials": {
+     "madera": 30,
+     "piedra": 150
+    },
+    "build_days": 45,
+    "workers": 6,
+    "jobs": 14,
+    "prod_per_worker": 1.5,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0.0,
+    "tech": "fabricas",
+    "inputs": {
+     "tela": 1.4
+    },
+    "pollution": 1,
+    "product": "ropa_fina",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4.4,
+       4.5,
+       6
+      ],
+      "pos": [
+       -2.25,
+       2.25,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.5,
+       1.4,
+       6.2
+      ],
+      "pos": [
+       -2.25,
+       5.2,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       4.4,
+       4.5,
+       6
+      ],
+      "pos": [
+       2.25,
+       2.25,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.5,
+       1.4,
+       6.2
+      ],
+      "pos": [
+       2.25,
+       5.2,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       9.5,
+       0.6
+      ],
+      "pos": [
+       3.5,
+       4.75,
+       -2.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       3.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "siderurgica": {
+  "label": "Siderúrgica",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 62,
+  "product": "acero",
+  "skill": "mineria",
+  "base_wage": 2.4,
+  "footprint": 7.0,
+  "industrial": true,
+  "output": "warehouse",
+  "description": "Funde hierro con carbón para producir acero, base de herramientas, maquinaria, autos y aviones. Contamina mucho.",
+  "levels": [
+   {
+    "label": "Fundición",
+    "cost": 2200,
+    "materials": {
+     "madera": 30,
+     "piedra": 80
+    },
+    "build_days": 30,
+    "workers": 4,
+    "jobs": 6,
+    "prod_per_worker": 1.0,
+    "quality": 1.0,
+    "upkeep": 0.6,
+    "unit_cost": 0.0,
+    "tech": "carbon",
+    "inputs": {
+     "hierro": 1.5,
+     "carbon": 1.0
+    },
+    "pollution": 3,
+    "product": "acero",
+    "skill": "mineria",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5.9,
+       4,
+       5
+      ],
+      "pos": [
+       0.0,
+       2.0,
+       0
+      ],
+      "c": [
+       0.4,
+       0.35,
+       0.32
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.0,
+       1.4,
+       5.2
+      ],
+      "pos": [
+       0.0,
+       4.7,
+       0
+      ],
+      "c": [
+       0.3,
+       0.28,
+       0.26
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       9.0,
+       0.6
+      ],
+      "pos": [
+       2.0,
+       4.5,
+       -1.5
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       2.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Altos hornos",
+    "cost": 9000,
+    "materials": {
+     "madera": 40,
+     "piedra": 250
+    },
+    "build_days": 60,
+    "workers": 8,
+    "jobs": 14,
+    "prod_per_worker": 1.8,
+    "quality": 1.0,
+    "upkeep": 2.0,
+    "unit_cost": 0.0,
+    "tech": "maquina_vapor",
+    "inputs": {
+     "hierro": 1.4,
+     "carbon": 0.9
+    },
+    "pollution": 5,
+    "product": "acero",
+    "skill": "mineria",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5.9,
+       6,
+       7
+      ],
+      "pos": [
+       -3.0,
+       3.0,
+       0
+      ],
+      "c": [
+       0.35,
+       0.3,
+       0.28
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.0,
+       1.4,
+       7.2
+      ],
+      "pos": [
+       -3.0,
+       6.7,
+       0
+      ],
+      "c": [
+       0.25,
+       0.25,
+       0.25
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       5.9,
+       6,
+       7
+      ],
+      "pos": [
+       3.0,
+       3.0,
+       0
+      ],
+      "c": [
+       0.35,
+       0.3,
+       0.28
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.0,
+       1.4,
+       7.2
+      ],
+      "pos": [
+       3.0,
+       6.7,
+       0
+      ],
+      "c": [
+       0.25,
+       0.25,
+       0.25
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       11.0,
+       0.6
+      ],
+      "pos": [
+       5.0,
+       5.5,
+       -2.5
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       11.0,
+       0.6
+      ],
+      "pos": [
+       3.4,
+       5.5,
+       -2.5
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       11.0,
+       0.6
+      ],
+      "pos": [
+       1.7999999999999998,
+       5.5,
+       -2.5
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       3.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Acería moderna",
+    "cost": 22000,
+    "materials": {
+     "madera": 30,
+     "piedra": 450
+    },
+    "build_days": 100,
+    "workers": 12,
+    "jobs": 24,
+    "prod_per_worker": 3.0,
+    "quality": 1.0,
+    "upkeep": 4.5,
+    "unit_cost": 0.0,
+    "tech": "acero_estructural",
+    "inputs": {
+     "hierro": 1.3,
+     "carbon": 0.8
+    },
+    "pollution": 6,
+    "required_profession": "ingeniero",
+    "product": "acero",
+    "skill": "mineria",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       14,
+       9,
+       9
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.6,
+       0.6,
+       0.62
+      ],
+      "c2": [
+       0.35,
+       0.35,
+       0.4
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       14.4,
+       0.3,
+       9.4
+      ],
+      "pos": [
+       0,
+       9.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.4,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.2,
+       4.53
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.6,
+       14,
+       0.8
+      ],
+      "pos": [
+       5.5,
+       7,
+       -3.5
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.6,
+       14,
+       0.8
+      ],
+      "pos": [
+       3.5,
+       7,
+       -3.5
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "fabrica_herramientas": {
+  "label": "Fábrica de herramientas",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 63,
+  "product": "herramientas",
+  "skill": "artesania",
+  "base_wage": 2.2,
+  "footprint": 5.0,
+  "industrial": true,
+  "output": "warehouse",
+  "description": "Forja acero y madera en herramientas: insumo de la maquinaria y los motores, y buen producto de exportación.",
+  "levels": [
+   {
+    "label": "Forja de herramientas",
+    "cost": 1200,
+    "materials": {
+     "madera": 25,
+     "piedra": 40
+    },
+    "build_days": 20,
+    "workers": 3,
+    "jobs": 4,
+    "prod_per_worker": 0.6,
+    "quality": 1.0,
+    "upkeep": 0.4,
+    "unit_cost": 0.0,
+    "tech": "revolucion_industrial",
+    "inputs": {
+     "acero": 0.5,
+     "madera": 0.3
+    },
+    "pollution": 1,
+    "product": "herramientas",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4.9,
+       3.2,
+       4.5
+      ],
+      "pos": [
+       0.0,
+       1.6,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.0,
+       1.4,
+       4.7
+      ],
+      "pos": [
+       0.0,
+       3.9000000000000004,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       8.2,
+       0.6
+      ],
+      "pos": [
+       1.5,
+       4.1,
+       -1.25
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       2.28
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Fábrica de herramientas",
+    "cost": 5500,
+    "materials": {
+     "madera": 30,
+     "piedra": 160
+    },
+    "build_days": 45,
+    "workers": 6,
+    "jobs": 12,
+    "prod_per_worker": 1.1,
+    "quality": 1.0,
+    "upkeep": 1.3,
+    "unit_cost": 0.0,
+    "tech": "fabricas",
+    "inputs": {
+     "acero": 0.5,
+     "madera": 0.25
+    },
+    "pollution": 2,
+    "product": "herramientas",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4.9,
+       4.5,
+       6
+      ],
+      "pos": [
+       -2.5,
+       2.25,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.0,
+       1.4,
+       6.2
+      ],
+      "pos": [
+       -2.5,
+       5.2,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       4.9,
+       4.5,
+       6
+      ],
+      "pos": [
+       2.5,
+       2.25,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.0,
+       1.4,
+       6.2
+      ],
+      "pos": [
+       2.5,
+       5.2,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       9.5,
+       0.6
+      ],
+      "pos": [
+       4.0,
+       4.75,
+       -2.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       9.5,
+       0.6
+      ],
+      "pos": [
+       2.4,
+       4.75,
+       -2.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       3.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "fabrica_maquinaria": {
+  "label": "Fábrica de maquinaria",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 64,
+  "product": "maquinaria",
+  "skill": "construccion",
+  "base_wage": 2.6,
+  "footprint": 7.0,
+  "industrial": true,
+  "output": "warehouse",
+  "description": "Construye máquinas (telares mecánicos, trilladoras, calderas) con acero y herramientas.",
+  "levels": [
+   {
+    "label": "Talleres mecánicos",
+    "cost": 4000,
+    "materials": {
+     "madera": 30,
+     "piedra": 120
+    },
+    "build_days": 40,
+    "workers": 6,
+    "jobs": 8,
+    "prod_per_worker": 0.08,
+    "quality": 1.0,
+    "upkeep": 1.0,
+    "unit_cost": 0.0,
+    "tech": "maquina_vapor",
+    "inputs": {
+     "acero": 5.0,
+     "herramientas": 1.0
+    },
+    "pollution": 2,
+    "min_education": 1,
+    "product": "maquinaria",
+    "skill": "construccion",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       3.9,
+       5,
+       6
+      ],
+      "pos": [
+       -2.0,
+       2.5,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.0,
+       1.4,
+       6.2
+      ],
+      "pos": [
+       -2.0,
+       5.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       3.9,
+       5,
+       6
+      ],
+      "pos": [
+       2.0,
+       2.5,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.0,
+       1.4,
+       6.2
+      ],
+      "pos": [
+       2.0,
+       5.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       10.0,
+       0.6
+      ],
+      "pos": [
+       3.0,
+       5.0,
+       -2.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       3.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Fábrica de maquinaria",
+    "cost": 12000,
+    "materials": {
+     "madera": 30,
+     "piedra": 300
+    },
+    "build_days": 70,
+    "workers": 10,
+    "jobs": 16,
+    "prod_per_worker": 0.12,
+    "quality": 1.0,
+    "upkeep": 2.5,
+    "unit_cost": 0.0,
+    "tech": "fabricas",
+    "inputs": {
+     "acero": 5.0,
+     "herramientas": 1.0
+    },
+    "pollution": 3,
+    "min_education": 1,
+    "required_profession": "ingeniero",
+    "product": "maquinaria",
+    "skill": "construccion",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4.566666666666667,
+       6,
+       8
+      ],
+      "pos": [
+       -4.666666666666666,
+       3.0,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.666666666666667,
+       1.4,
+       8.2
+      ],
+      "pos": [
+       -4.666666666666666,
+       6.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       4.566666666666667,
+       6,
+       8
+      ],
+      "pos": [
+       0.0,
+       3.0,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.666666666666667,
+       1.4,
+       8.2
+      ],
+      "pos": [
+       0.0,
+       6.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       4.566666666666667,
+       6,
+       8
+      ],
+      "pos": [
+       4.666666666666668,
+       3.0,
+       0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.666666666666667,
+       1.4,
+       8.2
+      ],
+      "pos": [
+       4.666666666666668,
+       6.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       11.0,
+       0.6
+      ],
+      "pos": [
+       6.0,
+       5.5,
+       -3.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       11.0,
+       0.6
+      ],
+      "pos": [
+       4.4,
+       5.5,
+       -3.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       4.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "fabrica_motores": {
+  "label": "Fábrica de motores",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 65,
+  "product": "motor",
+  "skill": "construccion",
+  "base_wage": 2.8,
+  "footprint": 7.0,
+  "industrial": true,
+  "output": "warehouse",
+  "description": "Fabrica motores (de vapor y luego de combustión) con acero y herramientas. Insumo de autos y aviones.",
+  "levels": [
+   {
+    "label": "Taller de calderas y motores",
+    "cost": 5000,
+    "materials": {
+     "madera": 30,
+     "piedra": 150
+    },
+    "build_days": 45,
+    "workers": 6,
+    "jobs": 8,
+    "prod_per_worker": 0.06,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0.0,
+    "tech": "maquina_vapor",
+    "inputs": {
+     "acero": 5.0,
+     "herramientas": 2.0
+    },
+    "pollution": 3,
+    "min_education": 1,
+    "product": "motor",
+    "skill": "construccion",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       7.9,
+       5,
+       6
+      ],
+      "pos": [
+       0.0,
+       2.5,
+       0
+      ],
+      "c": [
+       0.45,
+       0.4,
+       0.38
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       8.0,
+       1.4,
+       6.2
+      ],
+      "pos": [
+       0.0,
+       5.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       10.0,
+       0.6
+      ],
+      "pos": [
+       3.0,
+       5.0,
+       -2.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       10.0,
+       0.6
+      ],
+      "pos": [
+       1.4,
+       5.0,
+       -2.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       3.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Fábrica de motores",
+    "cost": 15000,
+    "materials": {
+     "madera": 30,
+     "piedra": 320
+    },
+    "build_days": 80,
+    "workers": 10,
+    "jobs": 16,
+    "prod_per_worker": 0.1,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "automovil",
+    "inputs": {
+     "acero": 4.5,
+     "herramientas": 1.5
+    },
+    "pollution": 3,
+    "min_education": 1,
+    "required_profession": "ingeniero",
+    "product": "motor",
+    "skill": "construccion",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       12,
+       7,
+       8
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.7,
+       0.7,
+       0.72
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       12.4,
+       0.3,
+       8.4
+      ],
+      "pos": [
+       0,
+       7.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.4,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.2,
+       4.03
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "fabrica_electronica": {
+  "label": "Fábrica de electrónica",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 66,
+  "product": "componentes_electronicos",
+  "skill": "ciencia",
+  "base_wage": 3.0,
+  "footprint": 6.5,
+  "industrial": true,
+  "output": "warehouse",
+  "description": "Produce componentes electrónicos (válvulas, circuitos) con plata y acero. Insumo de autos y, sobre todo, aviones.",
+  "levels": [
+   {
+    "label": "Taller eléctrico",
+    "cost": 6000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 45,
+    "workers": 6,
+    "jobs": 8,
+    "prod_per_worker": 0.3,
+    "quality": 1.0,
+    "upkeep": 1.5,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "inputs": {
+     "acero": 0.5,
+     "plata": 0.2
+    },
+    "pollution": 1,
+    "min_education": 1,
+    "product": "componentes_electronicos",
+    "skill": "ciencia",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       8,
+       4,
+       6
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 1,
+      "c": [
+       0.85,
+       0.82,
+       0.75
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.4,
+       0.3,
+       6.4
+      ],
+      "pos": [
+       0,
+       4.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.4,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.2,
+       3.03
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Fábrica de electrónica",
+    "cost": 18000,
+    "materials": {
+     "madera": 20,
+     "piedra": 350
+    },
+    "build_days": 80,
+    "workers": 10,
+    "jobs": 18,
+    "prod_per_worker": 0.5,
+    "quality": 1.0,
+    "upkeep": 3.5,
+    "unit_cost": 0.0,
+    "tech": "electronica",
+    "inputs": {
+     "acero": 0.4,
+     "plata": 0.15,
+     "oro": 0.02
+    },
+    "pollution": 1,
+    "min_education": 2,
+    "required_profession": "ingeniero",
+    "product": "componentes_electronicos",
+    "skill": "ciencia",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       12,
+       7,
+       8
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.92,
+       0.92,
+       0.95
+      ],
+      "c2": [
+       0.2,
+       0.3,
+       0.45
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       12.4,
+       0.3,
+       8.4
+      ],
+      "pos": [
+       0,
+       7.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.4,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.2,
+       4.03
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "industria_automotriz": {
+  "label": "Industria automotriz",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 67,
+  "product": "automovil_bien",
+  "skill": "construccion",
+  "base_wage": 3.2,
+  "footprint": 9.0,
+  "industrial": true,
+  "output": "warehouse",
+  "description": "Ensambla automóviles con acero, motores, tela y componentes. Producto muy caro de exportación.",
+  "levels": [
+   {
+    "label": "Taller de ensamblaje",
+    "cost": 20000,
+    "materials": {
+     "madera": 30,
+     "piedra": 350
+    },
+    "build_days": 80,
+    "workers": 10,
+    "jobs": 14,
+    "prod_per_worker": 0.01,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "industria_automotriz",
+    "inputs": {
+     "acero": 40.0,
+     "motor": 1.0,
+     "tela": 10.0,
+     "componentes_electronicos": 4.0
+    },
+    "pollution": 4,
+    "min_education": 1,
+    "required_profession": "ingeniero",
+    "product": "automovil_bien",
+    "skill": "construccion",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4.566666666666667,
+       6,
+       9
+      ],
+      "pos": [
+       -4.666666666666666,
+       3.0,
+       0
+      ],
+      "c": [
+       0.7,
+       0.7,
+       0.72
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.666666666666667,
+       1.4,
+       9.2
+      ],
+      "pos": [
+       -4.666666666666666,
+       6.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       4.566666666666667,
+       6,
+       9
+      ],
+      "pos": [
+       0.0,
+       3.0,
+       0
+      ],
+      "c": [
+       0.7,
+       0.7,
+       0.72
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.666666666666667,
+       1.4,
+       9.2
+      ],
+      "pos": [
+       0.0,
+       6.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       4.566666666666667,
+       6,
+       9
+      ],
+      "pos": [
+       4.666666666666668,
+       3.0,
+       0
+      ],
+      "c": [
+       0.7,
+       0.7,
+       0.72
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.666666666666667,
+       1.4,
+       9.2
+      ],
+      "pos": [
+       4.666666666666668,
+       6.7,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.45,
+       11.0,
+       0.6
+      ],
+      "pos": [
+       6.0,
+       5.5,
+       -3.5
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       4.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Planta automotriz",
+    "cost": 50000,
+    "materials": {
+     "madera": 40,
+     "piedra": 700
+    },
+    "build_days": 140,
+    "workers": 16,
+    "jobs": 30,
+    "prod_per_worker": 0.015,
+    "quality": 1.0,
+    "upkeep": 7.0,
+    "unit_cost": 0.0,
+    "tech": "electronica",
+    "inputs": {
+     "acero": 36.0,
+     "motor": 1.0,
+     "tela": 8.0,
+     "componentes_electronicos": 5.0
+    },
+    "pollution": 5,
+    "min_education": 2,
+    "required_profession": "ingeniero",
+    "product": "automovil_bien",
+    "skill": "construccion",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       18,
+       9,
+       11
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.85,
+       0.85,
+       0.88
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       18.4,
+       0.3,
+       11.4
+      ],
+      "pos": [
+       0,
+       9.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.4,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.2,
+       5.53
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "aeronautica": {
+  "label": "Industria aeronáutica",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 68,
+  "product": "avion_bien",
+  "skill": "ciencia",
+  "base_wage": 3.6,
+  "footprint": 11.0,
+  "industrial": true,
+  "output": "warehouse",
+  "description": "Construye aviones con acero, motores, tela y mucha electrónica. El producto más caro del juego.",
+  "levels": [
+   {
+    "label": "Hangar aeronáutico",
+    "cost": 45000,
+    "materials": {
+     "madera": 40,
+     "piedra": 700
+    },
+    "build_days": 140,
+    "workers": 14,
+    "jobs": 20,
+    "prod_per_worker": 0.0012,
+    "quality": 1.0,
+    "upkeep": 6.0,
+    "unit_cost": 0.0,
+    "tech": "aeronautica",
+    "inputs": {
+     "acero": 200.0,
+     "motor": 4.0,
+     "tela": 30.0,
+     "componentes_electronicos": 60.0
+    },
+    "pollution": 4,
+    "min_education": 2,
+    "required_profession": "ingeniero",
+    "product": "avion_bien",
+    "skill": "ciencia",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       18,
+       8,
+       12
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 1,
+      "c": [
+       0.8,
+       0.8,
+       0.82
+      ],
+      "c2": [
+       0.3,
+       0.3,
+       0.35
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       18.4,
+       0.3,
+       12.4
+      ],
+      "pos": [
+       0,
+       8.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.4,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.2,
+       6.03
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       18.4,
+       3,
+       12.4
+      ],
+      "pos": [
+       0,
+       9.5,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     }
+    ]
+   },
+   {
+    "label": "Planta aeronáutica",
+    "cost": 90000,
+    "materials": {
+     "madera": 40,
+     "piedra": 1200
+    },
+    "build_days": 200,
+    "workers": 20,
+    "jobs": 36,
+    "prod_per_worker": 0.0016,
+    "quality": 1.0,
+    "upkeep": 12.0,
+    "unit_cost": 0.0,
+    "tech": "electronica",
+    "inputs": {
+     "acero": 180.0,
+     "motor": 4.0,
+     "tela": 25.0,
+     "componentes_electronicos": 55.0
+    },
+    "pollution": 5,
+    "min_education": 2,
+    "required_profession": "ingeniero",
+    "product": "avion_bien",
+    "skill": "ciencia",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       22,
+       10,
+       14
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.9,
+       0.9,
+       0.92
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       22.4,
+       0.3,
+       14.4
+      ],
+      "pos": [
+       0,
+       10.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.4,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.2,
+       7.03
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       22.4,
+       3,
+       14.4
+      ],
+      "pos": [
+       0,
+       11.5,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     }
+    ]
+   }
+  ]
+ },
+ "joyeria": {
+  "label": "Orfebrería y joyería",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 69,
+  "product": "joyas",
+  "skill": "artesania",
+  "base_wage": 2.4,
+  "footprint": 4.0,
+  "industrial": true,
+  "output": "warehouse",
+  "description": "Trabaja oro y plata del almacén en joyas: poco volumen, mucho valor. Se venden afuera.",
+  "levels": [
+   {
+    "label": "Orfebrería",
+    "cost": 900,
+    "materials": {
+     "madera": 15,
+     "piedra": 30
+    },
+    "build_days": 15,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 0.15,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0.0,
+    "tech": "",
+    "inputs": {
+     "oro": 0.2,
+     "plata": 0.5
+    },
+    "pollution": 0,
+    "product": "joyas",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4.4,
+       3.0,
+       4
+      ],
+      "pos": [
+       0.0,
+       1.5,
+       0
+      ],
+      "c": [
+       0.9,
+       0.85,
+       0.7
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.5,
+       1.4,
+       4.2
+      ],
+      "pos": [
+       0.0,
+       3.7,
+       0
+      ],
+      "c": [
+       0.62,
+       0.25,
+       0.18
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       2.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Joyería fina",
+    "cost": 4000,
+    "materials": {
+     "madera": 20,
+     "piedra": 120
+    },
+    "build_days": 35,
+    "workers": 4,
+    "jobs": 6,
+    "prod_per_worker": 0.25,
+    "quality": 1.3,
+    "upkeep": 1.0,
+    "unit_cost": 0.0,
+    "tech": "contabilidad",
+    "inputs": {
+     "oro": 0.2,
+     "plata": 0.5
+    },
+    "pollution": 0,
+    "product": "joyas",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5.9,
+       4,
+       5
+      ],
+      "pos": [
+       0.0,
+       2.0,
+       0
+      ],
+      "c": [
+       0.95,
+       0.92,
+       0.85
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.0,
+       1.4,
+       5.2
+      ],
+      "pos": [
+       0.0,
+       4.7,
+       0
+      ],
+      "c": [
+       0.2,
+       0.3,
+       0.45
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.8,
+       2.2,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.1,
+       2.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
