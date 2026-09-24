@@ -40,6 +40,7 @@ var government_panel: GovernmentPanel
 var logistics_panel: LogisticsPanel
 var trade_panel: TradePanel
 var tourism_panel: TourismPanel
+var realestate_panel: RealEstatePanel   # Bienes raíces
 var era_lbl: Label
 
 # Interior
@@ -239,6 +240,7 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Mi Personaje", func(): _show_dock("player"), 160))
 	box.add_child(UIKit.button("Construir", func(): _show_dock("build"), 160))
 	box.add_child(UIKit.button("Mis Empresas", func(): _show_dock("companies"), 160))
+	box.add_child(UIKit.button("Bienes raíces", func(): _show_dock("realestate"), 160))
 	box.add_child(UIKit.button("Finanzas", func(): _show_dock("finance"), 160))
 	box.add_child(UIKit.button("Estadísticas", func(): _show_dock("stats"), 160))
 	box.add_child(UIKit.button("Población", _open_population, 160))
@@ -355,7 +357,8 @@ func _build_dock() -> void:
 	logistics_panel = LogisticsPanel.new()
 	trade_panel = TradePanel.new()
 	tourism_panel = TourismPanel.new()
-	for panel in [logistics_panel, trade_panel, tourism_panel]:
+	realestate_panel = RealEstatePanel.new()
+	for panel in [logistics_panel, trade_panel, tourism_panel, realestate_panel]:
 		panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 		stack.add_child(panel)
 		panel.setup(self)
@@ -380,7 +383,10 @@ func _show_dock(mode: String) -> void:
 	logistics_panel.visible = mode == "logistics"
 	trade_panel.visible = mode == "trade"
 	tourism_panel.visible = mode == "tourism"
+	realestate_panel.visible = mode == "realestate"
 	match mode:
+		"realestate":
+			realestate_panel.refresh()
 		"logistics":
 			logistics_panel.refresh()
 		"trade":

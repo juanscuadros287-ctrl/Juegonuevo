@@ -30,6 +30,7 @@ var place_ok := false
 var place_reason := ""
 var move_id := -1
 var place_tender: Dictionary = {}
+var place_project: Dictionary = {}   # Bienes raíces: {level, opts} al colocar un multifamiliar
 var _ghost: Node3D
 var zone_mode := false
 var _zone_marker: MeshInstance3D
@@ -109,6 +110,7 @@ func _ready() -> void:
 	EventBus.zones_changed.connect(_on_zones_changed)
 	EventBus.player_changed.connect(_on_player_changed)
 	EventBus.build_mode_requested.connect(start_placement)
+	EventBus.project_mode_requested.connect(start_project_placement)
 	EventBus.zone_mode_requested.connect(start_zone_mode)
 	EventBus.interior_requested.connect(open_interior)
 	EventBus.day_passed.connect(_on_day)
@@ -377,6 +379,15 @@ func start_placement(type_id: String, tier: String) -> void:
 	EventBus.citizen_selected.emit(-1)
 
 
+## Bienes raíces: colocar un proyecto multifamiliar (obra nueva por etapas).
+func start_project_placement(level: int, tier: String, opts: Dictionary) -> void:
+	start_placement("vivienda", tier)
+	place_project = {"level": level, "opts": opts}
+	_ghost.queue_free()
+	_ghost = MeshLib.build_model(Housing.exterior_parts({"type": "vivienda", "level": level, "tier": tier}), 1.0, MeshLib.ghost_mat(true))
+	add_child(_ghost)
+
+
 ## Colocar una obra pública ganada en licitación.
 func start_public_placement(tender: Dictionary) -> void:
 	start_placement(str(tender["type"]), "normal")
@@ -413,6 +424,7 @@ func cancel_placement() -> void:
 		building_nodes[move_id].visible = true
 	move_id = -1
 	place_tender = {}
+	place_project = {}
 	place_type = ""
 	zone_mode = false
 	if _ghost:
@@ -450,13 +462,15 @@ func _update_placement() -> void:
 		return
 	p.x = snappedf(p.x, 0.25)
 	p.z = snappedf(p.z, 0.25)
-	var place_level := int(GameState.get_building(move_id).get("level", 1)) if move_id >= 0 else 1
+	var place_level := int(GameState.get_building(move_id).get("level", 1)) if move_id >= 0 else int(place_project.get("level", 1))
 	var fp := GameData.footprint(place_type, place_level)
 	place_pos = Vector3(p.x, _ground(p.x, p.z, fp), p.z)
 	place_reason = ConstructionSim.placement_block_reason(GameState, place_type, p.x, p.z, move_id, place_level)
 	if place_reason == "":
 		place_reason = terrain.footprint_ok(p.x, p.z, fp)
-	if place_reason == "" and move_id < 0 and place_tender.is_empty():
+	if place_reason == "" and move_id < 0 and not place_project.is_empty():
+		place_reason = RealEstateSim.project_block_reason(GameState, place_level, place_tier, float(place_project["opts"].get("credit_ratio", 0.0)))
+	elif place_reason == "" and move_id < 0 and place_tender.is_empty():
 		place_reason = ConstructionSim.build_block_reason(GameState, place_type, place_tier)
 	place_ok = place_reason == ""
 	_ghost.position = place_pos
@@ -473,6 +487,11 @@ func _update_placement() -> void:
 		var mb: Dictionary = GameState.get_building(move_id)
 		hud.set_placement_hint("Mover %s — %s · %d°   %s   (R/T gira 15° · Shift+rueda gira libre · clic confirma · Esc cancela)" % [
 			GameState.building_label(mb), "gratis" if ConstructionSim.move_cost(GameState, mb, p.x, p.z) <= 0.0 else Fmt.money(ConstructionSim.move_cost(GameState, mb, p.x, p.z)), deg, "✔" if place_ok else place_reason] + link_hint)
+		return
+	if not place_project.is_empty():
+		var pc := ConstructionSim.cost_for(GameState, "vivienda", place_level, false, place_tier)
+		hud.set_placement_hint("Proyecto %s — %s en 3 etapas · %d días · %d°   %s   (R/T gira 15° · clic construye · Esc cancela)" % [
+			GameData.level_def("vivienda", place_level).get("label", ""), Fmt.money(pc["total"]), int(pc["days"]), deg, "✔" if place_ok else place_reason] + link_hint)
 		return
 	var cost := ConstructionSim.cost_for(GameState, place_type, 1, false, place_tier)
 	hud.set_placement_hint("%s — %s · %d días · %d°   %s   (R/T gira 15° · Shift+rueda gira libre · clic construye · Esc cancela)" % [
@@ -501,6 +520,13 @@ func _confirm_placement() -> void:
 		var perr := GovSim.start_public_project(GameState, place_tender, place_pos.x, place_pos.z, place_rot)
 		if perr != "":
 			hud.toast(perr, "jugador")
+			return
+		cancel_placement()
+		return
+	if not place_project.is_empty():
+		var pr := RealEstateSim.start_project(GameState, int(place_project["level"]), place_tier, place_pos.x, place_pos.z, place_rot, "", place_project["opts"])
+		if pr.has("error"):
+			hud.toast(pr["error"], "jugador")
 			return
 		cancel_placement()
 		return

@@ -319,6 +319,10 @@ static func _pay_housing(gs, c: Citizen, home: Dictionary, payers: Array, mainte
 		var p: Citizen = gs.player_citizen()
 		if p != null and (c.id == p.spouse_id or p.children_ids.has(c.id) or c.home_id == p.home_id):
 			return true
+		if RealEstateSim.has_units(home):   # Bienes raíces: arriendo por unidad.
+			var r := RealEstateSim.pay_unit_housing(gs, c, home, payers)
+			if r >= 0:
+				return r == 1
 		var rent := MarketSim.daily_rent(gs, home)
 		var factor := 1.0 if c.age_years(gs.today()) >= int(GameData.citizens.get("adult_age", 16)) else float(GameData.citizens.get("child_cost_factor", 0.4))
 		rent *= factor
