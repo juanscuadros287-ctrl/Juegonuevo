@@ -74,7 +74,22 @@
   "rep_reject": 1,
   "offer_reply_days": [2, 5],
   "local_wholesale": 0.75,
-  "gov_material_price": 0.9
+  "gov_material_price": 0.9,
+  "_nota_recurrentes": "Contratos recurrentes de compra y venta (frecuencia en días, precio fijo). Ver docs/MERCADO_LIBRE.md.",
+  "request_periods": [15, 30, 30, 60],
+  "duration_discount": 0.01,
+  "counter_ratio": 0.85,
+  "npc_supply_wholesale": 0.9,
+  "import_premium": 1.4,
+  "import_days": 7,
+  "reliability_start": 80,
+  "reliability_success": 2,
+  "reliability_fail": 15,
+  "supply_offer_chance_month": 0.3,
+  "supply_price_premium": [0.95, 1.08],
+  "supply_installments": [3, 6],
+  "shop_need_month": 40,
+  "supply_offers_per_month": 1
  },
  "gov_plans": {
   "_nota": "El gobierno construye con su presupuesto según las necesidades medidas.",
