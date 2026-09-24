@@ -7,7 +7,17 @@
   "need": "comida",
   "order": 0,
   "self_supply": 0.7,
-  "discretionary": true
+  "discretionary": true,
+  "category": "producto",
+  "era": 1,
+  "description": "Alimento básico diario: granjas, pesca, panaderías y la tienda.",
+  "model": [
+   {"s": "cyl", "size": [0.42, 0.2, 0.3], "pos": [0.0, 0.1, 0.0], "c": [0.76, 0.58, 0.36]},
+   {"s": "sphere", "size": [0.22, 0.22, 0.22], "pos": [-0.12, 0.25, 0.0], "c": [0.78, 0.16, 0.14]},
+   {"s": "sphere", "size": [0.2, 0.2, 0.2], "pos": [0.12, 0.25, 0.05], "c": [0.9, 0.6, 0.15]},
+   {"s": "sphere", "size": [0.18, 0.18, 0.18], "pos": [0.02, 0.26, -0.13], "c": [0.3, 0.55, 0.25]},
+   {"s": "box", "size": [0.4, 0.14, 0.14], "pos": [0.05, 0.33, 0.05], "c": [0.85, 0.65, 0.35], "rot": 30.0}
+  ]
  },
  "agua": {
   "label": "Agua",
@@ -16,7 +26,17 @@
   "storable": true,
   "need": "agua",
   "order": 1,
-  "self_supply": 0.9
+  "self_supply": 0.9,
+  "category": "producto",
+  "era": 1,
+  "description": "Agua para beber y cocinar: aguateros, acueductos y plantas de agua.",
+  "model": [
+   {"s": "cyl", "size": [0.26, 0.45, 0.22], "pos": [0.0, 0.225, 0.0], "c": [0.55, 0.36, 0.2]},
+   {"s": "cyl", "size": [0.24, 0.02, 0.24], "pos": [0.0, 0.45, 0.0], "c": [0.25, 0.5, 0.8]},
+   {"s": "box", "size": [0.5, 0.04, 0.04], "pos": [0.0, 0.62, 0.0], "c": [0.42, 0.4, 0.4]},
+   {"s": "cyl", "size": [0.27, 0.04, 0.27], "pos": [0.0, 0.1, 0.0], "c": [0.42, 0.4, 0.4]},
+   {"s": "cyl", "size": [0.27, 0.04, 0.27], "pos": [0.0, 0.36, 0.0], "c": [0.42, 0.4, 0.4]}
+  ]
  },
  "lena": {
   "label": "Leña",
@@ -25,7 +45,29 @@
   "storable": true,
   "need": "energia",
   "order": 2,
-  "self_supply": 0.8
+  "self_supply": 0.8,
+  "category": "energia",
+  "era": 1,
+  "export": true,
+  "description": "Combustible de los hogares coloniales para cocinar y calentarse.",
+  "model": [
+   {"s": "cyl", "size": [0.1, 0.8, 0.1], "pos": [0.0, 0.14, -0.15], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.08, 0.02, 0.08], "pos": [0.405, 0.14, -0.15], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.08, 0.02, 0.08], "pos": [-0.405, 0.14, -0.15], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.1, 0.8, 0.1], "pos": [0.0, 0.14, 0.05], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.08, 0.02, 0.08], "pos": [0.405, 0.14, 0.05], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.08, 0.02, 0.08], "pos": [-0.405, 0.14, 0.05], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.1, 0.8, 0.1], "pos": [0.0, 0.14, 0.25], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.08, 0.02, 0.08], "pos": [0.405, 0.14, 0.25], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.08, 0.02, 0.08], "pos": [-0.405, 0.14, 0.25], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.1, 0.8, 0.1], "pos": [0.0, 0.32, -0.05], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.08, 0.02, 0.08], "pos": [0.405, 0.32, -0.05], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.08, 0.02, 0.08], "pos": [-0.405, 0.32, -0.05], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.1, 0.8, 0.1], "pos": [0.0, 0.32, 0.15], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.08, 0.02, 0.08], "pos": [0.405, 0.32, 0.15], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.08, 0.02, 0.08], "pos": [-0.405, 0.32, 0.15], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+   {"s": "cyl", "size": [0.33, 0.06, 0.33], "pos": [0.0, 0.24, 0.05], "c": [0.6, 0.5, 0.3], "rz": 90.0}
+  ]
  },
  "ocio": {
   "label": "Ocio",
@@ -35,7 +77,17 @@
   "need": "ocio",
   "order": 3,
   "self_supply": 0.5,
-  "discretionary": true
+  "discretionary": true,
+  "category": "servicio",
+  "era": 1,
+  "description": "Diversión en tabernas, posadas y teatros.",
+  "model": [
+   {"s": "cyl", "size": [0.2, 0.42, 0.18], "pos": [0.0, 0.21, 0.0], "c": [0.7, 0.5, 0.25]},
+   {"s": "cyl", "size": [0.21, 0.08, 0.21], "pos": [0.0, 0.45, 0.0], "c": [0.94, 0.93, 0.9]},
+   {"s": "box", "size": [0.06, 0.26, 0.06], "pos": [0.25, 0.22, 0.0], "c": [0.7, 0.5, 0.25]},
+   {"s": "box", "size": [0.24, 0.24, 0.24], "pos": [-0.45, 0.12, 0.1], "c": [0.94, 0.93, 0.9], "rot": 25.0},
+   {"s": "sphere", "size": [0.05, 0.05, 0.05], "pos": [-0.45, 0.25, 0.1], "c": [0.08, 0.08, 0.09]}
+  ]
  },
  "madera": {
   "label": "Madera",
@@ -43,7 +95,20 @@
   "import_price": 5.0,
   "storable": true,
   "material": true,
-  "order": 4
+  "order": 4,
+  "category": "materia_prima",
+  "era": 1,
+  "export": true,
+  "description": "Vigas y tablones del aserradero. Material de construcción y de muebles, papel y herramientas.",
+  "raw": true,
+  "model": [
+   {"s": "box", "size": [1.0, 0.1, 0.22], "pos": [0.0, 0.05, -0.24], "c": [0.76, 0.58, 0.36]},
+   {"s": "box", "size": [1.0, 0.1, 0.22], "pos": [0.0, 0.05, 0.0], "c": [0.76, 0.58, 0.36]},
+   {"s": "box", "size": [1.0, 0.1, 0.22], "pos": [0.0, 0.05, 0.24], "c": [0.76, 0.58, 0.36]},
+   {"s": "box", "size": [1.0, 0.1, 0.22], "pos": [0.0, 0.15, -0.12], "c": [0.55, 0.36, 0.2]},
+   {"s": "box", "size": [1.0, 0.1, 0.22], "pos": [0.0, 0.15, 0.12], "c": [0.55, 0.36, 0.2]},
+   {"s": "box", "size": [1.0, 0.1, 0.22], "pos": [0.0, 0.25, 0.0], "c": [0.76, 0.58, 0.36]}
+  ]
  },
  "piedra": {
   "label": "Piedra",
@@ -51,7 +116,17 @@
   "import_price": 7.0,
   "storable": true,
   "material": true,
-  "order": 5
+  "order": 5,
+  "category": "materia_prima",
+  "era": 1,
+  "export": true,
+  "description": "Bloques de cantera para construir; también arena de sílice para el vidrio.",
+  "raw": true,
+  "model": [
+   {"s": "box", "size": [0.4, 0.26, 0.3], "pos": [-0.22, 0.13, 0.0], "c": [0.62, 0.6, 0.57]},
+   {"s": "box", "size": [0.4, 0.26, 0.3], "pos": [0.22, 0.13, 0.02], "c": [0.58, 0.57, 0.55]},
+   {"s": "box", "size": [0.4, 0.26, 0.3], "pos": [0.0, 0.39, 0.0], "c": [0.66, 0.64, 0.6], "rot": 8.0}
+  ]
  },
  "construccion": {
   "label": "Trabajo de obra",

@@ -9,12 +9,23 @@ static func cfg() -> Dictionary:
 	return GameData.extra("resources")
 
 
+## Economía real: yacimientos que aparecen con la tecnología (petróleo, gas, cobre, uranio).
+static func energy_cfg() -> Dictionary:
+	return GameData.extra("resources_energia")
+
+
+## Definición de un recurso (resources.json o resources_energia.json).
+static func resource_def(id: String) -> Dictionary:
+	var r: Dictionary = cfg().get("resources", {}).get(id, {})
+	return r if not r.is_empty() else energy_cfg().get("resources", {}).get(id, {})
+
+
 static func resource_label(id: String) -> String:
-	return str(cfg().get("resources", {}).get(id, {}).get("label", GameData.good_label(id)))
+	return str(resource_def(id).get("label", GameData.good_label(id)))
 
 
 static func resource_color(id: String) -> Color:
-	return MeshLib.arr_color(cfg().get("resources", {}).get(id, {}).get("color"), Color(0.6, 0.6, 0.6))
+	return MeshLib.arr_color(resource_def(id).get("color"), Color(0.6, 0.6, 0.6))
 
 
 static func deposit_types() -> Array:
@@ -76,6 +87,9 @@ static func strengths_text(region: Dictionary) -> String:
 		var pct := int(round((float(st[r]) - 1.0) * 100.0))
 		if pct != 0:
 			parts.append("%s %+d%%" % [resource_label(r), pct])
+	var hidden: Dictionary = energy_cfg().get("region_deposits", {}).get(str(region.get("id", "")), {})
+	if not hidden.is_empty():
+		parts.append("subsuelo: %s (con investigación)" % ", ".join(hidden.keys().map(func(t): return resource_label(str(t)).to_lower())))
 	return " · ".join(parts) if not parts.is_empty() else "Sin recursos destacados"
 
 
@@ -211,3 +225,72 @@ static func deplete(gs, dep: Dictionary, qty: float) -> void:
 		gs.notify("El yacimiento de %s está casi agotado (quedan %d unidades)." % [resource_label(str(dep["type"])).to_lower(), int(dep["amount"])], "negocio")
 	elif float(dep["amount"]) <= 0.0:
 		gs.notify("Se agotó un yacimiento de %s. La mina ya no produce." % resource_label(str(dep["type"])).to_lower(), "jugador")
+
+
+# --- Economía real: yacimientos que se revelan con la tecnología -----------------------------
+
+## Tipos de yacimiento que exigen investigar una tecnología (resources_energia.json).
+static func tech_deposit_types() -> Array:
+	var res: Dictionary = energy_cfg().get("resources", {})
+	var out := []
+	for k in GameData.sorted_ids(res):
+		if bool(res[k].get("deposit", false)) and str(res[k].get("requires_tech", "")) != "":
+			out.append(k)
+	return out
+
+
+## Si se investigó la tecnología de un tipo de yacimiento aún oculto, lo ubica en el mapa
+## (región con ese recurso: seguro; si no, según la probabilidad del tipo de mapa) y avisa.
+## Es determinista por semilla. Devuelve los tipos revelados en esta llamada.
+static func reveal_tech_deposits(gs) -> Array:
+	var L: Dictionary = gs.logistics
+	var revealed: Array = L.get("revealed_deposits", [])
+	var pending := []
+	for t in tech_deposit_types():
+		if not revealed.has(t) and gs.has_tech(str(resource_def(t).get("requires_tech", ""))):
+			pending.append(t)
+	if pending.is_empty():
+		return []
+	var mt := str(gs.settings.get("map_type", "interior"))
+	var sd := int(gs.settings.get("seed", 0))
+	var reg: Dictionary = region(gs)
+	var reg_deps: Dictionary = energy_cfg().get("region_deposits", {}).get(str(reg.get("id", "")), {})
+	var chance: Dictionary = energy_cfg().get("map_chance", {}).get(mt, {})
+	var terrain: Terrain = null
+	var deps: Array = L.get("deposits", [])
+	var next_id := 1
+	for d in deps:
+		next_id = maxi(next_id, int(d["id"]) + 1)
+	var found := []
+	for t in pending:
+		revealed.append(t)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = sd * 131 + str(t).hash()
+		var n := int(reg_deps.get(t, 0))
+		if n <= 0 and rng.randf() < float(chance.get(t, 0.0)):
+			n = 1
+		if n <= 0:
+			continue
+		if terrain == null:
+			terrain = Terrain.new()
+			terrain.generate(mt, sd)
+		# Se evita a los yacimientos existentes y a los edificios ya construidos.
+		var avoid: Array = deps.duplicate()
+		for b in gs.buildings:
+			avoid.append({"x": float(b["x"]), "z": float(b["z"])})
+		var rng_amt: Array = resource_def(t).get("amount", [1000, 2000])
+		for i in range(n):
+			var ring := 1 if reg_deps.has(t) and i == 0 else 2
+			var pos := _find_spot(terrain, rng, ring, avoid, float(cfg().get("deposit_min_spacing", 18.0)), mt)
+			var amount := snappedf(rng.randf_range(float(rng_amt[0]), float(rng_amt[1])), 1.0)
+			var dep := {"id": next_id, "type": t, "x": pos.x, "z": pos.y, "amount": amount, "initial": amount}
+			next_id += 1
+			deps.append(dep)
+			avoid.append(dep)
+		found.append(t)
+		gs.notify("¡Descubrimiento! La investigación revela %d yacimiento%s de %s en la región (Logística → Región)." % [n, "s" if n > 1 else "", resource_label(t).to_lower()], "importante")
+	if terrain != null:
+		terrain.free()
+	L["deposits"] = deps
+	L["revealed_deposits"] = revealed
+	return found

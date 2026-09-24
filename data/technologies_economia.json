@@ -1,0 +1,187 @@
+{
+ "_nota": "Economía real: tecnologías de la progresión industrial y energética (encajan en las épocas y ramas de eras.json con prerrequisitos existentes).",
+ "vidrieria": {
+  "label": "Vidriería",
+  "era": 1,
+  "branch": "industria",
+  "cost": 450,
+  "requires": [
+   "ladrillo"
+  ],
+  "effects": [],
+  "description": "Hornos para fundir arena de sílice: vidrio para frascos, botellas y ventanas."
+ },
+ "conservas": {
+  "label": "Conservas y enlatado",
+  "era": 2,
+  "branch": "agricultura",
+  "cost": 2400,
+  "requires": [
+   "revolucion_industrial"
+  ],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.05,
+    "key": "carne"
+   }
+  ],
+  "description": "Hojalata y esterilización: carne en lata que viaja lejos sin estropearse."
+ },
+ "quimica": {
+  "label": "Química industrial",
+  "era": 2,
+  "branch": "industria",
+  "cost": 3000,
+  "requires": [
+   "revolucion_industrial",
+   "metodo_cientifico"
+  ],
+  "effects": [],
+  "description": "Destilación del alquitrán de carbón: ácidos, tintes, jabones y reactivos."
+ },
+ "relojeria": {
+  "label": "Relojería de precisión",
+  "era": 2,
+  "branch": "industria",
+  "cost": 2400,
+  "requires": [
+   "revolucion_industrial"
+  ],
+  "effects": [],
+  "description": "Engranajes finos de acero: relojes de bolsillo para los ricos."
+ },
+ "produccion_en_serie": {
+  "label": "Producción en serie",
+  "era": 2,
+  "branch": "industria",
+  "cost": 3600,
+  "requires": [
+   "fabricas"
+  ],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.05,
+    "key": "muebles"
+   }
+  ],
+  "description": "Piezas intercambiables y cadenas de montaje: calzado, muebles y relojes baratos."
+ },
+ "dinamo": {
+  "label": "Dínamo y centrales eléctricas",
+  "era": 2,
+  "branch": "energia",
+  "cost": 4200,
+  "requires": [
+   "maquina_vapor",
+   "telegrafo"
+  ],
+  "effects": [],
+  "description": "El vapor mueve dínamos: primeras centrales térmicas de carbón para las fábricas."
+ },
+ "petroleo": {
+  "label": "Petróleo",
+  "era": 2,
+  "branch": "energia",
+  "cost": 4800,
+  "requires": [
+   "maquina_vapor",
+   "quimica"
+  ],
+  "effects": [],
+  "description": "Perforación y destilación: revela los yacimientos de petróleo y gas de la región y permite refinar combustible."
+ },
+ "petroquimica": {
+  "label": "Petroquímica y plásticos",
+  "era": 3,
+  "branch": "industria",
+  "cost": 12000,
+  "requires": [
+   "petroleo",
+   "electricidad"
+  ],
+  "effects": [],
+  "description": "Del petróleo salen plásticos, reactivos y combustibles de calidad."
+ },
+ "electrodomesticos": {
+  "label": "Electrodomésticos",
+  "era": 3,
+  "branch": "industria",
+  "cost": 10500,
+  "requires": [
+   "electricidad",
+   "refrigeracion"
+  ],
+  "effects": [
+   {
+    "type": "happiness",
+    "value": 1
+   }
+  ],
+  "description": "Radios, neveras y cocinas eléctricas para los hogares."
+ },
+ "hidroelectrica": {
+  "label": "Energía hidroeléctrica",
+  "era": 3,
+  "branch": "energia",
+  "cost": 10500,
+  "requires": [
+   "electricidad",
+   "acero_estructural"
+  ],
+  "effects": [],
+  "description": "Represas con turbinas: electricidad limpia en pueblos con río."
+ },
+ "energia_eolica": {
+  "label": "Energía eólica",
+  "era": 3,
+  "branch": "energia",
+  "cost": 12000,
+  "requires": [
+   "electricidad"
+  ],
+  "effects": [],
+  "description": "Aerogeneradores: electricidad limpia, mejor en costas y montañas."
+ },
+ "energia_solar": {
+  "label": "Energía solar",
+  "era": 3,
+  "branch": "energia",
+  "cost": 21000,
+  "requires": [
+   "electronica"
+  ],
+  "effects": [],
+  "description": "Paneles fotovoltaicos: electricidad limpia de día."
+ },
+ "energia_nuclear": {
+  "label": "Energía nuclear",
+  "era": 3,
+  "branch": "energia",
+  "cost": 30000,
+  "requires": [
+   "electronica",
+   "investigacion_moderna"
+  ],
+  "effects": [],
+  "description": "Fisión del uranio: enormes centrales con muy poco combustible. Revela yacimientos de uranio."
+ },
+ "farmaceutica": {
+  "label": "Industria farmacéutica",
+  "era": 3,
+  "branch": "medicina",
+  "cost": 12000,
+  "requires": [
+   "antibioticos",
+   "quimica"
+  ],
+  "effects": [
+   {
+    "type": "disease",
+    "value": 0.95
+   }
+  ],
+  "description": "Laboratorios que producen medicamentos en serie; farmacias modernas."
+ }
+}

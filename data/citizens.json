@@ -102,6 +102,168 @@
     "buffer_days": 45,
     "weekly_share": 0.06,
     "happiness_per_unit": 0.4,
-    "max_bonus": 6
+    "max_bonus": 6,
+    "wants_buffer_days": 6,
+    "wants_max_weekly_share": 0.5,
+    "wants_max_bonus": 6
+  },
+  "wants": {
+    "_nota": "Deseos opcionales por época y riqueza (ShopSim, semanal). every_days = cada cuánto lo compra un vecino; min_wealth_days = ahorro mínimo (en días de necesidades básicas) para comprarlo; rich_days = desde ese ahorro elige el bien más caro de la lista; qty = unidades por compra; era/tech = desde cuándo existe el deseo. Solo se compra en tus comercios especializados con existencias: el dinero circula.",
+    "pan": {
+      "label": "Pan fresco",
+      "goods": ["pan"],
+      "every_days": 4,
+      "qty": 2,
+      "min_wealth_days": 8,
+      "happiness": 0.1,
+      "era": 1
+    },
+    "carne": {
+      "label": "Carne",
+      "goods": ["carne", "embutidos", "conservas"],
+      "every_days": 7,
+      "qty": 1.5,
+      "min_wealth_days": 12,
+      "rich_days": 60,
+      "happiness": 0.4,
+      "era": 1
+    },
+    "velas_jabon": {
+      "label": "Velas y jabón",
+      "goods": ["velas_jabon"],
+      "every_days": 20,
+      "qty": 1,
+      "min_wealth_days": 8,
+      "happiness": 0.3,
+      "era": 1
+    },
+    "calefaccion": {
+      "label": "Carbón para cocina y calefacción",
+      "goods": ["carbon", "lena"],
+      "every_days": 14,
+      "qty": 2,
+      "min_wealth_days": 10,
+      "happiness": 0.2,
+      "era": 1,
+      "until_tech": "electrodomesticos"
+    },
+    "ropa": {
+      "label": "Ropa nueva",
+      "goods": ["ropa", "ropa_fina"],
+      "every_days": 150,
+      "qty": 1,
+      "min_wealth_days": 25,
+      "rich_days": 90,
+      "happiness": 2.0,
+      "era": 1
+    },
+    "calzado": {
+      "label": "Calzado",
+      "goods": ["zapatos"],
+      "every_days": 240,
+      "qty": 1,
+      "min_wealth_days": 25,
+      "happiness": 1.5,
+      "era": 1
+    },
+    "utensilios": {
+      "label": "Utensilios de cocina",
+      "goods": ["utensilios", "loza"],
+      "every_days": 400,
+      "qty": 1,
+      "min_wealth_days": 20,
+      "happiness": 0.8,
+      "era": 1
+    },
+    "herramientas": {
+      "label": "Herramientas de trabajo",
+      "goods": ["herramientas"],
+      "every_days": 365,
+      "qty": 1,
+      "min_wealth_days": 20,
+      "happiness": 0.5,
+      "era": 1,
+      "employed": true
+    },
+    "reparaciones": {
+      "label": "Madera para reparar la casa",
+      "goods": ["madera"],
+      "every_days": 500,
+      "qty": 1,
+      "min_wealth_days": 30,
+      "happiness": 0.6,
+      "era": 1
+    },
+    "muebles": {
+      "label": "Muebles",
+      "goods": ["muebles"],
+      "every_days": 1200,
+      "qty": 1,
+      "min_wealth_days": 50,
+      "happiness": 3.0,
+      "era": 1
+    },
+    "medicina": {
+      "label": "Medicinas",
+      "goods": ["remedios", "medicamentos"],
+      "every_days": 180,
+      "qty": 1,
+      "min_wealth_days": 5,
+      "rich_days": 5,
+      "happiness": 0.5,
+      "era": 1,
+      "when_sick": true,
+      "effects": {"remedios": {"health": 5, "cure": 0.3}, "medicamentos": {"health": 12, "cure": 0.75}}
+    },
+    "periodico": {
+      "label": "Periódico",
+      "goods": ["periodicos"],
+      "every_days": 7,
+      "qty": 1,
+      "min_wealth_days": 10,
+      "happiness": 0.15,
+      "era": 2
+    },
+    "joyas": {
+      "label": "Joyas y relojes",
+      "goods": ["joyas", "relojes"],
+      "every_days": 900,
+      "qty": 1,
+      "min_wealth_days": 150,
+      "rich_days": 400,
+      "happiness": 4.0,
+      "era": 1
+    },
+    "electrodomesticos": {
+      "label": "Electrodomésticos",
+      "goods": ["electrodomesticos"],
+      "every_days": 1500,
+      "qty": 1,
+      "min_wealth_days": 120,
+      "happiness": 5.0,
+      "era": 3,
+      "tech": "electrodomesticos"
+    },
+    "automovil": {
+      "label": "Automóvil",
+      "goods": ["automovil_bien"],
+      "every_days": 3650,
+      "qty": 1,
+      "min_wealth_days": 500,
+      "happiness": 8.0,
+      "era": 3,
+      "tech": "automovil",
+      "owns": "auto"
+    },
+    "combustible": {
+      "label": "Gasolina del auto",
+      "goods": ["combustible"],
+      "every_days": 7,
+      "qty": 1,
+      "min_wealth_days": 5,
+      "happiness": 0.3,
+      "era": 3,
+      "requires_owned": "auto"
+    }
   }
 }

@@ -2,37 +2,100 @@
  "_nota": "Fase 8 — productos intermedios y finales de la industria. Las materias primas (hierro, carbon, madera, piedra, lana, algodon, oro, plata, trigo) las define la Fase 6. export = producto pensado para vender a otros pueblos (Fase 7).",
  "acero": {
   "label": "Acero",
-  "base_price": 4.5,
-  "import_price": 7.0,
+  "base_price": 6.0,
+  "import_price": 9.0,
   "storable": true,
   "order": 41,
   "intermediate": true,
-  "export": true
+  "export": true,
+  "category": "intermedio",
+  "era": 2,
+  "tech": "carbon",
+  "volatility": 0.03,
+  "description": "Hierro refinado con carbón en fundiciones y altos hornos: base de la industria.",
+  "model": [
+   {"s": "box", "size": [1.0, 0.1, 0.1], "pos": [0.0, 0.05, -0.2], "c": [0.55, 0.58, 0.62]},
+   {"s": "box", "size": [1.0, 0.1, 0.1], "pos": [0.0, 0.05, -0.07], "c": [0.55, 0.58, 0.62]},
+   {"s": "box", "size": [1.0, 0.1, 0.1], "pos": [0.0, 0.05, 0.06], "c": [0.55, 0.58, 0.62]},
+   {"s": "box", "size": [1.0, 0.1, 0.1], "pos": [0.0, 0.05, 0.19], "c": [0.55, 0.58, 0.62]},
+   {"s": "box", "size": [1.0, 0.1, 0.1], "pos": [0.0, 0.15, -0.13], "c": [0.62, 0.65, 0.7]},
+   {"s": "box", "size": [1.0, 0.1, 0.1], "pos": [0.0, 0.15, 0.0], "c": [0.62, 0.65, 0.7]},
+   {"s": "box", "size": [1.0, 0.1, 0.1], "pos": [0.0, 0.15, 0.13], "c": [0.62, 0.65, 0.7]},
+   {"s": "box", "size": [0.05, 0.3, 0.5], "pos": [0.3, 0.15, 0.0], "c": [0.7, 0.2, 0.15]}
+  ]
  },
  "ropa_fina": {
   "label": "Ropa fina",
-  "base_price": 7.5,
-  "import_price": 11.0,
+  "base_price": 14.0,
+  "import_price": 21.0,
   "storable": true,
   "order": 43,
-  "export": true
+  "export": true,
+  "category": "producto",
+  "era": 2,
+  "tech": "tapiceria_industrial",
+  "volatility": 0.01,
+  "description": "Trajes y vestidos de confección: los compran los vecinos acomodados.",
+  "model": [
+   {"s": "box", "size": [0.5, 0.85, 0.2], "pos": [0.0, 0.45, 0.0], "c": [0.2, 0.15, 0.35]},
+   {"s": "box", "size": [0.16, 0.6, 0.15], "pos": [-0.33, 0.52, 0.0], "c": [0.2, 0.15, 0.35], "rz": -18.0},
+   {"s": "box", "size": [0.16, 0.6, 0.15], "pos": [0.33, 0.52, 0.0], "c": [0.2, 0.15, 0.35], "rz": 18.0},
+   {"s": "prism", "size": [0.32, 0.18, 0.21], "pos": [0.0, 0.82, 0.01], "c": [0.85, 0.8, 0.7]},
+   {"s": "sphere", "size": [0.05, 0.05, 0.05], "pos": [0.0, 0.6, 0.11], "c": [0.98, 0.78, 0.18]},
+   {"s": "sphere", "size": [0.05, 0.05, 0.05], "pos": [0.0, 0.45, 0.11], "c": [0.98, 0.78, 0.18]},
+   {"s": "sphere", "size": [0.05, 0.05, 0.05], "pos": [0.0, 0.3, 0.11], "c": [0.98, 0.78, 0.18]}
+  ]
  },
  "maquinaria": {
   "label": "Maquinaria",
-  "base_price": 55.0,
-  "import_price": 80.0,
+  "base_price": 70.0,
+  "import_price": 105.0,
   "storable": true,
   "order": 44,
-  "export": true
+  "export": true,
+  "category": "producto",
+  "era": 2,
+  "tech": "maquina_vapor",
+  "volatility": 0.02,
+  "description": "Máquinas de vapor, tornos y telares mecánicos. Gran producto de exportación.",
+  "model": [
+   {"s": "box", "size": [0.9, 0.12, 0.5], "pos": [0.0, 0.06, 0.0], "c": [0.3, 0.45, 0.35]},
+   {"s": "box", "size": [0.3, 0.4, 0.3], "pos": [-0.25, 0.32, 0.0], "c": [0.3, 0.45, 0.35]},
+   {"s": "cyl", "size": [0.26, 0.12, 0.26], "pos": [0.2, 0.0, 0.0], "c": [0.42, 0.4, 0.4], "rx": 90.0},
+   {"s": "cyl", "size": [0.078, 0.14, 0.078], "pos": [0.2, 0.0, 0.0], "c": [0.42, 0.4, 0.4], "rx": 90.0},
+   {"s": "box", "size": [0.12, 0.12, 0.1], "pos": [0.5, 0.0, 0.0], "c": [0.42, 0.4, 0.4], "rot": -0.0, "rx": 90.0},
+   {"s": "box", "size": [0.12, 0.12, 0.1], "pos": [0.41200000000000003, 0.0, 0.212], "c": [0.42, 0.4, 0.4], "rot": -45.0, "rx": 90.0},
+   {"s": "box", "size": [0.12, 0.12, 0.1], "pos": [0.2, 0.0, 0.3], "c": [0.42, 0.4, 0.4], "rot": -90.0, "rx": 90.0},
+   {"s": "box", "size": [0.12, 0.12, 0.1], "pos": [-0.011999999999999983, 0.0, 0.212], "c": [0.42, 0.4, 0.4], "rot": -135.0, "rx": 90.0},
+   {"s": "box", "size": [0.12, 0.12, 0.1], "pos": [-0.09999999999999998, 0.0, 0.0], "c": [0.42, 0.4, 0.4], "rot": -180.0, "rx": 90.0},
+   {"s": "box", "size": [0.12, 0.12, 0.1], "pos": [-0.011999999999999983, 0.0, -0.212], "c": [0.42, 0.4, 0.4], "rot": -225.0, "rx": 90.0},
+   {"s": "box", "size": [0.12, 0.12, 0.1], "pos": [0.2, 0.0, -0.3], "c": [0.42, 0.4, 0.4], "rot": -270.0, "rx": 90.0},
+   {"s": "box", "size": [0.12, 0.12, 0.1], "pos": [0.41200000000000003, 0.0, -0.212], "c": [0.42, 0.4, 0.4], "rot": -315.0, "rx": 90.0},
+   {"s": "box", "size": [0.06, 0.5, 0.06], "pos": [0.2, 0.3, -0.12], "c": [0.55, 0.58, 0.62]}
+  ]
  },
  "motor": {
   "label": "Motor",
-  "base_price": 70.0,
-  "import_price": 100.0,
+  "base_price": 90.0,
+  "import_price": 135.0,
   "storable": true,
   "order": 45,
   "intermediate": true,
-  "export": true
+  "export": true,
+  "category": "intermedio",
+  "era": 2,
+  "tech": "maquina_vapor",
+  "volatility": 0.02,
+  "description": "Motores y calderas: insumo de autos y aviones.",
+  "model": [
+   {"s": "box", "size": [0.6, 0.35, 0.36], "pos": [0.0, 0.2, 0.0], "c": [0.35, 0.37, 0.4]},
+   {"s": "cyl", "size": [0.07, 0.2, 0.07], "pos": [-0.2, 0.47, 0.0], "c": [0.55, 0.58, 0.62]},
+   {"s": "cyl", "size": [0.07, 0.2, 0.07], "pos": [-0.07, 0.47, 0.0], "c": [0.55, 0.58, 0.62]},
+   {"s": "cyl", "size": [0.07, 0.2, 0.07], "pos": [0.07, 0.47, 0.0], "c": [0.55, 0.58, 0.62]},
+   {"s": "cyl", "size": [0.07, 0.2, 0.07], "pos": [0.2, 0.47, 0.0], "c": [0.55, 0.58, 0.62]},
+   {"s": "cyl", "size": [0.22, 0.08, 0.22], "pos": [0.36, 0.22, 0.0], "c": [0.42, 0.4, 0.4], "rz": 90.0},
+   {"s": "box", "size": [0.5, 0.06, 0.1], "pos": [0.0, 0.4, 0.2], "c": [0.7, 0.2, 0.15]}
+  ]
  },
  "componentes_electronicos": {
   "label": "Componentes electrónicos",
@@ -41,22 +104,70 @@
   "storable": true,
   "order": 46,
   "intermediate": true,
-  "export": true
+  "export": true,
+  "category": "intermedio",
+  "era": 3,
+  "tech": "electricidad",
+  "volatility": 0.03,
+  "description": "Circuitos, válvulas y transistores.",
+  "model": [
+   {"s": "box", "size": [0.7, 0.04, 0.5], "pos": [0.0, 0.02, 0.0], "c": [0.15, 0.5, 0.25]},
+   {"s": "box", "size": [0.2, 0.06, 0.14], "pos": [-0.15, 0.07, -0.05], "c": [0.08, 0.08, 0.09]},
+   {"s": "box", "size": [0.12, 0.06, 0.12], "pos": [0.18, 0.07, 0.1], "c": [0.08, 0.08, 0.09]},
+   {"s": "cyl", "size": [0.05, 0.14, 0.05], "pos": [0.2, 0.11, -0.15], "c": [0.2, 0.35, 0.65]},
+   {"s": "cyl", "size": [0.04, 0.12, 0.04], "pos": [-0.25, 0.1, 0.15], "c": [0.9, 0.7, 0.2]},
+   {"s": "box", "size": [0.6, 0.01, 0.02], "pos": [0.0, 0.045, 0.2], "c": [0.98, 0.78, 0.18]}
+  ]
  },
  "automovil_bien": {
   "label": "Automóvil",
   "base_price": 800.0,
-  "import_price": 1150.0,
+  "import_price": 1200.0,
   "storable": true,
   "order": 47,
-  "export": true
+  "export": true,
+  "category": "producto",
+  "era": 3,
+  "tech": "industria_automotriz",
+  "volatility": 0.02,
+  "description": "Automóvil de pasajeros: lo compran los vecinos ricos y otros pueblos.",
+  "model": [
+   {"s": "box", "size": [1.0, 0.22, 0.44], "pos": [0.0, 0.22, 0.0], "c": [0.78, 0.16, 0.14]},
+   {"s": "box", "size": [0.5, 0.2, 0.4], "pos": [-0.05, 0.43, 0.0], "c": [0.78, 0.16, 0.14]},
+   {"s": "box", "size": [0.48, 0.16, 0.41], "pos": [-0.05, 0.44, 0.0], "c": [0.55, 0.75, 0.85]},
+   {"s": "box", "size": [0.05, 0.08, 0.1], "pos": [0.5, 0.26, 0.13], "c": [0.95, 0.82, 0.2]},
+   {"s": "box", "size": [0.05, 0.08, 0.1], "pos": [0.5, 0.26, -0.13], "c": [0.95, 0.82, 0.2]},
+   {"s": "cyl", "size": [0.14, 0.1, 0.14], "pos": [0.3, 0.14, 0.23], "c": [0.08, 0.08, 0.09], "rx": 90.0},
+   {"s": "cyl", "size": [0.07, 0.11, 0.07], "pos": [0.3, 0.14, 0.23], "c": [0.85, 0.87, 0.9], "rx": 90.0},
+   {"s": "cyl", "size": [0.14, 0.1, 0.14], "pos": [-0.3, 0.14, 0.23], "c": [0.08, 0.08, 0.09], "rx": 90.0},
+   {"s": "cyl", "size": [0.07, 0.11, 0.07], "pos": [-0.3, 0.14, 0.23], "c": [0.85, 0.87, 0.9], "rx": 90.0},
+   {"s": "cyl", "size": [0.14, 0.1, 0.14], "pos": [0.3, 0.14, -0.23], "c": [0.08, 0.08, 0.09], "rx": 90.0},
+   {"s": "cyl", "size": [0.07, 0.11, 0.07], "pos": [0.3, 0.14, -0.23], "c": [0.85, 0.87, 0.9], "rx": 90.0},
+   {"s": "cyl", "size": [0.14, 0.1, 0.14], "pos": [-0.3, 0.14, -0.23], "c": [0.08, 0.08, 0.09], "rx": 90.0},
+   {"s": "cyl", "size": [0.07, 0.11, 0.07], "pos": [-0.3, 0.14, -0.23], "c": [0.85, 0.87, 0.9], "rx": 90.0}
+  ]
  },
  "avion_bien": {
   "label": "Avión",
   "base_price": 7000.0,
-  "import_price": 10000.0,
+  "import_price": 10500.0,
   "storable": true,
   "order": 48,
-  "export": true
+  "export": true,
+  "category": "producto",
+  "era": 3,
+  "tech": "aeronautica",
+  "volatility": 0.02,
+  "description": "Avión: el producto más caro de la industria.",
+  "model": [
+   {"s": "cyl", "size": [0.1, 1.2, 0.12], "pos": [0.0, 0.35, 0.0], "c": [0.94, 0.93, 0.9], "rz": 90.0},
+   {"s": "sphere", "size": [0.24, 0.2, 0.2], "pos": [0.6, 0.35, 0.0], "c": [0.94, 0.93, 0.9]},
+   {"s": "box", "size": [0.28, 0.03, 1.3], "pos": [0.05, 0.33, 0.0], "c": [0.8, 0.82, 0.86]},
+   {"s": "box", "size": [0.16, 0.03, 0.5], "pos": [-0.52, 0.4, 0.0], "c": [0.8, 0.82, 0.86]},
+   {"s": "box", "size": [0.16, 0.26, 0.03], "pos": [-0.52, 0.5, 0.0], "c": [0.2, 0.35, 0.65]},
+   {"s": "cyl", "size": [0.06, 0.2, 0.06], "pos": [0.1, 0.27, 0.35], "c": [0.55, 0.58, 0.62], "rz": 90.0},
+   {"s": "cyl", "size": [0.06, 0.2, 0.06], "pos": [0.1, 0.27, -0.35], "c": [0.55, 0.58, 0.62], "rz": 90.0},
+   {"s": "box", "size": [0.8, 0.02, 0.02], "pos": [0.1, 0.4, 0.105], "c": [0.2, 0.35, 0.65]}
+  ]
  }
 }

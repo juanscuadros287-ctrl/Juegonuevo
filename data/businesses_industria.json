@@ -1,5 +1,5 @@
 {
- "_nota": "Fase 8 — industria avanzada (solo datos). Esquema acordado con la Fase 6: en cada nivel inputs {bien: cantidad por unidad} se consumen del almacén, output 'warehouse' envía el producto al almacén, product = bien producido. Los productos caros se exportan en la Fase 7.",
+ "_nota": "Fase 8 — industria avanzada (solo datos). Esquema acordado con la Fase 6: en cada nivel inputs {bien: cantidad por unidad} se consumen del almacén, output 'warehouse' envía el producto al almacén, product = bien producido. Los productos caros se exportan en la Fase 7. Economía real: insumos y productividad recalibrados (márgenes 10–40 %, ver tests/test_economia_real.gd); los niveles modernos consumen electricidad (power).",
  "textil": {
   "label": "Industria textil",
   "category": "negocio",
@@ -103,13 +103,13 @@
     "build_days": 45,
     "workers": 6,
     "jobs": 12,
-    "prod_per_worker": 2.6,
+    "prod_per_worker": 2.4,
     "quality": 1.0,
     "upkeep": 1.2,
     "unit_cost": 0.0,
     "tech": "fabricas",
     "inputs": {
-     "algodon": 1.0
+     "algodon": 1.5
     },
     "pollution": 2,
     "product": "tela",
@@ -262,7 +262,7 @@
     "unit_cost": 0.0,
     "tech": "electricidad",
     "inputs": {
-     "algodon": 1.0
+     "algodon": 1.4
     },
     "pollution": 2,
     "required_profession": "ingeniero",
@@ -330,7 +330,8 @@
        0.38
       ]
      }
-    ]
+    ],
+    "power": 2.0
    }
   ]
  },
@@ -357,13 +358,13 @@
     "build_days": 15,
     "workers": 2,
     "jobs": 4,
-    "prod_per_worker": 0.8,
+    "prod_per_worker": 0.45,
     "quality": 1.0,
     "upkeep": 0.3,
     "unit_cost": 0.0,
     "tech": "tapiceria_industrial",
     "inputs": {
-     "tela": 1.5
+     "tela": 1.8
     },
     "pollution": 0,
     "product": "ropa_fina",
@@ -437,13 +438,13 @@
     "build_days": 45,
     "workers": 6,
     "jobs": 14,
-    "prod_per_worker": 1.5,
+    "prod_per_worker": 0.6,
     "quality": 1.0,
     "upkeep": 1.2,
     "unit_cost": 0.0,
     "tech": "fabricas",
     "inputs": {
-     "tela": 1.4
+     "tela": 1.7
     },
     "pollution": 1,
     "product": "ropa_fina",
@@ -587,7 +588,7 @@
     "build_days": 30,
     "workers": 4,
     "jobs": 6,
-    "prod_per_worker": 1.0,
+    "prod_per_worker": 1.6,
     "quality": 1.0,
     "upkeep": 0.6,
     "unit_cost": 0.0,
@@ -686,7 +687,7 @@
     "build_days": 60,
     "workers": 8,
     "jobs": 14,
-    "prod_per_worker": 1.8,
+    "prod_per_worker": 2.4,
     "quality": 1.0,
     "upkeep": 2.0,
     "unit_cost": 0.0,
@@ -858,7 +859,7 @@
     "build_days": 100,
     "workers": 12,
     "jobs": 24,
-    "prod_per_worker": 3.0,
+    "prod_per_worker": 3.2,
     "quality": 1.0,
     "upkeep": 4.5,
     "unit_cost": 0.0,
@@ -996,14 +997,14 @@
     "build_days": 20,
     "workers": 3,
     "jobs": 4,
-    "prod_per_worker": 0.6,
+    "prod_per_worker": 1.4,
     "quality": 1.0,
     "upkeep": 0.4,
     "unit_cost": 0.0,
     "tech": "revolucion_industrial",
     "inputs": {
-     "acero": 0.5,
-     "madera": 0.3
+     "acero": 0.35,
+     "madera": 0.2
     },
     "pollution": 1,
     "product": "herramientas",
@@ -1095,14 +1096,14 @@
     "build_days": 45,
     "workers": 6,
     "jobs": 12,
-    "prod_per_worker": 1.1,
+    "prod_per_worker": 2.2,
     "quality": 1.0,
     "upkeep": 1.3,
     "unit_cost": 0.0,
     "tech": "fabricas",
     "inputs": {
-     "acero": 0.5,
-     "madera": 0.25
+     "acero": 0.35,
+     "madera": 0.2
     },
     "pollution": 2,
     "product": "herramientas",
@@ -1264,7 +1265,7 @@
     "build_days": 40,
     "workers": 6,
     "jobs": 8,
-    "prod_per_worker": 0.08,
+    "prod_per_worker": 0.16,
     "quality": 1.0,
     "upkeep": 1.0,
     "unit_cost": 0.0,
@@ -1401,7 +1402,7 @@
     "build_days": 70,
     "workers": 10,
     "jobs": 16,
-    "prod_per_worker": 0.12,
+    "prod_per_worker": 0.2,
     "quality": 1.0,
     "upkeep": 2.5,
     "unit_cost": 0.0,
@@ -1609,7 +1610,7 @@
     "build_days": 45,
     "workers": 6,
     "jobs": 8,
-    "prod_per_worker": 0.06,
+    "prod_per_worker": 0.1,
     "quality": 1.0,
     "upkeep": 1.2,
     "unit_cost": 0.0,
@@ -1727,7 +1728,7 @@
     "build_days": 80,
     "workers": 10,
     "jobs": 16,
-    "prod_per_worker": 0.1,
+    "prod_per_worker": 0.12,
     "quality": 1.0,
     "upkeep": 3.0,
     "unit_cost": 0.0,
@@ -1803,7 +1804,8 @@
        0.38
       ]
      }
-    ]
+    ],
+    "power": 2.0
    }
   ]
  },
@@ -1830,14 +1832,15 @@
     "build_days": 45,
     "workers": 6,
     "jobs": 8,
-    "prod_per_worker": 0.3,
+    "prod_per_worker": 0.4,
     "quality": 1.0,
     "upkeep": 1.5,
     "unit_cost": 0.0,
     "tech": "electricidad",
     "inputs": {
-     "acero": 0.5,
-     "plata": 0.2
+     "acero": 0.3,
+     "plata": 0.1,
+     "cobre": 0.5
     },
     "pollution": 1,
     "min_education": 1,
@@ -1905,7 +1908,8 @@
        0.38
       ]
      }
-    ]
+    ],
+    "power": 2.0
    },
    {
     "label": "Fábrica de electrónica",
@@ -1917,15 +1921,17 @@
     "build_days": 80,
     "workers": 10,
     "jobs": 18,
-    "prod_per_worker": 0.5,
+    "prod_per_worker": 0.65,
     "quality": 1.0,
     "upkeep": 3.5,
     "unit_cost": 0.0,
     "tech": "electronica",
     "inputs": {
-     "acero": 0.4,
-     "plata": 0.15,
-     "oro": 0.02
+     "acero": 0.25,
+     "plata": 0.08,
+     "oro": 0.01,
+     "cobre": 0.45,
+     "plasticos": 0.2
     },
     "pollution": 1,
     "min_education": 2,
@@ -1994,7 +2000,8 @@
        0.38
       ]
      }
-    ]
+    ],
+    "power": 2.5
    }
   ]
  },
@@ -2021,16 +2028,16 @@
     "build_days": 80,
     "workers": 10,
     "jobs": 14,
-    "prod_per_worker": 0.01,
+    "prod_per_worker": 0.012,
     "quality": 1.0,
     "upkeep": 3.0,
     "unit_cost": 0.0,
     "tech": "industria_automotriz",
     "inputs": {
-     "acero": 40.0,
+     "acero": 20.0,
      "motor": 1.0,
-     "tela": 10.0,
-     "componentes_electronicos": 4.0
+     "tela": 5.0,
+     "componentes_electronicos": 3.0
     },
     "pollution": 4,
     "min_education": 1,
@@ -2186,7 +2193,8 @@
        0.1
       ]
      }
-    ]
+    ],
+    "power": 2.0
    },
    {
     "label": "Planta automotriz",
@@ -2198,16 +2206,17 @@
     "build_days": 140,
     "workers": 16,
     "jobs": 30,
-    "prod_per_worker": 0.015,
+    "prod_per_worker": 0.016,
     "quality": 1.0,
     "upkeep": 7.0,
     "unit_cost": 0.0,
     "tech": "electronica",
     "inputs": {
-     "acero": 36.0,
+     "acero": 18.0,
      "motor": 1.0,
-     "tela": 8.0,
-     "componentes_electronicos": 5.0
+     "tela": 3.5,
+     "componentes_electronicos": 3.0,
+     "plasticos": 4.0
     },
     "pollution": 5,
     "min_education": 2,
@@ -2276,7 +2285,8 @@
        0.38
       ]
      }
-    ]
+    ],
+    "power": 2.5
    }
   ]
  },
@@ -2303,16 +2313,16 @@
     "build_days": 140,
     "workers": 14,
     "jobs": 20,
-    "prod_per_worker": 0.0012,
+    "prod_per_worker": 0.0018,
     "quality": 1.0,
     "upkeep": 6.0,
     "unit_cost": 0.0,
     "tech": "aeronautica",
     "inputs": {
-     "acero": 200.0,
+     "acero": 150.0,
      "motor": 4.0,
-     "tela": 30.0,
-     "componentes_electronicos": 60.0
+     "tela": 20.0,
+     "componentes_electronicos": 50.0
     },
     "pollution": 4,
     "min_education": 2,
@@ -2400,7 +2410,8 @@
       ],
       "rot": 0
      }
-    ]
+    ],
+    "power": 2.5
    },
    {
     "label": "Planta aeronáutica",
@@ -2412,16 +2423,17 @@
     "build_days": 200,
     "workers": 20,
     "jobs": 36,
-    "prod_per_worker": 0.0016,
+    "prod_per_worker": 0.0022,
     "quality": 1.0,
     "upkeep": 12.0,
     "unit_cost": 0.0,
     "tech": "electronica",
     "inputs": {
-     "acero": 180.0,
+     "acero": 130.0,
      "motor": 4.0,
-     "tela": 25.0,
-     "componentes_electronicos": 55.0
+     "tela": 10.0,
+     "componentes_electronicos": 45.0,
+     "plasticos": 30.0
     },
     "pollution": 5,
     "min_education": 2,
@@ -2509,7 +2521,8 @@
       ],
       "rot": 0
      }
-    ]
+    ],
+    "power": 3.0
    }
   ]
  },
@@ -2617,7 +2630,7 @@
     "build_days": 35,
     "workers": 4,
     "jobs": 6,
-    "prod_per_worker": 0.25,
+    "prod_per_worker": 0.2,
     "quality": 1.3,
     "upkeep": 1.0,
     "unit_cost": 0.0,

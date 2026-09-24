@@ -1,0 +1,3932 @@
+{
+ "_nota": "Economía real: fábricas de bienes básicos → industriales → modernos, centrales eléctricas, pozos y comercios especializados (product \"comercio\" = tienda que vende desde el almacén; ver data/shops.json). power = electricidad por trabajador y día (ver data/resources_energia.json → energy). Generado; ver docs/ECONOMIA.md.",
+ "estancia": {
+  "label": "Estancia ganadera",
+  "category": "negocio",
+  "sector": "Materias primas",
+  "order": 70,
+  "product": "ganado",
+  "skill": "agricultura",
+  "base_wage": 2.0,
+  "footprint": 7.0,
+  "description": "Cría reses en los pastos. El ganado va al almacén: matadero, curtiembre y velería.",
+  "economia": true,
+  "output": "warehouse",
+  "extraction": true,
+  "region_resource": "pastos",
+  "levels": [
+   {
+    "label": "Corral de ganado",
+    "cost": 420,
+    "materials": {
+     "madera": 20
+    },
+    "build_days": 12,
+    "workers": 2,
+    "jobs": 4,
+    "prod_per_worker": 0.6,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [0.1, 0.6, 6.0], "pos": [-3.0, 0.4, 0.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.1, 0.6, 6.0], "pos": [3.0, 0.4, 0.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [6.0, 0.6, 0.1], "pos": [0.0, 0.4, -3.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [6.0, 0.6, 0.1], "pos": [0.0, 0.4, 3.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [2.6, 2.0, 2.2], "pos": [-1.5, 1.0, -1.5], "c": [0.6, 0.45, 0.3]},
+     {"s": "prism", "size": [2.9, 1.0, 2.6], "pos": [-1.5, 2.5, -1.5], "c": [0.55, 0.3, 0.2], "rot": 90},
+     {"s": "box", "size": [1.2, 0.6, 0.5], "pos": [1.6, 0.4, 1.8], "c": [0.45, 0.3, 0.2]},
+     {"s": "box", "size": [1.2, 0.6, 0.5], "pos": [0.8, 0.4, 0.2], "c": [0.45, 0.3, 0.2]}
+    ],
+    "product": "ganado",
+    "skill": "agricultura",
+    "output": "warehouse"
+   },
+   {
+    "label": "Estancia",
+    "cost": 1400,
+    "materials": {
+     "madera": 40,
+     "piedra": 10
+    },
+    "build_days": 25,
+    "workers": 4,
+    "jobs": 8,
+    "prod_per_worker": 0.8,
+    "quality": 1.0,
+    "upkeep": 0.5,
+    "unit_cost": 0.0,
+    "tech": "rotacion_cultivos",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [0.1, 0.6, 7.0], "pos": [-3.5, 0.4, 0.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.1, 0.6, 7.0], "pos": [3.5, 0.4, 0.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [7.0, 0.6, 0.1], "pos": [0.0, 0.4, -3.5], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [7.0, 0.6, 0.1], "pos": [0.0, 0.4, 3.5], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [3.2, 2.6, 2.6], "pos": [-1.8, 1.3, -1.8], "c": [0.62, 0.3, 0.22]},
+     {"s": "prism", "size": [3.5, 1.4, 3.0], "pos": [-1.8, 3.3, -1.8], "c": [0.4, 0.25, 0.18], "rot": 90},
+     {"s": "box", "size": [1.2, 0.6, 0.5], "pos": [1.6, 0.4, 1.8], "c": [0.45, 0.3, 0.2]},
+     {"s": "box", "size": [1.2, 0.6, 0.5], "pos": [0.4, 0.4, 0.8], "c": [0.45, 0.3, 0.2]},
+     {"s": "box", "size": [1.2, 0.6, 0.5], "pos": [2.2, 0.4, -0.2], "c": [0.45, 0.3, 0.2]}
+    ],
+    "product": "ganado",
+    "skill": "agricultura",
+    "output": "warehouse"
+   },
+   {
+    "label": "Hacienda ganadera",
+    "cost": 5500,
+    "materials": {
+     "madera": 50,
+     "piedra": 60
+    },
+    "build_days": 40,
+    "workers": 6,
+    "jobs": 14,
+    "prod_per_worker": 1.4,
+    "quality": 1.0,
+    "upkeep": 1.8,
+    "unit_cost": 0.0,
+    "tech": "maquinaria_agricola",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [0.1, 0.6, 8.0], "pos": [-4.0, 0.4, 0.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.1, 0.6, 8.0], "pos": [4.0, 0.4, 0.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [8.0, 0.6, 0.1], "pos": [0.0, 0.4, -4.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [8.0, 0.6, 0.1], "pos": [0.0, 0.4, 4.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [4.0, 3.0, 3.0], "pos": [-2.0, 1.5, -2.0], "c": [0.62, 0.3, 0.22]},
+     {"s": "prism", "size": [4.3, 1.4, 3.4], "pos": [-2.0, 3.7, -2.0], "c": [0.4, 0.25, 0.18], "rot": 90},
+     {"s": "cyl", "size": [0.7, 3.0, 0.7], "pos": [2.5, 1.5, -2.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.63, 0.15, 0.7], "pos": [2.5, 3.07, -2.5], "c": [0.6, 0.6, 0.6]},
+     {"s": "box", "size": [1.2, 0.6, 0.5], "pos": [1.6, 0.4, 1.8], "c": [0.45, 0.3, 0.2]},
+     {"s": "box", "size": [1.2, 0.6, 0.5], "pos": [0.4, 0.4, 0.8], "c": [0.45, 0.3, 0.2]},
+     {"s": "box", "size": [1.2, 0.6, 0.5], "pos": [2.2, 0.4, -0.2], "c": [0.45, 0.3, 0.2]},
+     {"s": "box", "size": [1.2, 0.6, 0.5], "pos": [-1.0, 0.4, 2.5], "c": [0.45, 0.3, 0.2]}
+    ],
+    "product": "ganado",
+    "skill": "agricultura",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "barrero": {
+  "label": "Barrero",
+  "category": "negocio",
+  "sector": "Materias primas",
+  "order": 71,
+  "product": "arcilla",
+  "skill": "mineria",
+  "base_wage": 1.9,
+  "footprint": 5.0,
+  "description": "Excava arcilla junto al pueblo para la alfarería.",
+  "economia": true,
+  "output": "warehouse",
+  "extraction": true,
+  "region_resource": "piedra",
+  "levels": [
+   {
+    "label": "Barrero",
+    "cost": 300,
+    "materials": {
+     "madera": 10
+    },
+    "build_days": 8,
+    "workers": 2,
+    "jobs": 4,
+    "prod_per_worker": 12.0,
+    "quality": 1.0,
+    "upkeep": 0.1,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [4.5, 0.12, 4.0], "pos": [0.0, 0.06, 0.0], "c": [0.5, 0.33, 0.2]},
+     {"s": "sphere", "size": [1.0, 0.8, 1.0], "pos": [0.205, 0.58, 0.319], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.2, 0.8, 1.0], "pos": [-0.635, 0.58, -0.168], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.4, 0.8, 1.0], "pos": [0.751, 0.4, -0.394], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.0, 0.8, 1.0], "pos": [-0.34, 0.4, 0.945], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.2, 0.8, 1.0], "pos": [-0.439, 0.4, -1.05], "c": [0.72, 0.42, 0.26]},
+     {"s": "box", "size": [1.4, 0.5, 0.8], "pos": [1.6, 0.25, 1.5], "c": [0.55, 0.36, 0.2]}
+    ],
+    "product": "arcilla",
+    "skill": "mineria",
+    "output": "warehouse"
+   },
+   {
+    "label": "Tejar y barrero",
+    "cost": 1300,
+    "materials": {
+     "madera": 20,
+     "piedra": 20
+    },
+    "build_days": 20,
+    "workers": 4,
+    "jobs": 8,
+    "prod_per_worker": 16.0,
+    "quality": 1.0,
+    "upkeep": 0.4,
+    "unit_cost": 0.0,
+    "tech": "ladrillo",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [4.5, 0.12, 4.0], "pos": [0.0, 0.06, 0.0], "c": [0.5, 0.33, 0.2]},
+     {"s": "sphere", "size": [1.1, 0.88, 1.1], "pos": [-0.168, 0.62, 0.367], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.32, 0.88, 1.1], "pos": [-0.215, 0.62, -0.666], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.54, 0.88, 1.1], "pos": [0.786, 0.44, 0.446], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.1, 0.88, 1.1], "pos": [-1.042, 0.44, 0.238], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.32, 0.88, 1.1], "pos": [0.689, 0.44, -0.998], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.54, 0.88, 1.1], "pos": [0.184, 0.44, 1.328], "c": [0.72, 0.42, 0.26]},
+     {"s": "cyl", "size": [0.7, 3.0, 0.805], "pos": [1.8, 1.5, -1.2], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.6, 1.2, 1.6], "pos": [1.8, 0.6, -1.2], "c": [0.72, 0.42, 0.26]}
+    ],
+    "product": "arcilla",
+    "skill": "mineria",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "colmenar": {
+  "label": "Colmenar",
+  "category": "negocio",
+  "sector": "Materias primas",
+  "order": 72,
+  "product": "cera",
+  "skill": "agricultura",
+  "base_wage": 1.9,
+  "footprint": 5.0,
+  "description": "Colmenas de abejas: cera para velas y jabón.",
+  "economia": true,
+  "output": "warehouse",
+  "extraction": true,
+  "region_resource": "tierra_fertil",
+  "seasonal": true,
+  "levels": [
+   {
+    "label": "Colmenar",
+    "cost": 320,
+    "materials": {
+     "madera": 12
+    },
+    "build_days": 8,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 2.6,
+    "quality": 1.0,
+    "upkeep": 0.1,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [5.0, 0.08, 4.5], "pos": [0.0, 0.04, 0.0], "c": [0.35, 0.55, 0.25]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [-1.5, 0.35, -1.0], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [-1.5, 0.75, -1.0], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [-1.5, 0.1, -1.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [0.0, 0.35, -1.0], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [0.0, 0.75, -1.0], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [0.0, 0.1, -1.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [1.5, 0.35, -1.0], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [1.5, 0.75, -1.0], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [1.5, 0.1, -1.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [-0.75, 0.35, 1.0], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [-0.75, 0.75, 1.0], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [-0.75, 0.1, 1.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [0.75, 0.35, 1.0], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [0.75, 0.75, 1.0], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [0.75, 0.1, 1.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "sphere", "size": [0.4, 0.4, 0.4], "pos": [-1.8, 0.2, 2.0], "c": [0.9, 0.4, 0.6]},
+     {"s": "sphere", "size": [0.4, 0.4, 0.4], "pos": [1.8, 0.2, 2.0], "c": [0.9, 0.4, 0.6]}
+    ],
+    "product": "cera",
+    "skill": "agricultura",
+    "output": "warehouse"
+   },
+   {
+    "label": "Colmenar grande",
+    "cost": 1200,
+    "materials": {
+     "madera": 30
+    },
+    "build_days": 18,
+    "workers": 4,
+    "jobs": 7,
+    "prod_per_worker": 3.4,
+    "quality": 1.0,
+    "upkeep": 0.4,
+    "unit_cost": 0.0,
+    "tech": "rotacion_cultivos",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [6.0, 0.08, 5.5], "pos": [0.0, 0.04, 0.0], "c": [0.35, 0.55, 0.25]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [-2.0, 0.35, -1.6], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [-2.0, 0.75, -1.6], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [-2.0, 0.1, -1.6], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [-0.7, 0.35, -1.6], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [-0.7, 0.75, -1.6], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [-0.7, 0.1, -1.6], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [0.7, 0.35, -1.6], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [0.7, 0.75, -1.6], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [0.7, 0.1, -1.6], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [2.0, 0.35, -1.6], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [2.0, 0.75, -1.6], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [2.0, 0.1, -1.6], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [-2.0, 0.35, 0.2], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [-2.0, 0.75, 0.2], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [-2.0, 0.1, 0.2], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [-0.7, 0.35, 0.2], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [-0.7, 0.75, 0.2], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [-0.7, 0.1, 0.2], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [0.7, 0.35, 0.2], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [0.7, 0.75, 0.2], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [0.7, 0.1, 0.2], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.6, 0.5, 0.5], "pos": [2.0, 0.35, 0.2], "c": [0.95, 0.85, 0.5]},
+     {"s": "prism", "size": [0.7, 0.3, 0.6], "pos": [2.0, 0.75, 0.2], "c": [0.6, 0.4, 0.2], "rot": 90},
+     {"s": "box", "size": [0.2, 0.3, 0.2], "pos": [2.0, 0.1, 0.2], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [1.6, 1.8, 1.4], "pos": [0.0, 0.9, 2.0], "c": [0.8, 0.7, 0.5]},
+     {"s": "prism", "size": [1.9, 0.8, 1.8], "pos": [0.0, 2.2, 2.0], "c": [0.55, 0.3, 0.2], "rot": 90}
+    ],
+    "product": "cera",
+    "skill": "agricultura",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "huerto_hierbas": {
+  "label": "Huerto de hierbas",
+  "category": "negocio",
+  "sector": "Materias primas",
+  "order": 73,
+  "product": "hierbas",
+  "skill": "medicina",
+  "base_wage": 2.0,
+  "footprint": 5.0,
+  "description": "Cultiva hierbas medicinales para los remedios de botica.",
+  "economia": true,
+  "output": "warehouse",
+  "extraction": true,
+  "region_resource": "tierra_fertil",
+  "seasonal": true,
+  "levels": [
+   {
+    "label": "Huerto de hierbas",
+    "cost": 350,
+    "materials": {
+     "madera": 10
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 5.0,
+    "quality": 1.0,
+    "upkeep": 0.1,
+    "unit_cost": 0.0,
+    "tech": "herbolaria",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [4.5, 0.1, 4.0], "pos": [0.0, 0.05, 0.0], "c": [0.4, 0.3, 0.18]},
+     {"s": "box", "size": [4.05, 0.4, 0.3], "pos": [0.0, 0.3, -1.5], "c": [0.3, 0.6, 0.3]},
+     {"s": "box", "size": [4.05, 0.4, 0.3], "pos": [0.0, 0.3, -0.5], "c": [0.3, 0.6, 0.3]},
+     {"s": "box", "size": [4.05, 0.4, 0.3], "pos": [0.0, 0.3, 0.5], "c": [0.3, 0.6, 0.3]},
+     {"s": "box", "size": [4.05, 0.4, 0.3], "pos": [0.0, 0.3, 1.5], "c": [0.3, 0.6, 0.3]},
+     {"s": "box", "size": [0.8, 1.2, 0.8], "pos": [2.4, 0.6, 1.8], "c": [0.55, 0.36, 0.2]}
+    ],
+    "product": "hierbas",
+    "skill": "medicina",
+    "output": "warehouse"
+   },
+   {
+    "label": "Invernadero de hierbas",
+    "cost": 2400,
+    "materials": {
+     "madera": 20,
+     "piedra": 30
+    },
+    "build_days": 25,
+    "workers": 4,
+    "jobs": 7,
+    "prod_per_worker": 7.0,
+    "quality": 1.0,
+    "upkeep": 0.7,
+    "unit_cost": 0.0,
+    "tech": "saneamiento",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [5.0, 0.1, 4.5], "pos": [0.0, 0.05, 0.0], "c": [0.4, 0.3, 0.18]},
+     {"s": "box", "size": [4.5, 0.4, 0.3], "pos": [0.0, 0.3, -1.8], "c": [0.3, 0.65, 0.35]},
+     {"s": "box", "size": [4.5, 0.4, 0.3], "pos": [0.0, 0.3, -0.9], "c": [0.3, 0.65, 0.35]},
+     {"s": "box", "size": [4.5, 0.4, 0.3], "pos": [0.0, 0.3, 0.0], "c": [0.3, 0.65, 0.35]},
+     {"s": "box", "size": [4.5, 0.4, 0.3], "pos": [0.0, 0.3, 0.9], "c": [0.3, 0.65, 0.35]},
+     {"s": "box", "size": [4.5, 0.4, 0.3], "pos": [0.0, 0.3, 1.8], "c": [0.3, 0.65, 0.35]},
+     {"s": "box", "size": [4.6, 2.2, 3.0], "pos": [0.0, 1.1, -0.6], "c": [0.62, 0.82, 0.9]},
+     {"s": "prism", "size": [4.8, 1.0, 3.2], "pos": [0.0, 2.7, -0.6], "c": [0.62, 0.82, 0.9], "rot": 90}
+    ],
+    "product": "hierbas",
+    "skill": "medicina",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "obrador": {
+  "label": "Obrador de pan",
+  "category": "negocio",
+  "sector": "Alimentos",
+  "order": 74,
+  "product": "pan",
+  "skill": "artesania",
+  "base_wage": 2.1,
+  "footprint": 4.0,
+  "description": "Hornea pan con harina del almacén. Lo venden las panaderías y tiendas.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Obrador de pan",
+    "cost": 450,
+    "materials": {
+     "madera": 15,
+     "piedra": 15
+    },
+    "build_days": 12,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 7.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.6, 2.4, 3.2], "pos": [0.0, 1.2, 0.0], "c": [0.92, 0.85, 0.66]},
+     {"s": "prism", "size": [3.9, 1.4, 3.6], "pos": [0.0, 3.1, 0.0], "c": [0.62, 0.3, 0.2], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.63], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.2, 1.32, 1.63], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.2, 1.32, 1.63], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.5, 1.85], "c": [0.85, 0.6, 0.25]},
+     {"s": "cyl", "size": [0.3, 4.0, 0.345], "pos": [1.1, 2.0, -0.6], "c": [0.5, 0.45, 0.42]}
+    ],
+    "inputs": {
+     "harina": 0.35
+    },
+    "product": "pan",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Horno de pan de ladrillo",
+    "cost": 1600,
+    "materials": {
+     "madera": 20,
+     "piedra": 40
+    },
+    "build_days": 20,
+    "workers": 4,
+    "jobs": 6,
+    "prod_per_worker": 9.0,
+    "quality": 1.0,
+    "upkeep": 0.5,
+    "unit_cost": 0.0,
+    "tech": "ladrillo",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [4.6, 2.8, 3.6], "pos": [0.0, 1.4, 0.0], "c": [0.75, 0.4, 0.28]},
+     {"s": "prism", "size": [4.9, 1.4, 4.0], "pos": [0.0, 3.5, 0.0], "c": [0.55, 0.28, 0.18], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.83], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.533, 1.54, 1.83], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.533, 1.54, 1.83], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.9, 2.05], "c": [0.85, 0.6, 0.25]},
+     {"s": "cyl", "size": [0.3, 4.6, 0.345], "pos": [1.6, 2.3, -0.8], "c": [0.5, 0.45, 0.42]}
+    ],
+    "inputs": {
+     "harina": 0.35
+    },
+    "product": "pan",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Panificadora",
+    "cost": 6500,
+    "materials": {
+     "madera": 20,
+     "piedra": 120
+    },
+    "build_days": 40,
+    "workers": 8,
+    "jobs": 12,
+    "prod_per_worker": 14.0,
+    "quality": 1.0,
+    "upkeep": 1.8,
+    "unit_cost": 0.0,
+    "tech": "maquina_vapor",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [7.0, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.85, 0.8, 0.65]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [-1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.6, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.75, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 7.5, 0.402], "pos": [2.6, 3.75, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.8, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.85, 0.6, 0.25]}
+    ],
+    "inputs": {
+     "harina": 0.33
+    },
+    "product": "pan",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "matadero": {
+  "label": "Matadero",
+  "category": "negocio",
+  "sector": "Alimentos",
+  "order": 75,
+  "product": "carne",
+  "skill": "artesania",
+  "base_wage": 2.1,
+  "footprint": 5.0,
+  "description": "Beneficia el ganado del almacén y deja carne lista para las carnicerías.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Matadero",
+    "cost": 500,
+    "materials": {
+     "madera": 20,
+     "piedra": 15
+    },
+    "build_days": 14,
+    "workers": 2,
+    "jobs": 4,
+    "prod_per_worker": 6.0,
+    "quality": 1.0,
+    "upkeep": 0.25,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [4.4, 2.6, 3.6], "pos": [0.0, 1.3, 0.0], "c": [0.85, 0.82, 0.78]},
+     {"s": "prism", "size": [4.7, 1.4, 4.0], "pos": [0.0, 3.3, 0.0], "c": [0.55, 0.2, 0.18], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.83], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.467, 1.43, 1.83], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.467, 1.43, 1.83], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.7, 2.05], "c": [0.72, 0.22, 0.2]},
+     {"s": "box", "size": [1.8, 0.8, 1.2], "pos": [-2.8, 0.4, 0.8], "c": [0.45, 0.3, 0.2]}
+    ],
+    "inputs": {
+     "ganado": 0.2
+    },
+    "product": "carne",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Matadero municipal",
+    "cost": 2200,
+    "materials": {
+     "madera": 20,
+     "piedra": 60
+    },
+    "build_days": 25,
+    "workers": 5,
+    "jobs": 9,
+    "prod_per_worker": 8.0,
+    "quality": 1.0,
+    "upkeep": 0.8,
+    "unit_cost": 0.0,
+    "tech": "saneamiento",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [6.0, 3.0, 4.4], "pos": [0.0, 1.5, 0.0], "c": [0.9, 0.88, 0.84]},
+     {"s": "prism", "size": [6.3, 1.4, 4.8], "pos": [0.0, 3.7, 0.0], "c": [0.55, 0.2, 0.18], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 2.23], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-2.0, 1.65, 2.23], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [2.0, 1.65, 2.23], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 3.1, 2.45], "c": [0.72, 0.22, 0.2]},
+     {"s": "cyl", "size": [0.3, 4.5, 0.345], "pos": [2.0, 2.25, -1.2], "c": [0.5, 0.45, 0.42]}
+    ],
+    "inputs": {
+     "ganado": 0.2
+    },
+    "product": "carne",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Frigorífico",
+    "cost": 12000,
+    "materials": {
+     "madera": 20,
+     "piedra": 200
+    },
+    "build_days": 50,
+    "workers": 10,
+    "jobs": 18,
+    "prod_per_worker": 14.0,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "refrigeracion",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [9.0, 4.5, 6.0], "pos": [0.0, 2.25, 0.0], "c": [0.92, 0.92, 0.92]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [-3.0, 5.15, 0.0], "c": [0.6, 0.62, 0.66]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [0.0, 5.15, 0.0], "c": [0.6, 0.62, 0.66]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [3.0, 5.15, 0.0], "c": [0.6, 0.62, 0.66]},
+     {"s": "box", "size": [7.2, 0.8, 0.08], "pos": [0.0, 2.7, 3.03], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.25, 1.1, 3.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 7.0, 0.402], "pos": [3.5, 3.5, -2.0], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [3.6, 0.5, 0.08], "pos": [0.0, 4.0, 3.1], "c": [0.72, 0.22, 0.2]},
+     {"s": "cyl", "size": [0.9, 3.5, 0.9], "pos": [-5.5, 1.75, -1.5], "c": [0.7, 0.75, 0.8]},
+     {"s": "cyl", "size": [0.81, 0.15, 0.9], "pos": [-5.5, 3.57, -1.5], "c": [0.6, 0.6, 0.6]}
+    ],
+    "inputs": {
+     "ganado": 0.19
+    },
+    "power": 2.0,
+    "product": "carne",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "charcuteria": {
+  "label": "Charcutería",
+  "category": "negocio",
+  "sector": "Alimentos",
+  "order": 76,
+  "product": "embutidos",
+  "skill": "artesania",
+  "base_wage": 2.1,
+  "footprint": 4.0,
+  "description": "Cura y embute carne del almacén: chorizos y jamones que se venden caro y aguantan el viaje.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Charcutería",
+    "cost": 480,
+    "materials": {
+     "madera": 15,
+     "piedra": 10
+    },
+    "build_days": 12,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 3.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.6, 2.4, 3.2], "pos": [0.0, 1.2, 0.0], "c": [0.88, 0.78, 0.62]},
+     {"s": "prism", "size": [3.9, 1.4, 3.6], "pos": [0.0, 3.1, 0.0], "c": [0.5, 0.22, 0.16], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.63], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.2, 1.32, 1.63], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.2, 1.32, 1.63], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.5, 1.85], "c": [0.6, 0.18, 0.15]},
+     {"s": "cyl", "size": [0.3, 3.8, 0.345], "pos": [-1.0, 1.9, -0.6], "c": [0.5, 0.45, 0.42]},
+     {"s": "cyl", "size": [0.12, 0.6, 0.12], "pos": [-1.2, 1.9, 1.75], "c": [0.6, 0.18, 0.15]},
+     {"s": "cyl", "size": [0.12, 0.6, 0.12], "pos": [-0.9, 1.9, 1.75], "c": [0.6, 0.18, 0.15]},
+     {"s": "cyl", "size": [0.12, 0.6, 0.12], "pos": [1.0, 1.9, 1.75], "c": [0.6, 0.18, 0.15]}
+    ],
+    "inputs": {
+     "carne": 1.2
+    },
+    "product": "embutidos",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Fábrica de embutidos",
+    "cost": 5000,
+    "materials": {
+     "madera": 20,
+     "piedra": 100
+    },
+    "build_days": 35,
+    "workers": 6,
+    "jobs": 12,
+    "prod_per_worker": 4.4,
+    "quality": 1.0,
+    "upkeep": 1.4,
+    "unit_cost": 0.0,
+    "tech": "fabricas",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [7.0, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.88, 0.78, 0.62]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [-1.75, 4.65, 0.0], "c": [0.5, 0.22, 0.16]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [1.75, 4.65, 0.0], "c": [0.5, 0.22, 0.16]},
+     {"s": "box", "size": [5.6, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.75, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 6.5, 0.402], "pos": [2.6, 3.25, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.8, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.6, 0.18, 0.15]}
+    ],
+    "inputs": {
+     "carne": 1.15
+    },
+    "product": "embutidos",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "curtiembre": {
+  "label": "Curtiembre",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 77,
+  "product": "cuero",
+  "skill": "artesania",
+  "base_wage": 2.0,
+  "footprint": 5.0,
+  "description": "Curte pieles del ganado. Huele mal: mejor lejos de las casas.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Curtiembre",
+    "cost": 480,
+    "materials": {
+     "madera": 20,
+     "piedra": 10
+    },
+    "build_days": 12,
+    "workers": 2,
+    "jobs": 4,
+    "prod_per_worker": 3.5,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [4.0, 2.3, 3.4], "pos": [0.0, 1.15, 0.0], "c": [0.7, 0.55, 0.38]},
+     {"s": "prism", "size": [4.3, 1.4, 3.8], "pos": [0.0, 3.0, 0.0], "c": [0.45, 0.3, 0.2], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.73], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.333, 1.265, 1.73], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.333, 1.265, 1.73], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.4, 1.95], "c": [0.45, 0.27, 0.14]},
+     {"s": "cyl", "size": [0.6, 0.8, 0.6], "pos": [-2.8, 0.4, 1.0], "c": [0.45, 0.35, 0.2]},
+     {"s": "cyl", "size": [0.54, 0.15, 0.6], "pos": [-2.8, 0.87, 1.0], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [0.6, 0.8, 0.6], "pos": [-2.8, 0.4, -0.6], "c": [0.45, 0.35, 0.2]},
+     {"s": "cyl", "size": [0.54, 0.15, 0.6], "pos": [-2.8, 0.87, -0.6], "c": [0.6, 0.6, 0.6]},
+     {"s": "box", "size": [1.6, 0.04, 1.0], "pos": [2.8, 1.2, 0.8], "c": [0.45, 0.27, 0.14], "rx": 80}
+    ],
+    "inputs": {
+     "ganado": 0.25
+    },
+    "product": "cuero",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Curtiduría industrial",
+    "cost": 5000,
+    "materials": {
+     "madera": 20,
+     "piedra": 100
+    },
+    "build_days": 35,
+    "workers": 6,
+    "jobs": 12,
+    "prod_per_worker": 5.5,
+    "quality": 1.0,
+    "upkeep": 1.3,
+    "unit_cost": 0.0,
+    "tech": "quimica",
+    "pollution": 3,
+    "model": [
+     {"s": "box", "size": [7.0, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.7, 0.55, 0.38]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [-1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.6, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.75, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 6.5, 0.402], "pos": [2.6, 3.25, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.8, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.45, 0.27, 0.14]},
+     {"s": "cyl", "size": [0.8, 1.2, 0.8], "pos": [-4.5, 0.6, 0.0], "c": [0.45, 0.35, 0.2]},
+     {"s": "cyl", "size": [0.72, 0.15, 0.8], "pos": [-4.5, 1.27, 0.0], "c": [0.6, 0.6, 0.6]}
+    ],
+    "inputs": {
+     "ganado": 0.24
+    },
+    "product": "cuero",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "zapateria_taller": {
+  "label": "Zapatería",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 78,
+  "product": "zapatos",
+  "skill": "artesania",
+  "base_wage": 2.1,
+  "footprint": 4.0,
+  "description": "Cose botas y zapatos con cuero del almacén.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Taller de zapatería",
+    "cost": 450,
+    "materials": {
+     "madera": 15,
+     "piedra": 5
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 0.6,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.4, 2.3, 3.0], "pos": [0.0, 1.15, 0.0], "c": [0.85, 0.75, 0.6]},
+     {"s": "prism", "size": [3.7, 1.4, 3.4], "pos": [0.0, 3.0, 0.0], "c": [0.45, 0.28, 0.18], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.133, 1.265, 1.53], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.133, 1.265, 1.53], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.4, 1.75], "c": [0.45, 0.27, 0.14]}
+    ],
+    "inputs": {
+     "cuero": 1.2
+    },
+    "product": "zapatos",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Fábrica de calzado",
+    "cost": 5500,
+    "materials": {
+     "madera": 20,
+     "piedra": 100
+    },
+    "build_days": 35,
+    "workers": 6,
+    "jobs": 14,
+    "prod_per_worker": 1.0,
+    "quality": 1.0,
+    "upkeep": 1.4,
+    "unit_cost": 0.0,
+    "tech": "produccion_en_serie",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [7.0, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.8, 0.7, 0.55]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [-1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.6, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.75, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 6.5, 0.402], "pos": [2.6, 3.25, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.8, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.45, 0.27, 0.14]}
+    ],
+    "inputs": {
+     "cuero": 1.15
+    },
+    "product": "zapatos",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Calzado moderno",
+    "cost": 15000,
+    "materials": {
+     "madera": 20,
+     "piedra": 200
+    },
+    "build_days": 50,
+    "workers": 10,
+    "jobs": 22,
+    "prod_per_worker": 1.6,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "petroquimica",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [9.0, 4.5, 6.0], "pos": [0.0, 2.25, 0.0], "c": [0.85, 0.85, 0.85]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [-3.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [0.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [3.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "box", "size": [7.2, 0.8, 0.08], "pos": [0.0, 2.7, 3.03], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.25, 1.1, 3.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 6.5, 0.402], "pos": [3.5, 3.25, -2.0], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [3.6, 0.5, 0.08], "pos": [0.0, 4.0, 3.1], "c": [0.45, 0.27, 0.14]}
+    ],
+    "inputs": {
+     "cuero": 0.9,
+     "plasticos": 0.3
+    },
+    "power": 1.5,
+    "product": "zapatos",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "carpinteria": {
+  "label": "Carpintería y ebanistería",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 79,
+  "product": "muebles",
+  "skill": "artesania",
+  "base_wage": 2.1,
+  "footprint": 4.5,
+  "description": "Hace mesas, sillas y armarios con madera del almacén.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Carpintería",
+    "cost": 480,
+    "materials": {
+     "madera": 20,
+     "piedra": 5
+    },
+    "build_days": 12,
+    "workers": 2,
+    "jobs": 4,
+    "prod_per_worker": 0.4,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [4.0, 2.4, 3.4], "pos": [0.0, 1.2, 0.0], "c": [0.72, 0.55, 0.35]},
+     {"s": "prism", "size": [4.3, 1.4, 3.8], "pos": [0.0, 3.1, 0.0], "c": [0.45, 0.3, 0.2], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.73], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.333, 1.32, 1.73], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.333, 1.32, 1.73], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.5, 1.95], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [1.8, 0.2, 0.5], "pos": [-2.9, 0.3, 0.8], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [1.8, 0.2, 0.5], "pos": [-2.9, 0.5, 0.8], "c": [0.55, 0.36, 0.2]}
+    ],
+    "inputs": {
+     "madera": 2.5
+    },
+    "product": "muebles",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Ebanistería",
+    "cost": 1900,
+    "materials": {
+     "madera": 40,
+     "piedra": 30
+    },
+    "build_days": 25,
+    "workers": 4,
+    "jobs": 8,
+    "prod_per_worker": 0.55,
+    "quality": 1.0,
+    "upkeep": 0.6,
+    "unit_cost": 0.0,
+    "tech": "tapiceria_industrial",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [5.4, 2.8, 4.0], "pos": [0.0, 1.4, 0.0], "c": [0.72, 0.55, 0.35]},
+     {"s": "prism", "size": [5.7, 1.4, 4.4], "pos": [0.0, 3.5, 0.0], "c": [0.45, 0.3, 0.2], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 2.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.8, 1.54, 2.03], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.8, 1.54, 2.03], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.9, 2.25], "c": [0.76, 0.58, 0.36]},
+     {"s": "cyl", "size": [0.3, 4.2, 0.345], "pos": [1.8, 2.1, -1.0], "c": [0.5, 0.45, 0.42]}
+    ],
+    "inputs": {
+     "madera": 2.3,
+     "tela": 0.2
+    },
+    "product": "muebles",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Fábrica de muebles",
+    "cost": 7000,
+    "materials": {
+     "madera": 40,
+     "piedra": 120
+    },
+    "build_days": 40,
+    "workers": 8,
+    "jobs": 16,
+    "prod_per_worker": 0.9,
+    "quality": 1.0,
+    "upkeep": 1.8,
+    "unit_cost": 0.0,
+    "tech": "produccion_en_serie",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [8.0, 4.0, 5.5], "pos": [0.0, 2.0, 0.0], "c": [0.72, 0.55, 0.35]},
+     {"s": "prism", "size": [2.667, 1.3, 5.5], "pos": [-2.667, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [2.667, 1.3, 5.5], "pos": [0.0, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [2.667, 1.3, 5.5], "pos": [2.667, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [6.4, 0.8, 0.08], "pos": [0.0, 2.4, 2.78], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.0, 1.1, 2.78], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 7.0, 0.402], "pos": [3.0, 3.5, -1.8], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [3.2, 0.5, 0.08], "pos": [0.0, 3.5, 2.85], "c": [0.76, 0.58, 0.36]}
+    ],
+    "inputs": {
+     "madera": 2.2,
+     "tela": 0.2
+    },
+    "product": "muebles",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "caldereria": {
+  "label": "Calderería",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 80,
+  "product": "utensilios",
+  "skill": "artesania",
+  "base_wage": 2.1,
+  "footprint": 4.0,
+  "description": "Forja ollas, sartenes, clavos y cerraduras con hierro y carbón del almacén.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Calderería",
+    "cost": 480,
+    "materials": {
+     "madera": 15,
+     "piedra": 15
+    },
+    "build_days": 12,
+    "workers": 2,
+    "jobs": 4,
+    "prod_per_worker": 2.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [3.8, 2.4, 3.2], "pos": [0.0, 1.2, 0.0], "c": [0.6, 0.55, 0.5]},
+     {"s": "prism", "size": [4.1, 1.4, 3.6], "pos": [0.0, 3.1, 0.0], "c": [0.35, 0.3, 0.28], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.63], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.267, 1.32, 1.63], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.267, 1.32, 1.63], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.5, 1.85], "c": [0.42, 0.4, 0.4]},
+     {"s": "cyl", "size": [0.3, 4.0, 0.345], "pos": [1.2, 2.0, -0.7], "c": [0.5, 0.45, 0.42]},
+     {"s": "box", "size": [0.6, 0.6, 0.6], "pos": [2.4, 0.3, 1.2], "c": [0.42, 0.4, 0.4]}
+    ],
+    "inputs": {
+     "hierro": 0.6,
+     "carbon": 0.4
+    },
+    "product": "utensilios",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Fábrica de utensilios",
+    "cost": 5000,
+    "materials": {
+     "madera": 20,
+     "piedra": 100
+    },
+    "build_days": 35,
+    "workers": 6,
+    "jobs": 12,
+    "prod_per_worker": 3.4,
+    "quality": 1.0,
+    "upkeep": 1.4,
+    "unit_cost": 0.0,
+    "tech": "fabricas",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [7.0, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.6, 0.55, 0.5]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [-1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.6, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.75, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 7.0, 0.402], "pos": [2.6, 3.5, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.8, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.42, 0.4, 0.4]}
+    ],
+    "inputs": {
+     "acero": 0.3,
+     "carbon": 0.2
+    },
+    "product": "utensilios",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "veleria": {
+  "label": "Velería y jabonería",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 81,
+  "product": "velas_jabon",
+  "skill": "artesania",
+  "base_wage": 2.0,
+  "footprint": 4.0,
+  "description": "Funde cera y sebo del ganado en velas y jabón para los hogares.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Velería y jabonería",
+    "cost": 420,
+    "materials": {
+     "madera": 15,
+     "piedra": 5
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 5.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.4, 2.3, 3.0], "pos": [0.0, 1.15, 0.0], "c": [0.92, 0.88, 0.7]},
+     {"s": "prism", "size": [3.7, 1.4, 3.4], "pos": [0.0, 3.0, 0.0], "c": [0.55, 0.35, 0.2], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.133, 1.265, 1.53], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.133, 1.265, 1.53], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.4, 1.75], "c": [0.95, 0.85, 0.4]},
+     {"s": "cyl", "size": [0.3, 3.6, 0.345], "pos": [1.0, 1.8, -0.5], "c": [0.5, 0.45, 0.42]}
+    ],
+    "inputs": {
+     "cera": 0.4,
+     "ganado": 0.05
+    },
+    "product": "velas_jabon",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Fábrica de jabón",
+    "cost": 4500,
+    "materials": {
+     "madera": 20,
+     "piedra": 90
+    },
+    "build_days": 30,
+    "workers": 6,
+    "jobs": 10,
+    "prod_per_worker": 8.0,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0.0,
+    "tech": "quimica",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [6.5, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.92, 0.88, 0.7]},
+     {"s": "prism", "size": [3.25, 1.3, 5.0], "pos": [-1.625, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.25, 1.3, 5.0], "pos": [1.625, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.2, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.625, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 6.0, 0.402], "pos": [2.4, 3.0, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.6, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.95, 0.85, 0.4]}
+    ],
+    "inputs": {
+     "cera": 0.3,
+     "quimicos": 0.08
+    },
+    "product": "velas_jabon",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "alfareria": {
+  "label": "Alfarería",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 82,
+  "product": "loza",
+  "skill": "artesania",
+  "base_wage": 2.0,
+  "footprint": 4.5,
+  "description": "Moldea arcilla y la cuece en horno: platos, jarras y tinajas.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Alfarería",
+    "cost": 420,
+    "materials": {
+     "madera": 10,
+     "piedra": 15
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 3.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [3.6, 2.3, 3.2], "pos": [0.0, 1.15, 0.0], "c": [0.85, 0.6, 0.42]},
+     {"s": "prism", "size": [3.9, 1.4, 3.6], "pos": [0.0, 3.0, 0.0], "c": [0.62, 0.32, 0.2], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.63], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.2, 1.265, 1.63], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.2, 1.265, 1.63], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.4, 1.85], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [1.6, 1.4, 1.6], "pos": [-2.8, 0.7, -0.5], "c": [0.72, 0.42, 0.26]},
+     {"s": "cyl", "size": [0.2, 0.6, 0.25], "pos": [-2.8, 1.6, -0.5], "c": [0.72, 0.42, 0.26]}
+    ],
+    "inputs": {
+     "arcilla": 2.0,
+     "carbon": 0.3
+    },
+    "product": "loza",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Fábrica de loza",
+    "cost": 4800,
+    "materials": {
+     "madera": 20,
+     "piedra": 100
+    },
+    "build_days": 35,
+    "workers": 6,
+    "jobs": 12,
+    "prod_per_worker": 4.0,
+    "quality": 1.0,
+    "upkeep": 1.3,
+    "unit_cost": 0.0,
+    "tech": "fabricas",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [7.0, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.85, 0.6, 0.42]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [-1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.6, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.75, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 7.0, 0.402], "pos": [2.6, 3.5, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.8, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.72, 0.42, 0.26]}
+    ],
+    "inputs": {
+     "arcilla": 1.8,
+     "carbon": 0.25
+    },
+    "product": "loza",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "vidrieria": {
+  "label": "Vidriería",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 83,
+  "product": "vidrio",
+  "skill": "artesania",
+  "base_wage": 2.1,
+  "footprint": 4.5,
+  "description": "Funde arena de sílice (piedra) con carbón: botellas, frascos y ventanas.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Vidriería",
+    "cost": 700,
+    "materials": {
+     "madera": 15,
+     "piedra": 30
+    },
+    "build_days": 14,
+    "workers": 2,
+    "jobs": 4,
+    "prod_per_worker": 3.5,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0.0,
+    "tech": "vidrieria",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [4.0, 2.5, 3.4], "pos": [0.0, 1.25, 0.0], "c": [0.78, 0.72, 0.62]},
+     {"s": "prism", "size": [4.3, 1.4, 3.8], "pos": [0.0, 3.2, 0.0], "c": [0.4, 0.4, 0.45], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.73], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.333, 1.375, 1.73], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.333, 1.375, 1.73], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.6, 1.95], "c": [0.62, 0.82, 0.9]},
+     {"s": "cyl", "size": [0.45, 4.4, 0.517], "pos": [-1.2, 2.2, -0.8], "c": [0.5, 0.4, 0.35]},
+     {"s": "sphere", "size": [1.4, 1.2, 1.4], "pos": [2.8, 0.6, -0.4], "c": [0.5, 0.4, 0.35]}
+    ],
+    "inputs": {
+     "piedra": 0.25,
+     "carbon": 0.6
+    },
+    "product": "vidrio",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Fábrica de vidrio",
+    "cost": 5500,
+    "materials": {
+     "madera": 20,
+     "piedra": 120
+    },
+    "build_days": 35,
+    "workers": 6,
+    "jobs": 12,
+    "prod_per_worker": 5.5,
+    "quality": 1.0,
+    "upkeep": 1.5,
+    "unit_cost": 0.0,
+    "tech": "fabricas",
+    "pollution": 3,
+    "model": [
+     {"s": "box", "size": [7.0, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.78, 0.72, 0.62]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [-1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.6, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.75, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 8.0, 0.402], "pos": [2.6, 4.0, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "cyl", "size": [0.35, 8.0, 0.402], "pos": [1.2, 4.0, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.8, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.62, 0.82, 0.9]}
+    ],
+    "inputs": {
+     "piedra": 0.22,
+     "carbon": 0.5
+    },
+    "product": "vidrio",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "botica_lab": {
+  "label": "Laboratorio de boticario",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 84,
+  "product": "remedios",
+  "skill": "medicina",
+  "base_wage": 2.2,
+  "footprint": 4.0,
+  "description": "Prepara jarabes y ungüentos con hierbas del almacén. Se venden en la botica.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Rebotica",
+    "cost": 520,
+    "materials": {
+     "madera": 15,
+     "piedra": 10
+    },
+    "build_days": 12,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 3.5,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "herbolaria",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.4, 2.4, 3.0], "pos": [0.0, 1.2, 0.0], "c": [0.9, 0.9, 0.84]},
+     {"s": "prism", "size": [3.7, 1.4, 3.4], "pos": [0.0, 3.1, 0.0], "c": [0.3, 0.45, 0.35], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.133, 1.32, 1.53], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.133, 1.32, 1.53], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.5, 1.75], "c": [0.3, 0.6, 0.35]},
+     {"s": "cyl", "size": [0.25, 0.5, 0.25], "pos": [-1.0, 0.25, 1.9], "c": [0.45, 0.25, 0.12]},
+     {"s": "cyl", "size": [0.25, 0.5, 0.25], "pos": [1.0, 0.25, 1.9], "c": [0.45, 0.25, 0.12]}
+    ],
+    "inputs": {
+     "hierbas": 1.5
+    },
+    "product": "remedios",
+    "skill": "medicina",
+    "output": "warehouse"
+   },
+   {
+    "label": "Laboratorio de remedios",
+    "cost": 2600,
+    "materials": {
+     "madera": 20,
+     "piedra": 50
+    },
+    "build_days": 25,
+    "workers": 4,
+    "jobs": 8,
+    "prod_per_worker": 5.0,
+    "quality": 1.0,
+    "upkeep": 0.7,
+    "unit_cost": 0.0,
+    "tech": "saneamiento",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [5.0, 2.8, 4.0], "pos": [0.0, 1.4, 0.0], "c": [0.9, 0.9, 0.84]},
+     {"s": "prism", "size": [5.3, 1.4, 4.4], "pos": [0.0, 3.5, 0.0], "c": [0.3, 0.45, 0.35], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 2.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.667, 1.54, 2.03], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.667, 1.54, 2.03], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.9, 2.25], "c": [0.3, 0.6, 0.35]},
+     {"s": "cyl", "size": [0.3, 4.0, 0.345], "pos": [1.6, 2.0, -1.0], "c": [0.5, 0.45, 0.42]}
+    ],
+    "inputs": {
+     "hierbas": 1.4
+    },
+    "product": "remedios",
+    "skill": "medicina",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "papelera": {
+  "label": "Molino de papel",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 85,
+  "product": "papel",
+  "skill": "artesania",
+  "base_wage": 2.1,
+  "footprint": 5.0,
+  "description": "Machaca trapos y pulpa de madera para hacer papel.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Molino de papel",
+    "cost": 800,
+    "materials": {
+     "madera": 25,
+     "piedra": 20
+    },
+    "build_days": 16,
+    "workers": 3,
+    "jobs": 4,
+    "prod_per_worker": 3.5,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0.0,
+    "tech": "imprenta",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [4.2, 2.6, 3.6], "pos": [0.0, 1.3, 0.0], "c": [0.85, 0.82, 0.72]},
+     {"s": "prism", "size": [4.5, 1.4, 4.0], "pos": [0.0, 3.3, 0.0], "c": [0.45, 0.32, 0.22], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.83], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.4, 1.43, 1.83], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.4, 1.43, 1.83], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 2.7, 2.05], "c": [0.94, 0.93, 0.9]},
+     {"s": "cyl", "size": [1.2, 0.3, 1.2], "pos": [-2.8, 1.2, 0.0], "c": [0.55, 0.36, 0.2], "rz": 90}
+    ],
+    "inputs": {
+     "madera": 0.25,
+     "tela": 0.05
+    },
+    "product": "papel",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Papelera industrial",
+    "cost": 6000,
+    "materials": {
+     "madera": 20,
+     "piedra": 120
+    },
+    "build_days": 40,
+    "workers": 6,
+    "jobs": 12,
+    "prod_per_worker": 6.0,
+    "quality": 1.0,
+    "upkeep": 1.6,
+    "unit_cost": 0.0,
+    "tech": "fabricas",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [7.5, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.85, 0.82, 0.72]},
+     {"s": "prism", "size": [2.5, 1.3, 5.0], "pos": [-2.5, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [2.5, 1.3, 5.0], "pos": [0.0, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [2.5, 1.3, 5.0], "pos": [2.5, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [6.0, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.875, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 7.0, 0.402], "pos": [2.8, 3.5, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [3.0, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.94, 0.93, 0.9]},
+     {"s": "cyl", "size": [0.9, 2.5, 0.9], "pos": [-4.8, 1.25, 0.0], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.81, 0.15, 0.9], "pos": [-4.8, 2.57, 0.0], "c": [0.6, 0.6, 0.6]}
+    ],
+    "inputs": {
+     "madera": 0.28
+    },
+    "product": "papel",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "imprenta_editorial": {
+  "label": "Imprenta y editorial",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 86,
+  "product": "periodicos",
+  "skill": "comercio",
+  "base_wage": 2.3,
+  "footprint": 4.5,
+  "description": "Imprime periódicos con papel del almacén: los vecinos los compran cada semana.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Imprenta de periódicos",
+    "cost": 2400,
+    "materials": {
+     "madera": 20,
+     "piedra": 50
+    },
+    "build_days": 25,
+    "workers": 3,
+    "jobs": 5,
+    "prod_per_worker": 25.0,
+    "quality": 1.0,
+    "upkeep": 0.6,
+    "unit_cost": 0.0,
+    "tech": "periodico",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [4.6, 3.0, 4.0], "pos": [0.0, 1.5, 0.0], "c": [0.8, 0.78, 0.72]},
+     {"s": "prism", "size": [4.9, 1.4, 4.4], "pos": [0.0, 3.7, 0.0], "c": [0.3, 0.3, 0.35], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 2.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.533, 1.65, 2.03], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.533, 1.65, 2.03], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 3.1, 2.25], "c": [0.15, 0.15, 0.15]},
+     {"s": "cyl", "size": [0.3, 4.5, 0.345], "pos": [1.5, 2.25, -1.0], "c": [0.5, 0.45, 0.42]}
+    ],
+    "inputs": {
+     "papel": 0.04
+    },
+    "product": "periodicos",
+    "skill": "comercio",
+    "output": "warehouse"
+   },
+   {
+    "label": "Rotativa",
+    "cost": 9000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 40,
+    "workers": 6,
+    "jobs": 10,
+    "prod_per_worker": 40.0,
+    "quality": 1.0,
+    "upkeep": 1.8,
+    "unit_cost": 0.0,
+    "tech": "telegrafo",
+    "pollution": 1,
+    "model": [
+     {"s": "box", "size": [7.0, 4.5, 5.0], "pos": [0.0, 2.25, 0.0], "c": [0.8, 0.78, 0.72]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [-1.75, 5.15, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [1.75, 5.15, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.6, 0.8, 0.08], "pos": [0.0, 2.7, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.75, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 7.0, 0.402], "pos": [2.6, 3.5, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.8, 0.5, 0.08], "pos": [0.0, 4.0, 2.6], "c": [0.15, 0.15, 0.15]}
+    ],
+    "inputs": {
+     "papel": 0.035
+    },
+    "product": "periodicos",
+    "skill": "comercio",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "conservera": {
+  "label": "Fábrica de conservas",
+  "category": "negocio",
+  "sector": "Alimentos",
+  "order": 87,
+  "product": "conservas",
+  "skill": "artesania",
+  "base_wage": 2.2,
+  "footprint": 5.0,
+  "description": "Enlata carne con hojalata de hierro: comida que viaja lejos sin estropearse.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Fábrica de conservas",
+    "cost": 3200,
+    "materials": {
+     "madera": 20,
+     "piedra": 80
+    },
+    "build_days": 30,
+    "workers": 4,
+    "jobs": 10,
+    "prod_per_worker": 4.0,
+    "quality": 1.0,
+    "upkeep": 1.0,
+    "unit_cost": 0.0,
+    "tech": "conservas",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [6.5, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.75, 0.75, 0.72]},
+     {"s": "prism", "size": [3.25, 1.3, 5.0], "pos": [-1.625, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.25, 1.3, 5.0], "pos": [1.625, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.2, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.625, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 6.5, 0.402], "pos": [2.4, 3.25, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.6, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.85, 0.25, 0.2]}
+    ],
+    "inputs": {
+     "carne": 0.5,
+     "hierro": 0.1
+    },
+    "product": "conservas",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Conservera moderna",
+    "cost": 14000,
+    "materials": {
+     "madera": 20,
+     "piedra": 200
+    },
+    "build_days": 50,
+    "workers": 10,
+    "jobs": 20,
+    "prod_per_worker": 6.5,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "refrigeracion",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [9.0, 4.5, 6.0], "pos": [0.0, 2.25, 0.0], "c": [0.85, 0.85, 0.82]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [-3.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [0.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [3.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "box", "size": [7.2, 0.8, 0.08], "pos": [0.0, 2.7, 3.03], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.25, 1.1, 3.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 7.0, 0.402], "pos": [3.5, 3.5, -2.0], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [3.6, 0.5, 0.08], "pos": [0.0, 4.0, 3.1], "c": [0.85, 0.25, 0.2]},
+     {"s": "cyl", "size": [0.9, 3.0, 0.9], "pos": [-5.5, 1.5, 0.0], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.81, 0.15, 0.9], "pos": [-5.5, 3.07, 0.0], "c": [0.6, 0.6, 0.6]}
+    ],
+    "inputs": {
+     "carne": 0.48,
+     "acero": 0.05
+    },
+    "power": 2.0,
+    "product": "conservas",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "planta_quimica": {
+  "label": "Planta química",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 88,
+  "product": "quimicos",
+  "skill": "ciencia",
+  "base_wage": 2.6,
+  "footprint": 6.0,
+  "description": "Destila alquitrán de carbón (y luego petróleo y gas) en ácidos, tintes y reactivos.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Destilería de alquitrán",
+    "cost": 4200,
+    "materials": {
+     "madera": 20,
+     "piedra": 120
+    },
+    "build_days": 35,
+    "workers": 5,
+    "jobs": 10,
+    "prod_per_worker": 2.0,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0.0,
+    "tech": "quimica",
+    "pollution": 4,
+    "model": [
+     {"s": "box", "size": [6.5, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.6, 0.62, 0.58]},
+     {"s": "prism", "size": [3.25, 1.3, 5.0], "pos": [-1.625, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.25, 1.3, 5.0], "pos": [1.625, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.2, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.625, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 8.0, 0.402], "pos": [2.4, 4.0, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.6, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.3, 0.8, 0.45]},
+     {"s": "cyl", "size": [0.9, 3.0, 0.9], "pos": [-4.3, 1.5, -1.0], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.81, 0.15, 0.9], "pos": [-4.3, 3.07, -1.0], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [0.7, 2.4, 0.7], "pos": [-4.3, 1.2, 1.2], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.63, 0.15, 0.7], "pos": [-4.3, 2.47, 1.2], "c": [0.6, 0.6, 0.6]}
+    ],
+    "inputs": {
+     "carbon": 1.5
+    },
+    "product": "quimicos",
+    "skill": "ciencia",
+    "output": "warehouse"
+   },
+   {
+    "label": "Planta petroquímica de reactivos",
+    "cost": 16000,
+    "materials": {
+     "madera": 20,
+     "piedra": 250
+    },
+    "build_days": 55,
+    "workers": 10,
+    "jobs": 20,
+    "prod_per_worker": 3.6,
+    "quality": 1.0,
+    "upkeep": 3.2,
+    "unit_cost": 0.0,
+    "tech": "petroquimica",
+    "pollution": 4,
+    "model": [
+     {"s": "box", "size": [8.0, 4.5, 6.0], "pos": [0.0, 2.25, 0.0], "c": [0.8, 0.8, 0.78]},
+     {"s": "prism", "size": [4.0, 1.3, 6.0], "pos": [-2.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [4.0, 1.3, 6.0], "pos": [2.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "box", "size": [6.4, 0.8, 0.08], "pos": [0.0, 2.7, 3.03], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.0, 1.1, 3.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 9.0, 0.402], "pos": [3.0, 4.5, -2.0], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [3.2, 0.5, 0.08], "pos": [0.0, 4.0, 3.1], "c": [0.3, 0.8, 0.45]},
+     {"s": "cyl", "size": [1.1, 4.0, 1.1], "pos": [-5.2, 2.0, -1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.99, 0.15, 1.1], "pos": [-5.2, 4.07, -1.5], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [1.1, 4.0, 1.1], "pos": [-5.2, 2.0, 1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.99, 0.15, 1.1], "pos": [-5.2, 4.07, 1.5], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [0.3, 6.0, 0.345], "pos": [3.8, 3.0, 2.0], "c": [0.7, 0.7, 0.7]}
+    ],
+    "inputs": {
+     "petroleo": 0.5,
+     "gas_natural": 0.25
+    },
+    "power": 2.0,
+    "product": "quimicos",
+    "skill": "ciencia",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "relojeria": {
+  "label": "Relojería",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 89,
+  "product": "relojes",
+  "skill": "artesania",
+  "base_wage": 2.4,
+  "footprint": 3.8,
+  "description": "Relojes de bolsillo con acero, plata y oro: lujo para ricos y exportación.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Taller de relojería",
+    "cost": 2600,
+    "materials": {
+     "madera": 15,
+     "piedra": 40
+    },
+    "build_days": 25,
+    "workers": 2,
+    "jobs": 4,
+    "prod_per_worker": 0.12,
+    "quality": 1.0,
+    "upkeep": 0.5,
+    "unit_cost": 0.0,
+    "tech": "relojeria",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.4, 3.0, 3.0], "pos": [0.0, 1.5, 0.0], "c": [0.88, 0.85, 0.78]},
+     {"s": "prism", "size": [3.7, 1.4, 3.4], "pos": [0.0, 3.7, 0.0], "c": [0.25, 0.3, 0.45], "rot": 90},
+     {"s": "box", "size": [0.9, 1.4, 0.1], "pos": [0.0, 0.7, 1.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [-1.133, 1.65, 1.53], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [0.6, 0.6, 0.08], "pos": [1.133, 1.65, 1.53], "c": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [2.0, 0.5, 0.08], "pos": [0.0, 3.1, 1.75], "c": [0.98, 0.78, 0.18]},
+     {"s": "cyl", "size": [0.6, 0.1, 0.6], "pos": [0.0, 3.6, 1.6], "c": [0.94, 0.93, 0.9], "rx": 90},
+     {"s": "box", "size": [0.05, 0.4, 0.05], "pos": [0.0, 3.7, 1.68], "c": [0.08, 0.08, 0.09]}
+    ],
+    "inputs": {
+     "acero": 0.2,
+     "plata": 0.8,
+     "oro": 0.1
+    },
+    "product": "relojes",
+    "skill": "artesania",
+    "output": "warehouse"
+   },
+   {
+    "label": "Fábrica de relojes",
+    "cost": 9000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 40,
+    "workers": 6,
+    "jobs": 12,
+    "prod_per_worker": 0.15,
+    "quality": 1.0,
+    "upkeep": 1.6,
+    "unit_cost": 0.0,
+    "tech": "produccion_en_serie",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [7.0, 4.0, 5.0], "pos": [0.0, 2.0, 0.0], "c": [0.88, 0.85, 0.78]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [-1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [1.75, 4.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [5.6, 0.8, 0.08], "pos": [0.0, 2.4, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.75, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 5.5, 0.402], "pos": [2.6, 2.75, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.8, 0.5, 0.08], "pos": [0.0, 3.5, 2.6], "c": [0.98, 0.78, 0.18]}
+    ],
+    "inputs": {
+     "acero": 0.2,
+     "plata": 0.75,
+     "oro": 0.08
+    },
+    "product": "relojes",
+    "skill": "artesania",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "pozo_petroleo": {
+  "label": "Pozo petrolero",
+  "category": "negocio",
+  "sector": "Energía",
+  "order": 90,
+  "product": "petroleo",
+  "skill": "mineria",
+  "base_wage": 2.6,
+  "footprint": 5.0,
+  "description": "Solo junto a un yacimiento de petróleo (aparecen al investigar Petróleo). Extrae crudo al almacén.",
+  "economia": true,
+  "output": "warehouse",
+  "extraction": true,
+  "levels": [
+   {
+    "label": "Pozo de perforación",
+    "cost": 3500,
+    "materials": {
+     "madera": 40,
+     "piedra": 30
+    },
+    "build_days": 25,
+    "workers": 4,
+    "jobs": 6,
+    "prod_per_worker": 2.8,
+    "quality": 1.0,
+    "upkeep": 0.8,
+    "unit_cost": 0.0,
+    "tech": "petroleo",
+    "pollution": 3,
+    "model": [
+     {"s": "box", "size": [0.12, 7.0, 0.12], "pos": [-0.44, 3.5, -0.94], "c": [0.35, 0.3, 0.28], "rx": 4.8, "rz": -4.8},
+     {"s": "box", "size": [0.12, 7.0, 0.12], "pos": [0.44, 3.5, -0.94], "c": [0.35, 0.3, 0.28], "rx": 4.8, "rz": 4.8},
+     {"s": "box", "size": [0.12, 7.0, 0.12], "pos": [-0.44, 3.5, -0.06], "c": [0.35, 0.3, 0.28], "rx": -4.8, "rz": -4.8},
+     {"s": "box", "size": [0.12, 7.0, 0.12], "pos": [0.44, 3.5, -0.06], "c": [0.35, 0.3, 0.28], "rx": -4.8, "rz": 4.8},
+     {"s": "box", "size": [1.3, 0.08, 1.3], "pos": [0.0, 2.1, -0.5], "c": [0.35, 0.3, 0.28]},
+     {"s": "box", "size": [1.3, 0.08, 1.3], "pos": [0.0, 4.2, -0.5], "c": [0.35, 0.3, 0.28]},
+     {"s": "box", "size": [0.5, 0.3, 0.5], "pos": [0.0, 7.0, -0.5], "c": [0.35, 0.3, 0.28]},
+     {"s": "cyl", "size": [0.9, 1.8, 0.9], "pos": [2.4, 0.9, 1.6], "c": [0.25, 0.25, 0.27]},
+     {"s": "cyl", "size": [0.81, 0.15, 0.9], "pos": [2.4, 1.87, 1.6], "c": [0.6, 0.6, 0.6]},
+     {"s": "box", "size": [1.8, 1.4, 1.4], "pos": [-2.2, 0.7, 1.6], "c": [0.6, 0.45, 0.3]}
+    ],
+    "requires_deposit": "petroleo",
+    "product": "petroleo",
+    "skill": "mineria",
+    "output": "warehouse"
+   },
+   {
+    "label": "Campo petrolero",
+    "cost": 12000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 40,
+    "workers": 8,
+    "jobs": 14,
+    "prod_per_worker": 4.2,
+    "quality": 1.0,
+    "upkeep": 2.4,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "pollution": 3,
+    "model": [
+     {"s": "box", "size": [0.5, 1.6, 0.4], "pos": [-1.5, 0.8, -1.0], "c": [0.2, 0.2, 0.22]},
+     {"s": "box", "size": [3.0, 0.3, 0.3], "pos": [-1.2, 1.75, -1.0], "c": [0.85, 0.65, 0.15], "rz": -8},
+     {"s": "box", "size": [0.4, 0.9, 0.35], "pos": [0.3, 1.6, -1.0], "c": [0.85, 0.65, 0.15]},
+     {"s": "cyl", "size": [0.45, 0.25, 0.45], "pos": [-2.6, 1.3, -1.0], "c": [0.2, 0.2, 0.22], "rx": 90},
+     {"s": "box", "size": [0.08, 1.4, 0.08], "pos": [0.4, 0.7, -1.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.8, 0.2, 0.8], "pos": [-1.5, 0.1, -1.0], "c": [0.4, 0.4, 0.42]},
+     {"s": "box", "size": [0.5, 1.6, 0.4], "pos": [1.5, 0.8, 1.5], "c": [0.2, 0.2, 0.22]},
+     {"s": "box", "size": [3.0, 0.3, 0.3], "pos": [1.8, 1.75, 1.5], "c": [0.85, 0.65, 0.15], "rz": -8},
+     {"s": "box", "size": [0.4, 0.9, 0.35], "pos": [3.3, 1.6, 1.5], "c": [0.85, 0.65, 0.15]},
+     {"s": "cyl", "size": [0.45, 0.25, 0.45], "pos": [0.4, 1.3, 1.5], "c": [0.2, 0.2, 0.22], "rx": 90},
+     {"s": "box", "size": [0.08, 1.4, 0.08], "pos": [3.4, 0.7, 1.5], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.8, 0.2, 0.8], "pos": [1.5, 0.1, 1.5], "c": [0.4, 0.4, 0.42]},
+     {"s": "cyl", "size": [1.0, 2.4, 1.0], "pos": [3.3, 1.2, -1.8], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.9, 0.15, 1.0], "pos": [3.3, 2.47, -1.8], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [0.8, 2.0, 0.8], "pos": [-3.3, 1.0, 2.0], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.72, 0.15, 0.8], "pos": [-3.3, 2.07, 2.0], "c": [0.6, 0.6, 0.6]}
+    ],
+    "power": 1.0,
+    "requires_deposit": "petroleo",
+    "product": "petroleo",
+    "skill": "mineria",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "pozo_gas": {
+  "label": "Pozo de gas",
+  "category": "negocio",
+  "sector": "Energía",
+  "order": 91,
+  "product": "gas_natural",
+  "skill": "mineria",
+  "base_wage": 2.6,
+  "footprint": 4.5,
+  "description": "Solo junto a un yacimiento de gas natural. Combustible de centrales y de la química.",
+  "economia": true,
+  "output": "warehouse",
+  "extraction": true,
+  "levels": [
+   {
+    "label": "Pozo de gas",
+    "cost": 4000,
+    "materials": {
+     "madera": 20,
+     "piedra": 60
+    },
+    "build_days": 25,
+    "workers": 3,
+    "jobs": 5,
+    "prod_per_worker": 4.0,
+    "quality": 1.0,
+    "upkeep": 0.9,
+    "unit_cost": 0.0,
+    "tech": "petroleo",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [0.12, 5.0, 0.12], "pos": [-0.44, 2.5, -0.44], "c": [0.35, 0.3, 0.28], "rx": 4.8, "rz": -4.8},
+     {"s": "box", "size": [0.12, 5.0, 0.12], "pos": [0.44, 2.5, -0.44], "c": [0.35, 0.3, 0.28], "rx": 4.8, "rz": 4.8},
+     {"s": "box", "size": [0.12, 5.0, 0.12], "pos": [-0.44, 2.5, 0.44], "c": [0.35, 0.3, 0.28], "rx": -4.8, "rz": -4.8},
+     {"s": "box", "size": [0.12, 5.0, 0.12], "pos": [0.44, 2.5, 0.44], "c": [0.35, 0.3, 0.28], "rx": -4.8, "rz": 4.8},
+     {"s": "box", "size": [1.3, 0.08, 1.3], "pos": [0.0, 1.5, 0.0], "c": [0.35, 0.3, 0.28]},
+     {"s": "box", "size": [1.3, 0.08, 1.3], "pos": [0.0, 3.0, 0.0], "c": [0.35, 0.3, 0.28]},
+     {"s": "box", "size": [0.5, 0.3, 0.5], "pos": [0.0, 5.0, 0.0], "c": [0.35, 0.3, 0.28]},
+     {"s": "cyl", "size": [0.9, 0.9, 0.9], "pos": [2.0, 0.9, 1.4], "c": [0.3, 0.55, 0.85], "rz": 90},
+     {"s": "sphere", "size": [1.8, 1.8, 1.8], "pos": [-2.0, 0.9, 1.4], "c": [0.85, 0.85, 0.85]}
+    ],
+    "requires_deposit": "gas_natural",
+    "product": "gas_natural",
+    "skill": "mineria",
+    "output": "warehouse"
+   },
+   {
+    "label": "Campo de gas",
+    "cost": 13000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 40,
+    "workers": 6,
+    "jobs": 10,
+    "prod_per_worker": 6.5,
+    "quality": 1.0,
+    "upkeep": 2.4,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "pollution": 2,
+    "model": [
+     {"s": "sphere", "size": [2.6, 2.6, 2.6], "pos": [-2.0, 1.3, -1.0], "c": [0.85, 0.85, 0.85]},
+     {"s": "sphere", "size": [2.6, 2.6, 2.6], "pos": [1.2, 1.3, -1.0], "c": [0.85, 0.85, 0.85]},
+     {"s": "box", "size": [5.0, 0.3, 0.3], "pos": [0.0, 0.5, 1.6], "c": [0.55, 0.58, 0.62]},
+     {"s": "cyl", "size": [0.15, 3.0, 0.15], "pos": [2.8, 1.5, 1.6], "c": [0.55, 0.58, 0.62]}
+    ],
+    "power": 1.0,
+    "requires_deposit": "gas_natural",
+    "product": "gas_natural",
+    "skill": "mineria",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "refineria": {
+  "label": "Refinería",
+  "category": "negocio",
+  "sector": "Energía",
+  "order": 92,
+  "product": "combustible",
+  "skill": "ciencia",
+  "base_wage": 2.8,
+  "footprint": 7.0,
+  "description": "Destila petróleo crudo en gasolina y diésel para autos, camiones y aviones.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Destilería de queroseno",
+    "cost": 6000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 40,
+    "workers": 5,
+    "jobs": 10,
+    "prod_per_worker": 5.0,
+    "quality": 1.0,
+    "upkeep": 1.6,
+    "unit_cost": 0.0,
+    "tech": "petroleo",
+    "pollution": 5,
+    "model": [
+     {"s": "cyl", "size": [1.2, 3.0, 1.2], "pos": [-2.5, 1.5, -1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [1.08, 0.15, 1.2], "pos": [-2.5, 3.07, -1.5], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [1.0, 2.6, 1.0], "pos": [-2.5, 1.3, 1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.9, 0.15, 1.0], "pos": [-2.5, 2.67, 1.5], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [0.5, 6.0, 0.6], "pos": [1.0, 3.0, -1.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "cyl", "size": [0.4, 4.5, 0.5], "pos": [2.4, 2.25, 0.4], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [4.0, 0.2, 0.2], "pos": [0.5, 2.5, 0.3], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [0.25, 5.5, 0.287], "pos": [3.2, 2.75, -2.0], "c": [0.55, 0.3, 0.22]}
+    ],
+    "inputs": {
+     "petroleo": 1.2
+    },
+    "product": "combustible",
+    "skill": "ciencia",
+    "output": "warehouse"
+   },
+   {
+    "label": "Refinería moderna",
+    "cost": 22000,
+    "materials": {
+     "madera": 20,
+     "piedra": 300
+    },
+    "build_days": 60,
+    "workers": 10,
+    "jobs": 20,
+    "prod_per_worker": 8.0,
+    "quality": 1.0,
+    "upkeep": 4.0,
+    "unit_cost": 0.0,
+    "tech": "petroquimica",
+    "pollution": 5,
+    "model": [
+     {"s": "cyl", "size": [1.4, 3.5, 1.4], "pos": [-3.5, 1.75, -2.0], "c": [0.85, 0.85, 0.82]},
+     {"s": "cyl", "size": [1.26, 0.15, 1.4], "pos": [-3.5, 3.57, -2.0], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [1.4, 3.5, 1.4], "pos": [-3.5, 1.75, 1.5], "c": [0.85, 0.85, 0.82]},
+     {"s": "cyl", "size": [1.26, 0.15, 1.4], "pos": [-3.5, 3.57, 1.5], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [1.0, 2.6, 1.0], "pos": [-0.6, 1.3, 2.4], "c": [0.85, 0.85, 0.82]},
+     {"s": "cyl", "size": [0.9, 0.15, 1.0], "pos": [-0.6, 2.67, 2.4], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [0.6, 8.0, 0.7], "pos": [1.0, 4.0, -1.5], "c": [0.55, 0.58, 0.62]},
+     {"s": "cyl", "size": [0.5, 6.5, 0.6], "pos": [2.6, 3.25, 0.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "cyl", "size": [0.4, 5.0, 0.5], "pos": [3.8, 2.5, -1.8], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [6.0, 0.2, 0.2], "pos": [0.5, 3.0, 0.3], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [0.25, 7.0, 0.287], "pos": [3.8, 3.5, 1.8], "c": [0.9, 0.3, 0.2]}
+    ],
+    "inputs": {
+     "petroleo": 1.15
+    },
+    "power": 1.5,
+    "required_profession": "ingeniero",
+    "product": "combustible",
+    "skill": "ciencia",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "petroquimica": {
+  "label": "Planta de plásticos",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 93,
+  "product": "plasticos",
+  "skill": "ciencia",
+  "base_wage": 2.8,
+  "footprint": 6.5,
+  "description": "Convierte petróleo en plásticos: electrodomésticos, autos, calzado y electrónica.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Planta de plásticos",
+    "cost": 16000,
+    "materials": {
+     "madera": 20,
+     "piedra": 250
+    },
+    "build_days": 50,
+    "workers": 8,
+    "jobs": 14,
+    "prod_per_worker": 2.4,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "petroquimica",
+    "pollution": 4,
+    "model": [
+     {"s": "box", "size": [8.0, 4.5, 6.0], "pos": [0.0, 2.25, 0.0], "c": [0.85, 0.85, 0.85]},
+     {"s": "prism", "size": [4.0, 1.3, 6.0], "pos": [-2.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [4.0, 1.3, 6.0], "pos": [2.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "box", "size": [6.4, 0.8, 0.08], "pos": [0.0, 2.7, 3.03], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.0, 1.1, 3.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 8.0, 0.402], "pos": [3.0, 4.0, -2.0], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [3.2, 0.5, 0.08], "pos": [0.0, 4.0, 3.1], "c": [0.25, 0.5, 0.9]},
+     {"s": "cyl", "size": [1.0, 3.5, 1.0], "pos": [-5.3, 1.75, -1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.9, 0.15, 1.0], "pos": [-5.3, 3.57, -1.5], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [1.0, 3.5, 1.0], "pos": [-5.3, 1.75, 1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [0.9, 0.15, 1.0], "pos": [-5.3, 3.57, 1.5], "c": [0.6, 0.6, 0.6]}
+    ],
+    "inputs": {
+     "petroleo": 0.8
+    },
+    "power": 2.0,
+    "product": "plasticos",
+    "skill": "ciencia",
+    "output": "warehouse"
+   },
+   {
+    "label": "Complejo petroquímico",
+    "cost": 34000,
+    "materials": {
+     "madera": 20,
+     "piedra": 400
+    },
+    "build_days": 70,
+    "workers": 14,
+    "jobs": 26,
+    "prod_per_worker": 3.0,
+    "quality": 1.0,
+    "upkeep": 6.0,
+    "unit_cost": 0.0,
+    "tech": "electronica",
+    "pollution": 4,
+    "model": [
+     {"s": "box", "size": [10.0, 5.0, 7.0], "pos": [0.0, 2.5, 0.0], "c": [0.9, 0.9, 0.9]},
+     {"s": "prism", "size": [3.333, 1.3, 7.0], "pos": [-3.333, 5.65, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [3.333, 1.3, 7.0], "pos": [0.0, 5.65, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [3.333, 1.3, 7.0], "pos": [3.333, 5.65, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "box", "size": [8.0, 0.8, 0.08], "pos": [0.0, 3.0, 3.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.5, 1.1, 3.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 9.0, 0.402], "pos": [4.0, 4.5, -2.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "cyl", "size": [0.35, 9.0, 0.402], "pos": [2.5, 4.5, -2.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [4.0, 0.5, 0.08], "pos": [0.0, 4.5, 3.6], "c": [0.25, 0.5, 0.9]},
+     {"s": "cyl", "size": [1.3, 4.0, 1.3], "pos": [-6.6, 2.0, -2.0], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [1.17, 0.15, 1.3], "pos": [-6.6, 4.07, -2.0], "c": [0.6, 0.6, 0.6]},
+     {"s": "cyl", "size": [1.3, 4.0, 1.3], "pos": [-6.6, 2.0, 1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [1.17, 0.15, 1.3], "pos": [-6.6, 4.07, 1.5], "c": [0.6, 0.6, 0.6]}
+    ],
+    "inputs": {
+     "petroleo": 0.75
+    },
+    "power": 2.5,
+    "required_profession": "ingeniero",
+    "product": "plasticos",
+    "skill": "ciencia",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "farmaceutica": {
+  "label": "Laboratorio farmacéutico",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 94,
+  "product": "medicamentos",
+  "skill": "medicina",
+  "base_wage": 3.0,
+  "footprint": 5.5,
+  "description": "Fabrica antibióticos y fármacos con químicos y vidrio. Se venden en farmacias.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Laboratorio farmacéutico",
+    "cost": 14000,
+    "materials": {
+     "madera": 20,
+     "piedra": 200
+    },
+    "build_days": 45,
+    "workers": 6,
+    "jobs": 10,
+    "prod_per_worker": 1.0,
+    "quality": 1.0,
+    "upkeep": 2.6,
+    "unit_cost": 0.0,
+    "tech": "farmaceutica",
+    "pollution": 1,
+    "model": [
+     {"s": "floors", "size": [7.0, 7.5, 5.5], "pos": [0.0, 0.0, 0.0], "c": [0.92, 0.92, 0.95], "floors": 3, "c2": [0.4, 0.55, 0.65]},
+     {"s": "box", "size": [2.0, 0.6, 0.1], "pos": [0.0, 7.8, 2.8], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [0.6, 2.0, 0.1], "pos": [0.0, 7.8, 2.8], "c": [0.85, 0.15, 0.15]}
+    ],
+    "inputs": {
+     "quimicos": 0.4,
+     "vidrio": 0.2
+    },
+    "power": 2.0,
+    "product": "medicamentos",
+    "skill": "medicina",
+    "output": "warehouse"
+   },
+   {
+    "label": "Industria farmacéutica",
+    "cost": 32000,
+    "materials": {
+     "madera": 20,
+     "piedra": 350
+    },
+    "build_days": 60,
+    "workers": 10,
+    "jobs": 18,
+    "prod_per_worker": 1.2,
+    "quality": 1.0,
+    "upkeep": 5.0,
+    "unit_cost": 0.0,
+    "tech": "medicina_moderna",
+    "pollution": 1,
+    "model": [
+     {"s": "floors", "size": [9.0, 12.0, 6.5], "pos": [0.0, 0.0, 0.0], "c": [0.95, 0.95, 0.97], "floors": 5, "c2": [0.4, 0.55, 0.65]},
+     {"s": "box", "size": [2.4, 0.7, 0.1], "pos": [0.0, 12.3, 3.3], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [0.7, 2.4, 0.1], "pos": [0.0, 12.3, 3.3], "c": [0.85, 0.15, 0.15]}
+    ],
+    "inputs": {
+     "quimicos": 0.38,
+     "vidrio": 0.18,
+     "plasticos": 0.05
+    },
+    "power": 2.5,
+    "required_profession": "cientifico",
+    "product": "medicamentos",
+    "skill": "medicina",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "mina_cobre": {
+  "label": "Mina de cobre",
+  "category": "negocio",
+  "sector": "Minería",
+  "order": 95,
+  "product": "cobre",
+  "skill": "mineria",
+  "base_wage": 2.4,
+  "footprint": 5.0,
+  "description": "Solo junto a un yacimiento de cobre (se descubren al investigar Electricidad).",
+  "economia": true,
+  "output": "warehouse",
+  "extraction": true,
+  "levels": [
+   {
+    "label": "Mina de cobre",
+    "cost": 4000,
+    "materials": {
+     "madera": 40,
+     "piedra": 40
+    },
+    "build_days": 30,
+    "workers": 6,
+    "jobs": 10,
+    "prod_per_worker": 2.0,
+    "quality": 1.0,
+    "upkeep": 1.0,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "pollution": 3,
+    "model": [
+     {"s": "box", "size": [0.2, 5.0, 0.2], "pos": [-0.6, 2.5, -1.0], "c": [0.4, 0.3, 0.2]},
+     {"s": "box", "size": [0.2, 5.0, 0.2], "pos": [0.6, 2.5, -1.0], "c": [0.4, 0.3, 0.2]},
+     {"s": "box", "size": [1.5, 0.2, 0.2], "pos": [0.0, 5.0, -1.0], "c": [0.4, 0.3, 0.2]},
+     {"s": "cyl", "size": [0.5, 0.15, 0.5], "pos": [0.0, 5.35, -1.0], "c": [0.42, 0.4, 0.4], "rx": 90},
+     {"s": "box", "size": [2.4, 0.5, 2.0], "pos": [0.0, 0.25, 0.8], "c": [0.35, 0.3, 0.28]},
+     {"s": "sphere", "size": [0.9, 0.72, 0.9], "pos": [-0.376, 0.54, 0.054], "c": [0.8, 0.46, 0.24]},
+     {"s": "sphere", "size": [1.08, 0.72, 0.9], "pos": [0.417, 0.54, -0.508], "c": [0.8, 0.46, 0.24]},
+     {"s": "sphere", "size": [1.26, 0.72, 0.9], "pos": [0.046, 0.36, 0.847], "c": [0.8, 0.46, 0.24]},
+     {"s": "sphere", "size": [0.9, 0.72, 0.9], "pos": [-0.717, 0.36, -0.703], "c": [0.8, 0.46, 0.24]},
+     {"s": "sphere", "size": [1.08, 0.72, 0.9], "pos": [1.138, 0.36, 0.038], "c": [0.8, 0.46, 0.24]}
+    ],
+    "power": 1.0,
+    "requires_deposit": "cobre",
+    "product": "cobre",
+    "skill": "mineria",
+    "output": "warehouse"
+   },
+   {
+    "label": "Mina de cobre a cielo abierto",
+    "cost": 14000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 45,
+    "workers": 12,
+    "jobs": 22,
+    "prod_per_worker": 3.2,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "maquinaria_agricola",
+    "pollution": 4,
+    "model": [
+     {"s": "box", "size": [7.0, 0.3, 6.0], "pos": [0.0, 0.15, 0.0], "c": [0.55, 0.4, 0.3]},
+     {"s": "box", "size": [5.0, 0.3, 4.0], "pos": [0.0, 0.45, 0.0], "c": [0.62, 0.45, 0.32]},
+     {"s": "box", "size": [3.0, 0.3, 2.0], "pos": [0.0, 0.75, 0.0], "c": [0.7, 0.5, 0.35]},
+     {"s": "box", "size": [0.2, 5.0, 0.2], "pos": [2.4, 2.5, -2.0], "c": [0.4, 0.3, 0.2]},
+     {"s": "box", "size": [0.2, 5.0, 0.2], "pos": [3.6, 2.5, -2.0], "c": [0.4, 0.3, 0.2]},
+     {"s": "box", "size": [1.5, 0.2, 0.2], "pos": [3.0, 5.0, -2.0], "c": [0.4, 0.3, 0.2]},
+     {"s": "cyl", "size": [0.5, 0.15, 0.5], "pos": [3.0, 5.35, -2.0], "c": [0.42, 0.4, 0.4], "rx": 90},
+     {"s": "box", "size": [2.4, 0.5, 2.0], "pos": [3.0, 0.25, -0.2], "c": [0.35, 0.3, 0.28]},
+     {"s": "sphere", "size": [0.9, 0.72, 0.9], "pos": [-0.376, 0.54, 0.054], "c": [0.8, 0.46, 0.24]},
+     {"s": "sphere", "size": [1.08, 0.72, 0.9], "pos": [0.417, 0.54, -0.508], "c": [0.8, 0.46, 0.24]},
+     {"s": "sphere", "size": [1.26, 0.72, 0.9], "pos": [0.046, 0.36, 0.847], "c": [0.8, 0.46, 0.24]},
+     {"s": "sphere", "size": [0.9, 0.72, 0.9], "pos": [-0.717, 0.36, -0.703], "c": [0.8, 0.46, 0.24]},
+     {"s": "sphere", "size": [1.08, 0.72, 0.9], "pos": [1.138, 0.36, 0.038], "c": [0.8, 0.46, 0.24]}
+    ],
+    "power": 1.5,
+    "requires_deposit": "cobre",
+    "product": "cobre",
+    "skill": "mineria",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "mina_uranio": {
+  "label": "Mina de uranio",
+  "category": "negocio",
+  "sector": "Minería",
+  "order": 96,
+  "product": "uranio",
+  "skill": "mineria",
+  "base_wage": 3.0,
+  "footprint": 5.0,
+  "description": "Solo junto a un yacimiento de uranio (se descubren al investigar Energía nuclear). Muy escaso y valioso.",
+  "economia": true,
+  "output": "warehouse",
+  "extraction": true,
+  "levels": [
+   {
+    "label": "Mina de uranio",
+    "cost": 20000,
+    "materials": {
+     "madera": 20,
+     "piedra": 250
+    },
+    "build_days": 50,
+    "workers": 6,
+    "jobs": 10,
+    "prod_per_worker": 0.1,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "energia_nuclear",
+    "pollution": 5,
+    "model": [
+     {"s": "box", "size": [0.2, 6.0, 0.2], "pos": [-0.6, 3.0, -1.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [0.2, 6.0, 0.2], "pos": [0.6, 3.0, -1.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.5, 0.2, 0.2], "pos": [0.0, 6.0, -1.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "cyl", "size": [0.5, 0.15, 0.5], "pos": [0.0, 6.35, -1.0], "c": [0.42, 0.4, 0.4], "rx": 90},
+     {"s": "box", "size": [2.4, 0.5, 2.0], "pos": [0.0, 0.25, 0.8], "c": [0.35, 0.3, 0.28]},
+     {"s": "cyl", "size": [0.4, 1.0, 0.4], "pos": [2.4, 0.5, 1.6], "c": [0.9, 0.78, 0.1]},
+     {"s": "cyl", "size": [0.42, 0.05, 0.42], "pos": [2.4, 0.22, 1.6], "c": [0.08, 0.08, 0.09]},
+     {"s": "cyl", "size": [0.42, 0.05, 0.42], "pos": [2.4, 0.78, 1.6], "c": [0.08, 0.08, 0.09]},
+     {"s": "cyl", "size": [0.1, 0.04, 0.1], "pos": [2.6, 1.02, 1.6], "c": [0.08, 0.08, 0.09]},
+     {"s": "cyl", "size": [0.4, 1.0, 0.4], "pos": [3.3, 0.5, 1.6], "c": [0.9, 0.78, 0.1]},
+     {"s": "cyl", "size": [0.42, 0.05, 0.42], "pos": [3.3, 0.22, 1.6], "c": [0.08, 0.08, 0.09]},
+     {"s": "cyl", "size": [0.42, 0.05, 0.42], "pos": [3.3, 0.78, 1.6], "c": [0.08, 0.08, 0.09]},
+     {"s": "cyl", "size": [0.1, 0.04, 0.1], "pos": [3.5, 1.02, 1.6], "c": [0.08, 0.08, 0.09]}
+    ],
+    "power": 1.5,
+    "requires_deposit": "uranio",
+    "product": "uranio",
+    "skill": "mineria",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "fabrica_electrodomesticos": {
+  "label": "Fábrica de electrodomésticos",
+  "category": "negocio",
+  "sector": "Industria",
+  "order": 97,
+  "product": "electrodomesticos",
+  "skill": "construccion",
+  "base_wage": 2.9,
+  "footprint": 7.0,
+  "description": "Radios, neveras y cocinas con acero, componentes, plásticos y cobre.",
+  "economia": true,
+  "output": "warehouse",
+  "levels": [
+   {
+    "label": "Fábrica de electrodomésticos",
+    "cost": 18000,
+    "materials": {
+     "madera": 20,
+     "piedra": 250
+    },
+    "build_days": 50,
+    "workers": 10,
+    "jobs": 18,
+    "prod_per_worker": 0.25,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "electrodomesticos",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [9.0, 4.5, 6.0], "pos": [0.0, 2.25, 0.0], "c": [0.9, 0.9, 0.92]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [-3.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [0.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [3.0, 1.3, 6.0], "pos": [3.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "box", "size": [7.2, 0.8, 0.08], "pos": [0.0, 2.7, 3.03], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.25, 1.1, 3.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 6.0, 0.402], "pos": [3.5, 3.0, -2.0], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [3.6, 0.5, 0.08], "pos": [0.0, 4.0, 3.1], "c": [0.3, 0.5, 0.85]}
+    ],
+    "inputs": {
+     "acero": 2.0,
+     "componentes_electronicos": 1.0,
+     "plasticos": 2.0,
+     "cobre": 1.0
+    },
+    "power": 2.5,
+    "product": "electrodomesticos",
+    "skill": "construccion",
+    "output": "warehouse"
+   },
+   {
+    "label": "Planta de electrodomésticos",
+    "cost": 38000,
+    "materials": {
+     "madera": 20,
+     "piedra": 400
+    },
+    "build_days": 70,
+    "workers": 16,
+    "jobs": 30,
+    "prod_per_worker": 0.36,
+    "quality": 1.0,
+    "upkeep": 6.0,
+    "unit_cost": 0.0,
+    "tech": "electronica",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [11.0, 5.0, 7.0], "pos": [0.0, 2.5, 0.0], "c": [0.92, 0.92, 0.94]},
+     {"s": "prism", "size": [2.75, 1.3, 7.0], "pos": [-4.125, 5.65, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [2.75, 1.3, 7.0], "pos": [-1.375, 5.65, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [2.75, 1.3, 7.0], "pos": [1.375, 5.65, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [2.75, 1.3, 7.0], "pos": [4.125, 5.65, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "box", "size": [8.8, 0.8, 0.08], "pos": [0.0, 3.0, 3.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.75, 1.1, 3.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 7.0, 0.402], "pos": [4.5, 3.5, -2.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [4.4, 0.5, 0.08], "pos": [0.0, 4.5, 3.6], "c": [0.3, 0.5, 0.85]}
+    ],
+    "inputs": {
+     "acero": 1.8,
+     "componentes_electronicos": 1.0,
+     "plasticos": 1.9,
+     "cobre": 0.9
+    },
+    "power": 3.0,
+    "required_profession": "ingeniero",
+    "product": "electrodomesticos",
+    "skill": "construccion",
+    "output": "warehouse"
+   }
+  ]
+ },
+ "central_carbon": {
+  "label": "Central térmica de carbón",
+  "category": "negocio",
+  "sector": "Energía",
+  "order": 98,
+  "product": "electricidad",
+  "skill": "construccion",
+  "base_wage": 2.5,
+  "footprint": 7.0,
+  "description": "Quema carbón del almacén para producir electricidad. Contamina mucho.",
+  "economia": true,
+  "power_plant": true,
+  "levels": [
+   {
+    "label": "Central de vapor y dínamo",
+    "cost": 6000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 40,
+    "workers": 6,
+    "jobs": 8,
+    "prod_per_worker": 16.0,
+    "quality": 1.0,
+    "upkeep": 1.5,
+    "unit_cost": 0.0,
+    "tech": "dinamo",
+    "pollution": 6,
+    "model": [
+     {"s": "box", "size": [7.0, 4.5, 5.0], "pos": [0.0, 2.25, 0.0], "c": [0.6, 0.35, 0.28]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [-1.75, 5.15, 0.0], "c": [0.4, 0.4, 0.42]},
+     {"s": "prism", "size": [3.5, 1.3, 5.0], "pos": [1.75, 5.15, 0.0], "c": [0.4, 0.4, 0.42]},
+     {"s": "box", "size": [5.6, 0.8, 0.08], "pos": [0.0, 2.7, 2.53], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-1.75, 1.1, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 10.0, 0.402], "pos": [2.6, 5.0, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "cyl", "size": [0.35, 10.0, 0.402], "pos": [1.0, 5.0, -1.5], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [2.8, 0.5, 0.08], "pos": [0.0, 4.0, 2.6], "c": [0.95, 0.82, 0.2]}
+    ],
+    "inputs": {
+     "carbon": 0.13
+    },
+    "product": "electricidad",
+    "skill": "construccion"
+   },
+   {
+    "label": "Central térmica",
+    "cost": 20000,
+    "materials": {
+     "madera": 20,
+     "piedra": 300
+    },
+    "build_days": 55,
+    "workers": 10,
+    "jobs": 14,
+    "prod_per_worker": 26.0,
+    "quality": 1.0,
+    "upkeep": 3.5,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "pollution": 7,
+    "model": [
+     {"s": "box", "size": [9.0, 5.0, 6.0], "pos": [0.0, 2.5, 0.0], "c": [0.65, 0.62, 0.6]},
+     {"s": "prism", "size": [4.5, 1.3, 6.0], "pos": [-2.25, 5.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "prism", "size": [4.5, 1.3, 6.0], "pos": [2.25, 5.65, 0.0], "c": [0.45, 0.45, 0.48]},
+     {"s": "box", "size": [7.2, 0.8, 0.08], "pos": [0.0, 3.0, 3.03], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.25, 1.1, 3.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 13.0, 0.402], "pos": [3.5, 6.5, -2.0], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [3.6, 0.5, 0.08], "pos": [0.0, 4.5, 3.1], "c": [0.95, 0.82, 0.2]},
+     {"s": "cyl", "size": [1.65, 4.4, 2.2], "pos": [-6.5, 2.2, 0.0], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [1.76, 3.6, 1.65], "pos": [-6.5, 6.2, 0.0], "c": [0.8, 0.8, 0.78]}
+    ],
+    "inputs": {
+     "carbon": 0.11
+    },
+    "product": "electricidad",
+    "skill": "construccion"
+   }
+  ]
+ },
+ "central_gas": {
+  "label": "Central de gas y petróleo",
+  "category": "negocio",
+  "sector": "Energía",
+  "order": 99,
+  "product": "electricidad",
+  "skill": "construccion",
+  "base_wage": 2.5,
+  "footprint": 7.0,
+  "description": "Quema gas natural del almacén (turbinas). Contamina menos que el carbón.",
+  "economia": true,
+  "power_plant": true,
+  "levels": [
+   {
+    "label": "Central de turbinas de gas",
+    "cost": 16000,
+    "materials": {
+     "madera": 20,
+     "piedra": 250
+    },
+    "build_days": 45,
+    "workers": 6,
+    "jobs": 8,
+    "prod_per_worker": 24.0,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "pollution": 3,
+    "model": [
+     {"s": "box", "size": [8.0, 4.5, 5.5], "pos": [0.0, 2.25, 0.0], "c": [0.85, 0.85, 0.85]},
+     {"s": "prism", "size": [4.0, 1.3, 5.5], "pos": [-2.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [4.0, 1.3, 5.5], "pos": [2.0, 5.15, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "box", "size": [6.4, 0.8, 0.08], "pos": [0.0, 2.7, 2.78], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.0, 1.1, 2.78], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 9.0, 0.402], "pos": [3.0, 4.5, -1.8], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [3.2, 0.5, 0.08], "pos": [0.0, 4.0, 2.85], "c": [0.95, 0.82, 0.2]},
+     {"s": "sphere", "size": [2.2, 2.2, 2.2], "pos": [-5.5, 1.1, 0.0], "c": [0.85, 0.85, 0.85]}
+    ],
+    "inputs": {
+     "gas_natural": 0.15
+    },
+    "product": "electricidad",
+    "skill": "construccion"
+   },
+   {
+    "label": "Ciclo combinado",
+    "cost": 34000,
+    "materials": {
+     "madera": 20,
+     "piedra": 350
+    },
+    "build_days": 60,
+    "workers": 10,
+    "jobs": 12,
+    "prod_per_worker": 34.0,
+    "quality": 1.0,
+    "upkeep": 5.0,
+    "unit_cost": 0.0,
+    "tech": "electronica",
+    "pollution": 2,
+    "model": [
+     {"s": "box", "size": [10.0, 5.0, 6.0], "pos": [0.0, 2.5, 0.0], "c": [0.9, 0.9, 0.9]},
+     {"s": "prism", "size": [3.333, 1.3, 6.0], "pos": [-3.333, 5.65, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [3.333, 1.3, 6.0], "pos": [0.0, 5.65, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "prism", "size": [3.333, 1.3, 6.0], "pos": [3.333, 5.65, 0.0], "c": [0.5, 0.52, 0.56]},
+     {"s": "box", "size": [8.0, 0.8, 0.08], "pos": [0.0, 3.0, 3.03], "c": [0.4, 0.5, 0.55]},
+     {"s": "box", "size": [1.8, 2.2, 0.1], "pos": [-2.5, 1.1, 3.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "cyl", "size": [0.35, 11.0, 0.402], "pos": [4.0, 5.5, -2.0], "c": [0.55, 0.3, 0.22]},
+     {"s": "cyl", "size": [0.35, 11.0, 0.402], "pos": [2.5, 5.5, -2.0], "c": [0.55, 0.3, 0.22]},
+     {"s": "box", "size": [4.0, 0.5, 0.08], "pos": [0.0, 4.5, 3.1], "c": [0.95, 0.82, 0.2]},
+     {"s": "sphere", "size": [2.6, 2.6, 2.6], "pos": [-6.8, 1.3, 0.0], "c": [0.85, 0.85, 0.85]}
+    ],
+    "inputs": {
+     "gas_natural": 0.12
+    },
+    "required_profession": "ingeniero",
+    "product": "electricidad",
+    "skill": "construccion"
+   }
+  ]
+ },
+ "central_hidro": {
+  "label": "Central hidroeléctrica",
+  "category": "negocio",
+  "sector": "Energía",
+  "order": 100,
+  "product": "electricidad",
+  "skill": "construccion",
+  "base_wage": 2.5,
+  "footprint": 10.0,
+  "description": "Represa sobre el río: electricidad limpia sin combustible. Solo en mapas con río.",
+  "economia": true,
+  "power_plant": true,
+  "map_types": [
+   "rio"
+  ],
+  "levels": [
+   {
+    "label": "Central hidroeléctrica",
+    "cost": 30000,
+    "materials": {
+     "madera": 40,
+     "piedra": 600
+    },
+    "build_days": 90,
+    "workers": 6,
+    "jobs": 8,
+    "prod_per_worker": 30.0,
+    "quality": 1.0,
+    "upkeep": 4.0,
+    "unit_cost": 0.0,
+    "tech": "hidroelectrica",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [10.0, 5.0, 1.6], "pos": [0.0, 2.5, -1.5], "c": [0.7, 0.7, 0.68]},
+     {"s": "box", "size": [9.6, 0.3, 3.0], "pos": [0.0, 4.6, -3.6], "c": [0.25, 0.45, 0.7]},
+     {"s": "box", "size": [3.6, 2.6, 2.4], "pos": [0.0, 1.3, 1.0], "c": [0.85, 0.82, 0.75]},
+     {"s": "box", "size": [2.0, 0.2, 2.0], "pos": [3.0, 0.1, 1.6], "c": [0.35, 0.6, 0.85]},
+     {"s": "cyl", "size": [0.08, 6.0, 0.12], "pos": [4.2, 3.0, 2.2], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.4, 0.08, 0.08], "pos": [4.2, 5.8, 2.2], "c": [0.55, 0.58, 0.62]}
+    ],
+    "product": "electricidad",
+    "skill": "construccion"
+   }
+  ]
+ },
+ "parque_eolico": {
+  "label": "Parque eólico",
+  "category": "negocio",
+  "sector": "Energía",
+  "order": 101,
+  "product": "electricidad",
+  "skill": "construccion",
+  "base_wage": 2.5,
+  "footprint": 8.0,
+  "description": "Molinos de viento modernos: energía limpia; rinde más en la costa y la montaña.",
+  "economia": true,
+  "power_plant": true,
+  "resource_bonus": {
+   "costa": 1.3,
+   "montana": 1.2,
+   "interior": 0.9
+  },
+  "levels": [
+   {
+    "label": "Parque eólico",
+    "cost": 16000,
+    "materials": {
+     "madera": 10,
+     "piedra": 120
+    },
+    "build_days": 45,
+    "workers": 3,
+    "jobs": 4,
+    "prod_per_worker": 40.0,
+    "quality": 1.0,
+    "upkeep": 2.2,
+    "unit_cost": 0.0,
+    "tech": "energia_eolica",
+    "pollution": 0,
+    "model": [
+     {"s": "cyl", "size": [0.18, 8.5, 0.3], "pos": [-2.2, 4.25, -1.5], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.5, 0.45, 0.9], "pos": [-2.2, 8.6, -1.5], "c": [0.94, 0.93, 0.9]},
+     {"s": "sphere", "size": [0.35, 0.35, 0.35], "pos": [-2.2, 8.6, -1.0], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [3.0, 0.22, 0.06], "pos": [-2.2, 10.1, -0.95], "c": [0.94, 0.93, 0.9], "rz": 90.0},
+     {"s": "box", "size": [3.0, 0.22, 0.06], "pos": [-3.499, 7.85, -0.95], "c": [0.94, 0.93, 0.9], "rz": 210.0},
+     {"s": "box", "size": [3.0, 0.22, 0.06], "pos": [-0.901, 7.85, -0.95], "c": [0.94, 0.93, 0.9], "rz": 330.0},
+     {"s": "cyl", "size": [0.18, 8.5, 0.3], "pos": [2.2, 4.25, 1.5], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.5, 0.45, 0.9], "pos": [2.2, 8.6, 1.5], "c": [0.94, 0.93, 0.9]},
+     {"s": "sphere", "size": [0.35, 0.35, 0.35], "pos": [2.2, 8.6, 2.0], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [3.0, 0.22, 0.06], "pos": [2.2, 10.1, 2.05], "c": [0.94, 0.93, 0.9], "rz": 90.0},
+     {"s": "box", "size": [3.0, 0.22, 0.06], "pos": [0.901, 7.85, 2.05], "c": [0.94, 0.93, 0.9], "rz": 210.0},
+     {"s": "box", "size": [3.0, 0.22, 0.06], "pos": [3.499, 7.85, 2.05], "c": [0.94, 0.93, 0.9], "rz": 330.0},
+     {"s": "box", "size": [1.6, 1.4, 1.2], "pos": [2.4, 0.7, -2.2], "c": [0.94, 0.93, 0.9]}
+    ],
+    "product": "electricidad",
+    "skill": "construccion"
+   },
+   {
+    "label": "Gran parque eólico",
+    "cost": 32000,
+    "materials": {
+     "madera": 10,
+     "piedra": 200
+    },
+    "build_days": 60,
+    "workers": 5,
+    "jobs": 7,
+    "prod_per_worker": 48.0,
+    "quality": 1.0,
+    "upkeep": 3.8,
+    "unit_cost": 0.0,
+    "tech": "energia_solar",
+    "pollution": 0,
+    "model": [
+     {"s": "cyl", "size": [0.18, 10.0, 0.3], "pos": [-3.0, 5.0, -2.0], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.5, 0.45, 0.9], "pos": [-3.0, 10.1, -2.0], "c": [0.94, 0.93, 0.9]},
+     {"s": "sphere", "size": [0.35, 0.35, 0.35], "pos": [-3.0, 10.1, -1.5], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [3.6, 0.22, 0.06], "pos": [-3.0, 11.9, -1.45], "c": [0.94, 0.93, 0.9], "rz": 90.0},
+     {"s": "box", "size": [3.6, 0.22, 0.06], "pos": [-4.559, 9.2, -1.45], "c": [0.94, 0.93, 0.9], "rz": 210.0},
+     {"s": "box", "size": [3.6, 0.22, 0.06], "pos": [-1.441, 9.2, -1.45], "c": [0.94, 0.93, 0.9], "rz": 330.0},
+     {"s": "cyl", "size": [0.18, 10.0, 0.3], "pos": [3.0, 5.0, -2.0], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.5, 0.45, 0.9], "pos": [3.0, 10.1, -2.0], "c": [0.94, 0.93, 0.9]},
+     {"s": "sphere", "size": [0.35, 0.35, 0.35], "pos": [3.0, 10.1, -1.5], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [3.6, 0.22, 0.06], "pos": [3.0, 11.9, -1.45], "c": [0.94, 0.93, 0.9], "rz": 90.0},
+     {"s": "box", "size": [3.6, 0.22, 0.06], "pos": [1.441, 9.2, -1.45], "c": [0.94, 0.93, 0.9], "rz": 210.0},
+     {"s": "box", "size": [3.6, 0.22, 0.06], "pos": [4.559, 9.2, -1.45], "c": [0.94, 0.93, 0.9], "rz": 330.0},
+     {"s": "cyl", "size": [0.18, 10.0, 0.3], "pos": [0.0, 5.0, 2.5], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.5, 0.45, 0.9], "pos": [0.0, 10.1, 2.5], "c": [0.94, 0.93, 0.9]},
+     {"s": "sphere", "size": [0.35, 0.35, 0.35], "pos": [0.0, 10.1, 3.0], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [3.6, 0.22, 0.06], "pos": [0.0, 11.9, 3.05], "c": [0.94, 0.93, 0.9], "rz": 90.0},
+     {"s": "box", "size": [3.6, 0.22, 0.06], "pos": [-1.559, 9.2, 3.05], "c": [0.94, 0.93, 0.9], "rz": 210.0},
+     {"s": "box", "size": [3.6, 0.22, 0.06], "pos": [1.559, 9.2, 3.05], "c": [0.94, 0.93, 0.9], "rz": 330.0}
+    ],
+    "product": "electricidad",
+    "skill": "construccion"
+   }
+  ]
+ },
+ "planta_solar": {
+  "label": "Planta solar",
+  "category": "negocio",
+  "sector": "Energía",
+  "order": 102,
+  "product": "electricidad",
+  "skill": "construccion",
+  "base_wage": 2.5,
+  "footprint": 8.0,
+  "description": "Paneles fotovoltaicos: energía limpia; rinde menos en invierno y con nubes.",
+  "economia": true,
+  "power_plant": true,
+  "seasonal": true,
+  "levels": [
+   {
+    "label": "Planta solar",
+    "cost": 22000,
+    "materials": {
+     "madera": 10,
+     "piedra": 100
+    },
+    "build_days": 40,
+    "workers": 3,
+    "jobs": 4,
+    "prod_per_worker": 34.0,
+    "quality": 1.0,
+    "upkeep": 2.0,
+    "unit_cost": 0.0,
+    "tech": "energia_solar",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-1.8, 0.45, -2.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-1.8, 1.0, -2.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [0.0, 0.45, -2.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [0.0, 1.0, -2.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [1.8, 0.45, -2.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [1.8, 1.0, -2.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-1.8, 0.45, 0.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-1.8, 1.0, 0.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [0.0, 0.45, 0.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [0.0, 1.0, 0.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [1.8, 0.45, 0.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [1.8, 1.0, 0.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-1.8, 0.45, 2.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-1.8, 1.0, 2.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [0.0, 0.45, 2.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [0.0, 1.0, 2.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [1.8, 0.45, 2.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [1.8, 1.0, 2.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [1.2, 1.2, 1.0], "pos": [3.4, 0.6, 2.6], "c": [0.94, 0.93, 0.9]}
+    ],
+    "product": "electricidad",
+    "skill": "construccion"
+   },
+   {
+    "label": "Gran planta solar",
+    "cost": 42000,
+    "materials": {
+     "madera": 10,
+     "piedra": 160
+    },
+    "build_days": 55,
+    "workers": 5,
+    "jobs": 7,
+    "prod_per_worker": 42.0,
+    "quality": 1.0,
+    "upkeep": 3.5,
+    "unit_cost": 0.0,
+    "tech": "electronica",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-3.2, 0.45, -2.8], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-3.2, 1.0, -2.8], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-1.4, 0.45, -2.8], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-1.4, 1.0, -2.8], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [0.4, 0.45, -2.8], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [0.4, 1.0, -2.8], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [2.2, 0.45, -2.8], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [2.2, 1.0, -2.8], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-3.2, 0.45, -0.9], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-3.2, 1.0, -0.9], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-1.4, 0.45, -0.9], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-1.4, 1.0, -0.9], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [0.4, 0.45, -0.9], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [0.4, 1.0, -0.9], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [2.2, 0.45, -0.9], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [2.2, 1.0, -0.9], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-3.2, 0.45, 1.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-3.2, 1.0, 1.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-1.4, 0.45, 1.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-1.4, 1.0, 1.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [0.4, 0.45, 1.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [0.4, 1.0, 1.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [2.2, 0.45, 1.0], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [2.2, 1.0, 1.0], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-3.2, 0.45, 2.9], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-3.2, 1.0, 2.9], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [-1.4, 0.45, 2.9], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [-1.4, 1.0, 2.9], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [0.4, 0.45, 2.9], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [0.4, 1.0, 2.9], "c": [0.12, 0.2, 0.45], "rx": -25},
+     {"s": "box", "size": [0.1, 0.9, 0.1], "pos": [2.2, 0.45, 2.9], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [1.6, 0.06, 1.1], "pos": [2.2, 1.0, 2.9], "c": [0.12, 0.2, 0.45], "rx": -25}
+    ],
+    "product": "electricidad",
+    "skill": "construccion"
+   }
+  ]
+ },
+ "central_nuclear": {
+  "label": "Central nuclear",
+  "category": "negocio",
+  "sector": "Energía",
+  "order": 103,
+  "product": "electricidad",
+  "skill": "construccion",
+  "base_wage": 3.2,
+  "footprint": 11.0,
+  "description": "Enorme producción con muy poco uranio. Exige ingenieros; no contamina el aire.",
+  "economia": true,
+  "power_plant": true,
+  "levels": [
+   {
+    "label": "Central nuclear",
+    "cost": 80000,
+    "materials": {
+     "madera": 20,
+     "piedra": 900
+    },
+    "build_days": 120,
+    "workers": 10,
+    "jobs": 14,
+    "prod_per_worker": 60.0,
+    "quality": 1.0,
+    "upkeep": 12.0,
+    "unit_cost": 0.0,
+    "tech": "energia_nuclear",
+    "pollution": 1,
+    "model": [
+     {"s": "cyl", "size": [2.1, 5.5, 2.8], "pos": [-3.5, 2.75, -1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [2.24, 4.5, 2.1], "pos": [-3.5, 7.75, -1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [2.1, 5.5, 2.8], "pos": [3.0, 2.75, -1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [2.24, 4.5, 2.1], "pos": [3.0, 7.75, -1.5], "c": [0.8, 0.8, 0.78]},
+     {"s": "cyl", "size": [1.8, 3.0, 1.8], "pos": [0.0, 1.5, 3.0], "c": [0.85, 0.85, 0.82]},
+     {"s": "sphere", "size": [3.6, 2.4, 3.6], "pos": [0.0, 3.0, 3.0], "c": [0.85, 0.85, 0.82]},
+     {"s": "box", "size": [4.0, 2.5, 2.5], "pos": [4.5, 1.25, 3.2], "c": [0.8, 0.8, 0.8]}
+    ],
+    "inputs": {
+     "uranio": 0.0008
+    },
+    "required_profession": "ingeniero",
+    "product": "electricidad",
+    "skill": "construccion"
+   }
+  ]
+ },
+ "carniceria": {
+  "label": "Carnicería",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 104,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 1.95,
+  "footprint": 4.0,
+  "description": "Vende carne, embutidos y conservas del almacén a los vecinos.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Carnicería",
+    "cost": 400,
+    "materials": {
+     "madera": 15
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 8.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.4, 2.6, 3.2], "pos": [0.0, 1.3, 0.0], "c": [0.92, 0.88, 0.82]},
+     {"s": "box", "size": [3.7, 0.2, 3.5], "pos": [0.0, 2.7, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.63], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.952, 1.0, 0.08], "pos": [-1.02, 1.0, 1.63], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [0.952, 1.0, 0.08], "pos": [1.02, 1.0, 1.63], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [3.4, 0.08, 1.1], "pos": [0.0, 2.05, 2.1], "c": [0.75, 0.15, 0.15], "rx": 15},
+     {"s": "box", "size": [2.38, 0.6, 0.1], "pos": [0.0, 2.7, 1.68], "c": [0.72, 0.22, 0.2]},
+     {"s": "sphere", "size": [0.54, 0.126, 0.378], "pos": [-1.2, 0.063, 2.2], "c": [0.72, 0.22, 0.2]},
+     {"s": "sphere", "size": [0.45, 0.09, 0.306], "pos": [-1.182, 0.09, 2.2], "c": [0.85, 0.35, 0.33]},
+     {"s": "cyl", "size": [0.045, 0.45, 0.045], "pos": [-0.93, 0.072, 2.2], "c": [0.94, 0.93, 0.9], "rz": 90.0},
+     {"s": "sphere", "size": [0.09, 0.09, 0.09], "pos": [-0.696, 0.072, 2.2], "c": [0.94, 0.93, 0.9]},
+     {"s": "cyl", "size": [0.063, 0.36, 0.063], "pos": [1.2, 0.495, 2.092], "c": [0.6, 0.18, 0.15], "rz": 15.0},
+     {"s": "cyl", "size": [0.063, 0.36, 0.063], "pos": [1.2, 0.477, 2.2], "c": [0.6, 0.18, 0.15], "rz": 5.0},
+     {"s": "cyl", "size": [0.063, 0.36, 0.063], "pos": [1.2, 0.459, 2.308], "c": [0.6, 0.18, 0.15], "rz": -5.0},
+     {"s": "box", "size": [0.72, 0.036, 0.036], "pos": [1.2, 0.72, 2.2], "c": [0.55, 0.36, 0.2]},
+     {"s": "cyl", "size": [0.108, 0.27, 0.108], "pos": [1.47, 0.135, 2.29], "c": [0.7, 0.3, 0.2], "rz": 90.0}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Carnicería con cámara fría",
+    "cost": 3500,
+    "materials": {
+     "madera": 15,
+     "piedra": 40
+    },
+    "build_days": 20,
+    "workers": 4,
+    "jobs": 5,
+    "prod_per_worker": 10.0,
+    "quality": 1.0,
+    "upkeep": 0.9,
+    "unit_cost": 0.0,
+    "tech": "refrigeracion",
+    "pollution": 0,
+    "model": [
+     {"s": "floors", "size": [4.4, 6.0, 3.6], "pos": [0.0, 0.0, 0.0], "c": [0.95, 0.95, 0.95], "floors": 2, "c2": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [4.6, 0.25, 3.8], "pos": [0.0, 6.12, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.83], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.232, 1.0, 0.08], "pos": [-1.32, 1.0, 1.83], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.232, 1.0, 0.08], "pos": [1.32, 1.0, 1.83], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [4.4, 0.08, 1.1], "pos": [0.0, 2.05, 2.3], "c": [0.75, 0.15, 0.15], "rx": 15},
+     {"s": "box", "size": [3.08, 0.6, 0.1], "pos": [0.0, 2.7, 1.88], "c": [0.72, 0.22, 0.2]},
+     {"s": "sphere", "size": [0.54, 0.126, 0.378], "pos": [-1.2, 0.063, 2.2], "c": [0.72, 0.22, 0.2]},
+     {"s": "sphere", "size": [0.45, 0.09, 0.306], "pos": [-1.182, 0.09, 2.2], "c": [0.85, 0.35, 0.33]},
+     {"s": "cyl", "size": [0.045, 0.45, 0.045], "pos": [-0.93, 0.072, 2.2], "c": [0.94, 0.93, 0.9], "rz": 90.0},
+     {"s": "sphere", "size": [0.09, 0.09, 0.09], "pos": [-0.696, 0.072, 2.2], "c": [0.94, 0.93, 0.9]},
+     {"s": "cyl", "size": [0.126, 0.216, 0.126], "pos": [1.056, 0.108, 2.2], "c": [0.55, 0.58, 0.62]},
+     {"s": "cyl", "size": [0.126, 0.216, 0.126], "pos": [1.344, 0.108, 2.2], "c": [0.55, 0.58, 0.62]},
+     {"s": "cyl", "size": [0.126, 0.216, 0.126], "pos": [1.2, 0.108, 2.416], "c": [0.55, 0.58, 0.62]},
+     {"s": "cyl", "size": [0.131, 0.108, 0.131], "pos": [1.056, 0.108, 2.2], "c": [0.85, 0.25, 0.2]},
+     {"s": "cyl", "size": [0.131, 0.108, 0.131], "pos": [1.344, 0.108, 2.2], "c": [0.85, 0.25, 0.2]},
+     {"s": "cyl", "size": [0.131, 0.108, 0.131], "pos": [1.2, 0.108, 2.416], "c": [0.85, 0.25, 0.2]}
+    ],
+    "power": 1.0,
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ },
+ "madereria": {
+  "label": "Maderería",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 105,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 1.95,
+  "footprint": 4.0,
+  "description": "Vende madera del almacén para reparaciones y muebles caseros.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Maderería",
+    "cost": 380,
+    "materials": {
+     "madera": 20
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 6.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.6, 2.6, 3.4], "pos": [0.0, 1.3, 0.0], "c": [0.72, 0.55, 0.35]},
+     {"s": "box", "size": [3.9, 0.2, 3.7], "pos": [0.0, 2.7, 0.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.73], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.008, 1.0, 0.08], "pos": [-1.08, 1.0, 1.73], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.008, 1.0, 0.08], "pos": [1.08, 1.0, 1.73], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [3.6, 0.08, 1.1], "pos": [0.0, 2.05, 2.2], "c": [0.45, 0.3, 0.2], "rx": 15},
+     {"s": "box", "size": [2.52, 0.6, 0.1], "pos": [0.0, 2.7, 1.78], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.045, 1.984], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.045, 2.2], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.045, 2.416], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.135, 2.092], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.135, 2.308], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.225, 2.2], "c": [0.76, 0.58, 0.36]},
+     {"s": "cyl", "size": [0.09, 0.72, 0.09], "pos": [1.2, 0.126, 2.065], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [1.565, 0.126, 2.065], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [0.835, 0.126, 2.065], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.09, 0.72, 0.09], "pos": [1.2, 0.126, 2.245], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [1.565, 0.126, 2.245], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [0.835, 0.126, 2.245], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "box", "size": [0.8, 0.1, 2.5], "pos": [2.4, 0.3, 0.0], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.8, 0.1, 2.5], "pos": [2.4, 0.42, 0.0], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.8, 0.1, 2.5], "pos": [2.4, 0.54, 0.0], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.8, 0.1, 2.5], "pos": [2.4, 0.66, 0.0], "c": [0.76, 0.58, 0.36]}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Depósito de maderas",
+    "cost": 2600,
+    "materials": {
+     "madera": 40,
+     "piedra": 20
+    },
+    "build_days": 20,
+    "workers": 4,
+    "jobs": 5,
+    "prod_per_worker": 8.0,
+    "quality": 1.0,
+    "upkeep": 0.7,
+    "unit_cost": 0.0,
+    "tech": "arquitectura_urbana",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [5.0, 3.0, 4.0], "pos": [0.0, 1.5, 0.0], "c": [0.72, 0.55, 0.35]},
+     {"s": "box", "size": [5.3, 0.2, 4.3], "pos": [0.0, 3.1, 0.0], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 2.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.4, 1.0, 0.08], "pos": [-1.5, 1.0, 2.03], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.4, 1.0, 0.08], "pos": [1.5, 1.0, 2.03], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [5.0, 0.08, 1.1], "pos": [0.0, 2.05, 2.5], "c": [0.45, 0.3, 0.2], "rx": 15},
+     {"s": "box", "size": [3.5, 0.6, 0.1], "pos": [0.0, 3.1, 2.08], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.045, 1.984], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.045, 2.2], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.045, 2.416], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.135, 2.092], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.135, 2.308], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.9, 0.09, 0.198], "pos": [-1.2, 0.225, 2.2], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.8, 0.1, 3.2], "pos": [3.2, 0.3, 0.0], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.8, 0.1, 3.2], "pos": [3.2, 0.42, 0.0], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.8, 0.1, 3.2], "pos": [3.2, 0.54, 0.0], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.8, 0.1, 3.2], "pos": [3.2, 0.66, 0.0], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.8, 0.1, 3.2], "pos": [3.2, 0.78, 0.0], "c": [0.76, 0.58, 0.36]},
+     {"s": "box", "size": [0.8, 0.1, 3.2], "pos": [3.2, 0.9, 0.0], "c": [0.76, 0.58, 0.36]}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ },
+ "carboneria": {
+  "label": "Carbonería y leñería",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 106,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 1.95,
+  "footprint": 4.0,
+  "description": "Vende carbón y leña del almacén para cocinar y calentar las casas.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Carbonería y leñería",
+    "cost": 350,
+    "materials": {
+     "madera": 12
+    },
+    "build_days": 8,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 7.0,
+    "quality": 1.0,
+    "upkeep": 0.15,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.2, 2.4, 3.0], "pos": [0.0, 1.2, 0.0], "c": [0.45, 0.42, 0.4]},
+     {"s": "box", "size": [3.5, 0.2, 3.3], "pos": [0.0, 2.5, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.896, 1.0, 0.08], "pos": [-0.96, 1.0, 1.53], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [0.896, 1.0, 0.08], "pos": [0.96, 1.0, 1.53], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [3.2, 0.08, 1.1], "pos": [0.0, 2.05, 2.0], "c": [0.2, 0.2, 0.22], "rx": 15},
+     {"s": "box", "size": [2.24, 0.6, 0.1], "pos": [0.0, 2.5, 1.58], "c": [0.2, 0.2, 0.22]},
+     {"s": "box", "size": [0.72, 0.108, 0.45], "pos": [-1.2, 0.054, 2.2], "c": [0.55, 0.36, 0.2]},
+     {"s": "sphere", "size": [0.216, 0.173, 0.216], "pos": [-1.166, 0.248, 2.254], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.259, 0.173, 0.216], "pos": [-1.306, 0.248, 2.172], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.302, 0.173, 0.216], "pos": [-1.074, 0.086, 2.134], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.216, 0.173, 0.216], "pos": [-1.257, 0.086, 2.358], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.259, 0.173, 0.216], "pos": [-1.274, 0.086, 2.024], "c": [0.1, 0.1, 0.11]},
+     {"s": "cyl", "size": [0.09, 0.72, 0.09], "pos": [1.2, 0.126, 2.065], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [1.565, 0.126, 2.065], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [0.835, 0.126, 2.065], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.09, 0.72, 0.09], "pos": [1.2, 0.126, 2.245], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [1.565, 0.126, 2.245], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [0.835, 0.126, 2.245], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Depósito de combustibles",
+    "cost": 2400,
+    "materials": {
+     "madera": 15,
+     "piedra": 40
+    },
+    "build_days": 18,
+    "workers": 4,
+    "jobs": 4,
+    "prod_per_worker": 9.0,
+    "quality": 1.0,
+    "upkeep": 0.6,
+    "unit_cost": 0.0,
+    "tech": "maquina_vapor",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [4.2, 2.8, 3.6], "pos": [0.0, 1.4, 0.0], "c": [0.5, 0.48, 0.45]},
+     {"s": "box", "size": [4.5, 0.2, 3.9], "pos": [0.0, 2.9, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.83], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.176, 1.0, 0.08], "pos": [-1.26, 1.0, 1.83], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.176, 1.0, 0.08], "pos": [1.26, 1.0, 1.83], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [4.2, 0.08, 1.1], "pos": [0.0, 2.05, 2.3], "c": [0.2, 0.2, 0.22], "rx": 15},
+     {"s": "box", "size": [2.94, 0.6, 0.1], "pos": [0.0, 2.9, 1.88], "c": [0.2, 0.2, 0.22]},
+     {"s": "box", "size": [0.72, 0.108, 0.45], "pos": [-1.2, 0.054, 2.2], "c": [0.55, 0.36, 0.2]},
+     {"s": "sphere", "size": [0.216, 0.173, 0.216], "pos": [-1.166, 0.248, 2.254], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.259, 0.173, 0.216], "pos": [-1.306, 0.248, 2.172], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.302, 0.173, 0.216], "pos": [-1.074, 0.086, 2.134], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.216, 0.173, 0.216], "pos": [-1.257, 0.086, 2.358], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.259, 0.173, 0.216], "pos": [-1.274, 0.086, 2.024], "c": [0.1, 0.1, 0.11]},
+     {"s": "cyl", "size": [0.09, 0.72, 0.09], "pos": [1.2, 0.126, 2.065], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [1.565, 0.126, 2.065], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [0.835, 0.126, 2.065], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.09, 0.72, 0.09], "pos": [1.2, 0.126, 2.245], "c": [0.38, 0.25, 0.14], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [1.565, 0.126, 2.245], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "cyl", "size": [0.072, 0.018, 0.072], "pos": [0.835, 0.126, 2.245], "c": [0.76, 0.58, 0.36], "rz": 90.0, "rot": 0},
+     {"s": "sphere", "size": [0.8, 0.64, 0.8], "pos": [-0.175, 0.5, -0.202], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.96, 0.64, 0.8], "pos": [0.46, 0.5, 0.054], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [1.12, 0.64, 0.8], "pos": [-0.485, 0.32, 0.35], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.8, 0.64, 0.8], "pos": [0.143, 0.32, -0.692], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.96, 0.64, 0.8], "pos": [0.41, 0.32, 0.689], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [1.12, 0.64, 0.8], "pos": [-0.849, 0.32, -0.255], "c": [0.1, 0.1, 0.11]},
+     {"s": "sphere", "size": [0.8, 0.64, 0.8], "pos": [0.868, 0.32, -0.419], "c": [0.1, 0.1, 0.11]}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ },
+ "ferreteria": {
+  "label": "Ferretería",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 107,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 1.95,
+  "footprint": 4.0,
+  "description": "Vende herramientas, utensilios de hierro y vidrio.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Ferretería",
+    "cost": 420,
+    "materials": {
+     "madera": 15
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 7.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.4, 2.6, 3.2], "pos": [0.0, 1.3, 0.0], "c": [0.7, 0.72, 0.75]},
+     {"s": "box", "size": [3.7, 0.2, 3.5], "pos": [0.0, 2.7, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.63], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.952, 1.0, 0.08], "pos": [-1.02, 1.0, 1.63], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [0.952, 1.0, 0.08], "pos": [1.02, 1.0, 1.63], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [3.4, 0.08, 1.1], "pos": [0.0, 2.05, 2.1], "c": [0.25, 0.35, 0.6], "rx": 15},
+     {"s": "box", "size": [2.38, 0.6, 0.1], "pos": [0.0, 2.7, 1.68], "c": [0.42, 0.4, 0.4]},
+     {"s": "box", "size": [0.054, 0.63, 0.054], "pos": [-1.335, 0.315, 2.2], "c": [0.76, 0.58, 0.36], "rz": -15.0},
+     {"s": "box", "size": [0.252, 0.09, 0.09], "pos": [-1.416, 0.612, 2.2], "c": [0.42, 0.4, 0.4], "rz": -15.0},
+     {"s": "box", "size": [0.054, 0.72, 0.054], "pos": [-1.02, 0.36, 2.2], "c": [0.76, 0.58, 0.36], "rz": 15.0},
+     {"s": "box", "size": [0.198, 0.234, 0.027], "pos": [-0.912, 0.045, 2.2], "c": [0.55, 0.58, 0.62], "rz": 15.0},
+     {"s": "box", "size": [0.45, 0.108, 0.027], "pos": [-1.2, 0.09, 2.425], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [0.126, 0.126, 0.045], "pos": [-1.452, 0.09, 2.425], "c": [0.55, 0.36, 0.2]},
+     {"s": "cyl", "size": [0.27, 0.27, 0.234], "pos": [1.2, 0.135, 2.2], "c": [0.42, 0.4, 0.4]},
+     {"s": "cyl", "size": [0.279, 0.027, 0.279], "pos": [1.2, 0.27, 2.2], "c": [0.3, 0.3, 0.3]},
+     {"s": "box", "size": [0.144, 0.036, 0.036], "pos": [1.542, 0.234, 2.2], "c": [0.42, 0.4, 0.4]},
+     {"s": "box", "size": [0.144, 0.036, 0.036], "pos": [0.858, 0.234, 2.2], "c": [0.42, 0.4, 0.4]},
+     {"s": "cyl", "size": [0.144, 0.045, 0.144], "pos": [1.515, 0.027, 2.515], "c": [0.42, 0.4, 0.4]},
+     {"s": "box", "size": [0.27, 0.027, 0.045], "pos": [1.722, 0.036, 2.515], "c": [0.55, 0.36, 0.2]}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Gran ferretería",
+    "cost": 3000,
+    "materials": {
+     "madera": 15,
+     "piedra": 50
+    },
+    "build_days": 20,
+    "workers": 4,
+    "jobs": 5,
+    "prod_per_worker": 9.0,
+    "quality": 1.0,
+    "upkeep": 0.8,
+    "unit_cost": 0.0,
+    "tech": "fabricas",
+    "pollution": 0,
+    "model": [
+     {"s": "floors", "size": [4.6, 6.0, 3.8], "pos": [0.0, 0.0, 0.0], "c": [0.7, 0.72, 0.75], "floors": 2, "c2": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [4.8, 0.25, 4.0], "pos": [0.0, 6.12, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.93], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.288, 1.0, 0.08], "pos": [-1.38, 1.0, 1.93], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.288, 1.0, 0.08], "pos": [1.38, 1.0, 1.93], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [4.6, 0.08, 1.1], "pos": [0.0, 2.05, 2.4], "c": [0.25, 0.35, 0.6], "rx": 15},
+     {"s": "box", "size": [3.22, 0.6, 0.1], "pos": [0.0, 2.7, 1.98], "c": [0.42, 0.4, 0.4]},
+     {"s": "box", "size": [0.054, 0.63, 0.054], "pos": [-1.335, 0.315, 2.2], "c": [0.76, 0.58, 0.36], "rz": -15.0},
+     {"s": "box", "size": [0.252, 0.09, 0.09], "pos": [-1.416, 0.612, 2.2], "c": [0.42, 0.4, 0.4], "rz": -15.0},
+     {"s": "box", "size": [0.054, 0.72, 0.054], "pos": [-1.02, 0.36, 2.2], "c": [0.76, 0.58, 0.36], "rz": 15.0},
+     {"s": "box", "size": [0.198, 0.234, 0.027], "pos": [-0.912, 0.045, 2.2], "c": [0.55, 0.58, 0.62], "rz": 15.0},
+     {"s": "box", "size": [0.45, 0.108, 0.027], "pos": [-1.2, 0.09, 2.425], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [0.126, 0.126, 0.045], "pos": [-1.452, 0.09, 2.425], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.54, 0.54, 0.036], "pos": [1.2, 0.288, 2.11], "c": [0.62, 0.82, 0.9], "rx": -8.0},
+     {"s": "box", "size": [0.558, 0.036, 0.09], "pos": [1.2, 0.018, 2.128], "c": [0.55, 0.36, 0.2]},
+     {"s": "cyl", "size": [0.09, 0.315, 0.108], "pos": [1.47, 0.162, 2.38], "c": [0.35, 0.7, 0.45]},
+     {"s": "cyl", "size": [0.036, 0.126, 0.045], "pos": [1.47, 0.378, 2.38], "c": [0.35, 0.7, 0.45]}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ },
+ "tienda_ropa": {
+  "label": "Tienda de ropa y calzado",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 108,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 1.95,
+  "footprint": 4.5,
+  "description": "Vende ropa, ropa fina y calzado del almacén.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Tienda de ropa",
+    "cost": 420,
+    "materials": {
+     "madera": 15
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 7.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.4, 2.6, 3.2], "pos": [0.0, 1.3, 0.0], "c": [0.9, 0.82, 0.85]},
+     {"s": "box", "size": [3.7, 0.2, 3.5], "pos": [0.0, 2.7, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.63], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.952, 1.0, 0.08], "pos": [-1.02, 1.0, 1.63], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [0.952, 1.0, 0.08], "pos": [1.02, 1.0, 1.63], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [3.4, 0.08, 1.1], "pos": [0.0, 2.05, 2.1], "c": [0.55, 0.25, 0.5], "rx": 15},
+     {"s": "box", "size": [2.38, 0.6, 0.1], "pos": [0.0, 2.7, 1.68], "c": [0.35, 0.45, 0.7]},
+     {"s": "box", "size": [0.45, 0.54, 0.162], "pos": [-1.2, 0.36, 2.2], "c": [0.35, 0.45, 0.7]},
+     {"s": "box", "size": [0.162, 0.378, 0.126], "pos": [-1.497, 0.432, 2.2], "c": [0.35, 0.45, 0.7], "rz": -35.0},
+     {"s": "box", "size": [0.162, 0.378, 0.126], "pos": [-0.903, 0.432, 2.2], "c": [0.35, 0.45, 0.7], "rz": 35.0},
+     {"s": "box", "size": [0.216, 0.063, 0.18], "pos": [-1.2, 0.648, 2.2], "c": [0.9, 0.9, 0.85]},
+     {"s": "box", "size": [0.18, 0.054, 0.414], "pos": [1.083, 0.027, 2.245], "c": [0.08, 0.08, 0.09]},
+     {"s": "box", "size": [0.18, 0.126, 0.36], "pos": [1.083, 0.108, 2.254], "c": [0.45, 0.27, 0.14]},
+     {"s": "box", "size": [0.18, 0.306, 0.144], "pos": [1.083, 0.27, 2.128], "c": [0.45, 0.27, 0.14]},
+     {"s": "box", "size": [0.18, 0.054, 0.414], "pos": [1.317, 0.027, 2.245], "c": [0.08, 0.08, 0.09]},
+     {"s": "box", "size": [0.18, 0.126, 0.36], "pos": [1.317, 0.108, 2.254], "c": [0.35, 0.2, 0.1]},
+     {"s": "box", "size": [0.18, 0.306, 0.144], "pos": [1.317, 0.27, 2.128], "c": [0.35, 0.2, 0.1]}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Almacén de modas",
+    "cost": 3200,
+    "materials": {
+     "madera": 15,
+     "piedra": 50
+    },
+    "build_days": 20,
+    "workers": 4,
+    "jobs": 6,
+    "prod_per_worker": 9.0,
+    "quality": 1.0,
+    "upkeep": 0.9,
+    "unit_cost": 0.0,
+    "tech": "tapiceria_industrial",
+    "pollution": 0,
+    "model": [
+     {"s": "floors", "size": [4.6, 6.0, 3.8], "pos": [0.0, 0.0, 0.0], "c": [0.92, 0.85, 0.88], "floors": 2, "c2": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [4.8, 0.25, 4.0], "pos": [0.0, 6.12, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.93], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.288, 1.0, 0.08], "pos": [-1.38, 1.0, 1.93], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.288, 1.0, 0.08], "pos": [1.38, 1.0, 1.93], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [4.6, 0.08, 1.1], "pos": [0.0, 2.05, 2.4], "c": [0.55, 0.25, 0.5], "rx": 15},
+     {"s": "box", "size": [3.22, 0.6, 0.1], "pos": [0.0, 2.7, 1.98], "c": [0.35, 0.45, 0.7]},
+     {"s": "box", "size": [0.45, 0.765, 0.18], "pos": [-1.2, 0.405, 2.2], "c": [0.2, 0.15, 0.35]},
+     {"s": "box", "size": [0.144, 0.54, 0.135], "pos": [-1.497, 0.468, 2.2], "c": [0.2, 0.15, 0.35], "rz": -18.0},
+     {"s": "box", "size": [0.144, 0.54, 0.135], "pos": [-0.903, 0.468, 2.2], "c": [0.2, 0.15, 0.35], "rz": 18.0},
+     {"s": "prism", "size": [0.288, 0.162, 0.189], "pos": [-1.2, 0.738, 2.209], "c": [0.85, 0.8, 0.7]},
+     {"s": "sphere", "size": [0.045, 0.045, 0.045], "pos": [-1.2, 0.54, 2.299], "c": [0.98, 0.78, 0.18]},
+     {"s": "sphere", "size": [0.045, 0.045, 0.045], "pos": [-1.2, 0.405, 2.299], "c": [0.98, 0.78, 0.18]},
+     {"s": "box", "size": [0.18, 0.054, 0.414], "pos": [1.083, 0.027, 2.245], "c": [0.08, 0.08, 0.09]},
+     {"s": "box", "size": [0.18, 0.126, 0.36], "pos": [1.083, 0.108, 2.254], "c": [0.45, 0.27, 0.14]},
+     {"s": "box", "size": [0.18, 0.306, 0.144], "pos": [1.083, 0.27, 2.128], "c": [0.45, 0.27, 0.14]},
+     {"s": "box", "size": [0.18, 0.054, 0.414], "pos": [1.317, 0.027, 2.245], "c": [0.08, 0.08, 0.09]},
+     {"s": "box", "size": [0.18, 0.126, 0.36], "pos": [1.317, 0.108, 2.254], "c": [0.35, 0.2, 0.1]},
+     {"s": "box", "size": [0.18, 0.306, 0.144], "pos": [1.317, 0.27, 2.128], "c": [0.35, 0.2, 0.1]}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Tienda por departamentos",
+    "cost": 14000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 40,
+    "workers": 8,
+    "jobs": 14,
+    "prod_per_worker": 12.0,
+    "quality": 1.0,
+    "upkeep": 2.5,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "pollution": 0,
+    "model": [
+     {"s": "floors", "size": [7.0, 9.6, 5.0], "pos": [0.0, 0.0, 0.0], "c": [0.92, 0.9, 0.9], "floors": 3, "c2": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [7.2, 0.25, 5.2], "pos": [0.0, 9.72, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.96, 1.0, 0.08], "pos": [-2.1, 1.0, 2.53], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.96, 1.0, 0.08], "pos": [2.1, 1.0, 2.53], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [7.0, 0.08, 1.1], "pos": [0.0, 2.05, 3.0], "c": [0.55, 0.25, 0.5], "rx": 15},
+     {"s": "box", "size": [4.9, 0.6, 0.1], "pos": [0.0, 2.7, 2.58], "c": [0.35, 0.45, 0.7]},
+     {"s": "box", "size": [0.45, 0.765, 0.18], "pos": [-1.2, 0.405, 2.2], "c": [0.2, 0.15, 0.35]},
+     {"s": "box", "size": [0.144, 0.54, 0.135], "pos": [-1.497, 0.468, 2.2], "c": [0.2, 0.15, 0.35], "rz": -18.0},
+     {"s": "box", "size": [0.144, 0.54, 0.135], "pos": [-0.903, 0.468, 2.2], "c": [0.2, 0.15, 0.35], "rz": 18.0},
+     {"s": "prism", "size": [0.288, 0.162, 0.189], "pos": [-1.2, 0.738, 2.209], "c": [0.85, 0.8, 0.7]},
+     {"s": "sphere", "size": [0.045, 0.045, 0.045], "pos": [-1.2, 0.54, 2.299], "c": [0.98, 0.78, 0.18]},
+     {"s": "sphere", "size": [0.045, 0.045, 0.045], "pos": [-1.2, 0.405, 2.299], "c": [0.98, 0.78, 0.18]},
+     {"s": "box", "size": [0.45, 0.54, 0.162], "pos": [1.2, 0.36, 2.2], "c": [0.35, 0.45, 0.7]},
+     {"s": "box", "size": [0.162, 0.378, 0.126], "pos": [0.903, 0.432, 2.2], "c": [0.35, 0.45, 0.7], "rz": -35.0},
+     {"s": "box", "size": [0.162, 0.378, 0.126], "pos": [1.497, 0.432, 2.2], "c": [0.35, 0.45, 0.7], "rz": 35.0},
+     {"s": "box", "size": [0.216, 0.063, 0.18], "pos": [1.2, 0.648, 2.2], "c": [0.9, 0.9, 0.85]}
+    ],
+    "power": 1.0,
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ },
+ "joyeria_tienda": {
+  "label": "Joyería",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 109,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 1.95,
+  "footprint": 4.0,
+  "description": "Vende joyas y relojes a los vecinos ricos.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Joyería",
+    "cost": 800,
+    "materials": {
+     "madera": 10,
+     "piedra": 20
+    },
+    "build_days": 12,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 3.0,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.2, 2.6, 3.0], "pos": [0.0, 1.3, 0.0], "c": [0.95, 0.92, 0.85]},
+     {"s": "box", "size": [3.5, 0.2, 3.3], "pos": [0.0, 2.7, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.896, 1.0, 0.08], "pos": [-0.96, 1.0, 1.53], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [0.896, 1.0, 0.08], "pos": [0.96, 1.0, 1.53], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [3.2, 0.08, 1.1], "pos": [0.0, 2.05, 2.0], "c": [0.2, 0.15, 0.35], "rx": 15},
+     {"s": "box", "size": [2.24, 0.6, 0.1], "pos": [0.0, 2.7, 1.58], "c": [0.98, 0.78, 0.18]},
+     {"s": "cyl", "size": [0.18, 0.036, 0.18], "pos": [-1.2, 0.18, 2.2], "c": [0.98, 0.78, 0.18], "rx": 70.0},
+     {"s": "sphere", "size": [0.108, 0.108, 0.108], "pos": [-1.2, 0.36, 2.254], "c": [0.2, 0.8, 0.45]},
+     {"s": "box", "size": [0.45, 0.09, 0.36], "pos": [-1.2, 0.045, 2.2], "c": [0.4, 0.1, 0.15]},
+     {"s": "sphere", "size": [0.054, 0.054, 0.054], "pos": [-0.975, 0.108, 2.2], "c": [0.85, 0.87, 0.9]},
+     {"s": "sphere", "size": [0.054, 0.054, 0.054], "pos": [-1.028, 0.108, 2.304], "c": [0.85, 0.87, 0.9]},
+     {"s": "sphere", "size": [0.054, 0.054, 0.054], "pos": [-1.162, 0.108, 2.359], "c": [0.85, 0.87, 0.9]},
+     {"s": "cyl", "size": [0.252, 0.072, 0.252], "pos": [1.2, 0.288, 2.2], "c": [0.98, 0.78, 0.18], "rx": 90.0},
+     {"s": "cyl", "size": [0.216, 0.077, 0.216], "pos": [1.2, 0.288, 2.205], "c": [0.94, 0.93, 0.9], "rx": 90.0},
+     {"s": "box", "size": [0.018, 0.144, 0.018], "pos": [1.2, 0.342, 2.245], "c": [0.08, 0.08, 0.09]},
+     {"s": "box", "size": [0.108, 0.018, 0.018], "pos": [1.245, 0.288, 2.245], "c": [0.08, 0.08, 0.09]},
+     {"s": "cyl", "size": [0.045, 0.072, 0.045], "pos": [1.2, 0.576, 2.2], "c": [0.98, 0.78, 0.18]},
+     {"s": "box", "size": [0.027, 0.27, 0.027], "pos": [1.335, 0.135, 2.2], "c": [0.98, 0.78, 0.18], "rz": 30.0}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Joyería de lujo",
+    "cost": 4200,
+    "materials": {
+     "madera": 10,
+     "piedra": 60
+    },
+    "build_days": 22,
+    "workers": 3,
+    "jobs": 4,
+    "prod_per_worker": 4.0,
+    "quality": 1.0,
+    "upkeep": 1.0,
+    "unit_cost": 0.0,
+    "tech": "relojeria",
+    "pollution": 0,
+    "model": [
+     {"s": "floors", "size": [4.0, 6.0, 3.4], "pos": [0.0, 0.0, 0.0], "c": [0.95, 0.92, 0.85], "floors": 2, "c2": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [4.2, 0.25, 3.6], "pos": [0.0, 6.12, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.73], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.12, 1.0, 0.08], "pos": [-1.2, 1.0, 1.73], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.12, 1.0, 0.08], "pos": [1.2, 1.0, 1.73], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [4.0, 0.08, 1.1], "pos": [0.0, 2.05, 2.2], "c": [0.2, 0.15, 0.35], "rx": 15},
+     {"s": "box", "size": [2.8, 0.6, 0.1], "pos": [0.0, 2.7, 1.78], "c": [0.98, 0.78, 0.18]},
+     {"s": "cyl", "size": [0.252, 0.072, 0.252], "pos": [-1.2, 0.288, 2.2], "c": [0.98, 0.78, 0.18], "rx": 90.0},
+     {"s": "cyl", "size": [0.216, 0.077, 0.216], "pos": [-1.2, 0.288, 2.205], "c": [0.94, 0.93, 0.9], "rx": 90.0},
+     {"s": "box", "size": [0.018, 0.144, 0.018], "pos": [-1.2, 0.342, 2.245], "c": [0.08, 0.08, 0.09]},
+     {"s": "box", "size": [0.108, 0.018, 0.018], "pos": [-1.155, 0.288, 2.245], "c": [0.08, 0.08, 0.09]},
+     {"s": "cyl", "size": [0.045, 0.072, 0.045], "pos": [-1.2, 0.576, 2.2], "c": [0.98, 0.78, 0.18]},
+     {"s": "box", "size": [0.027, 0.27, 0.027], "pos": [-1.065, 0.135, 2.2], "c": [0.98, 0.78, 0.18], "rz": 30.0},
+     {"s": "cyl", "size": [0.18, 0.036, 0.18], "pos": [1.2, 0.18, 2.2], "c": [0.98, 0.78, 0.18], "rx": 70.0},
+     {"s": "sphere", "size": [0.108, 0.108, 0.108], "pos": [1.2, 0.36, 2.254], "c": [0.2, 0.8, 0.45]},
+     {"s": "box", "size": [0.45, 0.09, 0.36], "pos": [1.2, 0.045, 2.2], "c": [0.4, 0.1, 0.15]},
+     {"s": "sphere", "size": [0.054, 0.054, 0.054], "pos": [1.425, 0.108, 2.2], "c": [0.85, 0.87, 0.9]},
+     {"s": "sphere", "size": [0.054, 0.054, 0.054], "pos": [1.372, 0.108, 2.304], "c": [0.85, 0.87, 0.9]},
+     {"s": "sphere", "size": [0.054, 0.054, 0.054], "pos": [1.238, 0.108, 2.359], "c": [0.85, 0.87, 0.9]}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ },
+ "muebleria": {
+  "label": "Mueblería",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 110,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 1.95,
+  "footprint": 4.5,
+  "description": "Vende muebles y loza del almacén.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Mueblería",
+    "cost": 450,
+    "materials": {
+     "madera": 20
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 5.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.8, 2.6, 3.4], "pos": [0.0, 1.3, 0.0], "c": [0.85, 0.75, 0.6]},
+     {"s": "box", "size": [4.1, 0.2, 3.7], "pos": [0.0, 2.7, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.73], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.064, 1.0, 0.08], "pos": [-1.14, 1.0, 1.73], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.064, 1.0, 0.08], "pos": [1.14, 1.0, 1.73], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [3.8, 0.08, 1.1], "pos": [0.0, 2.05, 2.2], "c": [0.45, 0.3, 0.2], "rx": 15},
+     {"s": "box", "size": [2.66, 0.6, 0.1], "pos": [0.0, 2.7, 1.78], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.72, 0.054, 0.45], "pos": [-1.2, 0.45, 2.2], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.054, 0.423, 0.054], "pos": [-1.515, 0.211, 2.02], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.054, 0.423, 0.054], "pos": [-0.885, 0.211, 2.02], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.054, 0.423, 0.054], "pos": [-1.515, 0.211, 2.38], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.054, 0.423, 0.054], "pos": [-0.885, 0.211, 2.38], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.306, 0.045, 0.306], "pos": [-1.065, 0.27, 2.605], "c": [0.76, 0.58, 0.36]},
+     {"s": "cyl", "size": [0.315, 0.027, 0.27], "pos": [1.2, 0.013, 2.2], "c": [0.94, 0.93, 0.9]},
+     {"s": "cyl", "size": [0.27, 0.027, 0.234], "pos": [1.2, 0.041, 2.2], "c": [0.3, 0.45, 0.75]},
+     {"s": "cyl", "size": [0.117, 0.36, 0.144], "pos": [1.452, 0.18, 2.335], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [0.27, 0.18, 0.27], "pos": [1.452, 0.108, 2.335], "c": [0.72, 0.42, 0.26]},
+     {"s": "box", "size": [0.036, 0.18, 0.054], "pos": [1.596, 0.225, 2.335], "c": [0.72, 0.42, 0.26]}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Gran mueblería",
+    "cost": 3400,
+    "materials": {
+     "madera": 30,
+     "piedra": 50
+    },
+    "build_days": 22,
+    "workers": 4,
+    "jobs": 5,
+    "prod_per_worker": 7.0,
+    "quality": 1.0,
+    "upkeep": 0.9,
+    "unit_cost": 0.0,
+    "tech": "produccion_en_serie",
+    "pollution": 0,
+    "model": [
+     {"s": "floors", "size": [5.0, 6.0, 4.0], "pos": [0.0, 0.0, 0.0], "c": [0.85, 0.75, 0.6], "floors": 2, "c2": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [5.2, 0.25, 4.2], "pos": [0.0, 6.12, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 2.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.4, 1.0, 0.08], "pos": [-1.5, 1.0, 2.03], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.4, 1.0, 0.08], "pos": [1.5, 1.0, 2.03], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [5.0, 0.08, 1.1], "pos": [0.0, 2.05, 2.5], "c": [0.45, 0.3, 0.2], "rx": 15},
+     {"s": "box", "size": [3.5, 0.6, 0.1], "pos": [0.0, 2.7, 2.08], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.72, 0.054, 0.45], "pos": [-1.2, 0.45, 2.2], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.054, 0.423, 0.054], "pos": [-1.515, 0.211, 2.02], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.054, 0.423, 0.054], "pos": [-0.885, 0.211, 2.02], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.054, 0.423, 0.054], "pos": [-1.515, 0.211, 2.38], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.054, 0.423, 0.054], "pos": [-0.885, 0.211, 2.38], "c": [0.55, 0.36, 0.2]},
+     {"s": "box", "size": [0.306, 0.045, 0.306], "pos": [-1.065, 0.27, 2.605], "c": [0.76, 0.58, 0.36]},
+     {"s": "cyl", "size": [0.315, 0.027, 0.27], "pos": [1.2, 0.013, 2.2], "c": [0.94, 0.93, 0.9]},
+     {"s": "cyl", "size": [0.27, 0.027, 0.234], "pos": [1.2, 0.041, 2.2], "c": [0.3, 0.45, 0.75]},
+     {"s": "cyl", "size": [0.117, 0.36, 0.144], "pos": [1.452, 0.18, 2.335], "c": [0.72, 0.42, 0.26]},
+     {"s": "sphere", "size": [0.27, 0.18, 0.27], "pos": [1.452, 0.108, 2.335], "c": [0.72, 0.42, 0.26]},
+     {"s": "box", "size": [0.036, 0.18, 0.054], "pos": [1.596, 0.225, 2.335], "c": [0.72, 0.42, 0.26]}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ },
+ "botica": {
+  "label": "Botica y farmacia",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 111,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 2.1,
+  "footprint": 4.0,
+  "description": "Vende remedios (y medicamentos modernos) a los enfermos; también jabón.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Botica",
+    "cost": 450,
+    "materials": {
+     "madera": 15
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 6.0,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0.0,
+    "tech": "herbolaria",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [3.2, 2.6, 3.0], "pos": [0.0, 1.3, 0.0], "c": [0.92, 0.92, 0.88]},
+     {"s": "box", "size": [3.5, 0.2, 3.3], "pos": [0.0, 2.7, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [0.896, 1.0, 0.08], "pos": [-0.96, 1.0, 1.53], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [0.896, 1.0, 0.08], "pos": [0.96, 1.0, 1.53], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [3.2, 0.08, 1.1], "pos": [0.0, 2.05, 2.0], "c": [0.25, 0.5, 0.3], "rx": 15},
+     {"s": "box", "size": [2.24, 0.6, 0.1], "pos": [0.0, 2.7, 1.58], "c": [0.3, 0.6, 0.35]},
+     {"s": "cyl", "size": [0.108, 0.27, 0.126], "pos": [-1.335, 0.135, 2.2], "c": [0.45, 0.25, 0.12]},
+     {"s": "cyl", "size": [0.108, 0.27, 0.126], "pos": [-1.065, 0.135, 2.2], "c": [0.45, 0.25, 0.12]},
+     {"s": "cyl", "size": [0.045, 0.072, 0.045], "pos": [-1.335, 0.306, 2.2], "c": [0.85, 0.75, 0.55]},
+     {"s": "cyl", "size": [0.045, 0.072, 0.045], "pos": [-1.065, 0.306, 2.2], "c": [0.85, 0.75, 0.55]},
+     {"s": "box", "size": [0.162, 0.108, 0.018], "pos": [-1.335, 0.135, 2.326], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.162, 0.108, 0.018], "pos": [-1.065, 0.135, 2.326], "c": [0.94, 0.93, 0.9]},
+     {"s": "cyl", "size": [0.054, 0.36, 0.054], "pos": [0.93, 0.18, 2.2], "c": [0.96, 0.94, 0.85]},
+     {"s": "cyl", "size": [0.054, 0.36, 0.054], "pos": [1.065, 0.18, 2.2], "c": [0.96, 0.94, 0.85]},
+     {"s": "sphere", "size": [0.045, 0.09, 0.045], "pos": [0.93, 0.405, 2.2], "c": [1.0, 0.6, 0.1]},
+     {"s": "sphere", "size": [0.045, 0.09, 0.045], "pos": [1.065, 0.405, 2.2], "c": [1.0, 0.6, 0.1]},
+     {"s": "box", "size": [0.27, 0.126, 0.18], "pos": [1.38, 0.063, 2.2], "c": [0.9, 0.85, 0.6]},
+     {"s": "box", "size": [0.27, 0.126, 0.18], "pos": [1.398, 0.189, 2.218], "c": [0.7, 0.85, 0.75], "rot": 15.0}
+    ],
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Farmacia",
+    "cost": 5000,
+    "materials": {
+     "madera": 15,
+     "piedra": 60
+    },
+    "build_days": 25,
+    "workers": 4,
+    "jobs": 5,
+    "prod_per_worker": 9.0,
+    "quality": 1.0,
+    "upkeep": 1.0,
+    "unit_cost": 0.0,
+    "tech": "farmaceutica",
+    "pollution": 0,
+    "model": [
+     {"s": "floors", "size": [4.2, 6.0, 3.6], "pos": [0.0, 0.0, 0.0], "c": [0.95, 0.95, 0.95], "floors": 2, "c2": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [4.4, 0.25, 3.8], "pos": [0.0, 6.12, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 1.83], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.176, 1.0, 0.08], "pos": [-1.26, 1.0, 1.83], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.176, 1.0, 0.08], "pos": [1.26, 1.0, 1.83], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [4.2, 0.08, 1.1], "pos": [0.0, 2.05, 2.3], "c": [0.25, 0.5, 0.3], "rx": 15},
+     {"s": "box", "size": [2.94, 0.6, 0.1], "pos": [0.0, 2.7, 1.88], "c": [0.3, 0.6, 0.35]},
+     {"s": "box", "size": [0.36, 0.234, 0.144], "pos": [-1.2, 0.117, 2.2], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.18, 0.054, 0.018], "pos": [-1.2, 0.135, 2.277], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [0.054, 0.18, 0.018], "pos": [-1.2, 0.135, 2.277], "c": [0.85, 0.15, 0.15]},
+     {"s": "cyl", "size": [0.072, 0.18, 0.072], "pos": [-0.912, 0.09, 2.29], "c": [0.9, 0.55, 0.15]},
+     {"s": "cyl", "size": [0.077, 0.054, 0.077], "pos": [-0.912, 0.207, 2.29], "c": [0.94, 0.93, 0.9]},
+     {"s": "sphere", "size": [0.072, 0.036, 0.072], "pos": [-1.47, 0.018, 2.38], "c": [0.3, 0.6, 0.9]},
+     {"s": "cyl", "size": [0.108, 0.27, 0.126], "pos": [1.065, 0.135, 2.2], "c": [0.45, 0.25, 0.12]},
+     {"s": "cyl", "size": [0.108, 0.27, 0.126], "pos": [1.335, 0.135, 2.2], "c": [0.45, 0.25, 0.12]},
+     {"s": "cyl", "size": [0.045, 0.072, 0.045], "pos": [1.065, 0.306, 2.2], "c": [0.85, 0.75, 0.55]},
+     {"s": "cyl", "size": [0.045, 0.072, 0.045], "pos": [1.335, 0.306, 2.2], "c": [0.85, 0.75, 0.55]},
+     {"s": "box", "size": [0.162, 0.108, 0.018], "pos": [1.065, 0.135, 2.326], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.162, 0.108, 0.018], "pos": [1.335, 0.135, 2.326], "c": [0.94, 0.93, 0.9]}
+    ],
+    "power": 1.0,
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ },
+ "concesionario": {
+  "label": "Concesionario de autos",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 112,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 2.4,
+  "footprint": 7.0,
+  "description": "Vende automóviles del almacén a vecinos ricos. Pide una gasolinera en el pueblo.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Concesionario",
+    "cost": 9000,
+    "materials": {
+     "madera": 10,
+     "piedra": 120
+    },
+    "build_days": 35,
+    "workers": 3,
+    "jobs": 3,
+    "prod_per_worker": 1.0,
+    "quality": 1.0,
+    "upkeep": 1.5,
+    "unit_cost": 0.0,
+    "tech": "automovil",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [7.0, 3.6, 5.0], "pos": [0.0, 1.8, 0.0], "c": [0.92, 0.92, 0.95]},
+     {"s": "box", "size": [7.3, 0.2, 5.3], "pos": [0.0, 3.7, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 2.53], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.96, 1.0, 0.08], "pos": [-2.1, 1.0, 2.53], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.96, 1.0, 0.08], "pos": [2.1, 1.0, 2.53], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [7.0, 0.08, 1.1], "pos": [0.0, 2.05, 3.0], "c": [0.2, 0.3, 0.55], "rx": 15},
+     {"s": "box", "size": [4.9, 0.6, 0.1], "pos": [0.0, 3.3, 2.58], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [0.9, 0.198, 0.396], "pos": [-1.2, 0.198, 2.2], "c": [0.78, 0.16, 0.14]},
+     {"s": "box", "size": [0.45, 0.18, 0.36], "pos": [-1.245, 0.387, 2.2], "c": [0.78, 0.16, 0.14]},
+     {"s": "box", "size": [0.432, 0.144, 0.369], "pos": [-1.245, 0.396, 2.2], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [0.045, 0.072, 0.09], "pos": [-0.75, 0.234, 2.317], "c": [0.95, 0.82, 0.2]},
+     {"s": "box", "size": [0.045, 0.072, 0.09], "pos": [-0.75, 0.234, 2.083], "c": [0.95, 0.82, 0.2]},
+     {"s": "cyl", "size": [0.126, 0.09, 0.126], "pos": [-0.93, 0.126, 2.407], "c": [0.08, 0.08, 0.09], "rx": 90.0},
+     {"s": "box", "size": [7.0, 0.05, 3.0], "pos": [0.0, 0.03, 4.2], "c": [0.35, 0.35, 0.38]}
+    ],
+    "power": 1.0,
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Gran concesionario",
+    "cost": 24000,
+    "materials": {
+     "madera": 10,
+     "piedra": 220
+    },
+    "build_days": 50,
+    "workers": 6,
+    "jobs": 6,
+    "prod_per_worker": 1.2,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0.0,
+    "tech": "industria_automotriz",
+    "pollution": 0,
+    "model": [
+     {"s": "floors", "size": [9.0, 7.2, 6.0], "pos": [0.0, 0.0, 0.0], "c": [0.92, 0.92, 0.95], "floors": 2, "c2": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [9.2, 0.25, 6.2], "pos": [0.0, 7.32, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 3.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [2.52, 1.0, 0.08], "pos": [-2.7, 1.0, 3.03], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [2.52, 1.0, 0.08], "pos": [2.7, 1.0, 3.03], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [9.0, 0.08, 1.1], "pos": [0.0, 2.05, 3.5], "c": [0.2, 0.3, 0.55], "rx": 15},
+     {"s": "box", "size": [6.3, 0.6, 0.1], "pos": [0.0, 2.7, 3.08], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [0.9, 0.198, 0.396], "pos": [-1.2, 0.198, 2.2], "c": [0.78, 0.16, 0.14]},
+     {"s": "box", "size": [0.45, 0.18, 0.36], "pos": [-1.245, 0.387, 2.2], "c": [0.78, 0.16, 0.14]},
+     {"s": "box", "size": [0.432, 0.144, 0.369], "pos": [-1.245, 0.396, 2.2], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [0.045, 0.072, 0.09], "pos": [-0.75, 0.234, 2.317], "c": [0.95, 0.82, 0.2]},
+     {"s": "box", "size": [0.045, 0.072, 0.09], "pos": [-0.75, 0.234, 2.083], "c": [0.95, 0.82, 0.2]},
+     {"s": "cyl", "size": [0.126, 0.09, 0.126], "pos": [-0.93, 0.126, 2.407], "c": [0.08, 0.08, 0.09], "rx": 90.0},
+     {"s": "box", "size": [9.0, 0.05, 3.0], "pos": [0.0, 0.03, 4.7], "c": [0.35, 0.35, 0.38]}
+    ],
+    "power": 1.5,
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ },
+ "gasolinera": {
+  "label": "Gasolinera",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 113,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 1.95,
+  "footprint": 6.0,
+  "description": "Vende combustible del almacén a los dueños de autos.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Gasolinera",
+    "cost": 5000,
+    "materials": {
+     "madera": 10,
+     "piedra": 80
+    },
+    "build_days": 25,
+    "workers": 2,
+    "jobs": 3,
+    "prod_per_worker": 8.0,
+    "quality": 1.0,
+    "upkeep": 0.8,
+    "unit_cost": 0.0,
+    "tech": "automovil",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [4.0, 2.4, 3.0], "pos": [-1.5, 1.2, -1.0], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [6.0, 0.25, 3.5], "pos": [0.5, 3.6, 2.0], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [0.25, 3.5, 0.25], "pos": [-1.8, 1.75, 2.0], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.25, 3.5, 0.25], "pos": [2.8, 1.75, 2.0], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.5, 1.3, 0.4], "pos": [-0.3, 0.65, 2.0], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [0.5, 1.3, 0.4], "pos": [1.3, 0.65, 2.0], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [1.8, 0.8, 0.1], "pos": [-1.5, 2.8, 0.55], "c": [0.95, 0.82, 0.2]}
+    ],
+    "power": 0.5,
+    "product": "comercio",
+    "skill": "comercio"
+   },
+   {
+    "label": "Estación de servicio",
+    "cost": 14000,
+    "materials": {
+     "madera": 10,
+     "piedra": 150
+    },
+    "build_days": 35,
+    "workers": 4,
+    "jobs": 6,
+    "prod_per_worker": 10.0,
+    "quality": 1.0,
+    "upkeep": 1.8,
+    "unit_cost": 0.0,
+    "tech": "petroquimica",
+    "pollution": 0,
+    "model": [
+     {"s": "box", "size": [5.0, 3.0, 3.5], "pos": [-2.0, 1.5, -1.5], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [8.0, 0.3, 4.0], "pos": [0.5, 4.0, 2.2], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [0.3, 3.9, 0.3], "pos": [-3.0, 1.95, 2.2], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.3, 3.9, 0.3], "pos": [0.5, 1.95, 2.2], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.3, 3.9, 0.3], "pos": [4.0, 1.95, 2.2], "c": [0.94, 0.93, 0.9]},
+     {"s": "box", "size": [0.5, 1.3, 0.4], "pos": [-1.2, 0.65, 2.2], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [0.5, 1.3, 0.4], "pos": [0.5, 0.65, 2.2], "c": [0.85, 0.15, 0.15]},
+     {"s": "box", "size": [0.5, 1.3, 0.4], "pos": [2.2, 0.65, 2.2], "c": [0.85, 0.15, 0.15]}
+    ],
+    "power": 1.0,
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ },
+ "tienda_electro": {
+  "label": "Tienda de electrodomésticos",
+  "category": "negocio",
+  "sector": "Comercio",
+  "order": 114,
+  "product": "comercio",
+  "skill": "comercio",
+  "base_wage": 2.2,
+  "footprint": 5.0,
+  "description": "Vende radios, neveras y cocinas a los hogares modernos.",
+  "economia": true,
+  "shop": true,
+  "levels": [
+   {
+    "label": "Tienda de electrodomésticos",
+    "cost": 8000,
+    "materials": {
+     "madera": 10,
+     "piedra": 100
+    },
+    "build_days": 30,
+    "workers": 3,
+    "jobs": 4,
+    "prod_per_worker": 3.0,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0.0,
+    "tech": "electrodomesticos",
+    "pollution": 0,
+    "model": [
+     {"s": "floors", "size": [5.0, 6.4, 4.0], "pos": [0.0, 0.0, 0.0], "c": [0.9, 0.92, 0.95], "floors": 2, "c2": [0.35, 0.45, 0.55]},
+     {"s": "box", "size": [5.2, 0.25, 4.2], "pos": [0.0, 6.52, 0.0], "c": [0.3, 0.25, 0.2]},
+     {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0.0, 0.8, 2.03], "c": [0.28, 0.18, 0.1]},
+     {"s": "box", "size": [1.4, 1.0, 0.08], "pos": [-1.5, 1.0, 2.03], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [1.4, 1.0, 0.08], "pos": [1.5, 1.0, 2.03], "c": [0.55, 0.75, 0.85]},
+     {"s": "box", "size": [5.0, 0.08, 1.1], "pos": [0.0, 2.05, 2.5], "c": [0.3, 0.5, 0.85], "rx": 15},
+     {"s": "box", "size": [3.5, 0.6, 0.1], "pos": [0.0, 2.7, 2.08], "c": [0.3, 0.5, 0.85]},
+     {"s": "box", "size": [0.36, 0.81, 0.324], "pos": [-1.335, 0.405, 2.2], "c": [0.92, 0.93, 0.95]},
+     {"s": "box", "size": [0.36, 0.018, 0.333], "pos": [-1.335, 0.54, 2.2], "c": [0.7, 0.7, 0.72]},
+     {"s": "box", "size": [0.027, 0.18, 0.027], "pos": [-1.2, 0.675, 2.371], "c": [0.55, 0.58, 0.62]},
+     {"s": "box", "size": [0.324, 0.216, 0.18], "pos": [-0.93, 0.108, 2.29], "c": [0.55, 0.35, 0.2]},
+     {"s": "cyl", "size": [0.063, 0.018, 0.063], "pos": [-0.984, 0.108, 2.38], "c": [0.8, 0.75, 0.6], "rx": 90.0},
+     {"s": "box", "size": [0.108, 0.09, 0.009], "pos": [-0.858, 0.126, 2.38], "c": [0.2, 0.2, 0.2]}
+    ],
+    "power": 1.0,
+    "product": "comercio",
+    "skill": "comercio"
+   }
+  ]
+ }
+}
