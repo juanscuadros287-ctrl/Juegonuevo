@@ -1,84 +1,828 @@
 {
- "_nota": "Fase 4 definirá costos, épocas y ramas. Por ahora solo nombres para mostrar requisitos.",
- "ladrillo": {
-  "label": "Ladrillo cocido"
- },
- "arquitectura_urbana": {
-  "label": "Arquitectura urbana"
- },
- "acero_estructural": {
-  "label": "Acero estructural"
- },
- "rascacielos": {
-  "label": "Rascacielos"
- },
- "contabilidad": {
-  "label": "Contabilidad"
- },
- "administracion_moderna": {
-  "label": "Administración moderna"
- },
+ "_nota": "Árbol de investigación. cost = puntos; requires = prerrequisitos; effects: production (key = bien o 'all'), disease, mortality, construction_speed, research, happiness, era. 'future' = función de fases siguientes.",
  "rotacion_cultivos": {
-  "label": "Rotación de cultivos"
+  "label": "Rotación de cultivos",
+  "era": 1,
+  "branch": "agricultura",
+  "cost": 240,
+  "requires": [],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.1,
+    "key": "comida"
+   }
+  ],
+  "description": "Alternar cultivos mejora el rendimiento de las granjas."
  },
- "maquinaria_agricola": {
-  "label": "Maquinaria agrícola"
- },
- "acueductos": {
-  "label": "Acueductos"
- },
- "potabilizacion": {
-  "label": "Potabilización"
- },
- "carbon": {
-  "label": "Carbón"
- },
- "energia_hidraulica": {
-  "label": "Energía hidráulica"
- },
- "polvora": {
-  "label": "Pólvora"
- },
- "navegacion": {
-  "label": "Navegación"
- },
- "maquina_vapor": {
-  "label": "Máquina de vapor"
- },
- "refrigeracion": {
-  "label": "Refrigeración"
- },
- "arte_escenico": {
-  "label": "Arte escénico"
- },
- "saneamiento": {
-  "label": "Saneamiento"
- },
- "plomeria_moderna": {
-  "label": "Plomería moderna"
- },
- "gas": {
-  "label": "Alumbrado de gas"
- },
- "electricidad": {
-  "label": "Electricidad"
- },
- "radio": {
-  "label": "Radio"
- },
- "television": {
-  "label": "Televisión"
- },
- "tapiceria_industrial": {
-  "label": "Tapicería industrial"
- },
- "banca_moderna": {
-  "label": "Banca moderna"
- },
- "banca_central": {
-  "label": "Banca central"
+ "arado_hierro": {
+  "label": "Arado de hierro",
+  "era": 1,
+  "branch": "agricultura",
+  "cost": 480,
+  "requires": [
+   "rotacion_cultivos"
+  ],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.15,
+    "key": "comida"
+   }
+  ],
+  "description": "Más tierra cultivada por campesino."
  },
  "adobe": {
-  "label": "Adobe y teja de barro"
+  "label": "Adobe y teja de barro",
+  "era": 1,
+  "branch": "construccion",
+  "cost": 180,
+  "requires": [],
+  "effects": [],
+  "description": "Casas de adobe con techo de teja: más cómodas y duraderas que el bahareque."
+ },
+ "ladrillo": {
+  "label": "Ladrillo cocido",
+  "era": 1,
+  "branch": "construccion",
+  "cost": 450,
+  "requires": [
+   "adobe"
+  ],
+  "effects": [
+   {
+    "type": "construction_speed",
+    "value": 1.1
+   }
+  ],
+  "description": "Hornos de ladrillo: casas y hornos más sólidos."
+ },
+ "acueductos": {
+  "label": "Acueductos",
+  "era": 1,
+  "branch": "construccion",
+  "cost": 660,
+  "requires": [
+   "ladrillo"
+  ],
+  "effects": [
+   {
+    "type": "disease",
+    "value": 0.92
+   }
+  ],
+  "description": "Agua traída por canales de piedra."
+ },
+ "energia_hidraulica": {
+  "label": "Energía hidráulica",
+  "era": 1,
+  "branch": "energia",
+  "cost": 420,
+  "requires": [],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.1,
+    "key": "madera"
+   }
+  ],
+  "description": "Ruedas de agua que mueven sierras y molinos."
+ },
+ "carbon": {
+  "label": "Carbón mineral",
+  "era": 1,
+  "branch": "energia",
+  "cost": 540,
+  "requires": [
+   "energia_hidraulica"
+  ],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.15,
+    "key": "lena"
+   }
+  ],
+  "description": "El carbón calienta más que la leña."
+ },
+ "carretas": {
+  "label": "Carretas de tiro",
+  "era": 1,
+  "branch": "transporte",
+  "cost": 300,
+  "requires": [],
+  "effects": [],
+  "description": "Transporte de carga con bueyes y mulas.",
+  "future": "Caminos y comercio con otros pueblos (Fase 6)"
+ },
+ "caminos_empedrados": {
+  "label": "Caminos empedrados",
+  "era": 1,
+  "branch": "transporte",
+  "cost": 480,
+  "requires": [
+   "carretas"
+  ],
+  "effects": [
+   {
+    "type": "construction_speed",
+    "value": 1.05
+   }
+  ],
+  "description": "Caminos más rápidos que el barro.",
+  "future": "Carreteras de piedra (Fase 6)"
+ },
+ "navegacion": {
+  "label": "Navegación",
+  "era": 1,
+  "branch": "transporte",
+  "cost": 600,
+  "requires": [
+   "carretas"
+  ],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.1,
+    "key": "comida"
+   }
+  ],
+  "description": "Botes de pesca y rutas fluviales.",
+  "future": "Puertos y barcos (Fase 6)"
+ },
+ "herbolaria": {
+  "label": "Herbolaria",
+  "era": 1,
+  "branch": "medicina",
+  "cost": 210,
+  "requires": [],
+  "effects": [
+   {
+    "type": "disease",
+    "value": 0.9
+   }
+  ],
+  "description": "Remedios con plantas: menos enfermedades."
+ },
+ "saneamiento": {
+  "label": "Saneamiento",
+  "era": 1,
+  "branch": "medicina",
+  "cost": 600,
+  "requires": [
+   "herbolaria"
+  ],
+  "effects": [
+   {
+    "type": "disease",
+    "value": 0.85
+   }
+  ],
+  "description": "Letrinas, drenajes e inodoros."
+ },
+ "polvora": {
+  "label": "Pólvora",
+  "era": 1,
+  "branch": "industria",
+  "cost": 450,
+  "requires": [],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.1,
+    "key": "piedra"
+   }
+  ],
+  "description": "Voladuras en canteras."
+ },
+ "telares": {
+  "label": "Telares",
+  "era": 1,
+  "branch": "industria",
+  "cost": 360,
+  "requires": [],
+  "effects": [],
+  "description": "Tejidos a mayor escala.",
+  "future": "Industria textil (Fase 7)"
+ },
+ "guardia_civil": {
+  "label": "Guardia del pueblo",
+  "era": 1,
+  "branch": "seguridad",
+  "cost": 360,
+  "requires": [],
+  "effects": [],
+  "description": "Vigilancia organizada.",
+  "future": "Policía (Fase 5)"
+ },
+ "imprenta": {
+  "label": "Imprenta",
+  "era": 1,
+  "branch": "comunicacion",
+  "cost": 450,
+  "requires": [],
+  "effects": [
+   {
+    "type": "research",
+    "value": 1.05
+   }
+  ],
+  "description": "Libros y hojas impresas difunden el conocimiento.",
+  "future": "Periódico y publicidad (Fase 7)"
+ },
+ "arte_escenico": {
+  "label": "Arte escénico",
+  "era": 1,
+  "branch": "comunicacion",
+  "cost": 540,
+  "requires": [],
+  "effects": [
+   {
+    "type": "happiness",
+    "value": 2
+   }
+  ],
+  "description": "Teatro y música para el pueblo."
+ },
+ "contabilidad": {
+  "label": "Contabilidad",
+  "era": 1,
+  "branch": "finanzas",
+  "cost": 360,
+  "requires": [],
+  "effects": [],
+  "description": "Partida doble: empresas más grandes y ordenadas."
+ },
+ "banca_moderna": {
+  "label": "Banca moderna",
+  "era": 1,
+  "branch": "finanzas",
+  "cost": 900,
+  "requires": [
+   "contabilidad"
+  ],
+  "effects": [],
+  "description": "Bancos con más capacidad de préstamo."
+ },
+ "escuela_parroquial": {
+  "label": "Escuela parroquial",
+  "era": 1,
+  "branch": "educacion",
+  "cost": 150,
+  "requires": [],
+  "effects": [],
+  "description": "Enseñar a leer y escribir a los niños."
+ },
+ "metodo_cientifico": {
+  "label": "Método científico",
+  "era": 1,
+  "branch": "educacion",
+  "cost": 750,
+  "requires": [
+   "escuela_parroquial"
+  ],
+  "effects": [
+   {
+    "type": "research",
+    "value": 1.15
+   }
+  ],
+  "description": "Experimentos sistemáticos: laboratorios más productivos."
+ },
+ "colegios": {
+  "label": "Colegios",
+  "era": 1,
+  "branch": "educacion",
+  "cost": 600,
+  "requires": [
+   "escuela_parroquial"
+  ],
+  "effects": [],
+  "description": "Educación secundaria."
+ },
+ "revolucion_industrial": {
+  "label": "Revolución industrial",
+  "era": 1,
+  "branch": "industria",
+  "cost": 2400,
+  "requires": [
+   "ladrillo",
+   "metodo_cientifico",
+   "carbon"
+  ],
+  "effects": [
+   {
+    "type": "era",
+    "value": 2
+   }
+  ],
+  "description": "Abre la época industrial."
+ },
+ "maquina_vapor": {
+  "label": "Máquina de vapor",
+  "era": 2,
+  "branch": "energia",
+  "cost": 2100,
+  "requires": [
+   "revolucion_industrial"
+  ],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.1,
+    "key": "madera"
+   }
+  ],
+  "description": "Fuerza mecánica para fábricas y panificadoras."
+ },
+ "gas": {
+  "label": "Alumbrado de gas",
+  "era": 2,
+  "branch": "energia",
+  "cost": 2700,
+  "requires": [
+   "carbon",
+   "maquina_vapor"
+  ],
+  "effects": [
+   {
+    "type": "happiness",
+    "value": 1
+   }
+  ],
+  "description": "Lámparas de gas en casas y calles."
+ },
+ "maquinaria_agricola": {
+  "label": "Maquinaria agrícola",
+  "era": 2,
+  "branch": "agricultura",
+  "cost": 2700,
+  "requires": [
+   "arado_hierro",
+   "maquina_vapor"
+  ],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.2,
+    "key": "comida"
+   }
+  ],
+  "description": "Trilladoras y sembradoras."
+ },
+ "arquitectura_urbana": {
+  "label": "Arquitectura urbana",
+  "era": 2,
+  "branch": "construccion",
+  "cost": 2700,
+  "requires": [
+   "ladrillo",
+   "revolucion_industrial"
+  ],
+  "effects": [
+   {
+    "type": "construction_speed",
+    "value": 1.1
+   }
+  ],
+  "description": "Edificios de varios pisos."
+ },
+ "acero_estructural": {
+  "label": "Acero estructural",
+  "era": 2,
+  "branch": "construccion",
+  "cost": 4500,
+  "requires": [
+   "arquitectura_urbana",
+   "maquina_vapor"
+  ],
+  "effects": [],
+  "description": "Vigas de acero: edificios altos."
+ },
+ "potabilizacion": {
+  "label": "Potabilización del agua",
+  "era": 2,
+  "branch": "medicina",
+  "cost": 2700,
+  "requires": [
+   "acueductos",
+   "revolucion_industrial"
+  ],
+  "effects": [
+   {
+    "type": "disease",
+    "value": 0.85
+   }
+  ],
+  "description": "Agua limpia: menos epidemias."
+ },
+ "plomeria_moderna": {
+  "label": "Plomería moderna",
+  "era": 2,
+  "branch": "medicina",
+  "cost": 2400,
+  "requires": [
+   "saneamiento",
+   "revolucion_industrial"
+  ],
+  "effects": [
+   {
+    "type": "disease",
+    "value": 0.95
+   }
+  ],
+  "description": "Baños con agua corriente."
+ },
+ "vacunas": {
+  "label": "Vacunas",
+  "era": 2,
+  "branch": "medicina",
+  "cost": 3000,
+  "requires": [
+   "saneamiento",
+   "revolucion_industrial"
+  ],
+  "effects": [
+   {
+    "type": "disease",
+    "value": 0.75
+   },
+   {
+    "type": "mortality",
+    "value": 0.9
+   }
+  ],
+  "description": "Previenen enfermedades mortales."
+ },
+ "ferrocarril": {
+  "label": "Ferrocarril",
+  "era": 2,
+  "branch": "transporte",
+  "cost": 4200,
+  "requires": [
+   "caminos_empedrados",
+   "maquina_vapor"
+  ],
+  "effects": [],
+  "description": "Trenes de vapor.",
+  "future": "Trenes a otros pueblos (Fase 6)"
+ },
+ "fabricas": {
+  "label": "Fábricas",
+  "era": 2,
+  "branch": "industria",
+  "cost": 3000,
+  "requires": [
+   "telares",
+   "maquina_vapor"
+  ],
+  "effects": [],
+  "description": "Producción en serie.",
+  "future": "Industria avanzada (Fase 7)"
+ },
+ "tapiceria_industrial": {
+  "label": "Tapicería industrial",
+  "era": 2,
+  "branch": "industria",
+  "cost": 2100,
+  "requires": [
+   "telares",
+   "revolucion_industrial"
+  ],
+  "effects": [
+   {
+    "type": "happiness",
+    "value": 1
+   }
+  ],
+  "description": "Muebles tapizados accesibles."
+ },
+ "bomberos": {
+  "label": "Cuerpo de bomberos",
+  "era": 2,
+  "branch": "seguridad",
+  "cost": 2400,
+  "requires": [
+   "guardia_civil",
+   "revolucion_industrial"
+  ],
+  "effects": [],
+  "description": "Combatir incendios.",
+  "future": "Estación de bomberos (Fase 5)"
+ },
+ "carceles": {
+  "label": "Sistema penitenciario",
+  "era": 2,
+  "branch": "seguridad",
+  "cost": 2700,
+  "requires": [
+   "guardia_civil",
+   "revolucion_industrial"
+  ],
+  "effects": [],
+  "description": "Cárceles organizadas.",
+  "future": "Cárceles (Fase 5)"
+ },
+ "periodico": {
+  "label": "Periódico",
+  "era": 2,
+  "branch": "comunicacion",
+  "cost": 2100,
+  "requires": [
+   "imprenta",
+   "revolucion_industrial"
+  ],
+  "effects": [],
+  "description": "Noticias diarias.",
+  "future": "Publicidad en periódico (Fase 7)"
+ },
+ "telegrafo": {
+  "label": "Telégrafo",
+  "era": 2,
+  "branch": "comunicacion",
+  "cost": 2700,
+  "requires": [
+   "periodico"
+  ],
+  "effects": [
+   {
+    "type": "research",
+    "value": 1.05
+   }
+  ],
+  "description": "Mensajes instantáneos a distancia."
+ },
+ "administracion_moderna": {
+  "label": "Administración moderna",
+  "era": 2,
+  "branch": "finanzas",
+  "cost": 3000,
+  "requires": [
+   "contabilidad",
+   "revolucion_industrial"
+  ],
+  "effects": [],
+  "description": "Grandes corporaciones."
+ },
+ "banca_central": {
+  "label": "Banca central",
+  "era": 2,
+  "branch": "finanzas",
+  "cost": 4800,
+  "requires": [
+   "banca_moderna",
+   "administracion_moderna"
+  ],
+  "effects": [],
+  "description": "Bancos nacionales."
+ },
+ "universidades": {
+  "label": "Universidades",
+  "era": 2,
+  "branch": "educacion",
+  "cost": 3600,
+  "requires": [
+   "colegios",
+   "revolucion_industrial"
+  ],
+  "effects": [],
+  "description": "Educación superior: científicos e ingenieros."
+ },
+ "investigacion_moderna": {
+  "label": "Investigación moderna",
+  "era": 2,
+  "branch": "educacion",
+  "cost": 4500,
+  "requires": [
+   "metodo_cientifico",
+   "universidades"
+  ],
+  "effects": [
+   {
+    "type": "research",
+    "value": 1.25
+   }
+  ],
+  "description": "Centros de investigación."
+ },
+ "era_moderna": {
+  "label": "Era moderna",
+  "era": 2,
+  "branch": "energia",
+  "cost": 12000,
+  "requires": [
+   "acero_estructural",
+   "vacunas",
+   "investigacion_moderna"
+  ],
+  "effects": [
+   {
+    "type": "era",
+    "value": 3
+   }
+  ],
+  "description": "Abre la época moderna."
+ },
+ "electricidad": {
+  "label": "Electricidad",
+  "era": 3,
+  "branch": "energia",
+  "cost": 9000,
+  "requires": [
+   "era_moderna"
+  ],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.1,
+    "key": "all"
+   },
+   {
+    "type": "happiness",
+    "value": 2
+   }
+  ],
+  "description": "Luz eléctrica y motores."
+ },
+ "refrigeracion": {
+  "label": "Refrigeración",
+  "era": 3,
+  "branch": "agricultura",
+  "cost": 7500,
+  "requires": [
+   "electricidad"
+  ],
+  "effects": [
+   {
+    "type": "disease",
+    "value": 0.95
+   }
+  ],
+  "description": "Alimentos frescos por más tiempo: supermercados."
+ },
+ "rascacielos": {
+  "label": "Rascacielos",
+  "era": 3,
+  "branch": "construccion",
+  "cost": 18000,
+  "requires": [
+   "acero_estructural",
+   "electricidad"
+  ],
+  "effects": [
+   {
+    "type": "construction_speed",
+    "value": 1.15
+   }
+  ],
+  "description": "Torres de decenas de pisos."
+ },
+ "automovil": {
+  "label": "Automóvil",
+  "era": 3,
+  "branch": "transporte",
+  "cost": 12000,
+  "requires": [
+   "ferrocarril",
+   "era_moderna"
+  ],
+  "effects": [],
+  "description": "Vehículos a motor.",
+  "future": "Automóviles (Fase 6)"
+ },
+ "aviacion": {
+  "label": "Aviación",
+  "era": 3,
+  "branch": "transporte",
+  "cost": 21000,
+  "requires": [
+   "automovil"
+  ],
+  "effects": [],
+  "description": "Aviones.",
+  "future": "Aeropuertos (Fase 6)"
+ },
+ "antibioticos": {
+  "label": "Antibióticos",
+  "era": 3,
+  "branch": "medicina",
+  "cost": 10500,
+  "requires": [
+   "vacunas",
+   "era_moderna"
+  ],
+  "effects": [
+   {
+    "type": "disease",
+    "value": 0.65
+   },
+   {
+    "type": "mortality",
+    "value": 0.85
+   }
+  ],
+  "description": "Curan infecciones: la gente vive mucho más."
+ },
+ "medicina_moderna": {
+  "label": "Medicina moderna",
+  "era": 3,
+  "branch": "medicina",
+  "cost": 18000,
+  "requires": [
+   "antibioticos"
+  ],
+  "effects": [
+   {
+    "type": "mortality",
+    "value": 0.75
+   }
+  ],
+  "description": "Hospitales modernos y cirugía: más esperanza de vida."
+ },
+ "industria_automotriz": {
+  "label": "Industria automotriz",
+  "era": 3,
+  "branch": "industria",
+  "cost": 15000,
+  "requires": [
+   "fabricas",
+   "automovil"
+  ],
+  "effects": [],
+  "description": "Fabricar autos.",
+  "future": "Industria automotriz (Fase 7)"
+ },
+ "aeronautica": {
+  "label": "Aeronáutica",
+  "era": 3,
+  "branch": "industria",
+  "cost": 24000,
+  "requires": [
+   "aviacion",
+   "industria_automotriz"
+  ],
+  "effects": [],
+  "description": "Fabricar aviones.",
+  "future": "Industria aeronáutica (Fase 7)"
+ },
+ "policia_moderna": {
+  "label": "Policía moderna",
+  "era": 3,
+  "branch": "seguridad",
+  "cost": 9000,
+  "requires": [
+   "carceles",
+   "era_moderna"
+  ],
+  "effects": [],
+  "description": "Investigación criminal.",
+  "future": "Policía moderna (Fase 5)"
+ },
+ "radio": {
+  "label": "Radio",
+  "era": 3,
+  "branch": "comunicacion",
+  "cost": 9000,
+  "requires": [
+   "telegrafo",
+   "electricidad"
+  ],
+  "effects": [
+   {
+    "type": "happiness",
+    "value": 2
+   }
+  ],
+  "description": "Música y noticias en cada casa.",
+  "future": "Publicidad en radio (Fase 7)"
+ },
+ "television": {
+  "label": "Televisión",
+  "era": 3,
+  "branch": "comunicacion",
+  "cost": 18000,
+  "requires": [
+   "radio"
+  ],
+  "effects": [
+   {
+    "type": "happiness",
+    "value": 2
+   }
+  ],
+  "description": "Imagen y sonido en casa.",
+  "future": "Publicidad en TV (Fase 7)"
+ },
+ "bolsa_valores": {
+  "label": "Bolsa de valores",
+  "era": 3,
+  "branch": "finanzas",
+  "cost": 12000,
+  "requires": [
+   "banca_central",
+   "era_moderna"
+  ],
+  "effects": [],
+  "description": "Mercado de capitales."
  }
 }

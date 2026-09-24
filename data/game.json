@@ -1,7 +1,7 @@
 {
  "name": "Dinastía",
  "subtitle": "Simulación económica y de pueblo · desde 1700",
- "version": "0.3.0 · Fase 3",
+ "version": "0.4.0 · Fase 4",
  "currency_symbol": "$",
  "start_year": 1700,
  "start_month": 3,
@@ -57,5 +57,10 @@
   "try_child_days": 30,
   "try_child_mult": 4.0
  },
- "realtime_game_seconds_per_second": 1.0
+ "realtime_game_seconds_per_second": 1.0,
+ "education_years": {
+  "1": 4,
+  "2": 8,
+  "3": 3
+ }
 }

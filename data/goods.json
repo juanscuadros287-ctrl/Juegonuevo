@@ -68,5 +68,21 @@
   "storable": false,
   "internal": true,
   "order": 7
+ },
+ "investigacion": {
+  "label": "Investigación",
+  "base_price": 0,
+  "import_price": 0,
+  "storable": false,
+  "internal": true,
+  "order": 8
+ },
+ "educacion": {
+  "label": "Educación",
+  "base_price": 0,
+  "import_price": 0,
+  "storable": false,
+  "internal": true,
+  "order": 9
  }
 }

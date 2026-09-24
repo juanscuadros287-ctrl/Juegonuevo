@@ -3,7 +3,7 @@ extends Node
 ## La lógica vive en scripts/sim/ (PopulationSim, WeatherSim, BusinessSim,
 ## ConstructionSim, MarketSim, PlayerSim).
 
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
 const MAP_SIZE := 400.0
 const ZONE_GRID := 5
 const START_ZONE := [2, 2]
@@ -22,6 +22,7 @@ var player_id: int = -1
 ## Datos propios del jugador: relaciones, planificación familiar, médico, finanzas personales.
 var player: Dictionary = {}
 var techs: Array = []                  # tecnologías investigadas (Fase 4)
+var research: Dictionary = {}          # época, proyecto actual, progreso, cola, modificadores
 var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
@@ -84,6 +85,7 @@ func new_game(opts: Dictionary) -> void:
 	money = float(diff().get("start_money", 8000))
 	unlocked_zones = [START_ZONE.duplicate()]
 	EconomySim.init_state(self)
+	TechSim.init_state(self)
 	WeatherSim.init_weather(self)
 	PopulationSim.generate_initial(self, int(diff().get("start_citizens", 30)))
 	PlayerSim.create_player(self)
@@ -103,6 +105,7 @@ func _clear() -> void:
 	player_id = -1
 	player = {}
 	techs = []
+	research = {}
 	economy = {}
 	loans = []
 	next_loan_id = 1
@@ -128,10 +131,12 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	MarketSim.begin_day(self)
 	PopulationSim.daily(self)
 	BusinessSim.end_day(self)
+	TechSim.end_day(self)
 	PlayerSim.daily(self)
 	if new_month and running:
 		MarketSim.monthly_housing(self)
 		BankSim.monthly(self)
+		EducationSim.monthly(self)
 		BusinessSim.monthly(self)
 		EconomySim.monthly(self)
 		PlayerSim.monthly(self)
@@ -317,6 +322,10 @@ func has_tech(id: String) -> bool:
 	return id == "" or techs.has(id)
 
 
+func era() -> int:
+	return int(research.get("era", 1))
+
+
 # --- Notificaciones y reportes ----------------------------------------------
 
 ## Categorías: info, nacimiento, muerte, salud, boda, emigracion, clima,
@@ -380,6 +389,7 @@ func to_dict() -> Dictionary:
 		"player_id": player_id,
 		"player": player,
 		"techs": techs,
+		"research": research,
 		"economy": economy,
 		"loans": loans,
 		"next_loan_id": next_loan_id,
@@ -436,6 +446,11 @@ func load_dict(d: Dictionary) -> void:
 	economy = d.get("economy", {})
 	if economy.is_empty():
 		EconomySim.init_state(self)
+	research = d.get("research", {})
+	if research.is_empty():
+		TechSim.init_state(self)
+	research["era"] = int(research.get("era", 1))
+	TechSim._recompute_mods(self)
 	if player_id < 0:
 		# Partida de la Fase 1: el jugador aún no era un ciudadano.
 		PlayerSim.migrate_v1_player(self, d.get("player", {}))

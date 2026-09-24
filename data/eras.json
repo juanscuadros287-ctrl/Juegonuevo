@@ -1,0 +1,62 @@
+{
+ "_nota": "Épocas del árbol de investigación. Se avanza investigando la tecnología puente (efecto 'era').",
+ "eras": [
+  {
+   "id": 1,
+   "label": "Época colonial",
+   "short": "Colonial"
+  },
+  {
+   "id": 2,
+   "label": "Revolución industrial",
+   "short": "Industrial"
+  },
+  {
+   "id": 3,
+   "label": "Época moderna",
+   "short": "Moderna"
+  }
+ ],
+ "branches": [
+  [
+   "agricultura",
+   "Agricultura"
+  ],
+  [
+   "construccion",
+   "Construcción"
+  ],
+  [
+   "energia",
+   "Energía"
+  ],
+  [
+   "transporte",
+   "Transporte"
+  ],
+  [
+   "medicina",
+   "Medicina"
+  ],
+  [
+   "industria",
+   "Industria"
+  ],
+  [
+   "seguridad",
+   "Seguridad pública"
+  ],
+  [
+   "comunicacion",
+   "Comunicación"
+  ],
+  [
+   "finanzas",
+   "Finanzas"
+  ],
+  [
+   "educacion",
+   "Educación y ciencia"
+  ]
+ ]
+}

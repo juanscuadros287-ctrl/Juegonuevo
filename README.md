@@ -5,17 +5,23 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 
 > El nombre del juego se cambia en `data/game.json` y `project.godot`.
 
-## Estado: Fase 3 de 7
+## Estado: Fase 4 de 7
 
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Mapa 3D, cámara, tiempo y ciudadanos | ✅ |
 | 2 | Construcción, negocios, tu personaje y vivienda | ✅ |
 | 3 | Economía, precios y banca | ✅ |
-| 4 | Árbol de investigación y épocas | ⏳ |
+| 4 | Árbol de investigación y épocas | ✅ |
 | 5 | Gobierno, impuestos, servicios públicos y proyectos | ⏳ |
 | 6 | Transporte y otros pueblos | ⏳ |
 | 7 | Turismo, publicidad, industria avanzada y herederos | ⏳ |
+
+### Fase 4 incluye
+- **Árbol de investigación visual** (botón *Investigación*): 3 épocas (Colonial → Revolución industrial → Moderna) y 10 ramas (agricultura, construcción, energía, transporte, medicina, industria, seguridad, comunicación, finanzas, educación). Proyecto actual, cola con prerrequisitos automáticos y tiempo estimado.
+- **Laboratorios** (Gabinete → Laboratorio → Centro de investigación): solo generan gastos; producen puntos según educación y habilidad de ciencia; especialidad por rama (+50%); los niveles altos exigen personal con educación.
+- **Efectos reales**: desbloquean niveles de casas/negocios y muebles de época; medicina reduce enfermedades y mortalidad (más esperanza de vida); mejoras de producción, velocidad de obra, felicidad e investigación.
+- **Educación**: escuela parroquial → colegio → universidad. Matriculan niños/jóvenes según cupos (profesores) y pensión opcional; al completar años suben su nivel educativo: la fuente de personal calificado.
 
 ### Fase 3 incluye
 - **Economía cerrada y realista**: el dinero no aparece de la nada. Los desempleados se autoabastecen en especie (cultivan, buscan agua y leña) con peor calidad de vida; el dinero entra solo por salarios, obras y préstamos, circula cuando la gente compra en tus negocios (incluido el gasto de sus ahorros) y sale por importaciones. La inmigración y el comercio con otros pueblos llegarán con los caminos (Fase 6).
@@ -77,7 +83,7 @@ scripts/world    Terreno, cámara, agentes 3D, clima visual
 scripts/ui       HUD y menú principal
 tests/           Pruebas headless y diagnóstico de balance
 ```
-Para agregar contenido basta con editar los JSON de `data/` — `businesses.json` (negocios y niveles), `buildings.json` (viviendas, calidades, oficina), `interiors.json` (muebles por época y calidad), `goods.json`, `legal_types.json`, `economy.json` (inflación, precios, banca, quiebras), `technologies.json`. Los modelos 3D de cada nivel también están en JSON.
+Para agregar contenido basta con editar los JSON de `data/` — `businesses.json` (negocios y niveles), `buildings.json` (viviendas, calidades, oficina), `interiors.json` (muebles por época y calidad), `goods.json`, `legal_types.json`, `economy.json` (inflación, precios, banca, quiebras), `technologies.json` y `eras.json` (árbol de investigación), `technologies.json`. Los modelos 3D de cada nivel también están en JSON.
 
 ## Pruebas
 ```
@@ -86,3 +92,5 @@ godot --headless res://tests/balance.tscn       # diagnóstico demográfico a 40
 godot --headless res://tests/ui_smoke.tscn      # abre todos los paneles de la interfaz
 godot --headless res://tests/economy_diag.tscn  # inflación y precios a 30 años
 ```
+
+Ideas acordadas para próximas fases: ver `docs/ROADMAP.md`.

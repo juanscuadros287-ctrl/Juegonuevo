@@ -25,6 +25,10 @@ var parent_ids: Array = []
 var children_ids: Array = []
 var last_birth_day: int = -100000
 var needs_met: float = 1.0          # 0-1, necesidades cubiertas hoy
+var school_id: int = -1             # escuela/universidad donde estudia
+var school_years: float = 0.0
+var school_level: int = 0           # nivel máximo de escuela cursado (1 escuela, 2 colegio)
+var uni_years: float = 0.0
 var visual_seed: int = 0
 
 
@@ -60,6 +64,7 @@ func to_dict() -> Dictionary:
 		"wage": wage, "unpaid_days": unpaid_days, "home_id": home_id, "spouse_id": spouse_id,
 		"parent_ids": parent_ids, "children_ids": children_ids,
 		"last_birth_day": last_birth_day, "needs_met": needs_met, "visual_seed": visual_seed,
+		"school_id": school_id, "school_years": school_years, "school_level": school_level, "uni_years": uni_years,
 	}
 
 
@@ -95,4 +100,8 @@ static func from_dict(d: Dictionary) -> Citizen:
 	c.last_birth_day = int(d.get("last_birth_day", -100000))
 	c.needs_met = float(d.get("needs_met", 1.0))
 	c.visual_seed = int(d.get("visual_seed", c.id))
+	c.school_id = int(d.get("school_id", -1))
+	c.school_years = float(d.get("school_years", 0.0))
+	c.school_level = int(d.get("school_level", 0))
+	c.uni_years = float(d.get("uni_years", 0.0))
 	return c

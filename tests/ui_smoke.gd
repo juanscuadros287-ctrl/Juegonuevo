@@ -30,6 +30,13 @@ func _ready() -> void:
 	hud._show_dock("stats")
 	await get_tree().process_frame
 	print("RECOMENDACIONES: ", StatsSim.advice(GameState))
+	hud._open_research()
+	await get_tree().process_frame
+	hud.research_screen._select("adobe")
+	hud.research_screen._enqueue_with_prereqs("acueductos")
+	hud.research_screen.refresh()
+	await get_tree().process_frame
+	hud.research_screen.close()
 	var some: Citizen = GameState.citizens.values()[3]
 	EventBus.citizen_selected.emit(some.id)
 	await get_tree().process_frame

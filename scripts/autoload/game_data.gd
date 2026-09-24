@@ -18,6 +18,7 @@ var legal_types: Dictionary = {}
 var technologies: Dictionary = {}
 var interiors: Dictionary = {}
 var economy: Dictionary = {}
+var eras: Dictionary = {}
 
 
 func _ready() -> void:
@@ -39,6 +40,7 @@ func load_all() -> void:
 	technologies = _load("technologies.json")
 	interiors = _load("interiors.json")
 	economy = _load("economy.json")
+	eras = _load("eras.json")
 
 
 func _load(file_name: String) -> Dictionary:
@@ -118,3 +120,21 @@ func good_label(id: String) -> String:
 
 func tech_label(id: String) -> String:
 	return str(technologies.get(id, {}).get("label", id))
+
+
+func tech_ids() -> Array:
+	return technologies.keys().filter(func(k): return not str(k).begins_with("_"))
+
+
+func era_label(era: int) -> String:
+	for e in eras.get("eras", []):
+		if int(e["id"]) == era:
+			return str(e["label"])
+	return "Época %d" % era
+
+
+func branch_label(id: String) -> String:
+	for b in eras.get("branches", []):
+		if b[0] == id:
+			return str(b[1])
+	return id

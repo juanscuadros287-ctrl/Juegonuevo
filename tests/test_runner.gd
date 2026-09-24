@@ -29,6 +29,8 @@ func _ready() -> void:
 	_test_phase3_bank()
 	_test_phase3_bankruptcy()
 	_test_closed_economy()
+	_test_phase4_research()
+	_test_phase4_education()
 	print("== %s (%d fallos) ==" % ["TODO OK" if failures == 0 else "CON FALLOS", failures])
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -427,3 +429,80 @@ func _test_closed_economy() -> void:
 	ConstructionSim.unlock_zone(GameState, 1, 2)
 	check(float(GameState.economy.get("treasury", 0.0)) > t0, "el terreno se compra al gobierno (tesoro público)")
 	check(StatsSim.advice(GameState).size() > 0, "estadísticas generan recomendaciones")
+
+
+
+func _test_phase4_research() -> void:
+	GameState.new_game({"seed": 51, "difficulty": "facil"})
+	GameState.money = 50000.0
+	check(ConstructionSim.level_block_reason(GameState, "vivienda", 2) != "", "adobe bloqueado al inicio")
+	check(TechSim.block_reason(GameState, "maquina_vapor") != "", "tecnología industrial bloqueada en época colonial")
+	var lab := _build_now("laboratorio", 30, -8)
+	check(not lab.is_empty(), "laboratorio construido")
+	_hire_n(lab, 3)
+	check(TechSim.set_current(GameState, "adobe") == "", "proyecto: adobe")
+	var base := TechSim.lab_output(GameState, lab)
+	lab["specialty"] = "construccion"
+	check(TechSim.lab_output(GameState, lab) > base, "especialidad acelera su rama")
+	var days := 0
+	while not GameState.techs.has("adobe") and days < 400:
+		TimeManager.advance_days(1)
+		days += 1
+	print("    adobe investigado en %d días (%.1f pts/día)" % [days, float(GameState.research.get("points_yesterday", 0.0))])
+	check(GameState.techs.has("adobe"), "adobe investigado con puntos del laboratorio")
+	check(ConstructionSim.level_block_reason(GameState, "vivienda", 2) == "", "casa de adobe desbloqueada")
+	# Cola con prerrequisitos
+	TechSim.enqueue(GameState, "herbolaria")
+	TechSim.enqueue(GameState, "saneamiento")
+	check(str(GameState.research["current"]) == "herbolaria" and GameState.research["queue"].has("saneamiento"), "cola de investigación")
+	# Época y efectos
+	for id in ["ladrillo", "escuela_parroquial", "metodo_cientifico", "energia_hidraulica", "carbon"]:
+		TechSim.complete(GameState, id)
+	TechSim.complete(GameState, "revolucion_industrial")
+	check(GameState.era() == 2, "nueva época: industrial")
+	check(TechSim.block_reason(GameState, "maquina_vapor") == "", "tecnologías industriales disponibles")
+	var m0 := PopulationSim.daily_death_probability(40, 100.0, false)
+	TechSim.complete(GameState, "saneamiento")
+	TechSim.complete(GameState, "vacunas")
+	check(PopulationSim.daily_death_probability(40, 100.0, false) < m0, "las vacunas reducen la mortalidad")
+	check(TechSim.mult(GameState, "disease") < 0.8, "la medicina reduce enfermedades")
+	# Personal calificado para laboratorio nivel 2
+	check(ConstructionSim.start_upgrade(GameState, lab) == "", "laboratorio se puede mejorar")
+	var n := 0
+	while lab["status"] != "activo" and n < 400:
+		TimeManager.advance_days(1)
+		n += 1
+	var unqualified: Citizen = null
+	for c in BusinessSim.candidates(GameState, lab):
+		if c.education == 0:
+			unqualified = c
+			break
+	if unqualified != null:
+		check(BusinessSim.hire(GameState, lab, unqualified, 3.0) != "", "laboratorio avanzado rechaza personal sin educación")
+	SaveManager.save_game("test_f4")
+	var techs := GameState.techs.size()
+	SaveManager.load_game("test_f4")
+	check(GameState.techs.size() == techs and GameState.era() == 2 and TechSim.mult(GameState, "disease") < 0.8, "investigación y efectos se guardan")
+	SaveManager.delete_save("test_f4")
+
+
+func _test_phase4_education() -> void:
+	GameState.new_game({"seed": 52, "difficulty": "facil"})
+	GameState.money = 50000.0
+	TechSim.complete(GameState, "escuela_parroquial")
+	var school := _build_now("escuela", -30, 8)
+	check(not school.is_empty(), "escuela construida")
+	for c in BusinessSim.candidates(GameState, school).slice(0, 2):
+		c.education = maxi(c.education, 1)
+		BusinessSim.hire(GameState, school, c, BusinessSim.asked_wage(GameState, c, "escuela"))
+	TimeManager.advance_days(62)
+	var students := EducationSim.students_of(GameState, school)
+	check(students.size() > 0, "niños matriculados (%d)" % students.size())
+	for y in range(6):
+		GameState.money = maxf(GameState.money, 50000.0)
+		TimeManager.advance_days(365)
+	var educated := 0
+	for c in GameState.citizens.values():
+		if c.school_years >= 4.0 and c.education >= 1:
+			educated += 1
+	check(educated > 0, "la escuela gradúa alumnos con educación básica (%d)" % educated)

@@ -62,6 +62,10 @@ func rebuild() -> void:
 			_add_tab("Precio", _price_tab(b))
 		if BankSim.is_bank(b):
 			_add_tab("Banco", _bank_tab(b))
+		if str(def.get("product", "")) == "investigacion":
+			_add_tab("Laboratorio", _lab_tab(b))
+		if str(def.get("product", "")) == "educacion":
+			_add_tab("Alumnos", _school_tab(b))
 	if cat == "vivienda":
 		_add_tab("Vivienda", _home_tab(b, mine))
 	if mine:
@@ -195,7 +199,8 @@ func _summary_text(b: Dictionary) -> String:
 func _employees_tab(b: Dictionary) -> Control:
 	var v := VBoxContainer.new()
 	var skill := str(GameState.building_def(b).get("skill", ""))
-	v.add_child(UIKit.label("Habilidad clave: %s" % GameData.skill_label(skill), 14, UIKit.TEXT_DIM))
+	var min_edu := int(GameState.level_def(b).get("min_education", 0))
+	v.add_child(UIKit.label("Habilidad clave: %s%s" % [GameData.skill_label(skill), " · requiere educación %s" % GameData.education_label(min_edu) if min_edu > 0 else ""], 14, UIKit.TEXT_DIM))
 	for c in GameState.employees_of(bid):
 		if c.job_kind != "empleo":
 			continue
@@ -414,4 +419,57 @@ func _bank_tab(b: Dictionary) -> Control:
 	ll.meta_clicked.connect(hud.on_meta_clicked)
 	ll.text = list
 	v.add_child(ll)
+	return v
+
+
+# --- Laboratorio y educación ---------------------------------------------------------------------
+
+func _lab_tab(b: Dictionary) -> Control:
+	var v := VBoxContainer.new()
+	var cur := str(GameState.research.get("current", ""))
+	var t := UIKit.label("Puntos de investigación estimados: %.1f/día · Proyecto actual: %s" % [TechSim.lab_output(GameState, b), GameData.tech_label(cur) if cur != "" else "ninguno (los puntos se acumulan)"], 14)
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	t.custom_minimum_size.x = 380
+	v.add_child(t)
+	var row := HBoxContainer.new()
+	row.add_child(UIKit.label("Especialidad:"))
+	var opt := OptionButton.new()
+	opt.add_item("General")
+	opt.set_item_metadata(0, "general")
+	for br in GameData.eras.get("branches", []):
+		opt.add_item(str(br[1]))
+		opt.set_item_metadata(opt.item_count - 1, br[0])
+	for i in range(opt.item_count):
+		if str(opt.get_item_metadata(i)) == str(b.get("specialty", "general")):
+			opt.select(i)
+	opt.item_selected.connect(func(i): _b()["specialty"] = str(opt.get_item_metadata(i)))
+	row.add_child(opt)
+	v.add_child(row)
+	var note := UIKit.label("Un laboratorio especializado investiga 50% más rápido las tecnologías de su rama. Los puntos dependen de la educación y la habilidad de ciencia del personal. Abre el árbol con el botón «Investigación».", 12, UIKit.TEXT_DIM)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size.x = 380
+	v.add_child(note)
+	return v
+
+
+func _school_tab(b: Dictionary) -> Control:
+	var v := VBoxContainer.new()
+	var ld: Dictionary = GameState.level_def(b)
+	var students := EducationSim.students_of(GameState, b)
+	var t := "Alumnos: %d / %d cupos (profesores × %d)\nEdades: %d a %d años · Otorga: educación %s\n" % [students.size(), EducationSim.capacity(GameState, b), int(ld.get("prod_per_worker", 15)),
+		int(ld.get("min_age", 6)), int(ld.get("max_age", 15)), GameData.education_label(int(ld.get("grants_education", 1)))]
+	var rl := UIKit.rich()
+	rl.meta_clicked.connect(hud.on_meta_clicked)
+	for c in students.slice(0, 25):
+		t += "• %s (%d años, %.1f años cursados)\n" % [hud.link(c.id), c.age_years(GameState.today()), c.school_years + c.uni_years]
+	rl.text = t
+	v.add_child(rl)
+	var row := HBoxContainer.new()
+	row.add_child(UIKit.label("Pensión mensual por alumno:"))
+	row.add_child(UIKit.spin(0, 1000, 0.5, float(b.get("fee", 0.0)), func(val): _b()["fee"] = val))
+	v.add_child(row)
+	var note := UIKit.label("Sin pensión la escuela solo genera gastos, pero forma empleados calificados para laboratorios y negocios. Con pensión alta, las familias pobres no matriculan a sus hijos. La matrícula se hace cada mes.", 12, UIKit.TEXT_DIM)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size.x = 380
+	v.add_child(note)
 	return v

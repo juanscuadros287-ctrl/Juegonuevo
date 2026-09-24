@@ -131,6 +131,11 @@ func _plan(h: int) -> void:
 		# Tarde: plaza del pueblo.
 		target = _random_point(Vector3.ZERO, 2.5, 7.5)
 		return
+	if c.school_id >= 0 and h < 14:
+		var sb: Dictionary = GameState.get_building(c.school_id)
+		if not sb.is_empty():
+			target = _random_point(Vector3(float(sb["x"]), 0, float(sb["z"])), 3.0, 5.0)
+			return
 	match _stage:
 		"child":
 			if _rng.randf() < 0.6:

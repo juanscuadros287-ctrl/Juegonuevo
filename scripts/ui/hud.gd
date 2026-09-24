@@ -34,6 +34,8 @@ var companies_panel: CompaniesPanel
 var player_panel: PlayerPanel
 var finance_panel: FinancePanel
 var stats_panel: StatsPanel
+var research_screen: ResearchScreen
+var era_lbl: Label
 
 # Interior
 var interior_panel: PanelContainer
@@ -81,6 +83,9 @@ func _ready() -> void:
 	_build_dock()
 	_build_interior_panel()
 	_build_modals()
+	research_screen = ResearchScreen.new()
+	root.add_child(research_screen)
+	research_screen.setup()
 	hint_lbl = UIKit.label("", 15, UIKit.ACCENT)
 	hint_lbl.anchor_left = 0.5
 	hint_lbl.anchor_right = 0.5
@@ -150,9 +155,10 @@ func _build_top_bar() -> void:
 	bar_panel.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	root.add_child(bar_panel)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 18)
+	row.add_theme_constant_override("separation", 14)
 	bar_panel.add_child(row)
-	row.add_child(UIKit.label(str(GameState.settings.get("town_name", "")), 18, UIKit.ACCENT))
+	era_lbl = UIKit.label("", 17, UIKit.ACCENT)
+	row.add_child(era_lbl)
 	money_lbl = _stat(row)
 	pop_lbl = _stat(row)
 	happy_lbl = _stat(row)
@@ -163,7 +169,7 @@ func _build_top_bar() -> void:
 	row.add_child(spacer)
 	weather_lbl = _stat(row)
 	date_lbl = _stat(row)
-	date_lbl.custom_minimum_size.x = 270
+	date_lbl.custom_minimum_size.x = 225
 	date_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	var speeds := HBoxContainer.new()
 	speeds.add_theme_constant_override("separation", 4)
@@ -197,6 +203,9 @@ func _update_top_bar() -> void:
 	var w := WeatherSim.weather_data(GameState)
 	weather_lbl.text = "%s · %s %d°C" % [season_label, w.get("label", ""), int(GameState.weather.get("temp", 0))]
 	date_lbl.text = TimeManager.date_string(true)
+	era_lbl.text = "%s · %s" % [GameState.settings.get("town_name", ""), _era_short()]
+	if research_screen.visible and Engine.get_process_frames() % 20 == 0:
+		research_screen.refresh()
 
 
 func _on_speed_button(i: int) -> void:
@@ -228,7 +237,8 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Notificaciones", _open_log, 160))
 	box.add_child(UIKit.button("Menú (Esc)", _open_pause, 160))
 	box.add_child(HSeparator.new())
-	for entry in [["Investigación", 4], ["Gobierno", 5]]:
+	box.add_child(UIKit.button("Investigación", _open_research, 160))
+	for entry in [["Gobierno", 5]]:
 		var b := UIKit.button(entry[0], func(): pass, 160)
 		b.disabled = true
 		b.tooltip_text = "Disponible en la Fase %d" % entry[1]
@@ -398,6 +408,8 @@ func _citizen_text(c: Citizen) -> String:
 	s += "Felicidad: %s · Necesidades: %s\n" % [bar(c.happiness), bar(c.needs_met * 100.0)]
 	s += "Dinero: %s   Deudas: %s\n" % [Fmt.money(GameState.money if me else c.money), Fmt.money(EconomySim.player_debt(GameState) if me else c.debt)]
 	s += "Trabajo: %s\n" % ("Empresario(a)" if me else BusinessSim.job_label(GameState, c))
+	if c.school_id >= 0:
+		s += "Estudia en: %s (%.1f años cursados)\n" % [GameState.building_label(GameState.get_building(c.school_id)), c.school_years + c.uni_years]
 	s += "Educación: %s · Experiencia: %.1f años\n\n" % [GameData.education_label(c.education), c.experience]
 	s += "[b]Habilidades[/b]\n"
 	var keys := c.skills.keys()
@@ -684,6 +696,18 @@ func _any_modal_open() -> bool:
 	return false
 
 
+func _era_short() -> String:
+	for e in GameData.eras.get("eras", []):
+		if int(e["id"]) == GameState.era():
+			return str(e.get("short", e["label"]))
+	return ""
+
+
+func _open_research() -> void:
+	close_dock()
+	research_screen.open()
+
+
 func _open_pause() -> void:
 	_speed_before_menu = TimeManager.speed
 	TimeManager.set_speed(0)
@@ -814,7 +838,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var key: Key = event.keycode
 	if key == KEY_ESCAPE:
-		if pause_modal["root"].visible:
+		if research_screen.visible:
+			research_screen.close()
+		elif pause_modal["root"].visible:
 			_close_pause()
 		elif _any_modal_open():
 			for m in [save_modal, load_modal, jump_modal, report_modal, population_modal, log_modal, details_modal, invite_modal, building_panel.hire_modal]:

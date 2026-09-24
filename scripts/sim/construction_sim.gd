@@ -288,7 +288,7 @@ static func daily(gs) -> void:
 			work += 1.0
 			c.money += wage
 			BusinessSim.pay(gs, b, wage, "obras")
-		b["work_done"] = float(b["work_done"]) + work
+		b["work_done"] = float(b["work_done"]) + work * TechSim.mult(gs, "construction_speed")
 		if float(b["work_done"]) >= float(b["work_needed"]):
 			_complete(gs, b, crew)
 

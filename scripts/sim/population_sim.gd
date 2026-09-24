@@ -138,7 +138,7 @@ static func annual_mortality(age: int) -> float:
 
 
 static func daily_death_probability(age: int, health: float, sick: bool) -> float:
-	var p := annual_mortality(age) / 365.0
+	var p := annual_mortality(age) / 365.0 * TechSim.mult(GameState, "mortality")
 	p *= 1.0 + (100.0 - health) / 40.0
 	if sick:
 		p *= float(GameData.citizens.get("disease", {}).get("death_mult_when_sick", 4.0))
@@ -330,7 +330,7 @@ static func _health(gs, c: Citizen, age: int, season: Dictionary, wdata: Diction
 		if gs.rng.randf() < float(dcfg.get("daily_recover_chance", 0.1)):
 			c.sick = false
 	else:
-		var chance := float(dcfg.get("daily_chance", 0.0012)) * float(diff.get("disease_mult", 1.0))
+		var chance := float(dcfg.get("daily_chance", 0.0012)) * float(diff.get("disease_mult", 1.0)) * TechSim.mult(gs, "disease")
 		chance *= float(season.get("disease", 1.0)) * float(wdata.get("disease", 1.0))
 		if age <= 5 or age >= 60:
 			chance *= float(dcfg.get("vulnerable_mult", 2.0))
@@ -365,7 +365,7 @@ static func _happiness(gs, c: Citizen, occupancy: Dictionary, wdata: Dictionary)
 		target += float(h.get("poor_penalty", -6))
 	if c.job_kind == "empleo":
 		target += float(h.get("employed", 3))
-	target += float(c.get_meta("bonus", 0.0))
+	target += float(c.get_meta("bonus", 0.0)) + TechSim.happiness_bonus(gs)
 	target += float(wdata.get("happiness", 0))
 	target = clampf(target, 0.0, 100.0)
 	c.happiness = clampf(c.happiness + (target - c.happiness) * float(h.get("adjust_rate", 0.05)), 0.0, 100.0)

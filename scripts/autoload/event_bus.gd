@@ -25,3 +25,4 @@ signal build_mode_requested(type_id: String, tier: String)
 signal zone_mode_requested
 signal interior_requested(building_id: int)
 signal interior_closed
+signal tech_researched(id: String)

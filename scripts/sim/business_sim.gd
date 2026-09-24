@@ -59,7 +59,7 @@ static func set_price(gs, b: Dictionary, price: float) -> void:
 ## Productividad de un empleado (≈1 = normal).
 static func productivity(c: Citizen, skill: String) -> float:
 	var s := float(c.skills.get(skill, 0.0))
-	var p := 0.6 + s / 100.0 * 0.8 + minf(c.experience, 20.0) * 0.01
+	var p := 0.6 + s / 100.0 * 0.8 + minf(c.experience, 20.0) * 0.01 + c.education * 0.1
 	p *= clampf(c.health / 100.0, 0.3, 1.0)
 	p *= 0.75 + c.happiness / 100.0 * 0.5
 	return p
@@ -84,6 +84,7 @@ static func expected_output(gs, b: Dictionary) -> float:
 	if def.get("seasonal", false):
 		total *= float(WeatherSim.season_data(gs).get("farming", 1.0)) * float(WeatherSim.weather_data(gs).get("farming", 1.0))
 	total *= float(def.get("resource_bonus", {}).get(str(gs.settings.get("map_type", "")), 1.0))
+	total *= TechSim.mult(gs, "production", str(def.get("product", "")))
 	return total
 
 
@@ -166,7 +167,10 @@ static func produce(gs) -> void:
 		if b["status"] != "activo":
 			continue  # En mejora: no produce ni factura.
 		var product := str(def.get("product", ""))
-		if product == "credito":
+		if product == "credito" or product == "educacion":
+			continue
+		if product == "investigacion":
+			TechSim.add_points(gs, TechSim.lab_output(gs, b) / TechSim.mult(gs, "research"))
 			continue
 		if bool(b.get("auto_price", false)):
 			b["price"] = clampf(snappedf(EconomySim.market_price(gs, product) * (1.0 + float(b.get("markup", 0.0))), 0.01), 0.01, max_price(gs, b))
@@ -261,6 +265,9 @@ static func hire(gs, b: Dictionary, c: Citizen, wage: float) -> String:
 		return "No hay vacantes (%d/%d). Mejora el negocio para más empleos." % [current, jobs]
 	if c.job_kind == "empleo":
 		return "%s ya tiene empleo." % c.full_name()
+	var min_edu := int(gs.level_def(b).get("min_education", 0))
+	if c.education < min_edu:
+		return "%s no está calificado(a): se requiere educación %s." % [c.full_name(), GameData.education_label(min_edu)]
 	c.job_id = int(b["id"])
 	c.job_kind = "empleo"
 	c.wage = maxf(0.1, wage)
