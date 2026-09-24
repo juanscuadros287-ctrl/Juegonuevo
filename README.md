@@ -24,6 +24,11 @@ industria que exige electricidad, casas altas que necesitan luz y agua, facturas
 comunitarios, toma de río, planta de agua con tuberías y la capa verde/roja en el mundo (botón
 *Servicios públicos*).
 
+### Transporte
+Ver `docs/TRANSPORTE.md`. Carreteras opcionales trazadas por puntos con curvas y puentes, caminos y vías
+férreas a otros pueblos trazados a mano (durmientes y rieles), tecnología *Transporte público*, empresa de
+buses con paraderos y rutas, pasajes, parqueaderos y trayecto al trabajo (panel *Transporte público*).
+
 ### Fases 6, 7 y 8
 Ver `docs/FASE6.md` (recursos, almacén, recetas, rutas, carreteras), `docs/FASE7.md` (pueblos, rutas comerciales, exportación/importación, inmigración, transporte externo) y `docs/FASE8.md` (turismo, publicidad, industria avanzada, herencia y dinastía).
 

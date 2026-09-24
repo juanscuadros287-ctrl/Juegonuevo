@@ -152,6 +152,8 @@ func rebuild_roads() -> void:
 	for ch in _roads_root.get_children():
 		ch.queue_free()
 	for r in RoadSim.roads(GameState):
+		if r.has("poly"):
+			continue   # Las carreteras por puntos las dibuja TransitVisuals (franja continua).
 		_roads_root.add_child(_road_node(RoadSim.seg_a(r), RoadSim.seg_b(r), str(r["kind"])))
 
 

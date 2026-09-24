@@ -519,9 +519,9 @@ func _build_roads() -> void:
 		var tech := str(kd.get("tech", ""))
 		var ok: bool = gs.has_tech(tech)
 		var btn := UIKit.button("Construir %s (%s/m)" % [RoadSim.kind_label(kind).to_lower(), Fmt.money2(float(kd.get("cost_per_unit", 1.0)) * gs.price_mult())], func():
-			if LogisticsVisuals.instance:
-				LogisticsVisuals.instance.start_road_mode(kind)
-				_msg("Modo carretera: clic en el inicio y clic en el final de cada tramo. Clic derecho o Esc para terminar.", "info"))
+			if TransitVisuals.instance:
+				TransitVisuals.instance.start_trace("road", kind)   # Transporte: carretera por puntos con curvas.
+				_msg("Carretera por puntos: clic, clic, clic; sigue una curva suave. Clic derecho, Enter o Esc construye; Retroceso quita el último punto.", "info"))
 		btn.disabled = not ok
 		btn.tooltip_text = "" if ok else "Requiere investigar: %s" % GameData.tech_label(tech)
 		v.add_child(btn)
@@ -540,6 +540,9 @@ func _build_roads() -> void:
 		b.disabled = not gs.has_tech(str(RoadSim.kind_def(target).get("tech", "")))
 		b.tooltip_text = "" if not b.disabled else "Requiere investigar: %s" % GameData.tech_label(str(RoadSim.kind_def(target).get("tech", "")))
 		v.add_child(b)
+	v.add_child(UIKit.button("Borrar carretera (todo el trazado bajo el clic)", func():
+		if TransitVisuals.instance:
+			TransitVisuals.instance.start_trace("erase")))
 	v.add_child(UIKit.button("Mostrar u ocultar yacimientos", func():
 		if LogisticsVisuals.instance:
 			LogisticsVisuals.instance.toggle_deposits()))
