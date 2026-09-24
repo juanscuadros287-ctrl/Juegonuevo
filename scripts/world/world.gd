@@ -421,6 +421,8 @@ func cancel_placement() -> void:
 	if _zone_marker:
 		_zone_marker.queue_free()
 		_zone_marker = null
+	if LogisticsVisuals.instance:
+		LogisticsVisuals.instance.clear_placement_feedback()
 	if hud:
 		hud.set_placement_hint("")
 
@@ -458,17 +460,23 @@ func _update_placement() -> void:
 	place_ok = place_reason == ""
 	_ghost.position = place_pos
 	_ghost.rotation.y = place_rot
-	_set_ghost_mat(_ghost, MeshLib.ghost_mat(place_ok))
+	# Almacenes individuales: ghost verde brillante + flecha si queda al lado de un almacén.
+	var gm: Material = MeshLib.ghost_mat(place_ok)
+	var link_hint := ""
+	if LogisticsVisuals.instance:
+		gm = LogisticsVisuals.instance.placement_feedback(place_type, place_pos, move_id, place_ok, gm)
+		link_hint = LogisticsVisuals.instance.placement_text()
+	_set_ghost_mat(_ghost, gm)
 	var deg := int(round(fposmod(rad_to_deg(place_rot), 360.0)))
 	if move_id >= 0:
 		var mb: Dictionary = GameState.get_building(move_id)
 		hud.set_placement_hint("Mover %s — %s · %d°   %s   (R/T gira 15° · Shift+rueda gira libre · clic confirma · Esc cancela)" % [
-			GameState.building_label(mb), "gratis" if ConstructionSim.move_cost(GameState, mb, p.x, p.z) <= 0.0 else Fmt.money(ConstructionSim.move_cost(GameState, mb, p.x, p.z)), deg, "✔" if place_ok else place_reason])
+			GameState.building_label(mb), "gratis" if ConstructionSim.move_cost(GameState, mb, p.x, p.z) <= 0.0 else Fmt.money(ConstructionSim.move_cost(GameState, mb, p.x, p.z)), deg, "✔" if place_ok else place_reason] + link_hint)
 		return
 	var cost := ConstructionSim.cost_for(GameState, place_type, 1, false, place_tier)
 	hud.set_placement_hint("%s — %s · %d días · %d°   %s   (R/T gira 15° · Shift+rueda gira libre · clic construye · Esc cancela)" % [
 		GameData.level_def(place_type, 1).get("label", place_type), Fmt.money(cost["total"]), int(cost["days"]), deg,
-		"✔" if place_ok else place_reason])
+		"✔" if place_ok else place_reason] + link_hint)
 
 
 func _set_ghost_mat(node: Node, m: Material) -> void:
