@@ -186,17 +186,24 @@ static func _apply_shortfall(gs, b: Dictionary, lost_frac: float) -> float:
 	if lost <= 0.0:
 		return 0.0
 	var taken := 0.0
+	var wid := -1
 	if LogisticsSim.uses_chain(def, ld) and LogisticsSim.output_target(gs, b) == "warehouse":
-		taken = WarehouseSim.remove(gs, product, lost)
+		wid = WarehouseSim.warehouse_for(gs, b)
+		taken = WarehouseSim.remove_from(gs, wid, product, lost)
 	else:
 		var inv: Dictionary = b["inventory"]
 		taken = minf(lost, float(inv.get(product, 0.0)))
 		inv[product] = float(inv.get(product, 0.0)) - taken
 	if b.has("produced_today"):
 		b["produced_today"] = maxf(0.0, made - taken)
+	# Los insumos no usados vuelven a su almacén vinculado (o al sitio).
 	var inputs := LogisticsSim.recipe_inputs(def, ld)
 	for g in inputs:
-		WarehouseSim.add(gs, str(g), float(inputs[g]) * taken)
+		var back := float(inputs[g]) * taken
+		if wid >= 0:
+			back -= WarehouseSim.add_to(gs, wid, str(g), back)
+		if back > 0.0001:
+			b["inventory"][str(g)] = float(b["inventory"].get(str(g), 0.0)) + back
 	if taken > 0.0:
 		b["chain_status"] = "sin electricidad suficiente"
 	return taken * EconomySim.market_price(gs, product)

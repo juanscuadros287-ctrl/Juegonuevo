@@ -167,6 +167,63 @@
   "effects": [],
   "description": "Fisión del uranio: enormes centrales con muy poco combustible. Revela yacimientos de uranio."
  },
+ "mineria_moderna": {
+  "label": "Minería moderna",
+  "era": 3,
+  "branch": "industria",
+  "cost": 8000,
+  "requires": [
+   "electricidad",
+   "polvora"
+  ],
+  "effects": [],
+  "description": "Perforadoras eléctricas, camiones y minas a cielo abierto: más mineral con menos gente."
+ },
+ "redes_electricas": {
+  "label": "Redes eléctricas",
+  "era": 3,
+  "branch": "energia",
+  "cost": 9000,
+  "requires": [
+   "electricidad"
+  ],
+  "effects": [
+   {
+    "type": "happiness",
+    "value": 1
+   }
+  ],
+  "description": "Líneas de alta tensión y subestaciones: centrales más grandes y electricidad para todo el pueblo."
+ },
+ "grandes_superficies": {
+  "label": "Grandes superficies comerciales",
+  "era": 3,
+  "branch": "finanzas",
+  "cost": 9000,
+  "requires": [
+   "refrigeracion",
+   "administracion_moderna"
+  ],
+  "effects": [],
+  "description": "Supermercados, centros comerciales e hipermercados: los comercios atienden a muchos más clientes."
+ },
+ "automatizacion": {
+  "label": "Automatización industrial",
+  "era": 3,
+  "branch": "industria",
+  "cost": 20000,
+  "requires": [
+   "electronica"
+  ],
+  "effects": [
+   {
+    "type": "production",
+    "value": 1.05,
+    "key": "all"
+   }
+  ],
+  "description": "Robots y control electrónico: las fábricas producen mucho más por trabajador."
+ },
  "farmaceutica": {
   "label": "Industria farmacéutica",
   "era": 3,

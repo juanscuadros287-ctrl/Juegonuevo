@@ -23,7 +23,7 @@
     "build_days": 20,
     "workers": 3,
     "jobs": 5,
-    "prod_per_worker": 1.6,
+    "prod_per_worker": 1.31,
     "quality": 1.0,
     "upkeep": 0.3,
     "unit_cost": 0.0,
@@ -103,7 +103,7 @@
     "build_days": 45,
     "workers": 6,
     "jobs": 12,
-    "prod_per_worker": 2.4,
+    "prod_per_worker": 1.7,
     "quality": 1.0,
     "upkeep": 1.2,
     "unit_cost": 0.0,
@@ -256,7 +256,7 @@
     "build_days": 80,
     "workers": 10,
     "jobs": 20,
-    "prod_per_worker": 4.0,
+    "prod_per_worker": 3.35,
     "quality": 1.0,
     "upkeep": 3.0,
     "unit_cost": 0.0,
@@ -332,6 +332,129 @@
      }
     ],
     "power": 2.0
+   },
+   {
+    "label": "Textil automatizada",
+    "cost": 32200,
+    "materials": {
+     "madera": 36,
+     "piedra": 540
+    },
+    "build_days": 136,
+    "workers": 12,
+    "jobs": 32,
+    "prod_per_worker": 3.93,
+    "quality": 1.1,
+    "upkeep": 6.3,
+    "unit_cost": 0.0,
+    "tech": "automatizacion",
+    "inputs": {
+     "algodon": 1.33
+    },
+    "pollution": 2,
+    "required_profession": "ingeniero",
+    "product": "tela",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       13.8,
+       7.56,
+       9.2
+      ],
+      "pos": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "floors": 2,
+      "c": [
+       0.85,
+       0.85,
+       0.82
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       14.26,
+       0.324,
+       9.66
+      ],
+      "pos": [
+       0.0,
+       7.722,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.76,
+       2.592,
+       0.115
+      ],
+      "pos": [
+       0.0,
+       1.296,
+       4.635
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.4,
+       2.6
+      ],
+      "pos": [
+       7.4,
+       1.7,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       7.4,
+       3.5,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ],
+    "power": 2.5
    }
   ]
  },
@@ -358,7 +481,7 @@
     "build_days": 15,
     "workers": 2,
     "jobs": 4,
-    "prod_per_worker": 0.45,
+    "prod_per_worker": 0.371,
     "quality": 1.0,
     "upkeep": 0.3,
     "unit_cost": 0.0,
@@ -438,7 +561,7 @@
     "build_days": 45,
     "workers": 6,
     "jobs": 14,
-    "prod_per_worker": 0.6,
+    "prod_per_worker": 0.42,
     "quality": 1.0,
     "upkeep": 1.2,
     "unit_cost": 0.0,
@@ -562,6 +685,385 @@
       ]
      }
     ]
+   },
+   {
+    "label": "Confección en serie",
+    "cost": 11500,
+    "materials": {
+     "madera": 36,
+     "piedra": 270
+    },
+    "build_days": 77,
+    "workers": 8,
+    "jobs": 23,
+    "prod_per_worker": 0.477,
+    "quality": 1.1,
+    "upkeep": 2.52,
+    "unit_cost": 0.0,
+    "tech": "produccion_en_serie",
+    "inputs": {
+     "tela": 1.615
+    },
+    "pollution": 1,
+    "product": "ropa_fina",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5.06,
+       4.86,
+       6.9
+      ],
+      "pos": [
+       -2.587,
+       2.43,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.175,
+       1.512,
+       7.13
+      ],
+      "pos": [
+       -2.587,
+       5.616,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       5.06,
+       4.86,
+       6.9
+      ],
+      "pos": [
+       2.587,
+       2.43,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.175,
+       1.512,
+       7.13
+      ],
+      "pos": [
+       2.587,
+       5.616,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.517,
+       10.26,
+       0.69
+      ],
+      "pos": [
+       4.025,
+       5.13,
+       -2.3
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.07,
+       2.376,
+       0.115
+      ],
+      "pos": [
+       0.0,
+       1.188,
+       3.484
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.0,
+       2.6
+      ],
+      "pos": [
+       5.7,
+       1.5,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       5.7,
+       3.1,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Confección moderna",
+    "cost": 26400,
+    "materials": {
+     "madera": 44,
+     "piedra": 486
+    },
+    "build_days": 131,
+    "workers": 10,
+    "jobs": 37,
+    "prod_per_worker": 0.726,
+    "quality": 1.2,
+    "upkeep": 5.29,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "inputs": {
+     "tela": 1.53425
+    },
+    "pollution": 1,
+    "product": "ropa_fina",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5.819,
+       5.249,
+       7.935
+      ],
+      "pos": [
+       -2.975,
+       2.624,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.951,
+       1.633,
+       8.199
+      ],
+      "pos": [
+       -2.975,
+       6.065,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       5.819,
+       5.249,
+       7.935
+      ],
+      "pos": [
+       2.975,
+       2.624,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.951,
+       1.633,
+       8.199
+      ],
+      "pos": [
+       2.975,
+       6.065,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.595,
+       11.081,
+       0.793
+      ],
+      "pos": [
+       4.629,
+       5.54,
+       -2.645
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.38,
+       2.566,
+       0.132
+      ],
+      "pos": [
+       0.0,
+       1.283,
+       4.007
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.53,
+       3.24,
+       2.99
+      ],
+      "pos": [
+       6.555,
+       1.62,
+       -0.46
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.76,
+       0.216,
+       3.22
+      ],
+      "pos": [
+       6.555,
+       3.348,
+       -0.46
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.4,
+       2.6
+      ],
+      "pos": [
+       8.1,
+       1.7,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       8.1,
+       3.5,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ],
+    "power": 2.0
    }
   ]
  },
@@ -588,7 +1090,7 @@
     "build_days": 30,
     "workers": 4,
     "jobs": 6,
-    "prod_per_worker": 1.6,
+    "prod_per_worker": 1.58,
     "quality": 1.0,
     "upkeep": 0.6,
     "unit_cost": 0.0,
@@ -687,7 +1189,7 @@
     "build_days": 60,
     "workers": 8,
     "jobs": 14,
-    "prod_per_worker": 2.4,
+    "prod_per_worker": 1.79,
     "quality": 1.0,
     "upkeep": 2.0,
     "unit_cost": 0.0,
@@ -859,7 +1361,7 @@
     "build_days": 100,
     "workers": 12,
     "jobs": 24,
-    "prod_per_worker": 3.2,
+    "prod_per_worker": 2.69,
     "quality": 1.0,
     "upkeep": 4.5,
     "unit_cost": 0.0,
@@ -971,6 +1473,166 @@
       ]
      }
     ]
+   },
+   {
+    "label": "Acería eléctrica",
+    "cost": 50600,
+    "materials": {
+     "madera": 36,
+     "piedra": 810
+    },
+    "build_days": 170,
+    "workers": 14,
+    "jobs": 39,
+    "prod_per_worker": 3.78,
+    "quality": 1.1,
+    "upkeep": 9.45,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "inputs": {
+     "hierro": 1.235,
+     "carbon": 0.76
+    },
+    "pollution": 6,
+    "required_profession": "ingeniero",
+    "product": "acero",
+    "skill": "mineria",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       16.1,
+       9.72,
+       10.35
+      ],
+      "pos": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "floors": 2,
+      "c": [
+       0.6,
+       0.6,
+       0.62
+      ],
+      "c2": [
+       0.35,
+       0.35,
+       0.4
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       16.56,
+       0.324,
+       10.81
+      ],
+      "pos": [
+       0.0,
+       9.882,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.76,
+       2.592,
+       0.115
+      ],
+      "pos": [
+       0.0,
+       1.296,
+       5.21
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.69,
+       15.12,
+       0.92
+      ],
+      "pos": [
+       6.325,
+       7.56,
+       -4.025
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.69,
+       15.12,
+       0.92
+      ],
+      "pos": [
+       4.025,
+       7.56,
+       -4.025
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.4,
+       2.6
+      ],
+      "pos": [
+       8.4,
+       1.7,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       8.4,
+       3.5,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ],
+    "power": 2.0
    }
   ]
  },
@@ -997,7 +1659,7 @@
     "build_days": 20,
     "workers": 3,
     "jobs": 4,
-    "prod_per_worker": 1.4,
+    "prod_per_worker": 1.23,
     "quality": 1.0,
     "upkeep": 0.4,
     "unit_cost": 0.0,
@@ -1096,7 +1758,7 @@
     "build_days": 45,
     "workers": 6,
     "jobs": 12,
-    "prod_per_worker": 2.2,
+    "prod_per_worker": 1.56,
     "quality": 1.0,
     "upkeep": 1.3,
     "unit_cost": 0.0,
@@ -1239,6 +1901,423 @@
       ]
      }
     ]
+   },
+   {
+    "label": "Herramientas en serie",
+    "cost": 12600,
+    "materials": {
+     "madera": 36,
+     "piedra": 288
+    },
+    "build_days": 77,
+    "workers": 8,
+    "jobs": 20,
+    "prod_per_worker": 1.82,
+    "quality": 1.1,
+    "upkeep": 2.73,
+    "unit_cost": 0.0,
+    "tech": "produccion_en_serie",
+    "inputs": {
+     "acero": 0.3325,
+     "madera": 0.19
+    },
+    "pollution": 2,
+    "product": "herramientas",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5.635,
+       4.86,
+       6.9
+      ],
+      "pos": [
+       -2.875,
+       2.43,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.75,
+       1.512,
+       7.13
+      ],
+      "pos": [
+       -2.875,
+       5.616,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       5.635,
+       4.86,
+       6.9
+      ],
+      "pos": [
+       2.875,
+       2.43,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.75,
+       1.512,
+       7.13
+      ],
+      "pos": [
+       2.875,
+       5.616,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.517,
+       10.26,
+       0.69
+      ],
+      "pos": [
+       4.6,
+       5.13,
+       -2.3
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.517,
+       10.26,
+       0.69
+      ],
+      "pos": [
+       2.76,
+       5.13,
+       -2.3
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.07,
+       2.376,
+       0.115
+      ],
+      "pos": [
+       0.0,
+       1.188,
+       3.484
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.0,
+       2.6
+      ],
+      "pos": [
+       6.2,
+       1.5,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       6.2,
+       3.1,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Herramientas eléctricas",
+    "cost": 29000,
+    "materials": {
+     "madera": 44,
+     "piedra": 519
+    },
+    "build_days": 131,
+    "workers": 10,
+    "jobs": 32,
+    "prod_per_worker": 2.79,
+    "quality": 1.2,
+    "upkeep": 5.73,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "inputs": {
+     "acero": 0.31588,
+     "madera": 0.1805
+    },
+    "pollution": 2,
+    "product": "herramientas",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6.48,
+       5.249,
+       7.935
+      ],
+      "pos": [
+       -3.306,
+       2.624,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.612,
+       1.633,
+       8.199
+      ],
+      "pos": [
+       -3.306,
+       6.065,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       6.48,
+       5.249,
+       7.935
+      ],
+      "pos": [
+       3.306,
+       2.624,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.612,
+       1.633,
+       8.199
+      ],
+      "pos": [
+       3.306,
+       6.065,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.595,
+       11.081,
+       0.793
+      ],
+      "pos": [
+       5.29,
+       5.54,
+       -2.645
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.595,
+       11.081,
+       0.793
+      ],
+      "pos": [
+       3.174,
+       5.54,
+       -2.645
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.38,
+       2.566,
+       0.132
+      ],
+      "pos": [
+       0.0,
+       1.283,
+       4.007
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.53,
+       3.24,
+       2.99
+      ],
+      "pos": [
+       7.13,
+       1.62,
+       -0.46
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.76,
+       0.216,
+       3.22
+      ],
+      "pos": [
+       7.13,
+       3.348,
+       -0.46
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.4,
+       2.6
+      ],
+      "pos": [
+       8.6,
+       1.7,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       8.6,
+       3.5,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ],
+    "power": 2.0
    }
   ]
  },
@@ -1265,7 +2344,7 @@
     "build_days": 40,
     "workers": 6,
     "jobs": 8,
-    "prod_per_worker": 0.16,
+    "prod_per_worker": 0.121,
     "quality": 1.0,
     "upkeep": 1.0,
     "unit_cost": 0.0,
@@ -1402,7 +2481,7 @@
     "build_days": 70,
     "workers": 10,
     "jobs": 16,
-    "prod_per_worker": 0.2,
+    "prod_per_worker": 0.165,
     "quality": 1.0,
     "upkeep": 2.5,
     "unit_cost": 0.0,
@@ -1584,6 +2663,502 @@
       ]
      }
     ]
+   },
+   {
+    "label": "Maquinaria eléctrica",
+    "cost": 27600,
+    "materials": {
+     "madera": 36,
+     "piedra": 540
+    },
+    "build_days": 119,
+    "workers": 12,
+    "jobs": 26,
+    "prod_per_worker": 0.234,
+    "quality": 1.1,
+    "upkeep": 5.25,
+    "unit_cost": 0.0,
+    "tech": "electricidad",
+    "inputs": {
+     "acero": 4.75,
+     "herramientas": 0.95
+    },
+    "pollution": 3,
+    "min_education": 1,
+    "required_profession": "ingeniero",
+    "product": "maquinaria",
+    "skill": "construccion",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5.252,
+       6.48,
+       9.2
+      ],
+      "pos": [
+       -5.367,
+       3.24,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.367,
+       1.512,
+       9.43
+      ],
+      "pos": [
+       -5.367,
+       7.236,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       5.252,
+       6.48,
+       9.2
+      ],
+      "pos": [
+       0.0,
+       3.24,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.367,
+       1.512,
+       9.43
+      ],
+      "pos": [
+       0.0,
+       7.236,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       5.252,
+       6.48,
+       9.2
+      ],
+      "pos": [
+       5.367,
+       3.24,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.367,
+       1.512,
+       9.43
+      ],
+      "pos": [
+       5.367,
+       7.236,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.517,
+       11.88,
+       0.69
+      ],
+      "pos": [
+       6.9,
+       5.94,
+       -3.45
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.517,
+       11.88,
+       0.69
+      ],
+      "pos": [
+       5.06,
+       5.94,
+       -3.45
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.07,
+       2.376,
+       0.115
+      ],
+      "pos": [
+       0.0,
+       1.188,
+       4.635
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.0,
+       2.6
+      ],
+      "pos": [
+       8.2,
+       1.5,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       8.2,
+       3.1,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ],
+    "power": 2.0
+   },
+   {
+    "label": "Maquinaria automatizada",
+    "cost": 63500,
+    "materials": {
+     "madera": 44,
+     "piedra": 972
+    },
+    "build_days": 203,
+    "workers": 14,
+    "jobs": 42,
+    "prod_per_worker": 0.28,
+    "quality": 1.2,
+    "upkeep": 11.03,
+    "unit_cost": 0.0,
+    "tech": "automatizacion",
+    "inputs": {
+     "acero": 4.5125,
+     "herramientas": 0.9025
+    },
+    "pollution": 3,
+    "min_education": 1,
+    "required_profession": "ingeniero",
+    "product": "maquinaria",
+    "skill": "construccion",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6.04,
+       6.998,
+       10.58
+      ],
+      "pos": [
+       -6.172,
+       3.499,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.172,
+       1.633,
+       10.844
+      ],
+      "pos": [
+       -6.172,
+       7.815,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       6.04,
+       6.998,
+       10.58
+      ],
+      "pos": [
+       0.0,
+       3.499,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.172,
+       1.633,
+       10.844
+      ],
+      "pos": [
+       0.0,
+       7.815,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       6.04,
+       6.998,
+       10.58
+      ],
+      "pos": [
+       6.172,
+       3.499,
+       0.0
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.172,
+       1.633,
+       10.844
+      ],
+      "pos": [
+       6.172,
+       7.815,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.595,
+       12.83,
+       0.793
+      ],
+      "pos": [
+       7.935,
+       6.415,
+       -3.967
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.595,
+       12.83,
+       0.793
+      ],
+      "pos": [
+       5.819,
+       6.415,
+       -3.967
+      ],
+      "c": [
+       0.62,
+       0.32,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.38,
+       2.566,
+       0.132
+      ],
+      "pos": [
+       0.0,
+       1.283,
+       5.33
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.53,
+       3.24,
+       2.99
+      ],
+      "pos": [
+       9.43,
+       1.62,
+       -0.46
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.76,
+       0.216,
+       3.22
+      ],
+      "pos": [
+       9.43,
+       3.348,
+       -0.46
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.4,
+       2.6
+      ],
+      "pos": [
+       10.6,
+       1.7,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       10.6,
+       3.5,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ],
+    "power": 2.5
    }
   ]
  },
@@ -1610,7 +3185,7 @@
     "build_days": 45,
     "workers": 6,
     "jobs": 8,
-    "prod_per_worker": 0.1,
+    "prod_per_worker": 0.0875,
     "quality": 1.0,
     "upkeep": 1.2,
     "unit_cost": 0.0,
@@ -1728,7 +3303,7 @@
     "build_days": 80,
     "workers": 10,
     "jobs": 16,
-    "prod_per_worker": 0.12,
+    "prod_per_worker": 0.114,
     "quality": 1.0,
     "upkeep": 3.0,
     "unit_cost": 0.0,
@@ -1806,6 +3381,131 @@
      }
     ],
     "power": 2.0
+   },
+   {
+    "label": "Motores automatizados",
+    "cost": 34500,
+    "materials": {
+     "madera": 36,
+     "piedra": 576
+    },
+    "build_days": 136,
+    "workers": 12,
+    "jobs": 26,
+    "prod_per_worker": 0.135,
+    "quality": 1.1,
+    "upkeep": 6.3,
+    "unit_cost": 0.0,
+    "tech": "automatizacion",
+    "inputs": {
+     "acero": 4.275,
+     "herramientas": 1.425
+    },
+    "pollution": 3,
+    "min_education": 1,
+    "required_profession": "ingeniero",
+    "product": "motor",
+    "skill": "construccion",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       13.8,
+       7.56,
+       9.2
+      ],
+      "pos": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "floors": 2,
+      "c": [
+       0.7,
+       0.7,
+       0.72
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       14.26,
+       0.324,
+       9.66
+      ],
+      "pos": [
+       0.0,
+       7.722,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.76,
+       2.592,
+       0.115
+      ],
+      "pos": [
+       0.0,
+       1.296,
+       4.635
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.0,
+       2.6
+      ],
+      "pos": [
+       7.4,
+       1.5,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       7.4,
+       3.1,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ],
+    "power": 2.5
    }
   ]
  },
@@ -1832,7 +3532,7 @@
     "build_days": 45,
     "workers": 6,
     "jobs": 8,
-    "prod_per_worker": 0.4,
+    "prod_per_worker": 0.414,
     "quality": 1.0,
     "upkeep": 1.5,
     "unit_cost": 0.0,
@@ -1921,7 +3621,7 @@
     "build_days": 80,
     "workers": 10,
     "jobs": 18,
-    "prod_per_worker": 0.65,
+    "prod_per_worker": 0.673,
     "quality": 1.0,
     "upkeep": 3.5,
     "unit_cost": 0.0,
@@ -2002,6 +3702,134 @@
      }
     ],
     "power": 2.5
+   },
+   {
+    "label": "Electrónica automatizada",
+    "cost": 41400,
+    "materials": {
+     "madera": 24,
+     "piedra": 630
+    },
+    "build_days": 136,
+    "workers": 12,
+    "jobs": 29,
+    "prod_per_worker": 0.778,
+    "quality": 1.1,
+    "upkeep": 7.35,
+    "unit_cost": 0.0,
+    "tech": "automatizacion",
+    "inputs": {
+     "acero": 0.2375,
+     "plata": 0.076,
+     "oro": 0.0095,
+     "cobre": 0.4275,
+     "plasticos": 0.19
+    },
+    "pollution": 1,
+    "min_education": 2,
+    "required_profession": "ingeniero",
+    "product": "componentes_electronicos",
+    "skill": "ciencia",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       13.8,
+       7.56,
+       9.2
+      ],
+      "pos": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "floors": 2,
+      "c": [
+       0.92,
+       0.92,
+       0.95
+      ],
+      "c2": [
+       0.2,
+       0.3,
+       0.45
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       14.26,
+       0.324,
+       9.66
+      ],
+      "pos": [
+       0.0,
+       7.722,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.76,
+       2.592,
+       0.115
+      ],
+      "pos": [
+       0.0,
+       1.296,
+       4.635
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.0,
+       2.6
+      ],
+      "pos": [
+       7.4,
+       1.5,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       7.4,
+       3.1,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ],
+    "power": 3.0
    }
   ]
  },
@@ -2028,7 +3856,7 @@
     "build_days": 80,
     "workers": 10,
     "jobs": 14,
-    "prod_per_worker": 0.012,
+    "prod_per_worker": 0.0108,
     "quality": 1.0,
     "upkeep": 3.0,
     "unit_cost": 0.0,
@@ -2206,7 +4034,7 @@
     "build_days": 140,
     "workers": 16,
     "jobs": 30,
-    "prod_per_worker": 0.016,
+    "prod_per_worker": 0.0132,
     "quality": 1.0,
     "upkeep": 7.0,
     "unit_cost": 0.0,
@@ -2287,6 +4115,134 @@
      }
     ],
     "power": 2.5
+   },
+   {
+    "label": "Planta automotriz robotizada",
+    "cost": 115000,
+    "materials": {
+     "madera": 48,
+     "piedra": 1260
+    },
+    "build_days": 238,
+    "workers": 18,
+    "jobs": 48,
+    "prod_per_worker": 0.0154,
+    "quality": 1.1,
+    "upkeep": 14.7,
+    "unit_cost": 0.0,
+    "tech": "automatizacion",
+    "inputs": {
+     "acero": 17.1,
+     "motor": 0.95,
+     "tela": 3.325,
+     "componentes_electronicos": 2.85,
+     "plasticos": 3.8
+    },
+    "pollution": 5,
+    "min_education": 2,
+    "required_profession": "ingeniero",
+    "product": "automovil_bien",
+    "skill": "construccion",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       20.7,
+       9.72,
+       12.65
+      ],
+      "pos": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "floors": 2,
+      "c": [
+       0.85,
+       0.85,
+       0.88
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       21.16,
+       0.324,
+       13.11
+      ],
+      "pos": [
+       0.0,
+       9.882,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.76,
+       2.592,
+       0.115
+      ],
+      "pos": [
+       0.0,
+       1.296,
+       6.359
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.0,
+       2.6
+      ],
+      "pos": [
+       10.4,
+       1.5,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       10.4,
+       3.1,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ],
+    "power": 3.0
    }
   ]
  },
@@ -2313,7 +4269,7 @@
     "build_days": 140,
     "workers": 14,
     "jobs": 20,
-    "prod_per_worker": 0.0018,
+    "prod_per_worker": 0.00172,
     "quality": 1.0,
     "upkeep": 6.0,
     "unit_cost": 0.0,
@@ -2420,10 +4376,10 @@
      "madera": 40,
      "piedra": 1200
     },
-    "build_days": 200,
+    "build_days": 224,
     "workers": 20,
     "jobs": 36,
-    "prod_per_worker": 0.0022,
+    "prod_per_worker": 0.002,
     "quality": 1.0,
     "upkeep": 12.0,
     "unit_cost": 0.0,
@@ -2523,6 +4479,153 @@
      }
     ],
     "power": 3.0
+   },
+   {
+    "label": "Aeronáutica automatizada",
+    "cost": 207000,
+    "materials": {
+     "madera": 48,
+     "piedra": 2160
+    },
+    "build_days": 381,
+    "workers": 22,
+    "jobs": 58,
+    "prod_per_worker": 0.00231,
+    "quality": 1.1,
+    "upkeep": 25.2,
+    "unit_cost": 0.0,
+    "tech": "automatizacion",
+    "inputs": {
+     "acero": 123.5,
+     "motor": 3.8,
+     "tela": 9.5,
+     "componentes_electronicos": 42.75,
+     "plasticos": 28.5
+    },
+    "pollution": 5,
+    "min_education": 2,
+    "required_profession": "ingeniero",
+    "product": "avion_bien",
+    "skill": "ciencia",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       25.3,
+       10.8,
+       16.1
+      ],
+      "pos": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "floors": 2,
+      "c": [
+       0.9,
+       0.9,
+       0.92
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       25.76,
+       0.324,
+       16.56
+      ],
+      "pos": [
+       0.0,
+       10.962,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.76,
+       2.592,
+       0.115
+      ],
+      "pos": [
+       0.0,
+       1.296,
+       8.085
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       25.76,
+       3.24,
+       16.56
+      ],
+      "pos": [
+       0.0,
+       12.42,
+       0.0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.52
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.0,
+       2.6
+      ],
+      "pos": [
+       12.4,
+       1.5,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       12.4,
+       3.1,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     }
+    ],
+    "power": 3.5
    }
   ]
  },
@@ -2549,7 +4652,7 @@
     "build_days": 15,
     "workers": 2,
     "jobs": 3,
-    "prod_per_worker": 0.15,
+    "prod_per_worker": 0.131,
     "quality": 1.0,
     "upkeep": 0.3,
     "unit_cost": 0.0,
@@ -2630,7 +4733,7 @@
     "build_days": 35,
     "workers": 4,
     "jobs": 6,
-    "prod_per_worker": 0.2,
+    "prod_per_worker": 0.151,
     "quality": 1.3,
     "upkeep": 1.0,
     "unit_cost": 0.0,
@@ -2697,6 +4800,123 @@
        0.28,
        0.18,
        0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Joyería en serie",
+    "cost": 9200,
+    "materials": {
+     "madera": 24,
+     "piedra": 216
+    },
+    "build_days": 60,
+    "workers": 6,
+    "jobs": 10,
+    "prod_per_worker": 0.169,
+    "quality": 1.4,
+    "upkeep": 2.1,
+    "unit_cost": 0.0,
+    "tech": "produccion_en_serie",
+    "inputs": {
+     "oro": 0.19,
+     "plata": 0.475
+    },
+    "pollution": 0,
+    "product": "joyas",
+    "skill": "artesania",
+    "output": "warehouse",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6.785,
+       4.32,
+       5.75
+      ],
+      "pos": [
+       0.0,
+       2.16,
+       0.0
+      ],
+      "c": [
+       0.95,
+       0.92,
+       0.85
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.9,
+       1.512,
+       5.98
+      ],
+      "pos": [
+       0.0,
+       5.076,
+       0.0
+      ],
+      "c": [
+       0.2,
+       0.3,
+       0.45
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       2.07,
+       2.376,
+       0.115
+      ],
+      "pos": [
+       0.0,
+       1.188,
+       2.909
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       3.0,
+       2.6
+      ],
+      "pos": [
+       4.2,
+       1.5,
+       -0.4
+      ],
+      "c": [
+       0.62,
+       0.6,
+       0.58
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       0.2,
+       2.8
+      ],
+      "pos": [
+       4.2,
+       3.1,
+       -0.4
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
       ]
      }
     ]

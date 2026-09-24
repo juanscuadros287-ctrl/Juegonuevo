@@ -20,6 +20,7 @@ static func begin_day(gs) -> void:
 	for g in _offers:
 		# Mejor relación calidad/precio primero.
 		_offers[g].sort_custom(func(a, b): return float(a["price"]) / _quality(gs, a) < float(b["price"]) / _quality(gs, b))
+	EnergySim.daily(gs)   # Economía real: electricidad del día (tras producir, antes de cerrar el día).
 
 
 static func _quality(gs, b: Dictionary) -> float:
@@ -88,6 +89,7 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 ## Consumo discrecional semanal: quien tiene ahorros de sobra gasta parte en tus
 ## negocios (taberna, panadería, tienda…). Así el dinero vuelve a circular.
 static func discretionary(gs) -> void:
+	ShopSim.weekly(gs)   # Economía real: deseos de los vecinos en tus comercios especializados.
 	var cfg: Dictionary = GameData.citizens.get("discretionary", {})
 	var buffer_days := float(cfg.get("buffer_days", 45))
 	var share := float(cfg.get("weekly_share", 0.06)) * EventsSim.mult(gs, "discretionary")
