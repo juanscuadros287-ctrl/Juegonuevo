@@ -84,13 +84,13 @@ static func cost_for(gs, type_id: String, level: int, is_upgrade: bool, tier := 
 	}
 
 
-## Unidades de un bien disponibles en el inventario de tus negocios.
+## Unidades de un bien disponibles en el inventario de tus negocios y en el almacén de la compañía.
 static func stock_of(gs, good: String) -> float:
 	var total := 0.0
 	for b in gs.buildings:
 		if gs.owned_by_player(b):
 			total += float(b.get("inventory", {}).get(good, 0.0))
-	return total
+	return total + WarehouseSim.stock(gs, good)
 
 
 static func _consume_stock(gs, good: String, qty: float) -> void:
@@ -106,6 +106,8 @@ static func _consume_stock(gs, good: String, qty: float) -> void:
 			var take := minf(have, left)
 			inv[good] = have - take
 			left -= take
+	if left > 0.0:
+		WarehouseSim.remove(gs, good, left)   # Fase 6: el resto sale del almacén.
 
 
 ## Explica por qué no se puede construir/mejorar ("" si se puede).
@@ -153,7 +155,7 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 		var ofp := float(GameData.building_def(str(b["type"])).get("footprint", 4.0))
 		if Vector2(x, z).distance_to(Vector2(float(b["x"]), float(b["z"]))) < (fp + ofp) * 0.5 + 0.8:
 			return "Se superpone con otro edificio"
-	return ""
+	return RegionSim.deposit_block_reason(gs, type_id, x, z)   # Fase 6: minas junto a su yacimiento.
 
 
 # --- Acciones del jugador ------------------------------------------------------------

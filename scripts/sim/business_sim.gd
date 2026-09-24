@@ -87,6 +87,7 @@ static func expected_output(gs, b: Dictionary) -> float:
 	if def.get("seasonal", false):
 		total *= float(WeatherSim.season_data(gs).get("farming", 1.0)) * float(WeatherSim.weather_data(gs).get("farming", 1.0)) * EventsSim.mult(gs, "farming")
 	total *= float(def.get("resource_bonus", {}).get(str(gs.settings.get("map_type", "")), 1.0))
+	total *= RegionSim.region_mult(gs, b)   # Fase 6: recursos de la región.
 	total *= TechSim.mult(gs, "production", str(def.get("product", "")))
 	return total
 
@@ -170,7 +171,7 @@ static func produce(gs) -> void:
 		if b["status"] != "activo":
 			continue  # En mejora: no produce ni factura.
 		var product := str(def.get("product", ""))
-		if product == "credito" or product == "educacion" or product == "servicio":
+		if product == "credito" or product == "educacion" or product == "servicio" or product == "transporte":
 			continue
 		if product == "investigacion":
 			TechSim.add_points(gs, TechSim.lab_output(gs, b) / TechSim.mult(gs, "research"))
@@ -182,6 +183,12 @@ static func produce(gs) -> void:
 			points += out
 			continue
 		var unit_cost := float(ld.get("unit_cost", 0.0)) * pm
+		if LogisticsSim.uses_chain(def, ld):
+			# Fase 6: recetas ("inputs" del almacén), yacimientos y "output": "warehouse".
+			out = LogisticsSim.produce_chain(gs, b, product, out)
+			if unit_cost > 0.0 and out > 0.0:
+				pay(gs, b, out * unit_cost, "insumos")
+			continue
 		var inv: Dictionary = b["inventory"]
 		var storable := bool(GameData.goods.get(product, {}).get("storable", true))
 		if storable:

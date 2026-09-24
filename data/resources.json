@@ -1,0 +1,79 @@
+{
+  "_nota": "Fase 6. Recursos por región, yacimientos, transporte interno y carreteras. Se lee con GameData.extra(\"resources\"). strengths = multiplicador de producción de los negocios que usan ese recurso (region_resource en el negocio o business_resource aquí). deposits = cuántos yacimientos de cada tipo genera la región (el primero queda en el terreno inicial). Para un yacimiento nuevo basta con agregarlo a 'resources' con deposit=true y usar requires_deposit en el nivel del negocio.",
+  "resources": {
+    "oro": {"label": "Oro", "deposit": true, "amount": [1400, 2200], "color": [0.98, 0.8, 0.15], "order": 0},
+    "plata": {"label": "Plata", "deposit": true, "amount": [2500, 4000], "color": [0.86, 0.88, 0.92], "order": 1},
+    "carbon": {"label": "Carbón", "deposit": true, "amount": [12000, 18000], "color": [0.12, 0.12, 0.13], "order": 2},
+    "hierro": {"label": "Hierro", "deposit": true, "amount": [10000, 16000], "color": [0.62, 0.3, 0.2], "order": 3},
+    "madera": {"label": "Bosques (madera)", "order": 4},
+    "piedra": {"label": "Piedra", "order": 5},
+    "tierra_fertil": {"label": "Tierra fértil", "order": 6},
+    "pastos": {"label": "Pastos (lana)", "order": 7},
+    "pesca": {"label": "Pesca", "order": 8}
+  },
+  "business_resource": {
+    "granja": "tierra_fertil",
+    "pescaderia": "pesca",
+    "lenador": "madera",
+    "aserradero": "madera",
+    "cantera": "piedra"
+  },
+  "deposit_radius": 11.0,
+  "deposit_min_spacing": 18.0,
+  "minor_deposit_chance": 0.5,
+  "minor_deposit_amount": 0.35,
+  "place_names": ["San Isidro", "Santa Rosa", "La Esperanza", "El Carmen", "San Pedro", "Las Palmas", "Buenavista", "El Rosario", "San Miguel", "La Candelaria", "Piedras Blancas", "Los Alisos", "Santa Bárbara", "El Retiro", "Guayabal", "San Lorenzo"],
+  "regions": {
+    "interior": [
+      {"id": "valle_fertil", "label": "Valle fértil", "description": "Tierras negras y pastos: grandes cosechas de trigo, algodón y lana. Poco mineral.", "strengths": {"tierra_fertil": 1.4, "pastos": 1.25, "madera": 1.1}, "deposits": {"hierro": 1}},
+      {"id": "colinas_boscosas", "label": "Colinas boscosas", "description": "Bosques espesos y vetas de carbón entre las colinas.", "strengths": {"madera": 1.45, "piedra": 1.15}, "deposits": {"carbon": 2}},
+      {"id": "llanura_ferrera", "label": "Llanura ferrera", "description": "Hierro y carbón cerca de la superficie: tierra de herreros.", "strengths": {"piedra": 1.2}, "deposits": {"hierro": 2, "carbon": 1}},
+      {"id": "cerros_plata", "label": "Cerros de plata", "description": "Antiguas minas de plata y buena piedra de cantera.", "strengths": {"piedra": 1.3, "pastos": 1.1}, "deposits": {"plata": 2}}
+    ],
+    "costa": [
+      {"id": "bahia_pesquera", "label": "Bahía pesquera", "description": "Aguas ricas en peces y tierras de algodón junto al mar.", "strengths": {"pesca": 1.5, "tierra_fertil": 1.15}, "deposits": {"hierro": 1}},
+      {"id": "acantilados", "label": "Acantilados de hierro", "description": "Rocas de mineral de hierro y carbón expuestas por el mar.", "strengths": {"piedra": 1.35, "pesca": 1.1}, "deposits": {"hierro": 2, "carbon": 1}},
+      {"id": "playa_algodon", "label": "Llanura algodonera", "description": "Clima cálido y húmedo: algodón y pastos abundantes.", "strengths": {"tierra_fertil": 1.35, "pastos": 1.2, "pesca": 1.1}, "deposits": {"plata": 1}},
+      {"id": "cabo_dorado", "label": "Cabo dorado", "description": "Arenas con pepitas de oro y buena madera costera.", "strengths": {"madera": 1.2, "pesca": 1.15}, "deposits": {"oro": 1, "carbon": 1}}
+    ],
+    "montana": [
+      {"id": "veta_oro", "label": "Veta de oro", "description": "Una rica veta de oro en la cordillera. Poca tierra de cultivo.", "strengths": {"piedra": 1.3}, "deposits": {"oro": 2, "plata": 1}},
+      {"id": "valle_minero", "label": "Valle minero", "description": "Hierro y carbón en abundancia: el corazón de una futura industria.", "strengths": {"piedra": 1.25, "madera": 1.1}, "deposits": {"hierro": 2, "carbon": 2}},
+      {"id": "cumbre_plata", "label": "Cumbre de plata", "description": "Minas de plata en las alturas y pastos para ovejas.", "strengths": {"pastos": 1.35, "piedra": 1.2}, "deposits": {"plata": 2, "hierro": 1}},
+      {"id": "bosque_alto", "label": "Bosque alto", "description": "Bosques de montaña, piedra y algo de carbón.", "strengths": {"madera": 1.5, "piedra": 1.2}, "deposits": {"carbon": 1}}
+    ],
+    "rio": [
+      {"id": "vega_fertil", "label": "Vega del río", "description": "Tierras de aluvión muy fértiles y buena pesca de río.", "strengths": {"tierra_fertil": 1.45, "pesca": 1.25}, "deposits": {}},
+      {"id": "arenas_auriferas", "label": "Arenas auríferas", "description": "El río arrastra oro: se puede lavar en sus orillas.", "strengths": {"pesca": 1.15, "tierra_fertil": 1.1}, "deposits": {"oro": 2}},
+      {"id": "meandro_carbon", "label": "Meandro del carbón", "description": "Carbón y hierro en las barrancas del río.", "strengths": {"madera": 1.15}, "deposits": {"carbon": 2, "hierro": 1}},
+      {"id": "praderas", "label": "Praderas ribereñas", "description": "Pastos y algodonales a lo largo del río, con plata en los cerros.", "strengths": {"pastos": 1.4, "tierra_fertil": 1.2}, "deposits": {"plata": 1}}
+    ]
+  },
+  "warehouse": {
+    "walk_reach": 30.0,
+    "plaza_label": "Bodega de la plaza",
+    "shop_share": 0.35,
+    "shop_units_per_output": 0.4,
+    "full_warning_days": 20
+  },
+  "transport": {
+    "route_factor": 1.25,
+    "max_trips_per_day": 4,
+    "depart_hour": 7,
+    "modes": {
+      "pie": {"label": "A pie (cargadores)", "capacity": 10, "speed": 180, "road": false, "tech": "", "order": 0},
+      "carreta": {"label": "Caballos y carretas", "capacity": 60, "speed": 360, "road": true, "tech": "carretas", "order": 1},
+      "camion": {"label": "Camiones", "capacity": 250, "speed": 1200, "road": true, "tech": "automovil", "order": 2}
+    }
+  },
+  "roads": {
+    "snap": 3.0,
+    "reach": 12.0,
+    "min_length": 3.0,
+    "max_length": 80.0,
+    "kinds": {
+      "barro": {"label": "Camino de barro", "cost_per_unit": 1.2, "stone_per_unit": 0.0, "speed": 1.0, "tech": "", "color": [0.52, 0.4, 0.26], "width": 2.2},
+      "empedrado": {"label": "Camino empedrado", "cost_per_unit": 2.5, "stone_per_unit": 0.15, "speed": 1.4, "tech": "caminos_empedrados", "color": [0.55, 0.55, 0.53], "width": 2.6}
+    }
+  }
+}

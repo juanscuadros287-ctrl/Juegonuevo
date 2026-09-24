@@ -99,7 +99,8 @@ static func discretionary(gs) -> void:
 	for gid in GameData.goods:
 		if GameData.goods[gid].get("discretionary", false) and not sellers(gid).is_empty():
 			goods.append(gid)
-	if goods.is_empty():
+	var shop := WarehouseSim.shop_context(gs)   # Fase 6: productos del almacén en la Tienda.
+	if goods.is_empty() and shop.is_empty():
 		return
 	var today: int = gs.today()
 	var adult := int(GameData.citizens.get("adult_age", 16))
@@ -112,6 +113,10 @@ static func discretionary(gs) -> void:
 		var budget := excess * share
 		var spent := 0.0
 		var units := 0.0
+		if not shop.is_empty():
+			var sold: Dictionary = WarehouseSim.shop_sell(gs, c, budget * float(shop["share"]), shop)
+			spent += float(sold["spent"])
+			units += float(sold["units"])
 		for gid in goods:
 			for b in sellers(gid):
 				var inv: Dictionary = b["inventory"]

@@ -1,0 +1,507 @@
+{
+ "_nota": "Fase 6: almacén de la compañía. warehouse_capacity suma espacio (1 unidad = 1 espacio). Los negocios de extracción a menos de warehouse.walk_reach (resources.json) de un almacén o de la bodega de la plaza guardan directo; más lejos necesitan rutas de transporte.",
+ "almacen": {
+  "label": "Almacén",
+  "category": "Logística",
+  "order": 5,
+  "footprint": 6.0,
+  "description": "Almacén de la compañía: guarda materias primas y productos (1 unidad = 1 espacio). Las minas y campos cercanos (a menos de 30 m) descargan directo aquí. Mejóralo para más capacidad.",
+  "levels": [
+   {
+    "label": "Bodega de madera",
+    "cost": 400,
+    "materials": {
+     "madera": 30
+    },
+    "build_days": 12,
+    "workers": 2,
+    "warehouse_capacity": 500,
+    "upkeep": 0.15,
+    "tech": "",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6.0,
+       3.0,
+       4.4
+      ],
+      "pos": [
+       0,
+       1.5,
+       0
+      ],
+      "c": [
+       0.55,
+       0.4,
+       0.25
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.8,
+       1.5,
+       6.3
+      ],
+      "pos": [
+       0,
+       3.75,
+       0
+      ],
+      "c": [
+       0.42,
+       0.26,
+       0.18
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       2.2,
+       0.12
+      ],
+      "pos": [
+       0,
+       1.1,
+       2.22
+      ],
+      "c": [
+       0.12,
+       0.1,
+       0.09
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       0.8,
+       1.0
+      ],
+      "pos": [
+       3.4,
+       0.4,
+       2.0
+      ],
+      "c": [
+       0.62,
+       0.48,
+       0.3
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.9,
+       0.7,
+       0.9
+      ],
+      "pos": [
+       3.6,
+       1.15,
+       2.1
+      ],
+      "c": [
+       0.66,
+       0.52,
+       0.32
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.4,
+       0.9,
+       0.4
+      ],
+      "pos": [
+       -3.4,
+       0.45,
+       2.1
+      ],
+      "c": [
+       0.5,
+       0.35,
+       0.2
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Almacén de ladrillo",
+    "cost": 1500,
+    "materials": {
+     "madera": 20,
+     "piedra": 50
+    },
+    "build_days": 25,
+    "workers": 4,
+    "warehouse_capacity": 1500,
+    "upkeep": 0.35,
+    "tech": "ladrillo",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       7.5,
+       3.75,
+       5.5
+      ],
+      "pos": [
+       0,
+       1.875,
+       0
+      ],
+      "c": [
+       0.66,
+       0.32,
+       0.24
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.0,
+       1.875,
+       7.875
+      ],
+      "pos": [
+       0,
+       4.6875,
+       0
+      ],
+      "c": [
+       0.42,
+       0.26,
+       0.18
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       2.2,
+       0.12
+      ],
+      "pos": [
+       0,
+       1.1,
+       2.77
+      ],
+      "c": [
+       0.12,
+       0.1,
+       0.09
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       0.8,
+       1.0
+      ],
+      "pos": [
+       4.25,
+       0.4,
+       2.0
+      ],
+      "c": [
+       0.62,
+       0.48,
+       0.3
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.9,
+       0.7,
+       0.9
+      ],
+      "pos": [
+       4.5,
+       1.15,
+       2.1
+      ],
+      "c": [
+       0.66,
+       0.52,
+       0.32
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.4,
+       0.9,
+       0.4
+      ],
+      "pos": [
+       -4.25,
+       0.45,
+       2.1
+      ],
+      "c": [
+       0.5,
+       0.35,
+       0.2
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Depósito industrial",
+    "cost": 6000,
+    "materials": {
+     "madera": 30,
+     "piedra": 150
+    },
+    "build_days": 45,
+    "workers": 6,
+    "warehouse_capacity": 5000,
+    "upkeep": 1.0,
+    "tech": "fabricas",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       9.0,
+       4.5,
+       6.6000000000000005
+      ],
+      "pos": [
+       0,
+       2.25,
+       0
+      ],
+      "c": [
+       0.55,
+       0.55,
+       0.55
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       7.199999999999999,
+       2.25,
+       9.45
+      ],
+      "pos": [
+       0,
+       5.625,
+       0
+      ],
+      "c": [
+       0.35,
+       0.37,
+       0.4
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       2.2,
+       0.12
+      ],
+      "pos": [
+       0,
+       1.1,
+       3.3200000000000003
+      ],
+      "c": [
+       0.12,
+       0.1,
+       0.09
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       0.8,
+       1.0
+      ],
+      "pos": [
+       5.1,
+       0.4,
+       2.0
+      ],
+      "c": [
+       0.62,
+       0.48,
+       0.3
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.9,
+       0.7,
+       0.9
+      ],
+      "pos": [
+       5.4,
+       1.15,
+       2.1
+      ],
+      "c": [
+       0.66,
+       0.52,
+       0.32
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.4,
+       0.9,
+       0.4
+      ],
+      "pos": [
+       -5.1,
+       0.45,
+       2.1
+      ],
+      "c": [
+       0.5,
+       0.35,
+       0.2
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Centro logístico",
+    "cost": 20000,
+    "materials": {
+     "madera": 40,
+     "piedra": 400
+    },
+    "build_days": 90,
+    "workers": 12,
+    "warehouse_capacity": 15000,
+    "upkeep": 3.0,
+    "tech": "era_moderna",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       10.8,
+       5.4,
+       7.920000000000001
+      ],
+      "pos": [
+       0,
+       2.7,
+       0
+      ],
+      "c": [
+       0.7,
+       0.72,
+       0.75
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       8.64,
+       2.7,
+       11.34
+      ],
+      "pos": [
+       0,
+       6.75,
+       0
+      ],
+      "c": [
+       0.35,
+       0.37,
+       0.4
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       2.2,
+       0.12
+      ],
+      "pos": [
+       0,
+       1.1,
+       3.9800000000000004
+      ],
+      "c": [
+       0.12,
+       0.1,
+       0.09
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       0.8,
+       1.0
+      ],
+      "pos": [
+       6.12,
+       0.4,
+       2.0
+      ],
+      "c": [
+       0.62,
+       0.48,
+       0.3
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.9,
+       0.7,
+       0.9
+      ],
+      "pos": [
+       6.48,
+       1.15,
+       2.1
+      ],
+      "c": [
+       0.66,
+       0.52,
+       0.32
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.4,
+       0.9,
+       0.4
+      ],
+      "pos": [
+       -6.12,
+       0.45,
+       2.1
+      ],
+      "c": [
+       0.5,
+       0.35,
+       0.2
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
