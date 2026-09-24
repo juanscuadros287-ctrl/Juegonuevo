@@ -8,7 +8,7 @@ func _ready() -> void:
 	add_child(world)
 	await get_tree().process_frame
 	var hud: Hud = world.hud
-	for mode in ["player", "build", "companies", "finance", "stats", "government", "logistics", "trade", "tourism"]:
+	for mode in ["player", "build", "companies", "finance", "stats", "government", "logistics", "trade", "tourism", "utilities"]:
 		hud._show_dock(mode)
 		await get_tree().process_frame
 	BankSim.request_player_loan(GameState, 500.0, 12)
@@ -49,6 +49,22 @@ func _ready() -> void:
 	world.cancel_placement()
 	EventBus.zone_mode_requested.emit()
 	world.cancel_placement()
+	# Redes: trazado de cable, vista de capa y panel de servicios públicos.
+	GameState.techs.append("dinamo")
+	var uv: UtilitiesVisuals = UtilitiesVisuals.instance
+	uv.start_trace("aereo")
+	uv.set_hover(Vector2(-20, 20))
+	uv.confirm_point()
+	uv.set_hover(Vector2(20, 20))
+	uv.confirm_point()
+	uv.cancel_trace()
+	uv.toggle_layer("power")
+	hud._show_dock("utilities")
+	await get_tree().process_frame
+	hud.utilities_panel._update_live()
+	uv.toggle_layer("water")
+	uv.toggle_layer("water")
+	print("REDES: %d tramos · %s" % [GridSim.segments(GameState).size(), GridSim.panel_lines(GameState, farm).strip_edges()])
 	EventBus.interior_requested.emit(PlayerSim.player_home(GameState)["id"])
 	await get_tree().process_frame
 	hud._open_invite()

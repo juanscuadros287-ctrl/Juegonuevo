@@ -40,6 +40,7 @@ var government_panel: GovernmentPanel
 var logistics_panel: LogisticsPanel
 var trade_panel: TradePanel
 var tourism_panel: TourismPanel
+var utilities_panel: UtilitiesPanel
 var era_lbl: Label
 
 # Interior
@@ -250,6 +251,7 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Logística", func(): _show_dock("logistics"), 160))
 	box.add_child(UIKit.button("Comercio exterior", func(): _show_dock("trade"), 160))
 	box.add_child(UIKit.button("Turismo y publicidad", func(): _show_dock("tourism"), 160))
+	box.add_child(UIKit.button("Servicios públicos", func(): _show_dock("utilities"), 160))
 	box.add_child(UIKit.button("Catálogo de bienes", func(): goods_catalog.open(), 160))
 
 
@@ -355,7 +357,8 @@ func _build_dock() -> void:
 	logistics_panel = LogisticsPanel.new()
 	trade_panel = TradePanel.new()
 	tourism_panel = TourismPanel.new()
-	for panel in [logistics_panel, trade_panel, tourism_panel]:
+	utilities_panel = UtilitiesPanel.new()
+	for panel in [logistics_panel, trade_panel, tourism_panel, utilities_panel]:
 		panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 		stack.add_child(panel)
 		panel.setup(self)
@@ -380,7 +383,10 @@ func _show_dock(mode: String) -> void:
 	logistics_panel.visible = mode == "logistics"
 	trade_panel.visible = mode == "trade"
 	tourism_panel.visible = mode == "tourism"
+	utilities_panel.visible = mode == "utilities"
 	match mode:
+		"utilities":
+			utilities_panel.refresh()
 		"logistics":
 			logistics_panel.refresh()
 		"trade":

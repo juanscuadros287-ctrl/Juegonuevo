@@ -145,7 +145,8 @@
     "skill": "agricultura",
     "output": "warehouse",
     "power": 2.0,
-    "power_demand": 46.0
+    "power_demand": 46.0,
+    "requires_power": true
    }
   ]
  },
@@ -663,7 +664,8 @@
     "skill": "artesania",
     "output": "warehouse",
     "power": 2.0,
-    "power_demand": 40.0
+    "power_demand": 40.0,
+    "requires_power": true
    }
   ]
  },
@@ -779,7 +781,8 @@
     "product": "carne",
     "skill": "artesania",
     "output": "warehouse",
-    "power_demand": 36.0
+    "power_demand": 36.0,
+    "requires_power": true
    },
    {
     "label": "Planta cárnica automatizada",
@@ -818,7 +821,8 @@
     "product": "carne",
     "skill": "artesania",
     "output": "warehouse",
-    "power_demand": 72.5
+    "power_demand": 72.5,
+    "requires_power": true
    }
   ]
  },
@@ -936,7 +940,8 @@
     "skill": "artesania",
     "output": "warehouse",
     "power": 2.0,
-    "power_demand": 40.0
+    "power_demand": 40.0,
+    "requires_power": true
    }
   ]
  },
@@ -1059,7 +1064,8 @@
     "skill": "artesania",
     "output": "warehouse",
     "power": 2.0,
-    "power_demand": 40.0
+    "power_demand": 40.0,
+    "requires_power": true
    }
   ]
  },
@@ -1211,7 +1217,8 @@
     "product": "zapatos",
     "skill": "artesania",
     "output": "warehouse",
-    "power_demand": 72.0
+    "power_demand": 72.0,
+    "requires_power": true
    }
   ]
  },
@@ -1364,7 +1371,8 @@
     "skill": "artesania",
     "output": "warehouse",
     "power": 2.0,
-    "power_demand": 52.0
+    "power_demand": 52.0,
+    "requires_power": true
    }
   ]
  },
@@ -1483,7 +1491,8 @@
     "skill": "artesania",
     "output": "warehouse",
     "power": 2.0,
-    "power_demand": 40.0
+    "power_demand": 40.0,
+    "requires_power": true
    }
   ]
  },
@@ -1720,7 +1729,8 @@
     "skill": "artesania",
     "output": "warehouse",
     "power": 2.0,
-    "power_demand": 40.0
+    "power_demand": 40.0,
+    "requires_power": true
    }
   ]
  },
@@ -2192,7 +2202,8 @@
     "skill": "comercio",
     "output": "warehouse",
     "power": 2.0,
-    "power_demand": 32.0
+    "power_demand": 32.0,
+    "requires_power": true
    },
    {
     "label": "Editorial moderna",
@@ -2230,7 +2241,8 @@
     "skill": "comercio",
     "output": "warehouse",
     "power": 2.5,
-    "power_demand": 65.0
+    "power_demand": 65.0,
+    "requires_power": true
    }
   ]
  },
@@ -2316,7 +2328,8 @@
     "product": "conservas",
     "skill": "artesania",
     "output": "warehouse",
-    "power_demand": 40.0
+    "power_demand": 40.0,
+    "requires_power": true
    },
    {
     "label": "Conservera automatizada",
@@ -2356,7 +2369,8 @@
     "product": "conservas",
     "skill": "artesania",
     "output": "warehouse",
-    "power_demand": 80.0
+    "power_demand": 80.0,
+    "requires_power": true
    }
   ]
  },
@@ -2489,7 +2503,8 @@
     "product": "quimicos",
     "skill": "ciencia",
     "output": "warehouse",
-    "power_demand": 80.0
+    "power_demand": 80.0,
+    "requires_power": true
    }
   ]
  },
@@ -2611,7 +2626,8 @@
     "skill": "artesania",
     "output": "warehouse",
     "power": 2.0,
-    "power_demand": 40.0
+    "power_demand": 40.0,
+    "requires_power": true
    }
   ]
  },
@@ -2744,7 +2760,8 @@
     "product": "petroleo",
     "skill": "mineria",
     "output": "warehouse",
-    "power_demand": 46.0
+    "power_demand": 46.0,
+    "requires_power": true
    }
   ]
  },
@@ -2852,7 +2869,8 @@
     "product": "gas_natural",
     "skill": "mineria",
     "output": "warehouse",
-    "power_demand": 32.0
+    "power_demand": 32.0,
+    "requires_power": true
    }
   ]
  },
@@ -2980,7 +2998,8 @@
     "product": "combustible",
     "skill": "ciencia",
     "output": "warehouse",
-    "power_demand": 64.0
+    "power_demand": 64.0,
+    "requires_power": true
    }
   ]
  },
@@ -3074,7 +3093,8 @@
     "product": "plasticos",
     "skill": "ciencia",
     "output": "warehouse",
-    "power_demand": 65.0
+    "power_demand": 65.0,
+    "requires_power": true
    },
    {
     "label": "Complejo petroquímico automatizado",
@@ -3117,7 +3137,8 @@
     "product": "plasticos",
     "skill": "ciencia",
     "output": "warehouse",
-    "power_demand": 126.0
+    "power_demand": 126.0,
+    "requires_power": true
    }
   ]
  },
@@ -3231,7 +3252,8 @@
     "product": "medicamentos",
     "skill": "medicina",
     "output": "warehouse",
-    "power_demand": 87.0
+    "power_demand": 87.0,
+    "requires_power": true
    }
   ]
  },
@@ -3360,7 +3382,8 @@
     "product": "cobre",
     "skill": "mineria",
     "output": "warehouse",
-    "power_demand": 72.0
+    "power_demand": 72.0,
+    "requires_power": true
    }
   ]
  },
@@ -3496,7 +3519,8 @@
     "product": "uranio",
     "skill": "mineria",
     "output": "warehouse",
-    "power_demand": 65.0
+    "power_demand": 65.0,
+    "requires_power": true
    }
   ]
  },
@@ -3549,7 +3573,8 @@
     "product": "electrodomesticos",
     "skill": "construccion",
     "output": "warehouse",
-    "power_demand": 45.0
+    "power_demand": 45.0,
+    "requires_power": true
    },
    {
     "label": "Planta de electrodomésticos",
@@ -3589,7 +3614,8 @@
     "product": "electrodomesticos",
     "skill": "construccion",
     "output": "warehouse",
-    "power_demand": 90.0
+    "power_demand": 90.0,
+    "requires_power": true
    },
    {
     "label": "Electrodomésticos automatizados",
@@ -3631,7 +3657,8 @@
     "product": "electrodomesticos",
     "skill": "construccion",
     "output": "warehouse",
-    "power_demand": 168.0
+    "power_demand": 168.0,
+    "requires_power": true
    }
   ]
  },

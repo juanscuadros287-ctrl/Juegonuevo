@@ -1,0 +1,153 @@
+{
+ "_nota": "Redes de servicios (docs/REDES.md): pozo comunitario gratuito (amplía la capacidad de los pozos del pueblo).",
+ "pozo_comunitario": {
+  "label": "Pozo comunitario",
+  "category": "Servicios públicos",
+  "order": 6,
+  "footprint": 3.0,
+  "description": "Pozo gratuito para los vecinos. Cada pozo abastece a unas 80 personas; si hay más gente que pozos, el agua escasea: menos calidad y más enfermedades. La plaza ya tiene uno.",
+  "levels": [
+   {
+    "label": "Pozo comunitario",
+    "cost": 150,
+    "materials": {
+     "piedra": 12
+    },
+    "build_days": 6,
+    "workers": 2,
+    "well_capacity": 80,
+    "upkeep": 0.02,
+    "tech": "",
+    "model": [
+     {
+      "s": "cyl",
+      "size": [
+       1.0,
+       0.9,
+       1.0
+      ],
+      "pos": [
+       0,
+       0.45,
+       0
+      ],
+      "c": [
+       0.58,
+       0.56,
+       0.52
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.8,
+       0.05,
+       0.8
+      ],
+      "pos": [
+       0,
+       0.88,
+       0
+      ],
+      "c": [
+       0.2,
+       0.35,
+       0.55
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.14,
+       2.0,
+       0.14
+      ],
+      "pos": [
+       -0.85,
+       1.0,
+       0
+      ],
+      "c": [
+       0.45,
+       0.31,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.14,
+       2.0,
+       0.14
+      ],
+      "pos": [
+       0.85,
+       1.0,
+       0
+      ],
+      "c": [
+       0.45,
+       0.31,
+       0.18
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       2.4,
+       0.7,
+       1.6
+      ],
+      "pos": [
+       0,
+       2.3,
+       0
+      ],
+      "c": [
+       0.5,
+       0.3,
+       0.2
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.08,
+       1.8,
+       0.08
+      ],
+      "pos": [
+       0,
+       1.7,
+       0
+      ],
+      "c": [
+       0.3,
+       0.2,
+       0.12
+      ],
+      "rz": 90
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.25,
+       0.35,
+       0.25
+      ],
+      "pos": [
+       0.3,
+       1.2,
+       0
+      ],
+      "c": [
+       0.45,
+       0.32,
+       0.2
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

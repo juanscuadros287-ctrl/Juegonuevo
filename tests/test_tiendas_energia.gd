@@ -79,6 +79,12 @@ func _weeks(n: int) -> void:
 		ShopSim.weekly(gs)
 
 
+## Redes: tiende un cable aéreo (gratis) y cobra las acometidas.
+func _cable(ax: float, az: float, bx: float, bz: float) -> void:
+	GridSim.add_segment(gs, Vector2(ax, az), Vector2(bx, bz), "aereo")
+	GridSim.daily(gs)
+
+
 func _energy_day() -> void:
 	EnergySim.state(gs)["day"] = -1
 	EnergySim.daily(gs)
@@ -277,6 +283,7 @@ func _test_energy() -> void:
 	var plant := _place("central_carbon", -20, 0)
 	_hire(plant, 8)
 	WarehouseSim.add_to(gs, WarehouseSim.PLAZA, "carbon", 40.0)
+	_cable(-20, 0, 20, 0)   # Redes (docs/REDES.md): solo recibe electricidad lo conectado por cable.
 	BusinessSim.produce(gs)
 	var e := float(plant["inventory"].get("electricidad", 0.0))
 	var made2 := float(tex.get("produced_today", 0.0))
@@ -295,6 +302,7 @@ func _test_grid_import_and_homes() -> void:
 		gs.techs.append(t)
 	var tex := _factory(20)
 	WarehouseSim.add_to(gs, WarehouseSim.PLAZA, "algodon", 120.0)
+	_cable(-22, 0, 22, 0)   # Redes: cable desde la plaza (entrada regional) por las casas hasta la fábrica.
 	var conns: Array = gs.trade.get("connections", [])
 	conns.append({"town_id": "x", "distance": 60.0, "transport": "carreta"})
 	gs.trade["connections"] = conns
@@ -316,9 +324,11 @@ func _test_grid_import_and_homes() -> void:
 	_hire(plant, 8)
 	WarehouseSim.add_to(gs, WarehouseSim.PLAZA, "carbon", 60.0)
 	_give_money(100.0)
+	_cable(-20, 0, 22, 0)   # Redes: cable de la central por las casas.
 	BusinessSim.produce(gs)
 	var v0 := BusinessSim.period_value(plant, "total", "ventas")
 	_energy_day()
+	GridSim._bill(gs, GridSim.state(gs), GridSim.POWER)   # Redes: los hogares pagan factura mensual.
 	var st: Dictionary = EnergySim.state(gs).get("today", {})
 	check(int(st.get("homes", {}).get("powered", 0)) > 0 and BusinessSim.period_value(plant, "total", "ventas") > v0, "la central vende su sobrante a los hogares")
 
