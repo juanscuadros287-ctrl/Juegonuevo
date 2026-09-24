@@ -5,7 +5,7 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 
 > El nombre del juego se cambia en `data/game.json` y `project.godot`.
 
-## Estado: Fase 5 de 7
+## Estado: Fases 1–8 completas
 
 | Fase | Contenido | Estado |
 |---|---|---|
@@ -14,8 +14,12 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 | 3 | Economía, precios y banca | ✅ |
 | 4 | Árbol de investigación y épocas | ✅ |
 | 5 | Gobierno, impuestos, servicios públicos y proyectos | ✅ |
-| 6 | Transporte y otros pueblos | ⏳ |
-| 7 | Turismo, publicidad, industria avanzada y herederos | ⏳ |
+| 6 | Recursos, almacén, cadenas de producción, transporte interno y carreteras | ✅ |
+| 7 | Otros pueblos, rutas comerciales, comercio exterior, inmigración y transporte externo | ✅ |
+| 8 | Turismo, publicidad, industria avanzada y dinastía | ✅ |
+
+### Fases 6, 7 y 8
+Ver `docs/FASE6.md` (recursos, almacén, recetas, rutas, carreteras), `docs/FASE7.md` (pueblos, rutas comerciales, exportación/importación, inmigración, transporte externo) y `docs/FASE8.md` (turismo, publicidad, industria avanzada, herencia y dinastía).
 
 ### Fase 5 incluye
 - **Gobierno** (botón *Gobierno*): en la colonia, virreyes por decreto que cambian cada 15–25 años; desde la república, **elecciones** cada 4 años donde votan los ciudadanos (pobres y ricos prefieren políticas distintas) y puedes **financiar campañas**. Cada gobierno trae sus políticas.
@@ -100,6 +104,9 @@ godot --headless res://tests/test_runner.tscn   # pruebas de simulación, guarda
 godot --headless res://tests/balance.tscn       # diagnóstico demográfico a 40 años
 godot --headless res://tests/ui_smoke.tscn      # abre todos los paneles de la interfaz
 godot --headless res://tests/economy_diag.tscn  # inflación y precios a 30 años
+godot --headless res://tests/test_fase6.tscn    # recursos y logística
+godot --headless res://tests/test_fase7.tscn    # comercio exterior
+godot --headless res://tests/test_fase8.tscn    # turismo, publicidad, industria, dinastía
 ```
 
 Ideas acordadas para próximas fases: ver `docs/ROADMAP.md`.

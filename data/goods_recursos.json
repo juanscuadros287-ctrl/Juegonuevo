@@ -1,16 +1,110 @@
 {
-  "_nota": "Fase 6: materias primas (van al almacén de la compañía) y productos elaborados con recetas. shop_sale = la Tienda puede venderlo a los ciudadanos desde el almacén (consumo discrecional). raw = materia prima.",
-  "oro": {"label": "Oro", "base_price": 14.0, "import_price": 21.0, "storable": true, "raw": true, "order": 20},
-  "plata": {"label": "Plata", "base_price": 6.0, "import_price": 9.0, "storable": true, "raw": true, "order": 21},
-  "carbon": {"label": "Carbón", "base_price": 1.0, "import_price": 1.6, "storable": true, "raw": true, "order": 22},
-  "hierro": {"label": "Hierro", "base_price": 1.6, "import_price": 2.5, "storable": true, "raw": true, "order": 23},
-  "trigo": {"label": "Trigo", "base_price": 0.35, "import_price": 0.55, "storable": true, "raw": true, "order": 24},
-  "algodon": {"label": "Algodón", "base_price": 0.8, "import_price": 1.2, "storable": true, "raw": true, "order": 25},
-  "lana": {"label": "Lana", "base_price": 0.9, "import_price": 1.35, "storable": true, "raw": true, "order": 26},
-  "harina": {"label": "Harina", "base_price": 1.25, "import_price": 1.8, "storable": true, "order": 30},
-  "tela": {"label": "Tela", "base_price": 3.2, "import_price": 4.8, "storable": true, "order": 31},
-  "ropa": {"label": "Ropa", "base_price": 8.0, "import_price": 12.0, "storable": true, "shop_sale": true, "order": 32},
-  "herramientas": {"label": "Herramientas", "base_price": 5.5, "import_price": 8.0, "storable": true, "shop_sale": true, "order": 33},
-  "joyas": {"label": "Joyas", "base_price": 30.0, "import_price": 45.0, "storable": true, "shop_sale": true, "order": 34},
-  "transporte": {"label": "Transporte", "base_price": 0, "import_price": 0, "storable": false, "internal": true, "order": 40}
+ "_nota": "Fase 6: materias primas (van al almacén de la compañía) y productos elaborados con recetas. shop_sale = la Tienda puede venderlo a los ciudadanos desde el almacén (consumo discrecional). raw = materia prima.",
+ "oro": {
+  "label": "Oro",
+  "base_price": 14.0,
+  "import_price": 21.0,
+  "storable": true,
+  "raw": true,
+  "order": 20
+ },
+ "plata": {
+  "label": "Plata",
+  "base_price": 6.0,
+  "import_price": 9.0,
+  "storable": true,
+  "raw": true,
+  "order": 21
+ },
+ "carbon": {
+  "label": "Carbón",
+  "base_price": 1.0,
+  "import_price": 1.6,
+  "storable": true,
+  "raw": true,
+  "order": 22
+ },
+ "hierro": {
+  "label": "Hierro",
+  "base_price": 1.6,
+  "import_price": 2.5,
+  "storable": true,
+  "raw": true,
+  "order": 23
+ },
+ "trigo": {
+  "label": "Trigo",
+  "base_price": 0.35,
+  "import_price": 0.55,
+  "storable": true,
+  "raw": true,
+  "order": 24
+ },
+ "algodon": {
+  "label": "Algodón",
+  "base_price": 0.8,
+  "import_price": 1.2,
+  "storable": true,
+  "raw": true,
+  "order": 25
+ },
+ "lana": {
+  "label": "Lana",
+  "base_price": 0.9,
+  "import_price": 1.35,
+  "storable": true,
+  "raw": true,
+  "order": 26
+ },
+ "harina": {
+  "label": "Harina",
+  "base_price": 1.25,
+  "import_price": 1.8,
+  "storable": true,
+  "order": 30
+ },
+ "tela": {
+  "label": "Tela",
+  "base_price": 3.2,
+  "import_price": 4.8,
+  "storable": true,
+  "order": 31,
+  "intermediate": true,
+  "export": true
+ },
+ "ropa": {
+  "label": "Ropa",
+  "base_price": 8.0,
+  "import_price": 12.0,
+  "storable": true,
+  "shop_sale": true,
+  "order": 32
+ },
+ "herramientas": {
+  "label": "Herramientas",
+  "base_price": 5.5,
+  "import_price": 8.0,
+  "storable": true,
+  "shop_sale": true,
+  "order": 33,
+  "intermediate": true,
+  "export": true
+ },
+ "joyas": {
+  "label": "Joyas",
+  "base_price": 30.0,
+  "import_price": 45.0,
+  "storable": true,
+  "shop_sale": true,
+  "order": 34,
+  "export": true
+ },
+ "transporte": {
+  "label": "Transporte",
+  "base_price": 0,
+  "import_price": 0,
+  "storable": false,
+  "internal": true,
+  "order": 40
+ }
 }
