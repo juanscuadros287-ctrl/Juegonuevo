@@ -91,7 +91,7 @@ func _ready() -> void:
 	interior.name = "Interior"
 	add_child(interior)
 
-	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new()]:
+	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new(), UtilitiesVisuals.new()]:
 		add_child(vis)
 		vis.setup(self)
 
@@ -360,6 +360,8 @@ func _ring_mesh() -> Mesh:
 
 func start_placement(type_id: String, tier: String) -> void:
 	cancel_placement()
+	if UtilitiesVisuals.instance and UtilitiesVisuals.instance.trace_mode:
+		UtilitiesVisuals.instance.cancel_trace()
 	place_type = type_id
 	place_tier = tier
 	var parts: Array = Housing.exterior_parts({"type": type_id, "level": 1, "tier": tier}) if type_id == "vivienda" else GameData.level_def(type_id, 1).get("model", [])

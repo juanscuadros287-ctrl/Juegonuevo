@@ -124,6 +124,9 @@ superficies comerciales y automatización industrial (moderna). Todas con prerre
   reparto (guardado en `gs.economy["energy"]["coverage"][str(id)]`) para contar solo lo conectado.
 - Ayudantes: `EnergySim.level_output_kw(def, ld)`, `level_demand_kw(def, ld)`, `level_power(def, ld)`,
   `is_plant(def)`, `grid_active(gs)`, `summary(gs)`.
+- **Hecho (docs/REDES.md):** el reparto ya es por red de cables (`GridSim.power_daily`). Sin cable, la
+  cobertura es 0. Los hogares pagan una factura mensual. Los niveles con `requires_power` no producen
+  sin electricidad (`EnergySim.requires_power` y `unpowered_output`).
 
 **Combustible**: el bien se llama `combustible` (gasolina y diésel). Lo refina la Refinería y lo compran los dueños de
 autos en la Gasolinera. La flota de camiones de la logística (otro módulo) cobra hoy su combustible en dinero con

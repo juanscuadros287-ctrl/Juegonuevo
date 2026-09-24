@@ -18,6 +18,12 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 | 7 | Otros pueblos, rutas comerciales, comercio exterior, inmigración y transporte externo | ✅ |
 | 8 | Turismo, publicidad, industria avanzada y dinastía | ✅ |
 
+### Redes de servicios públicos
+Ver `docs/REDES.md`. Incluye tendido aéreo y cable subterráneo por tramos, reparto de energía por red,
+industria que exige electricidad, casas altas que necesitan luz y agua, facturas mensuales, pozos
+comunitarios, toma de río, planta de agua con tuberías y la capa verde/roja en el mundo (botón
+*Servicios públicos*).
+
 ### Fases 6, 7 y 8
 Ver `docs/FASE6.md` (recursos, almacén, recetas, rutas, carreteras), `docs/FASE7.md` (pueblos, rutas comerciales, exportación/importación, inmigración, transporte externo) y `docs/FASE8.md` (turismo, publicidad, industria avanzada, herencia y dinastía).
 
@@ -114,6 +120,7 @@ godot --headless res://tests/test_fase6.tscn    # recursos y logística
 godot --headless res://tests/test_fase7.tscn    # comercio exterior
 godot --headless res://tests/test_fase8.tscn    # turismo, publicidad, industria, dinastía
 godot --headless res://tests/test_bienes_raices.tscn  # unidades, proyectos por etapas, preventa, créditos, hipotecas
+godot --headless res://tests/test_redes.tscn    # redes eléctricas y de agua
 ```
 
 Ideas acordadas para próximas fases: ver `docs/ROADMAP.md`.

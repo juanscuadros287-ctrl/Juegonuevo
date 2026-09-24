@@ -155,7 +155,10 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 		var ofp: float = gs.footprint_of(b)
 		if Vector2(x, z).distance_to(Vector2(float(b["x"]), float(b["z"]))) < (fp + ofp) * 0.5 + 0.8:
 			return "Se superpone con otro edificio"
-	return RegionSim.deposit_block_reason(gs, type_id, x, z)   # Fase 6: minas junto a su yacimiento.
+	var dep := RegionSim.deposit_block_reason(gs, type_id, x, z)   # Fase 6: minas junto a su yacimiento.
+	if dep != "":
+		return dep
+	return WaterSim.placement_block_reason(gs, type_id, x, z)   # Redes: la toma de río va junto al agua dulce.
 
 
 # --- Acciones del jugador ------------------------------------------------------------
@@ -217,6 +220,9 @@ static func start_upgrade(gs, b: Dictionary) -> String:
 	if reason != "":
 		return reason
 	reason = upgrade_space_reason(gs, b, next)
+	if reason != "":
+		return reason
+	reason = GridSim.upgrade_block_reason(gs, b, next)   # Redes: casas altas exigen cable/tubería cerca.
 	if reason != "":
 		return reason
 	var cost := cost_for(gs, str(b["type"]), next, true, str(b.get("tier", "normal")))

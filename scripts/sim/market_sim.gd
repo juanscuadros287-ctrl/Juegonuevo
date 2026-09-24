@@ -35,6 +35,10 @@ static func sellers(good: String) -> Array:
 ## Orden: tus negocios → importación (si trabaja y puede pagarla) → autoabastecimiento en especie.
 ## Devuelve {"ok", "quality" (0-1, fracción de la necesidad cubierta), "bonus" (felicidad por calidad)}.
 static func purchase(gs, payers: Array, good: String, qty: float, ref_price: float, employed: bool) -> Dictionary:
+	if good == WaterSim.GOOD:
+		var piped := WaterSim.piped_purchase(gs, payers, qty)   # Redes: agua por tubería (factura mensual).
+		if not piped.is_empty():
+			return piped
 	var left := qty
 	var bonus := 0.0
 	var revenue := 0.0
@@ -73,12 +77,16 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 	var g: Dictionary = GameData.goods.get(good, {})
 	if left > 0.0001:
 		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs)
-		if employed and imp > 0.0 and PopulationSim.pay_with(gs, payers, left * imp):
+		var well := good == WaterSim.GOOD   # Redes: el agua del pozo comunitario es gratis (no se importa).
+		if employed and imp > 0.0 and not well and PopulationSim.pay_with(gs, payers, left * imp):
 			imported = left  # El dinero sale del pueblo.
 		else:
 			# Autoabastecimiento en especie: cultivar, buscar agua, cortar leña… sin dinero, peor calidad.
 			var ss := float(g.get("self_supply", 0.0))
-			if employed:
+			if well:
+				ss *= WaterSim.well_mult(gs)   # Con más gente que pozos, el agua escasea.
+				WaterSim.record_well_use(gs, left)
+			elif employed:
 				ss *= float(GameData.citizens.get("employed_self_supply_factor", 0.7))
 			self_q = left
 			quality = (local + ss * left) / qty
@@ -145,13 +153,13 @@ static func discretionary(gs) -> void:
 static func daily_rent(gs, b: Dictionary) -> float:
 	if not gs.owned_by_player(b) or b["status"] == "mejorando":
 		return 0.0
-	return float(b.get("rent", 0.0)) / 30.0
+	return float(b.get("rent", 0.0)) / 30.0 * GridSim.home_value_mult(gs, b)   # Redes: sin luz/agua exigidas, renta menor.
 
 
 static func home_quality(gs, b: Dictionary) -> float:
 	if b.is_empty():
 		return 0.0
-	return float(gs.level_def(b).get("quality", 1.0)) + float(Housing.tier_def(b).get("quality_add", 0.0))
+	return float(gs.level_def(b).get("quality", 1.0)) + float(Housing.tier_def(b).get("quality_add", 0.0)) + GridSim.home_quality_delta(gs, b)
 
 
 ## Familias: adulto responsable + cónyuge + hijos menores en la misma casa.
@@ -270,7 +278,7 @@ static func _try_buy_home(gs, members: Array, money: float, occ: Dictionary) -> 
 	for b in gs.buildings:
 		if not bool(b.get("for_sale", false)) or not gs.owned_by_player(b) or b["status"] != "activo" or RealEstateSim.has_units(b):
 			continue
-		var price := float(b["sale_price"])
+		var price := float(b["sale_price"]) * GridSim.home_value_mult(gs, b)   # Redes: sin servicios exigidos vale menos.
 		if money < price * 1.1 or gs.rng.randf() > 0.35:
 			continue
 		var others := int(occ.get(int(b["id"]), 0))

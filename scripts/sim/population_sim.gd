@@ -351,6 +351,7 @@ static func _health(gs, c: Citizen, age: int, season: Dictionary, wdata: Diction
 	else:
 		var chance := float(dcfg.get("daily_chance", 0.0012)) * float(diff.get("disease_mult", 1.0)) * TechSim.world_mult(gs, "disease")
 		chance *= float(season.get("disease", 1.0)) * float(wdata.get("disease", 1.0))
+		chance *= WaterSim.disease_mult(gs, c)   # Redes: agua por tubería protege; pozos escasos enferman.
 		if age <= 5 or age >= 60:
 			chance *= float(dcfg.get("vulnerable_mult", 2.0))
 		if c.needs_met < 0.6:

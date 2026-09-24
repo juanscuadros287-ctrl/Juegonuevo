@@ -166,6 +166,7 @@ func _summary_text(b: Dictionary) -> String:
 			s += "Estado: [color=#6c6]activo[/color]\n"
 	if GameState.owned_by_player(b):
 		s += WarehouseTab.summary_line(GameState, b)   # Almacén vinculado (verde) / ninguno (rojo).
+	s += GridSim.panel_lines(GameState, b)   # Redes: "Electricidad: conectado / sin conexión" y "Agua: …".
 	var site_crew := 0
 	for c in GameState.employees_of(bid):
 		if c.job_kind == "obra":

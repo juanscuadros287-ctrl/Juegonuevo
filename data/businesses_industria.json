@@ -456,7 +456,8 @@
      }
     ],
     "power": 2.5,
-    "power_demand": 80.0
+    "power_demand": 80.0,
+    "requires_power": true
    }
   ]
  },
@@ -1636,7 +1637,8 @@
      }
     ],
     "power": 2.0,
-    "power_demand": 78.0
+    "power_demand": 78.0,
+    "requires_power": true
    }
   ]
  },
@@ -2322,7 +2324,8 @@
      }
     ],
     "power": 2.0,
-    "power_demand": 64.0
+    "power_demand": 64.0,
+    "requires_power": true
    }
   ]
  },
@@ -2898,7 +2901,8 @@
      }
     ],
     "power": 2.0,
-    "power_demand": 52.0
+    "power_demand": 52.0,
+    "requires_power": true
    },
    {
     "label": "Maquinaria automatizada",
@@ -3165,7 +3169,8 @@
      }
     ],
     "power": 2.5,
-    "power_demand": 105.0
+    "power_demand": 105.0,
+    "requires_power": true
    }
   ]
  },
@@ -3514,7 +3519,8 @@
      }
     ],
     "power": 2.5,
-    "power_demand": 65.0
+    "power_demand": 65.0,
+    "requires_power": true
    }
   ]
  },
@@ -3619,7 +3625,8 @@
      }
     ],
     "power": 2.0,
-    "power_demand": 16.0
+    "power_demand": 16.0,
+    "requires_power": true
    },
    {
     "label": "Fábrica de electrónica",
@@ -3712,7 +3719,8 @@
      }
     ],
     "power": 2.5,
-    "power_demand": 45.0
+    "power_demand": 45.0,
+    "requires_power": true
    },
    {
     "label": "Electrónica automatizada",
@@ -3841,7 +3849,8 @@
      }
     ],
     "power": 3.0,
-    "power_demand": 87.0
+    "power_demand": 87.0,
+    "requires_power": true
    }
   ]
  },
@@ -4128,7 +4137,8 @@
      }
     ],
     "power": 2.5,
-    "power_demand": 75.0
+    "power_demand": 75.0,
+    "requires_power": true
    },
    {
     "label": "Planta automotriz robotizada",
@@ -4257,7 +4267,8 @@
      }
     ],
     "power": 3.0,
-    "power_demand": 144.0
+    "power_demand": 144.0,
+    "requires_power": true
    }
   ]
  },
@@ -4495,7 +4506,8 @@
      }
     ],
     "power": 3.0,
-    "power_demand": 108.0
+    "power_demand": 108.0,
+    "requires_power": true
    },
    {
     "label": "Aeronáutica automatizada",
@@ -4643,7 +4655,8 @@
      }
     ],
     "power": 3.5,
-    "power_demand": 203.0
+    "power_demand": 203.0,
+    "requires_power": true
    }
   ]
  },

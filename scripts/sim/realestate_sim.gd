@@ -1011,11 +1011,12 @@ static func _auto_prices(gs, b: Dictionary) -> void:
 		return
 	var prices := unit_prices(gs, int(b["level"]), str(b.get("tier", "normal")))
 	var units: Array = b["units"]
+	var svc := GridSim.home_value_mult(gs, b)   # Redes: sin luz/agua exigidas valen menos.
 	for i in range(mini(units.size(), prices.size())):
 		var u: Dictionary = units[i]
 		if str(u["status"]) == "disponible" and not bool(u.get("manual", false)):
-			u["price"] = float(prices[i]["price"])
-			u["rent"] = float(prices[i]["rent"])
+			u["price"] = snappedf(float(prices[i]["price"]) * svc, 1.0)
+			u["rent"] = snappedf(float(prices[i]["rent"]) * svc, 0.01)
 
 
 ## Cuota de administración: los dueños de unidades pagan su parte del mantenimiento.

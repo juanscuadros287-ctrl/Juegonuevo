@@ -30,6 +30,7 @@ var trade: Dictionary = {}             # Fase 7: pueblos, conexiones, comercio e
 var tourism: Dictionary = {}           # Fase 8: turismo y publicidad
 var realestate: Dictionary = {}        # Bienes raíces: demanda de vivienda y contadores (RealEstateSim)
 var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
+var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, acometidas, tarifas y facturas (GridSim/WaterSim)
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
 var weather: Dictionary = {}
@@ -122,6 +123,7 @@ func _clear() -> void:
 	tourism = {}
 	realestate = {}
 	economy = {}
+	utilities = {}
 	loans = []
 	next_loan_id = 1
 	weather = {}
@@ -141,6 +143,7 @@ func _init_expansions() -> void:
 	TradeSim.init_state(self)
 	TourismSim.init_state(self)
 	RealEstateSim.init_state(self)
+	GridSim.init_state(self)
 
 
 # --- Simulación diaria -----------------------------------------------------
@@ -156,13 +159,16 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	TourismSim.daily(self)
 	RealEstateSim.daily(self)   # Bienes raíces: pago por etapas / pausa de obras.
 	ConstructionSim.daily(self)
+	GridSim.daily(self)   # Redes: tormentas, reparaciones y acometidas (antes del reparto eléctrico).
 	MarketSim.begin_day(self)
+	WaterSim.daily(self)
 	PopulationSim.daily(self)
 	BusinessSim.end_day(self)
 	TechSim.end_day(self)
 	PlayerSim.daily(self)
 	if new_month and running:
 		RealEstateSim.monthly(self)   # Bienes raíces: unidades, preventas, arriendo y venta.
+		GridSim.monthly(self)   # Redes: facturas de luz y agua, mantenimiento, inquilinos sin servicios.
 		MarketSim.monthly_housing(self)
 		BankSim.monthly(self)
 		EducationSim.monthly(self)
@@ -442,6 +448,7 @@ func to_dict() -> Dictionary:
 		"tourism": tourism,
 		"realestate": realestate,
 		"economy": economy,
+		"utilities": utilities,
 		"loans": loans,
 		"next_loan_id": next_loan_id,
 		"weather": weather,
@@ -511,7 +518,10 @@ func load_dict(d: Dictionary) -> void:
 	trade = d.get("trade", {})
 	tourism = d.get("tourism", {})
 	realestate = d.get("realestate", {})
+	utilities = d.get("utilities", {})
 	_init_expansions()
+	if not d.has("utilities"):
+		GridSim.migrate(self)   # Partida sin redes: período de gracia si ya había centrales.
 	TechSim._recompute_mods(self)
 	if player_id < 0:
 		# Partida de la Fase 1: el jugador aún no era un ciudadano.

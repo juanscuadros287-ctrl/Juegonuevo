@@ -7,11 +7,14 @@ extends RefCounted
 ## - Demanda: niveles de negocio con "power" (electricidad por trabajador y día) o, si no lo
 ##   declaran, los niveles de la época moderna (default_power_modern). Hogares: desde la tecnología
 ##   home_tech, cada adulto consume home_units_per_person_day (incluye a sus hijos).
-## - Reparto: primero tus centrales (a tus fábricas el traspaso es interno: la central factura y la
-##   fábrica paga, neto cero para ti); lo que falta se compra a la red regional si hay una ruta
-##   comercial terminada (el dinero sale del pueblo). El sobrante se vende a los hogares.
-## - Sin electricidad suficiente una fábrica rinde unpowered_output (50 %) en la parte no cubierta:
-##   se descuenta lo producido hoy y se devuelven al almacén los insumos no usados.
+## - Reparto POR RED (GridSim, docs/REDES.md): solo cuenta lo conectado por cables. En cada red,
+##   primero sus centrales (a tus fábricas el traspaso es interno: la central factura y la fábrica
+##   paga, neto cero para ti); lo que falta se compra a la red regional si esa red toca la entrada
+##   regional (plaza/ruta comercial) y hay una ruta comercial terminada (el dinero sale del pueblo).
+##   El sobrante se vende a los hogares conectados (factura mensual con tarifa configurable).
+## - Sin electricidad suficiente una fábrica rinde unpowered_output (50 %) en la parte no cubierta;
+##   los niveles con "requires_power" no producen nada sin ella. Se descuenta lo producido hoy y se
+##   devuelven al almacén los insumos no usados.
 ## - Solo existe demanda cuando se investigó grid_tech (dínamo): antes nadie usa electricidad.
 ## Configuración: data/resources_energia.json → energy. Estado: gs.economy["energy"] (se guarda solo).
 ## Se llama desde MarketSim.begin_day (después de BusinessSim.produce y antes de BusinessSim.end_day).
@@ -86,8 +89,7 @@ static func demand_of(gs, b: Dictionary) -> float:
 
 
 ## PUNTO ÚNICO para la red eléctrica: fracción (0–1) de la energía que pidió `b` que recibió en el
-## último día. Hoy es global (tus centrales + red regional, repartido a prorrata); la red de cables
-## podrá reemplazar el reparto de EnergySim.daily para contar solo lo conectado.
+## último día. La calcula GridSim.power_daily por red conectada (sin cable = 0).
 static func supply_ratio(gs, b: Dictionary) -> float:
 	if not grid_active(gs):
 		return 1.0
@@ -99,7 +101,17 @@ static func factor(gs, b: Dictionary) -> float:
 	if not grid_active(gs):
 		return 1.0
 	var c := supply_ratio(gs, b)
-	return 1.0 - (1.0 - c) * (1.0 - float(cfg().get("unpowered_output", 0.5)))
+	return 1.0 - (1.0 - c) * (1.0 - unpowered_output(gs.level_def(b)))
+
+
+## Redes: los niveles con "requires_power": true (industria avanzada) no producen NADA sin
+## electricidad; los demás rinden unpowered_output (50 %) en la parte no cubierta.
+static func requires_power(ld: Dictionary) -> bool:
+	return bool(ld.get("requires_power", false))
+
+
+static func unpowered_output(ld: Dictionary) -> float:
+	return 0.0 if requires_power(ld) else float(cfg().get("unpowered_output", 0.5))
 
 
 static func price(gs) -> float:
@@ -127,62 +139,10 @@ static func daily(gs) -> void:
 	if not grid_active(gs):
 		st["coverage"] = {}
 		return
-	# 1) Oferta de tus centrales (producida hoy por BusinessSim.produce).
-	var plants := []
-	var supply := 0.0
-	for b in gs.buildings:
-		if gs.owned_by_player(b) and b["status"] == "activo" and is_plant(gs.building_def(b)):
-			var e := float(b["inventory"].get(PRODUCT, 0.0))
-			if e > 0.0:
-				plants.append([b, e])
-				supply += e
-	# 2) Demanda de tus negocios.
-	var users := []
-	var demand := 0.0
-	for b in gs.buildings:
-		var d := demand_of(gs, b)
-		if d > 0.0:
-			users.append([b, d])
-			demand += d
-	var p := price(gs)
-	var own_to_business := minf(supply, demand)
-	var ratio_own := own_to_business / demand if demand > 0.0 else 1.0
-	var grid_ok := grid_available(gs)
-	var gp := grid_price(gs)
-	var cov := {}
-	var lost_value := 0.0
-	var grid_units := 0.0
-	for pair in users:
-		var b: Dictionary = pair[0]
-		var need: float = pair[1]
-		var own := need * ratio_own
-		var from_grid := 0.0
-		if own < need and grid_ok:
-			from_grid = need - own
-		if own > 0.0:
-			BusinessSim.pay(gs, b, own * p, "insumos")   # Traspaso interno: lo cobra tu central.
-		if from_grid > 0.0:
-			BusinessSim.pay(gs, b, from_grid * gp, "insumos")   # Red regional: sale del pueblo.
-			grid_units += from_grid
-		var c := clampf((own + from_grid) / need, 0.0, 1.0)
-		cov[str(int(b["id"]))] = c
-		if c < 0.999:
-			lost_value += _apply_shortfall(gs, b, (1.0 - c) * (1.0 - float(cfg().get("unpowered_output", 0.5))))
-	_bill_plants(gs, plants, own_to_business * p)
-	# 3) Hogares: el sobrante de tus centrales (o la red regional) se vende a los vecinos.
-	var home := {"units": 0.0, "powered": 0, "unpowered": 0, "revenue": 0.0}
-	var surplus := supply - own_to_business
-	if homes_active(gs):
-		home = _homes(gs, surplus, grid_ok)
-		_bill_plants(gs, plants, float(home["revenue"]))
-	st["coverage"] = cov
-	var m: Dictionary = st.get("month", {})
-	for kv in [["supply", supply], ["demand", demand], ["own_business", own_to_business], ["grid_units", grid_units + float(home.get("grid_units", 0.0))],
-			["homes_units", float(home["units"])], ["homes_powered", float(home["powered"])], ["homes_unpowered", float(home["unpowered"])],
-			["lost_value", lost_value], ["wasted", maxf(0.0, surplus - float(home.get("own_units", 0.0)))], ["days", 1.0]]:
-		m[kv[0]] = float(m.get(kv[0], 0.0)) + float(kv[1])
-	st["month"] = m
-	st["today"] = {"supply": supply, "demand": demand, "grid": grid_ok, "homes": home}
+	# Redes: el reparto se hace por red eléctrica conectada (GridSim, docs/REDES.md): cada red reparte
+	# la generación de SUS centrales entre SUS consumidores; solo la red que toca la entrada regional
+	# (plaza o ruta comercial) compra lo que falta. Los hogares conectados acumulan su factura mensual.
+	GridSim.power_daily(gs, st)
 
 
 ## Reparte ingresos entre las centrales según lo que produjo cada una.
@@ -232,42 +192,6 @@ static func _apply_shortfall(gs, b: Dictionary, lost_frac: float) -> float:
 	if taken > 0.0:
 		b["chain_status"] = "sin electricidad suficiente"
 	return taken * EconomySim.market_price(gs, product)
-
-
-## Consumo de los hogares. Devuelve {units, own_units, grid_units, powered, unpowered, revenue}.
-static func _homes(gs, surplus: float, grid_ok: bool) -> Dictionary:
-	var per := float(cfg().get("home_units_per_person_day", 0.3)) * 1.5
-	var p := price(gs)
-	var gp := grid_price(gs)
-	var out := {"units": 0.0, "own_units": 0.0, "grid_units": 0.0, "powered": 0, "unpowered": 0, "revenue": 0.0}
-	var today: int = gs.today()
-	var adult := int(GameData.citizens.get("adult_age", 16))
-	var hp := float(cfg().get("home_powered_happiness", 1.5)) / 7.0
-	var hu := float(cfg().get("home_unpowered_happiness", -3.0)) / 7.0
-	var left := surplus
-	for c in gs.citizens.values():
-		if c.age_years(today) < adult or c.home_id < 0:
-			continue
-		if gs.is_player(c.id):
-			continue
-		var from_own := minf(per, maxf(0.0, left))
-		var from_grid := (per - from_own) if grid_ok else 0.0
-		var cost := from_own * p + from_grid * gp
-		if from_own + from_grid < per * 0.999 or c.money < cost:
-			out["unpowered"] = int(out["unpowered"]) + 1
-			c.happiness = clampf(c.happiness + hu, 0.0, 100.0)
-			continue
-		c.money -= cost
-		left -= from_own
-		out["units"] = float(out["units"]) + per
-		out["own_units"] = float(out["own_units"]) + from_own
-		out["grid_units"] = float(out["grid_units"]) + from_grid
-		out["revenue"] = float(out["revenue"]) + from_own * p
-		out["powered"] = int(out["powered"]) + 1
-		c.happiness = clampf(c.happiness + hp, 0.0, 100.0)
-	if float(out["own_units"]) > 0.0:
-		EconomySim.record_discretionary(gs, PRODUCT, float(out["own_units"]), float(out["revenue"]))
-	return out
 
 
 static func monthly(gs) -> void:
