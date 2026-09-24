@@ -35,6 +35,7 @@ var player_panel: PlayerPanel
 var finance_panel: FinancePanel
 var stats_panel: StatsPanel
 var research_screen: ResearchScreen
+var goods_catalog: GoodsCatalog
 var government_panel: GovernmentPanel
 var logistics_panel: LogisticsPanel
 var trade_panel: TradePanel
@@ -90,6 +91,9 @@ func _ready() -> void:
 	research_screen = ResearchScreen.new()
 	root.add_child(research_screen)
 	research_screen.setup()
+	goods_catalog = GoodsCatalog.new()
+	root.add_child(goods_catalog)
+	goods_catalog.setup()
 	hint_lbl = UIKit.label("", 15, UIKit.ACCENT)
 	hint_lbl.anchor_left = 0.5
 	hint_lbl.anchor_right = 0.5
@@ -246,6 +250,7 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Logística", func(): _show_dock("logistics"), 160))
 	box.add_child(UIKit.button("Comercio exterior", func(): _show_dock("trade"), 160))
 	box.add_child(UIKit.button("Turismo y publicidad", func(): _show_dock("tourism"), 160))
+	box.add_child(UIKit.button("Catálogo de bienes", func(): goods_catalog.open(), 160))
 
 
 # --- Notificaciones -----------------------------------------------------------------
@@ -870,7 +875,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var key: Key = event.keycode
 	if key == KEY_ESCAPE:
-		if research_screen.visible:
+		if goods_catalog.visible:
+			goods_catalog.close()
+		elif research_screen.visible:
 			research_screen.close()
 		elif pause_modal["root"].visible:
 			_close_pause()

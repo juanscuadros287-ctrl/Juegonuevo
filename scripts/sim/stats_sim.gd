@@ -195,6 +195,7 @@ static func advice(gs) -> Array:
 		out.append("Hay varios enfermos sin atención médica: un hospital reduce muertes.")
 	if not gs.government.get("missions_available", []).is_empty():
 		out.append("El gobierno tiene misiones disponibles con recompensa (ver «Gobierno»).")
+	out.append_array(ShopSim.advice(gs))
 	if out.is_empty():
 		out.append("Sin alertas. Los datos se actualizan al cerrar cada mes.")
 	return out
