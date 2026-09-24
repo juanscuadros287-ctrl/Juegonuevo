@@ -36,6 +36,9 @@ var finance_panel: FinancePanel
 var stats_panel: StatsPanel
 var research_screen: ResearchScreen
 var government_panel: GovernmentPanel
+var logistics_panel: LogisticsPanel
+var trade_panel: TradePanel
+var tourism_panel: TourismPanel
 var era_lbl: Label
 
 # Interior
@@ -240,6 +243,9 @@ func _build_side_menu() -> void:
 	box.add_child(HSeparator.new())
 	box.add_child(UIKit.button("Investigación", _open_research, 160))
 	box.add_child(UIKit.button("Gobierno", func(): _show_dock("government"), 160))
+	box.add_child(UIKit.button("Logística", func(): _show_dock("logistics"), 160))
+	box.add_child(UIKit.button("Comercio exterior", func(): _show_dock("trade"), 160))
+	box.add_child(UIKit.button("Turismo y publicidad", func(): _show_dock("tourism"), 160))
 
 
 # --- Notificaciones -----------------------------------------------------------------
@@ -341,6 +347,15 @@ func _build_dock() -> void:
 	government_panel.setup(self)
 	government_panel.closed.connect(close_dock)
 	government_panel.message.connect(toast)
+	logistics_panel = LogisticsPanel.new()
+	trade_panel = TradePanel.new()
+	tourism_panel = TourismPanel.new()
+	for panel in [logistics_panel, trade_panel, tourism_panel]:
+		panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+		stack.add_child(panel)
+		panel.setup(self)
+		panel.closed.connect(close_dock)
+		panel.message.connect(toast)
 
 
 func _show_dock(mode: String) -> void:
@@ -357,7 +372,16 @@ func _show_dock(mode: String) -> void:
 	finance_panel.visible = mode == "finance"
 	stats_panel.visible = mode == "stats"
 	government_panel.visible = mode == "government"
+	logistics_panel.visible = mode == "logistics"
+	trade_panel.visible = mode == "trade"
+	tourism_panel.visible = mode == "tourism"
 	match mode:
+		"logistics":
+			logistics_panel.refresh()
+		"trade":
+			trade_panel.refresh()
+		"tourism":
+			tourism_panel.refresh()
 		"government":
 			government_panel.refresh()
 		"stats":

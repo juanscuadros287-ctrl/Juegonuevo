@@ -47,8 +47,9 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 		var price := float(b["price"])
 		if price > willing:
 			continue
-		# Demanda elástica: por encima del precio de referencia compran menos.
-		if price > ref_price and gs.rng.randf() < (price / ref_price - 1.0) / (willing / ref_price - 1.0):
+		# Demanda elástica: por encima del precio de referencia compran menos (la publicidad ayuda).
+		var ad := AdvertisingSim.demand_mult(gs, b)
+		if price > ref_price and gs.rng.randf() < (price / ref_price - 1.0) / (willing / ref_price - 1.0) / ad:
 			continue
 		var inv: Dictionary = b["inventory"]
 		var stock := float(inv.get(good, 0.0))
@@ -118,7 +119,7 @@ static func discretionary(gs) -> void:
 				var stock := float(inv.get(gid, 0.0))
 				if stock <= 0.0 or price <= 0.0:
 					continue
-				var take := minf(stock, (budget - spent) / price)
+				var take := minf(stock, (budget - spent) / price * AdvertisingSim.demand_mult(gs, b))
 				if take <= 0.01:
 					break
 				inv[gid] = stock - take

@@ -36,17 +36,43 @@ func load_all() -> void:
 	citizens = _load("citizens.json")
 	weather = _load("weather.json")
 	skills = _load("skills.json")
-	buildings = _load("buildings.json")
-	businesses = _load("businesses.json")
-	goods = _load("goods.json")
+	buildings = _load_merged("buildings")
+	businesses = _load_merged("businesses")
+	goods = _load_merged("goods")
 	legal_types = _load("legal_types.json")
-	technologies = _load("technologies.json")
+	technologies = _load_merged("technologies")
 	interiors = _load("interiors.json")
 	economy = _load("economy.json")
 	eras = _load("eras.json")
 	professions = _load("professions.json")
 	government = _load("government.json")
 	events = _load("events.json")
+	_extra = {}
+
+
+## Carga <base>.json y fusiona encima todos los <base>_*.json (contenido modular por fase).
+func _load_merged(base: String) -> Dictionary:
+	var out := _load(base + ".json")
+	var files := Array(DirAccess.get_files_at(DATA_DIR))
+	files.sort()
+	for f in files:
+		var fname := str(f).trim_suffix(".remap").trim_suffix(".import")
+		if fname.begins_with(base + "_") and fname.ends_with(".json"):
+			var extra := _load(fname)
+			for k in extra:
+				if not str(k).begins_with("_"):
+					out[k] = extra[k]
+	return out
+
+
+var _extra := {}
+
+
+## Datos adicionales de un módulo: data/<name>.json (se cargan una vez y quedan en caché).
+func extra(name: String) -> Dictionary:
+	if not _extra.has(name):
+		_extra[name] = _load(name + ".json") if FileAccess.file_exists(DATA_DIR + name + ".json") else {}
+	return _extra[name]
 
 
 func _load(file_name: String) -> Dictionary:

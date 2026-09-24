@@ -3,7 +3,7 @@ extends Node
 ## La lógica vive en scripts/sim/ (PopulationSim, WeatherSim, BusinessSim,
 ## ConstructionSim, MarketSim, PlayerSim).
 
-const SAVE_VERSION := 5
+const SAVE_VERSION := 6
 const MAP_SIZE := 400.0
 const ZONE_GRID := 5
 const START_ZONE := [2, 2]
@@ -25,6 +25,9 @@ var techs: Array = []                  # tecnologías investigadas (Fase 4)
 var research: Dictionary = {}          # época, proyecto actual, progreso, cola, modificadores
 var government: Dictionary = {}        # régimen, políticas, tesoro, misiones, licitaciones
 var problems: Dictionary = {}          # crimen, contaminación, cobertura de servicios, eventos
+var logistics: Dictionary = {}         # Fase 6: almacén, yacimientos, transporte, rutas
+var trade: Dictionary = {}             # Fase 7: pueblos, conexiones, comercio exterior
+var tourism: Dictionary = {}           # Fase 8: turismo y publicidad
 var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
@@ -93,6 +96,7 @@ func new_game(opts: Dictionary) -> void:
 	PopulationSim.generate_initial(self, int(diff().get("start_citizens", 30)))
 	PlayerSim.create_player(self)
 	GovSim.init_state(self)
+	_init_expansions()
 	running = true
 	notify("Bienvenido a %s, %s. Eres el único empresario del pueblo." % [settings["town_name"], player_name()], "info")
 
@@ -112,6 +116,9 @@ func _clear() -> void:
 	research = {}
 	government = {}
 	problems = {}
+	logistics = {}
+	trade = {}
+	tourism = {}
 	economy = {}
 	loans = []
 	next_loan_id = 1
@@ -126,6 +133,13 @@ func _clear() -> void:
 	suppress_notifications = false
 
 
+## Inicializa (o completa en partidas antiguas) el estado de las fases 6-8.
+func _init_expansions() -> void:
+	LogisticsSim.init_state(self)
+	TradeSim.init_state(self)
+	TourismSim.init_state(self)
+
+
 # --- Simulación diaria -----------------------------------------------------
 
 func simulate_day(new_month: bool, _new_year: bool) -> void:
@@ -134,6 +148,9 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	WeatherSim.daily(self)
 	EventsSim.daily(self)
 	BusinessSim.produce(self)
+	LogisticsSim.daily(self)
+	TradeSim.daily(self)
+	TourismSim.daily(self)
 	ConstructionSim.daily(self)
 	MarketSim.begin_day(self)
 	PopulationSim.daily(self)
@@ -147,6 +164,10 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		BusinessSim.monthly(self)
 		GovSim.monthly(self)
 		EventsSim.monthly(self)
+		LogisticsSim.monthly(self)
+		TradeSim.monthly(self)
+		TourismSim.monthly(self)
+		AdvertisingSim.monthly(self)
 		EconomySim.monthly(self)
 		PlayerSim.monthly(self)
 		_record_month()
@@ -405,6 +426,9 @@ func to_dict() -> Dictionary:
 		"research": research,
 		"government": government,
 		"problems": problems,
+		"logistics": logistics,
+		"trade": trade,
+		"tourism": tourism,
 		"economy": economy,
 		"loans": loans,
 		"next_loan_id": next_loan_id,
@@ -471,6 +495,10 @@ func load_dict(d: Dictionary) -> void:
 	government = d.get("government", {})
 	if government.is_empty():
 		GovSim.init_state(self)
+	logistics = d.get("logistics", {})
+	trade = d.get("trade", {})
+	tourism = d.get("tourism", {})
+	_init_expansions()
 	TechSim._recompute_mods(self)
 	if player_id < 0:
 		# Partida de la Fase 1: el jugador aún no era un ciudadano.
