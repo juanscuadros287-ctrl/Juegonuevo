@@ -231,7 +231,7 @@ func _on_zones_changed() -> void:
 	terrain.scatter_nature(int(GameState.settings.get("seed", 1)))
 	for id in building_nodes:
 		var b: Dictionary = GameState.get_building(id)
-		terrain.clear_trees(float(b["x"]), float(b["z"]), float(GameState.building_def(b).get("footprint", 4.0)) * 0.8 + 1.0)
+		terrain.clear_trees(float(b["x"]), float(b["z"]), GameState.footprint_of(b) * 0.8 + 1.0)
 
 
 # --- Ciudadanos ---------------------------------------------------------------------------
@@ -243,7 +243,7 @@ func _home_position(c: Citizen) -> Vector3:
 	var x := float(b["x"])
 	var z := float(b["z"])
 	var rot := float(b.get("rot", 0.0))
-	var fp := float(GameState.building_def(b).get("footprint", 4.0))
+	var fp := GameState.footprint_of(b)
 	var door := Vector3(x, 0, z) + Vector3(sin(rot), 0, cos(rot)) * (fp * 0.4)
 	door.y = terrain.height_at(door.x, door.z)
 	return door
@@ -450,9 +450,10 @@ func _update_placement() -> void:
 		return
 	p.x = snappedf(p.x, 0.25)
 	p.z = snappedf(p.z, 0.25)
-	var fp := float(GameData.building_def(place_type).get("footprint", 4.0))
+	var place_level := int(GameState.get_building(move_id).get("level", 1)) if move_id >= 0 else 1
+	var fp := GameData.footprint(place_type, place_level)
 	place_pos = Vector3(p.x, _ground(p.x, p.z, fp), p.z)
-	place_reason = ConstructionSim.placement_block_reason(GameState, place_type, p.x, p.z, move_id)
+	place_reason = ConstructionSim.placement_block_reason(GameState, place_type, p.x, p.z, move_id, place_level)
 	if place_reason == "":
 		place_reason = terrain.footprint_ok(p.x, p.z, fp)
 	if place_reason == "" and move_id < 0 and place_tender.is_empty():

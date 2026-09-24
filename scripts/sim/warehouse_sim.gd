@@ -177,7 +177,7 @@ static func pos_of(gs, wid: int) -> Vector2:
 static func half_of(gs, wid: int) -> float:
 	if wid == PLAZA:
 		return float(cfg().get("plaza_half", 9.0))
-	return half_size(str(gs.get_building(wid).get("type", "")))
+	return float(gs.footprint_of(gs.get_building(wid))) * 0.5
 
 
 # --- API agregada (compatibilidad Fase 6/7/8) --------------------------------------------------
@@ -295,9 +295,9 @@ static func type_is_warehouse(type_id: String) -> bool:
 
 
 ## Almacén más cercano "al lado" de una huella hipotética: {"id", "gap"} o {} si no hay.
-static func nearest_for(gs, type_id: String, x: float, z: float, ignore_id := -1) -> Dictionary:
+static func nearest_for(gs, type_id: String, x: float, z: float, ignore_id := -1, level := 1) -> Dictionary:
 	var p := Vector2(x, z)
-	var h := half_size(type_id)
+	var h := GameData.footprint(type_id, level) * 0.5
 	var best := {}
 	var best_gap := link_distance() + 0.001
 	for wid in ids(gs):
@@ -314,7 +314,7 @@ static func nearest_for(gs, type_id: String, x: float, z: float, ignore_id := -1
 static func warehouse_for(gs, b: Dictionary) -> int:
 	if not is_linkable(gs, b):
 		return NONE
-	var n := nearest_for(gs, str(b["type"]), float(b["x"]), float(b["z"]), int(b["id"]))
+	var n := nearest_for(gs, str(b["type"]), float(b["x"]), float(b["z"]), int(b["id"]), int(b.get("level", 1)))
 	var wid := int(n.get("id", NONE))
 	b["warehouse_id"] = wid
 	return wid
@@ -337,7 +337,7 @@ static func linkable_near(gs, type_id: String, x: float, z: float, ignore_id := 
 	for b in gs.buildings:
 		if int(b["id"]) == ignore_id or not is_linkable(gs, b):
 			continue
-		if edge_gap(p, h, Vector2(float(b["x"]), float(b["z"])), half_size(str(b["type"]))) <= link_distance():
+		if edge_gap(p, h, Vector2(float(b["x"]), float(b["z"])), float(gs.footprint_of(b)) * 0.5) <= link_distance():
 			out.append(b)
 	return out
 

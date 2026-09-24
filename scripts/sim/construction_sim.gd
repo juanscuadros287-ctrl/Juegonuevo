@@ -139,8 +139,8 @@ static func build_block_reason(gs, type_id: String, tier := "normal") -> String:
 
 
 ## Validez de ubicación (sin terreno: el mundo 3D verifica agua y pendiente).
-static func placement_block_reason(gs, type_id: String, x: float, z: float, ignore_id := -1) -> String:
-	var fp := float(GameData.building_def(type_id).get("footprint", 4.0))
+static func placement_block_reason(gs, type_id: String, x: float, z: float, ignore_id := -1, level := 1) -> String:
+	var fp := GameData.footprint(type_id, level)
 	if Vector2(x, z).length() < MIN_TOWN_CENTER_DIST + fp * 0.5:
 		return "Demasiado cerca de la plaza"
 	var zs: float = gs.MAP_SIZE / gs.ZONE_GRID
@@ -152,7 +152,7 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 	for b in gs.buildings:
 		if int(b["id"]) == ignore_id:
 			continue
-		var ofp := float(GameData.building_def(str(b["type"])).get("footprint", 4.0))
+		var ofp: float = gs.footprint_of(b)
 		if Vector2(x, z).distance_to(Vector2(float(b["x"]), float(b["z"]))) < (fp + ofp) * 0.5 + 0.8:
 			return "Se superpone con otro edificio"
 	return RegionSim.deposit_block_reason(gs, type_id, x, z)   # Fase 6: minas junto a su yacimiento.
@@ -183,6 +183,30 @@ static func start_construction(gs, type_id: String, x: float, z: float, rot: flo
 	return {"building": b}
 
 
+## Días estimados que faltan para terminar una obra (según la cuadrilla actual).
+static func days_left(gs, b: Dictionary) -> int:
+	var crew := 0
+	for c in gs.citizens.values():
+		if c.job_id == int(b["id"]) and c.job_kind == "obra" and not c.sick:
+			crew += 1
+	if crew == 0:
+		crew = int(GameData.level_def(str(b["type"]), int(b["target_level"])).get("workers", 2))
+	var rate := maxf(0.1, crew * TechSim.mult(gs, "construction_speed"))
+	return int(ceil(maxf(0.0, float(b["work_needed"]) - float(b["work_done"])) / rate))
+
+
+## Al mejorar, el edificio crece: debe quedar espacio libre alrededor para el nuevo tamaño.
+static func upgrade_space_reason(gs, b: Dictionary, next: int) -> String:
+	var fp := GameData.footprint(str(b["type"]), next)
+	var p := Vector2(float(b["x"]), float(b["z"]))
+	for o in gs.buildings:
+		if int(o["id"]) == int(b["id"]):
+			continue
+		if p.distance_to(Vector2(float(o["x"]), float(o["z"]))) < (fp + float(gs.footprint_of(o))) * 0.5 + 0.8:
+			return "No hay espacio para ampliar (%.0f m): choca con %s. Muévelo o demuele el vecino." % [fp, gs.building_label(o)]
+	return ""
+
+
 static func start_upgrade(gs, b: Dictionary) -> String:
 	if not gs.owned_by_player(b):
 		return "No es tuyo"
@@ -190,6 +214,9 @@ static func start_upgrade(gs, b: Dictionary) -> String:
 		return "Ya está en obras"
 	var next := int(b["level"]) + 1
 	var reason := level_block_reason(gs, str(b["type"]), next)
+	if reason != "":
+		return reason
+	reason = upgrade_space_reason(gs, b, next)
 	if reason != "":
 		return reason
 	var cost := cost_for(gs, str(b["type"]), next, true, str(b.get("tier", "normal")))
@@ -407,7 +434,7 @@ static func move_cost(gs, b: Dictionary, x: float, z: float) -> float:
 static func move_building(gs, b: Dictionary, x: float, z: float, rot: float) -> String:
 	if not gs.owned_by_player(b):
 		return "Solo puedes mover tus edificios"
-	var reason := placement_block_reason(gs, str(b["type"]), x, z, int(b["id"]))
+	var reason := placement_block_reason(gs, str(b["type"]), x, z, int(b["id"]), int(b["level"]))
 	if reason != "":
 		return reason
 	var cost := move_cost(gs, b, x, z)

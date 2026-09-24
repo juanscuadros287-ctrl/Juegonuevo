@@ -295,6 +295,11 @@ func building_def(b: Dictionary) -> Dictionary:
 	return GameData.building_def(str(b.get("type", "")))
 
 
+## Huella actual del edificio según su nivel.
+func footprint_of(b: Dictionary) -> float:
+	return GameData.footprint(str(b.get("type", "")), int(b.get("level", 1)))
+
+
 func level_def(b: Dictionary) -> Dictionary:
 	return GameData.level_def(str(b.get("type", "")), int(b.get("level", 1)))
 

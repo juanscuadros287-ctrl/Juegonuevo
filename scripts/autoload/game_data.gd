@@ -135,6 +135,34 @@ func level_def(type_id: String, level: int) -> Dictionary:
 	return levels[clampi(level - 1, 0, levels.size() - 1)]
 
 
+## Huella (lado en metros) del edificio en un nivel: la base "footprint" crece con el
+## tamaño del modelo del nivel (o usa "footprint" del nivel si lo define).
+func footprint(type_id: String, level := 1) -> float:
+	var base := float(building_def(type_id).get("footprint", 4.0))
+	var ld := level_def(type_id, level)
+	if ld.has("footprint"):
+		return float(ld["footprint"])
+	if level <= 1:
+		return base
+	var w1 := _model_width(level_def(type_id, 1))
+	var wl := _model_width(ld)
+	if w1 <= 0.0 or wl <= 0.0:
+		return base
+	return base * clampf(wl / w1, 1.0, 2.5)
+
+
+func _model_width(ld: Dictionary) -> float:
+	var w := 0.0
+	for piece in ld.get("model", []):
+		if not (piece is Dictionary) or not piece.has("size"):
+			continue
+		var sz: Array = piece["size"]
+		var pos: Array = piece.get("pos", [0, 0, 0])
+		var ext := maxf(float(sz[0]), float(sz[2]) if sz.size() > 2 else float(sz[0])) * 0.5
+		w = maxf(w, maxf(absf(float(pos[0])), absf(float(pos[2]) if pos.size() > 2 else 0.0)) + ext)
+	return w * 2.0
+
+
 func max_level(type_id: String) -> int:
 	return building_def(type_id).get("levels", []).size()
 

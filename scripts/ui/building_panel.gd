@@ -151,9 +151,9 @@ func _summary_text(b: Dictionary) -> String:
 		s += "Sector: %s · Tipo legal: %s\n" % [def.get("sector", ""), GameData.legal_types.get(str(b.get("legal", "sas")), {}).get("label", "")]
 	match str(b["status"]):
 		"construccion":
-			s += "[color=#e9b949]En construcción: %d%%[/color]\n" % int(100.0 * float(b["work_done"]) / maxf(1.0, float(b["work_needed"])))
+			s += "[color=#e9b949]En construcción: %d%% · faltan ~%d días[/color]\n" % [int(100.0 * float(b["work_done"]) / maxf(1.0, float(b["work_needed"]))), ConstructionSim.days_left(GameState, b)]
 		"mejorando":
-			s += "[color=#e9b949]En obras de mejora: %d%% (no factura)[/color]\n" % int(100.0 * float(b["work_done"]) / maxf(1.0, float(b["work_needed"])))
+			s += "[color=#e9b949]En obras de mejora: %d%% · faltan ~%d días (no factura)[/color]\n" % [int(100.0 * float(b["work_done"]) / maxf(1.0, float(b["work_needed"]))), ConstructionSim.days_left(GameState, b)]
 		"cerrado":
 			s += "[color=#e66]CERRADO (quiebra o embargo)[/color]\n"
 		_:
@@ -371,7 +371,15 @@ func _upgrade_tab(b: Dictionary) -> Control:
 			t += "Capacidad: %d → %d personas\n" % [int(cur.get("capacity", 0)), int(nd["capacity"])]
 		if nd.has("business_slots"):
 			t += "Límite de negocios: +%d → +%d\n" % [int(cur.get("business_slots", 0)), int(nd["business_slots"])]
+		if nd.has("warehouse_capacity"):
+			t += "Almacén: %s → %s espacios\n" % [Fmt.thousands(float(cur.get("warehouse_capacity", 0))), Fmt.thousands(float(nd["warehouse_capacity"]))]
+		var fp_now: float = GameState.footprint_of(b)
+		var fp_next := GameData.footprint(str(b["type"]), next)
+		if fp_next > fp_now + 0.2:
+			t += "Tamaño: %.0f m → %.0f m (necesita espacio libre alrededor)\n" % [fp_now, fp_next]
 		var reason := ConstructionSim.level_block_reason(GameState, b["type"], next)
+		if reason == "":
+			reason = ConstructionSim.upgrade_space_reason(GameState, b, next)
 		if reason != "":
 			t += "[color=#e66]%s[/color]\n" % reason
 		var rl := UIKit.rich()
