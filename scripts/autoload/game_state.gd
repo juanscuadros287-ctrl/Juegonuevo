@@ -310,7 +310,7 @@ func building_label(b: Dictionary) -> String:
 
 
 func building_capacity(b: Dictionary) -> int:
-	return int(level_def(b).get("capacity", 0))
+	return GameData.capacity(str(b.get("type", "")), int(b.get("level", 1)), str(b.get("tier", "normal")))
 
 
 func is_active(b: Dictionary) -> bool:

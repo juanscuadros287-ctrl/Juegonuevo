@@ -184,17 +184,6 @@ func _rebuild_building(id: int) -> void:
 		var flag := MeshLib.mesh_node(MeshLib.box(Vector3(0.05, 1.2, 0.05)), MeshLib.mat(Color(0.3, 0.2, 0.1)), Vector3(fp * 0.5, 0.6, fp * 0.5))
 		flag.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(0.5, 0.3, 0.03)), MeshLib.mat(Color(0.95, 0.75, 0.2)), Vector3(0.25, 0.45, 0)))
 		holder.add_child(flag)
-	# Camino de tierra desde la plaza hasta el frente del edificio.
-	var flat := Vector2(pos.x, pos.z)
-	var length := flat.length()
-	var end := length - fp * 0.5
-	if length > 8.0 and length < 70.0 and end > 8.5:
-		var dir := flat / length
-		var mid := dir * (8.0 + end) * 0.5
-		var path := MeshLib.mesh_node(MeshLib.box(Vector3(1.3, 0.06, end - 8.0)), MeshLib.mat(Color(0.58, 0.5, 0.36)),
-				Vector3(mid.x, terrain.height_at(mid.x, mid.y) + 0.03, mid.y) - pos)
-		path.rotation.y = atan2(dir.x, dir.y)
-		root.add_child(path)
 	buildings_root.add_child(root)
 	building_nodes[id] = root
 	terrain.clear_trees(pos.x, pos.z, fp * 0.8 + 1.0)

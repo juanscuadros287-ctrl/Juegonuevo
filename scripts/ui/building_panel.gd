@@ -368,7 +368,7 @@ func _upgrade_tab(b: Dictionary) -> Control:
 		if nd.has("jobs"):
 			t += "Empleos: %d → %d · Producción/empleado: %.1f → %.1f · Calidad: %.1f → %.1f\n" % [int(cur.get("jobs", 0)), int(nd["jobs"]), float(cur.get("prod_per_worker", 0)), float(nd.get("prod_per_worker", 0)), float(cur.get("quality", 1)), float(nd.get("quality", 1))]
 		if nd.has("capacity"):
-			t += "Capacidad: %d → %d personas\n" % [int(cur.get("capacity", 0)), int(nd["capacity"])]
+			t += "Capacidad: %d → %d personas\n" % [GameState.building_capacity(b), GameData.capacity(str(b["type"]), next, str(b.get("tier", "normal")))]
 		if nd.has("business_slots"):
 			t += "Límite de negocios: +%d → +%d\n" % [int(cur.get("business_slots", 0)), int(nd["business_slots"])]
 		if nd.has("warehouse_capacity"):

@@ -60,7 +60,7 @@ func refresh() -> void:
 		if ld.has("jobs"):
 			extra = " · %d empleos · produce %s" % [int(ld["jobs"]), GameData.good_label(str(def.get("product", "")))]
 		elif ld.has("capacity"):
-			extra = " · %d personas · renta %s" % [int(ld["capacity"]), Fmt.money(float(ld.get("rent", 0)) * float(Housing.tier_def_by_id(tier).get("rent_mult", 1.0)))]
+			extra = " · %d personas · renta %s" % [GameData.capacity(type_id, 1, tier), Fmt.money(float(ld.get("rent", 0)) * float(Housing.tier_def_by_id(tier).get("rent_mult", 1.0)))]
 		var info := UIKit.label("%s · %d días · %d trabajadores%s\n%s" % [Fmt.money(cost["total"]), int(cost["days"]), int(cost["workers"]), extra, ", ".join(mats)], 12, UIKit.TEXT_DIM)
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info.tooltip_text = str(def.get("description", ""))
