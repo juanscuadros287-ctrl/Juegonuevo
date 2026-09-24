@@ -24,6 +24,8 @@ static func make_building(gs, type_id: String, level: int, x: float, z: float, r
 	var def := GameData.building_def(type_id)
 	if def.has("product"):
 		b["price"] = BusinessSim.default_price(gs, def)
+		b["auto_price"] = true
+		b["markup"] = 0.1
 	return b
 
 
@@ -59,7 +61,7 @@ static func normalize_building(src: Dictionary) -> Dictionary:
 ## {money, materials:{g:qty}, from_stock:{g:qty}, import:{g:qty}, import_cost, total, days, workers}
 static func cost_for(gs, type_id: String, level: int, is_upgrade: bool, tier := "normal") -> Dictionary:
 	var ld := GameData.level_def(type_id, level)
-	var pm := float(gs.diff().get("price_mult", 1.0))
+	var pm: float = gs.price_mult()
 	var factor := float(GameData.game.get("upgrade_cost_factor", 0.8)) if is_upgrade else 1.0
 	if type_id == "vivienda":
 		factor *= float(Housing.tier_def_by_id(tier).get("cost_mult", 1.0))
@@ -273,7 +275,7 @@ static func daily(gs) -> void:
 			sites.append(b)
 	if sites.is_empty():
 		return
-	var wage := float(GameData.game.get("construction_day_wage", 2.2)) * float(gs.diff().get("price_mult", 1.0))
+	var wage: float = float(GameData.game.get("construction_day_wage", 2.2)) * gs.price_mult()
 	var points_share: float = float(gs.get_meta("construction_points", 0.0)) / sites.size() if gs.has_meta("construction_points") else 0.0
 	for b in sites:
 		var lvl := int(b["target_level"])
@@ -342,7 +344,7 @@ static func _complete(gs, b: Dictionary, crew: Array) -> void:
 
 static func zone_cost(gs) -> float:
 	var n: int = gs.unlocked_zones.size() - 1
-	return float(GameData.game.get("zone_expansion_cost", 2500)) * pow(float(GameData.game.get("zone_expansion_growth", 1.5)), n) * float(gs.diff().get("price_mult", 1.0))
+	return float(GameData.game.get("zone_expansion_cost", 2500)) * pow(float(GameData.game.get("zone_expansion_growth", 1.5)), n) * gs.price_mult()
 
 
 static func zone_block_reason(gs, zx: int, zy: int) -> String:

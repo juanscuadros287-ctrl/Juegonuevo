@@ -17,6 +17,7 @@ var goods: Dictionary = {}
 var legal_types: Dictionary = {}
 var technologies: Dictionary = {}
 var interiors: Dictionary = {}
+var economy: Dictionary = {}
 
 
 func _ready() -> void:
@@ -37,6 +38,7 @@ func load_all() -> void:
 	legal_types = _load("legal_types.json")
 	technologies = _load("technologies.json")
 	interiors = _load("interiors.json")
+	economy = _load("economy.json")
 
 
 func _load(file_name: String) -> Dictionary:

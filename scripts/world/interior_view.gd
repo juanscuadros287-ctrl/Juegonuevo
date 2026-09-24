@@ -61,7 +61,7 @@ func _build() -> void:
 	_dist = maxf(w, d) * 1.2
 	var wall := MeshLib.arr_color(room.get("wall"), Color(0.8, 0.7, 0.5)) * float(Housing.tier_def(b).get("tint", 1.0))
 	wall.a = 1.0
-	var floor_c := MeshLib.arr_color(GameData.interiors.get("floors", {}).get(str(b.get("tier", "normal"))), Color(0.5, 0.4, 0.3))
+	var floor_c := Housing.floor_color(b)
 	_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(w + 0.3, 0.1, d + 0.3)), MeshLib.mat(floor_c), Vector3(0, -0.05, 0)))
 	# Paredes traseras completas y frente recortado (para ver dentro).
 	_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(w + 0.3, wh, 0.15)), MeshLib.mat(wall), Vector3(0, wh * 0.5, -d * 0.5 - 0.075)))
@@ -69,6 +69,19 @@ func _build() -> void:
 	_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(w + 0.3, 0.45, 0.15)), MeshLib.mat(wall), Vector3(0, 0.22, d * 0.5 + 0.075)))
 	_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(0.15, 0.45, d + 0.3)), MeshLib.mat(wall), Vector3(w * 0.5 + 0.075, 0.22, 0)))
 	_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(1.4, 1.0, 0.05)), MeshLib.mat(Color(0.55, 0.75, 0.9), 0.2), Vector3(w * 0.2, wh * 0.6, -d * 0.5)))
+	if room.get("posts", false):
+		# Bahareque: estructura de madera visible y techo de paja.
+		var post := MeshLib.mat(Color(0.33, 0.22, 0.12))
+		for x in [-w * 0.5, 0.0, w * 0.5]:
+			_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(0.2, wh, 0.2)), post, Vector3(x, wh * 0.5, -d * 0.5)))
+		for z in [-d * 0.5, 0.0, d * 0.5]:
+			_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(0.2, wh, 0.2)), post, Vector3(-w * 0.5, wh * 0.5, z)))
+		_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(w + 0.3, 0.2, 0.3)), post, Vector3(0, wh, -d * 0.5)))
+		_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(0.3, 0.2, d + 0.3)), post, Vector3(-w * 0.5, wh, 0)))
+	if room.has("zocalo"):
+		var zc := MeshLib.mat(MeshLib.arr_color(room["zocalo"], Color(0.5, 0.36, 0.24)))
+		_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(w + 0.3, 0.6, 0.17)), zc, Vector3(0, 0.3, -d * 0.5 - 0.07)))
+		_content.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(0.17, 0.6, d + 0.3)), zc, Vector3(-w * 0.5 - 0.07, 0.3, 0)))
 	# Objetos.
 	var beds := []
 	var light_energy := 0.6

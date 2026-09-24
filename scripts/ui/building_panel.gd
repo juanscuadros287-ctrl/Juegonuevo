@@ -58,8 +58,10 @@ func rebuild() -> void:
 	_add_tab("Resumen", _summary_tab(b, mine))
 	if mine and cat == "negocio":
 		_add_tab("Empleados", _employees_tab(b))
-		if str(def.get("product", "")) not in ["", "construccion"]:
+		if str(def.get("product", "")) not in ["", "construccion", "credito"]:
 			_add_tab("Precio", _price_tab(b))
+		if BankSim.is_bank(b):
+			_add_tab("Banco", _bank_tab(b))
 	if cat == "vivienda":
 		_add_tab("Vivienda", _home_tab(b, mine))
 	if mine:
@@ -104,6 +106,10 @@ func _summary_tab(b: Dictionary, mine: bool) -> Control:
 			closed.emit())
 		del.tooltip_text = "Elimina el edificio sin reembolso."
 		v.add_child(del)
+		if b["status"] == "cerrado":
+			v.add_child(UIKit.button("Reabrir (%s)" % Fmt.money(BusinessSim.reopen_cost(GameState, b)), func():
+				_msg(BusinessSim.reopen(GameState, _b()), "jugador")
+				rebuild()))
 	if Housing.is_home(b) and b["status"] != "construccion":
 		v.add_child(UIKit.button("Ver interior", func(): EventBus.interior_requested.emit(bid)))
 	return v
@@ -133,6 +139,8 @@ func _summary_text(b: Dictionary) -> String:
 			s += "[color=#e9b949]En construcción: %d%%[/color]\n" % int(100.0 * float(b["work_done"]) / maxf(1.0, float(b["work_needed"])))
 		"mejorando":
 			s += "[color=#e9b949]En obras de mejora: %d%% (no factura)[/color]\n" % int(100.0 * float(b["work_done"]) / maxf(1.0, float(b["work_needed"])))
+		"cerrado":
+			s += "[color=#e66]CERRADO (quiebra o embargo)[/color]\n"
 		_:
 			s += "Estado: [color=#6c6]activo[/color]\n"
 	var site_crew := 0
@@ -174,6 +182,11 @@ func _summary_text(b: Dictionary) -> String:
 		s += "Inversión en obras: %s\n" % Fmt.money(BusinessSim.period_value(b, "total", "obras"))
 		if BusinessSim.is_nonprofit(b):
 			s += "Reserva de la fundación: %s\n" % Fmt.money(float(b["reserve"]))
+		if BusinessSim.is_business(b):
+			s += "Clasificación: [b]%s[/b]" % EconomySim.classify(b)
+			if int(b.get("loss_months", 0)) > 0:
+				s += " · [color=#e66]%d meses con pérdidas[/color]" % int(b["loss_months"])
+			s += "\n"
 	return s
 
 
@@ -246,7 +259,19 @@ func _price_tab(b: Dictionary) -> Control:
 	var v := VBoxContainer.new()
 	var def: Dictionary = GameState.building_def(b)
 	var g: Dictionary = GameData.goods.get(str(def.get("product", "")), {})
-	var ref := float(g.get("base_price", 0.1)) * float(GameState.diff().get("price_mult", 1.0))
+	var product := str(def.get("product", ""))
+	var ref := EconomySim.market_price(GameState, product)
+	var f := EconomySim.good_factor(GameState, product)
+	v.add_child(UIKit.label("Mercado de %s: %s (%s)" % [GameData.good_label(product), Fmt.money2(ref), "escasez" if f > 1.08 else ("exceso de oferta" if f < 0.92 else "normal")], 14))
+	var auto := CheckBox.new()
+	auto.text = "Precio automático según el mercado"
+	auto.button_pressed = bool(b.get("auto_price", false))
+	auto.toggled.connect(func(on): _b()["auto_price"] = on)
+	v.add_child(auto)
+	var mk := HBoxContainer.new()
+	mk.add_child(UIKit.label("Margen sobre mercado (%):"))
+	mk.add_child(UIKit.spin(-50, 200, 1, float(b.get("markup", 0.0)) * 100.0, func(val): _b()["markup"] = val / 100.0))
+	v.add_child(mk)
 	var t := UIKit.label("Precio de referencia: %s. Los clientes pagan hasta %s; por encima del de referencia compran menos. Si no compran a ti, se autoabastecen o importan." % [Fmt.money2(ref), Fmt.money2(ref * float(GameData.citizens.get("willing_markup", 1.6)))], 13, UIKit.TEXT_DIM)
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	t.custom_minimum_size.x = 380
@@ -344,4 +369,49 @@ func _upgrade_tab(b: Dictionary) -> Control:
 				rebuild())
 			rb.disabled = not GameState.is_active(b)
 			v.add_child(rb)
+	return v
+
+
+# --- Banco ------------------------------------------------------------------------------------------
+
+func _bank_tab(b: Dictionary) -> Control:
+	BankSim.bank_settings(GameState, b)
+	var v := VBoxContainer.new()
+	var loans := BankSim.bank_loans(GameState, b)
+	var outstanding := 0.0
+	var late := 0
+	for l in loans:
+		outstanding += float(l["balance"])
+		if int(l["missed"]) > 0:
+			late += 1
+	var t := "Préstamos activos: %d/%d (capacidad según empleados)\n" % [loans.size(), BankSim.bank_capacity(GameState, b)]
+	t += "Cartera: %s · En mora: %d\n" % [Fmt.money(outstanding), late]
+	t += "Intereses cobrados (total): %s · Incobrables: %s\n" % [Fmt.money(BusinessSim.period_value(b, "total", "intereses")), Fmt.money(BusinessSim.period_value(b, "total", "incobrables"))]
+	var rl := UIKit.rich()
+	rl.text = t
+	v.add_child(rl)
+	var lend := CheckBox.new()
+	lend.text = "Otorgar préstamos a ciudadanos"
+	lend.button_pressed = bool(b["lending"])
+	lend.toggled.connect(func(on): _b()["lending"] = on)
+	v.add_child(lend)
+	var r1 := HBoxContainer.new()
+	r1.add_child(UIKit.label("Tasa de interés anual (%):"))
+	r1.add_child(UIKit.spin(0, 80, 0.5, float(b["loan_rate"]) * 100.0, func(val): _b()["loan_rate"] = val / 100.0))
+	v.add_child(r1)
+	var r2 := HBoxContainer.new()
+	r2.add_child(UIKit.label("Préstamo máximo:"))
+	r2.add_child(UIKit.spin(10, 1000000, 10, float(b["max_loan"]), func(val): _b()["max_loan"] = val, 130))
+	v.add_child(r2)
+	var note := UIKit.label("Tasas altas: más morosidad, pobreza y menos consumo. Tasas bajas: más préstamos y consumo (clientes para tus negocios) pero más riesgo de impago. El dinero prestado sale de tu capital.", 12, UIKit.TEXT_DIM)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size.x = 380
+	v.add_child(note)
+	var list := ""
+	for l in loans.slice(0, 20):
+		list += "• %s: saldo %s, %s%s\n" % [hud.link(int(l["borrower"])), Fmt.money(float(l["balance"])), l["purpose"], " [color=#e66](mora %d)[/color]" % int(l["missed"]) if int(l["missed"]) > 0 else ""]
+	var ll := UIKit.rich()
+	ll.meta_clicked.connect(hud.on_meta_clicked)
+	ll.text = list
+	v.add_child(ll)
 	return v

@@ -71,5 +71,14 @@
  },
  "tapiceria_industrial": {
   "label": "Tapicería industrial"
+ },
+ "banca_moderna": {
+  "label": "Banca moderna"
+ },
+ "banca_central": {
+  "label": "Banca central"
+ },
+ "adobe": {
+  "label": "Adobe y teja de barro"
  }
 }

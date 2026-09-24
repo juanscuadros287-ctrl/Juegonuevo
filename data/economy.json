@@ -1,0 +1,60 @@
+{
+ "_nota": "Parámetros de la economía real (Fase 3).",
+ "price_factor": {
+  "min": 0.5,
+  "max": 2.2,
+  "shortage_step": 0.04,
+  "surplus_step": 0.03,
+  "shortage_threshold": 0.15,
+  "surplus_stock_days": 5
+ },
+ "inflation": {
+  "base_monthly": 0.0012,
+  "money_weight": 0.1,
+  "credit_weight": 0.4,
+  "scarcity_weight": 0.004,
+  "min_monthly": -0.01,
+  "max_monthly": 0.02,
+  "smoothing": 0.8,
+  "min_level": 0.5,
+  "max_level": 50.0
+ },
+ "classification": {
+  "profitable_margin": 0.05,
+  "breakeven_margin": -0.05
+ },
+ "bankruptcy": {
+  "warn_months": 3,
+  "loss_months": 6,
+  "inventory_liquidation": 0.5,
+  "seizure_months": 3,
+  "seizure_value": 0.5
+ },
+ "external_bank": {
+  "label": "Banco del Reino",
+  "limit_networth_ratio": 0.5,
+  "min_limit": 1000,
+  "risk_premium_max": 0.08,
+  "late_penalty": 0.05,
+  "default_missed": 3,
+  "terms_months": [
+   12,
+   24,
+   60,
+   120
+  ]
+ },
+ "citizen_credit": {
+  "monthly_request_chance": 0.25,
+  "base_rate_reference": 0.08,
+  "rate_sensitivity": 0.25,
+  "consumer_days": 30,
+  "consumer_term": 12,
+  "housing_term": 60,
+  "default_missed": 3,
+  "default_happiness_penalty": 15,
+  "max_payment_income_ratio": 0.5,
+  "default_ban_months": 24
+ },
+ "property_value_ratio": 0.7
+}

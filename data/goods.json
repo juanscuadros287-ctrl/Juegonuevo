@@ -54,5 +54,13 @@
   "storable": false,
   "internal": true,
   "order": 6
+ },
+ "credito": {
+  "label": "Crédito",
+  "base_price": 0,
+  "import_price": 0,
+  "storable": false,
+  "internal": true,
+  "order": 7
  }
 }

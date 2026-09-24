@@ -2255,5 +2255,358 @@
     ]
    }
   ]
+ },
+ "banco": {
+  "label": "Banco",
+  "category": "negocio",
+  "sector": "Finanzas",
+  "order": 10,
+  "product": "credito",
+  "skill": "comercio",
+  "base_wage": 2.6,
+  "footprint": 5.0,
+  "description": "Presta dinero a los ciudadanos con la tasa que decidas. Tasas altas: morosidad, pobreza y menos consumo. Tasas bajas: estímulo económico con riesgo de impago. El dinero prestado sale de tu capital.",
+  "levels": [
+   {
+    "label": "Casa de préstamos",
+    "cost": 1200,
+    "materials": {
+     "madera": 20,
+     "piedra": 40
+    },
+    "build_days": 25,
+    "workers": 3,
+    "jobs": 3,
+    "prod_per_worker": 0,
+    "loans_per_worker": 12,
+    "quality": 1.0,
+    "upkeep": 0.4,
+    "unit_cost": 0,
+    "tech": "",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5,
+       3.2,
+       4
+      ],
+      "pos": [
+       0,
+       1.6,
+       0
+      ],
+      "c": [
+       0.85,
+       0.82,
+       0.74
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.4,
+       1.2,
+       4.4
+      ],
+      "pos": [
+       0,
+       3.8,
+       0
+      ],
+      "rot": 90,
+      "c": [
+       0.55,
+       0.3,
+       0.2
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.18,
+       3.0,
+       0.18
+      ],
+      "pos": [
+       -1.8,
+       1.5,
+       2.2
+      ],
+      "c": [
+       0.95,
+       0.93,
+       0.88
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.18,
+       3.0,
+       0.18
+      ],
+      "pos": [
+       -0.6,
+       1.5,
+       2.2
+      ],
+      "c": [
+       0.95,
+       0.93,
+       0.88
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.18,
+       3.0,
+       0.18
+      ],
+      "pos": [
+       0.6,
+       1.5,
+       2.2
+      ],
+      "c": [
+       0.95,
+       0.93,
+       0.88
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.18,
+       3.0,
+       0.18
+      ],
+      "pos": [
+       1.8,
+       1.5,
+       2.2
+      ],
+      "c": [
+       0.95,
+       0.93,
+       0.88
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       1.8,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.9,
+       2.03
+      ],
+      "c": [
+       0.3,
+       0.2,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Banco",
+    "cost": 5000,
+    "materials": {
+     "madera": 30,
+     "piedra": 150
+    },
+    "build_days": 50,
+    "workers": 6,
+    "jobs": 8,
+    "prod_per_worker": 0,
+    "loans_per_worker": 20,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0,
+    "tech": "banca_moderna",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       7,
+       6,
+       6
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.88,
+       0.86,
+       0.8
+      ],
+      "c2": [
+       0.3,
+       0.35,
+       0.4
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.4,
+       0.4,
+       6.4
+      ],
+      "pos": [
+       0,
+       6.2,
+       0
+      ],
+      "c": [
+       0.5,
+       0.5,
+       0.5
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.25,
+       5.5,
+       0.25
+      ],
+      "pos": [
+       -2.4,
+       2.75,
+       3.2
+      ],
+      "c": [
+       0.95,
+       0.93,
+       0.88
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.25,
+       5.5,
+       0.25
+      ],
+      "pos": [
+       -0.8,
+       2.75,
+       3.2
+      ],
+      "c": [
+       0.95,
+       0.93,
+       0.88
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.25,
+       5.5,
+       0.25
+      ],
+      "pos": [
+       0.8,
+       2.75,
+       3.2
+      ],
+      "c": [
+       0.95,
+       0.93,
+       0.88
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.25,
+       5.5,
+       0.25
+      ],
+      "pos": [
+       2.4,
+       2.75,
+       3.2
+      ],
+      "c": [
+       0.95,
+       0.93,
+       0.88
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Banco nacional",
+    "cost": 20000,
+    "materials": {
+     "madera": 40,
+     "piedra": 400
+    },
+    "build_days": 100,
+    "workers": 12,
+    "jobs": 20,
+    "prod_per_worker": 0,
+    "loans_per_worker": 40,
+    "quality": 1.0,
+    "upkeep": 4.0,
+    "unit_cost": 0,
+    "tech": "banca_central",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       8,
+       20,
+       8
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 7,
+      "c": [
+       0.8,
+       0.8,
+       0.82
+      ],
+      "c2": [
+       0.25,
+       0.35,
+       0.5
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.4,
+       0.5,
+       8.4
+      ],
+      "pos": [
+       0,
+       20.2,
+       0
+      ],
+      "c": [
+       0.8,
+       0.65,
+       0.2
+      ]
+     }
+    ]
+   }
+  ]
  }
 }

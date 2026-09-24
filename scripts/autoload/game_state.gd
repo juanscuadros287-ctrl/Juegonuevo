@@ -3,7 +3,7 @@ extends Node
 ## La lógica vive en scripts/sim/ (PopulationSim, WeatherSim, BusinessSim,
 ## ConstructionSim, MarketSim, PlayerSim).
 
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 const MAP_SIZE := 400.0
 const ZONE_GRID := 5
 const START_ZONE := [2, 2]
@@ -22,6 +22,9 @@ var player_id: int = -1
 ## Datos propios del jugador: relaciones, planificación familiar, médico, finanzas personales.
 var player: Dictionary = {}
 var techs: Array = []                  # tecnologías investigadas (Fase 4)
+var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
+var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
+var next_loan_id: int = 1
 var weather: Dictionary = {}
 var season: String = ""
 var unlocked_zones: Array = []         # Array de [x, y]
@@ -43,6 +46,16 @@ func diff() -> Dictionary:
 
 func today() -> int:
 	return TimeManager.day_index()
+
+
+## Nivel general de precios (inflación acumulada).
+func price_level() -> float:
+	return float(economy.get("price_level", 1.0))
+
+
+## Multiplicador de precios: dificultad × inflación. Úsalo para todo costo nominal.
+func price_mult() -> float:
+	return float(diff().get("price_mult", 1.0)) * price_level()
 
 
 # --- Partida nueva ----------------------------------------------------------
@@ -70,6 +83,7 @@ func new_game(opts: Dictionary) -> void:
 	TimeManager.reset()
 	money = float(diff().get("start_money", 8000))
 	unlocked_zones = [START_ZONE.duplicate()]
+	EconomySim.init_state(self)
 	WeatherSim.init_weather(self)
 	PopulationSim.generate_initial(self, int(diff().get("start_citizens", 30)))
 	PlayerSim.create_player(self)
@@ -89,6 +103,9 @@ func _clear() -> void:
 	player_id = -1
 	player = {}
 	techs = []
+	economy = {}
+	loans = []
+	next_loan_id = 1
 	weather = {}
 	season = ""
 	unlocked_zones = []
@@ -114,7 +131,9 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	PlayerSim.daily(self)
 	if new_month and running:
 		MarketSim.monthly_housing(self)
+		BankSim.monthly(self)
 		BusinessSim.monthly(self)
+		EconomySim.monthly(self)
 		PlayerSim.monthly(self)
 		_record_month()
 
@@ -130,10 +149,22 @@ func _record_month() -> void:
 		"deaths": int(month_counters.get("deaths", 0)),
 		"income": float(month_counters.get("income", 0.0)),
 		"expenses": float(month_counters.get("expenses", 0.0)),
+		"net_worth": EconomySim.net_worth(self),
+		"debt": EconomySim.player_debt(self),
+		"loans_granted": EconomySim.loans_granted(self),
+		"price_level": price_level(),
+		"inflation": EconomySim.annual_inflation(self),
+		"unemployment": EconomySim.unemployment(self),
+		"interest_paid": float(month_counters.get("interest_paid", 0.0)),
+		"interest_earned": float(month_counters.get("interest_earned", 0.0)),
 	})
 	if history.size() > MAX_HISTORY:
 		history.pop_front()
 	month_counters = {}
+
+
+func add_counter(key: String, amount: float) -> void:
+	month_counters[key] = float(month_counters.get(key, 0.0)) + amount
 
 
 func count(key: String, n: int = 1) -> void:
@@ -349,6 +380,9 @@ func to_dict() -> Dictionary:
 		"player_id": player_id,
 		"player": player,
 		"techs": techs,
+		"economy": economy,
+		"loans": loans,
+		"next_loan_id": next_loan_id,
 		"weather": weather,
 		"season": season,
 		"unlocked_zones": unlocked_zones,
@@ -379,6 +413,15 @@ func load_dict(d: Dictionary) -> void:
 	player = d.get("player", {})
 	player_id = int(d.get("player_id", -1))
 	techs = d.get("techs", [])
+	loans = []
+	for l in d.get("loans", []):
+		var ld: Dictionary = l
+		ld["id"] = int(ld["id"])
+		ld["months_paid"] = int(ld.get("months_paid", 0))
+		ld["missed"] = int(ld.get("missed", 0))
+		ld["term_months"] = int(ld.get("term_months", 12))
+		loans.append(ld)
+	next_loan_id = int(d.get("next_loan_id", 1))
 	weather = d.get("weather", {})
 	season = str(d.get("season", ""))
 	unlocked_zones = d.get("unlocked_zones", [START_ZONE.duplicate()])
@@ -390,6 +433,9 @@ func load_dict(d: Dictionary) -> void:
 	rng.seed = int(str(d.get("rng_seed", "0")))
 	rng.state = int(str(d.get("rng_state", "0")))
 	running = bool(d.get("running", true))
+	economy = d.get("economy", {})
+	if economy.is_empty():
+		EconomySim.init_state(self)
 	if player_id < 0:
 		# Partida de la Fase 1: el jugador aún no era un ciudadano.
 		PlayerSim.migrate_v1_player(self, d.get("player", {}))

@@ -8,9 +8,11 @@ func _ready() -> void:
 	add_child(world)
 	await get_tree().process_frame
 	var hud: Hud = world.hud
-	for mode in ["player", "build", "companies"]:
+	for mode in ["player", "build", "companies", "finance"]:
 		hud._show_dock(mode)
 		await get_tree().process_frame
+	BankSim.request_player_loan(GameState, 500.0, 12)
+	var bank: Dictionary = ConstructionSim.start_construction(GameState, "banco", -32, 10, 0.0, "Banco Test", "sas")["building"]
 	var r := ConstructionSim.start_construction(GameState, "granja", 30, -8, 0.0, "Granja Test", "sin_lucro")
 	var farm: Dictionary = r["building"]
 	TimeManager.advance_days(40)
@@ -19,6 +21,12 @@ func _ready() -> void:
 		hud.building_panel.tabs.current_tab = i
 		await get_tree().process_frame
 	hud.building_panel._open_hire()
+	hud.open_building(int(bank["id"]))
+	for i in range(hud.building_panel.tabs.get_tab_count()):
+		hud.building_panel.tabs.current_tab = i
+		await get_tree().process_frame
+	hud._show_dock("finance")
+	await get_tree().process_frame
 	var some: Citizen = GameState.citizens.values()[3]
 	EventBus.citizen_selected.emit(some.id)
 	await get_tree().process_frame

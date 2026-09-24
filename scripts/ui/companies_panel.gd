@@ -49,7 +49,9 @@ func refresh() -> void:
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(v)
 		v.add_child(UIKit.label("%s  · Nv %d" % [GameState.building_label(b), int(b["level"])], 15))
-		var status: String = {"activo": "activo", "construccion": "en construcción", "mejorando": "mejorando (no factura)"}.get(str(b["status"]), "")
+		var status: String = {"activo": "activo", "construccion": "en construcción", "mejorando": "mejorando (no factura)", "cerrado": "CERRADO"}.get(str(b["status"]), "")
+		if BusinessSim.is_business(b) and b["status"] == "activo":
+			status += " · " + EconomySim.classify(b)
 		var legal := str(GameData.legal_types.get(str(b.get("legal", "sas")), {}).get("label", "")) if def.get("category", "") == "negocio" else str(def.get("label", ""))
 		var col := Color(0.5, 0.85, 0.5) if profit >= 0 else Color(0.95, 0.45, 0.45)
 		v.add_child(UIKit.label("%s · %s" % [legal, status], 12, UIKit.TEXT_DIM))

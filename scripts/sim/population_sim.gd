@@ -208,10 +208,23 @@ static func pay_with(gs, payers: Array, amount: float) -> bool:
 	if amount <= 0.0:
 		return true
 	var total := 0.0
+	var player_payer: Citizen = null
 	for p in payers:
 		total += maxf(0.0, _wallet(gs, p))
+		if gs.is_player(p.id):
+			player_payer = p
 	if total < amount:
-		return false
+		if player_payer == null:
+			return false
+		# La familia del jugador nunca pasa hambre: se endeuda (saldo negativo → embargo).
+		var rest := amount
+		for p in payers:
+			if not gs.is_player(p.id):
+				var take := maxf(0.0, p.money)
+				p.money -= take
+				rest -= take
+		gs.add_money(-rest)
+		return true
 	var left := amount
 	for p in payers:
 		if left <= 0.0:
@@ -231,7 +244,7 @@ static func _wallet(gs, p: Citizen) -> float:
 
 static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionary, wdata: Dictionary, diff: Dictionary) -> void:
 	var cfg := GameData.citizens
-	var price_mult := float(diff.get("price_mult", 1.0))
+	var price_mult: float = gs.price_mult()
 	var is_adult := age >= adult_age
 	var is_player: bool = gs.is_player(c.id)
 	var cost_factor := 1.0 if is_adult else float(cfg.get("child_cost_factor", 0.4))
@@ -242,7 +255,7 @@ static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionar
 	if is_adult and not employed and not is_player:
 		# Sin empleo: subsistencia (cultivan y venden excedentes por su cuenta).
 		var skill := float(c.skills.get("agricultura", 0.0))
-		var income := float(cfg.get("subsistence_income", 1.5)) * (0.8 + skill / 250.0)
+		var income := float(cfg.get("subsistence_income", 1.5)) * (0.8 + skill / 250.0) * float(gs.price_level())
 		income *= float(season.get("farming", 1.0)) * float(wdata.get("farming", 1.0))
 		income *= clampf(c.health / 80.0, 0.2, 1.0)
 		if age >= int(cfg.get("retirement_age", 65)):
@@ -264,6 +277,8 @@ static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionar
 		var w := float(need.get("weight", 0.1))
 		total_w += w
 		var ref := float(need.get("cost", 0.1)) * price_mult
+		if need.has("good"):
+			ref *= EconomySim.good_factor(gs, str(need["good"]))
 		var qty := cost_factor
 		if need_id == "energia":
 			qty *= energy_mult

@@ -3,8 +3,10 @@ extends RefCounted
 ## Negocios del jugador: producción, salarios, mantenimiento, contabilidad,
 ## contratación manual y renuncias. Parámetros en data/businesses.json.
 
-const LEDGER_KEYS := ["ventas", "alquileres", "salarios", "mantenimiento", "insumos", "obras"]
-const INCOME_KEYS := ["ventas", "alquileres"]
+const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "salarios", "mantenimiento", "insumos", "incobrables", "obras"]
+const INCOME_KEYS := ["ventas", "alquileres", "intereses"]
+## Movimientos que no son ingreso ni gasto (inversión y capital prestado).
+const NON_PNL_KEYS := ["obras", "prestado"]
 
 
 # --- Consultas -----------------------------------------------------------------------
@@ -40,14 +42,14 @@ static func office_discount(gs) -> float:
 
 static func default_price(gs, def: Dictionary) -> float:
 	var g: Dictionary = GameData.goods.get(str(def.get("product", "")), {})
-	return snappedf(float(g.get("base_price", 0.0)) * float(gs.diff().get("price_mult", 1.0)) * 1.1, 0.01)
+	return snappedf(float(g.get("base_price", 0.0)) * gs.price_mult() * 1.1, 0.01)
 
 
 static func max_price(gs, b: Dictionary) -> float:
 	var def: Dictionary = gs.building_def(b)
 	var g: Dictionary = GameData.goods.get(str(def.get("product", "")), {})
 	var legal: Dictionary = GameData.legal_types.get(str(b.get("legal", "sas")), {})
-	return float(g.get("base_price", 1.0)) * float(gs.diff().get("price_mult", 1.0)) * float(legal.get("max_price_factor", 10.0))
+	return float(g.get("base_price", 1.0)) * gs.price_mult() * float(legal.get("max_price_factor", 10.0))
 
 
 static func set_price(gs, b: Dictionary, price: float) -> void:
@@ -67,7 +69,7 @@ static func asked_wage(gs, c: Citizen, type_id: String) -> float:
 	var def := GameData.building_def(type_id)
 	var s := float(c.skills.get(str(def.get("skill", "")), 0.0))
 	var w := float(def.get("base_wage", 2.0)) * (0.8 + s / 200.0 + minf(c.experience, 30.0) * 0.01 + c.education * 0.1)
-	return snappedf(w * float(gs.diff().get("price_mult", 1.0)), 0.05)
+	return snappedf(w * gs.price_mult(), 0.05)
 
 
 ## Producción diaria estimada con los empleados actuales.
@@ -105,7 +107,7 @@ static func period_profit(b: Dictionary, period: String) -> float:
 	for k in p:
 		if k in INCOME_KEYS:
 			profit += float(p[k])
-		elif k != "obras":
+		elif not k in NON_PNL_KEYS:
 			profit -= float(p[k])
 	return profit
 
@@ -143,10 +145,10 @@ static func pay(gs, b: Dictionary, amount: float, key: String) -> void:
 
 static func produce(gs) -> void:
 	var points := 0.0
-	var pm := float(gs.diff().get("price_mult", 1.0))
+	var pm: float = gs.price_mult()
 	var discount := office_discount(gs)
 	for b in gs.buildings:
-		if not gs.owned_by_player(b) or b["status"] == "construccion":
+		if not gs.owned_by_player(b) or b["status"] == "construccion" or b["status"] == "cerrado":
 			continue
 		var def: Dictionary = gs.building_def(b)
 		var ld: Dictionary = gs.level_def(b)
@@ -163,8 +165,12 @@ static func produce(gs) -> void:
 			c.skills[skill] = minf(100.0, float(c.skills.get(skill, 0.0)) + 0.02)
 		if b["status"] != "activo":
 			continue  # En mejora: no produce ni factura.
-		var out := expected_output(gs, b)
 		var product := str(def.get("product", ""))
+		if product == "credito":
+			continue
+		if bool(b.get("auto_price", false)):
+			b["price"] = clampf(snappedf(EconomySim.market_price(gs, product) * (1.0 + float(b.get("markup", 0.0))), 0.01), 0.01, max_price(gs, b))
+		var out := expected_output(gs, b)
 		if product == "construccion":
 			points += out
 			continue
@@ -189,12 +195,24 @@ static func end_day(gs) -> void:
 
 
 static func monthly(gs) -> void:
+	var bk: Dictionary = GameData.economy.get("bankruptcy", {})
 	for b in gs.buildings:
 		if not gs.owned_by_player(b):
 			continue
 		var led: Dictionary = b["ledger"]
 		led["last_month"] = led["month"]
 		led["month"] = {}
+		if not is_business(b) or b["status"] != "activo":
+			continue
+		if period_profit(b, "last_month") < 0.0:
+			b["loss_months"] = int(b.get("loss_months", 0)) + 1
+			var n := int(b["loss_months"])
+			if n == int(bk.get("warn_months", 3)):
+				gs.notify("%s lleva %d meses perdiendo dinero: ajusta precios, personal o ciérralo." % [gs.building_label(b), n], "jugador")
+			if n >= int(bk.get("loss_months", 6)) and gs.money < 0.0:
+				go_bankrupt(gs, b)
+		else:
+			b["loss_months"] = 0
 	# Renuncias por salario bajo y jubilación.
 	var ratio := float(GameData.citizens.get("quit_wage_ratio", 0.8))
 	var chance := float(GameData.citizens.get("quit_monthly_chance", 0.3))
@@ -270,3 +288,41 @@ static func job_label(gs, c: Citizen) -> String:
 	if c.job_kind == "obra":
 		return "Jornalero en obra: %s (%s/día)" % [gs.building_label(b), Fmt.money2(c.wage)]
 	return "%s (%s/día)" % [gs.building_label(b), Fmt.money2(c.wage)]
+
+
+# --- Quiebra y reapertura ----------------------------------------------------------------------
+
+## Quiebra: cierra el negocio, despide al personal y remata el inventario.
+static func go_bankrupt(gs, b: Dictionary) -> void:
+	var liq := float(GameData.economy.get("bankruptcy", {}).get("inventory_liquidation", 0.5))
+	var recovered := 0.0
+	for g in b["inventory"]:
+		recovered += float(b["inventory"][g]) * float(GameData.goods.get(g, {}).get("base_price", 0.0)) * gs.price_mult() * liq
+		b["inventory"][g] = 0.0
+	for c in gs.employees_of(int(b["id"])):
+		if c.job_kind == "empleo":
+			fire(gs, c)
+	b["status"] = "cerrado"
+	b["loss_months"] = 0
+	gs.add_money(recovered)
+	gs.count("bankruptcies")
+	gs.notify("QUIEBRA: %s cerró tras meses de pérdidas. Remate de inventario: %s." % [gs.building_label(b), Fmt.money(recovered)], "jugador")
+	EventBus.building_changed.emit(int(b["id"]))
+
+
+static func reopen_cost(gs, b: Dictionary) -> float:
+	return float(gs.level_def(b).get("cost", 0)) * 0.2 * gs.price_mult()
+
+
+static func reopen(gs, b: Dictionary) -> String:
+	if b["status"] != "cerrado" or not gs.owned_by_player(b):
+		return "No está cerrado"
+	var cost := reopen_cost(gs, b)
+	if gs.money < cost:
+		return "Necesitas %s" % Fmt.money(cost)
+	gs.add_money(-cost)
+	ledger_add(b, "obras", cost)
+	b["status"] = "activo"
+	gs.notify("Reabriste %s." % gs.building_label(b), "negocio")
+	EventBus.building_changed.emit(int(b["id"]))
+	return ""

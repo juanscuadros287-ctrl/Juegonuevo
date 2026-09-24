@@ -157,7 +157,7 @@ func _rebuild_building(id: int) -> void:
 	var holder := Node3D.new()
 	holder.rotation.y = float(b.get("rot", 0.0))
 	root.add_child(holder)
-	var parts: Array = ld.get("model", [])
+	var parts: Array = Housing.exterior_parts(b) if Housing.is_home(b) else ld.get("model", [])
 	var height := MeshLib.model_height(parts)
 	var tint := float(Housing.tier_def(b).get("tint", 1.0)) if Housing.is_home(b) else 1.0
 	match str(b.get("status", "activo")):

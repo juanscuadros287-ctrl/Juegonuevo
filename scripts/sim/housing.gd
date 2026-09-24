@@ -32,11 +32,12 @@ static func interior_items(gs, b: Dictionary) -> Array:
 	var catalog: Dictionary = cfg.get("items", {})
 	var layout: Dictionary = cfg.get("layout", {})
 	var tier := tier_index(b)
+	var level := int(b.get("level", 1))
 	var out := []
 	for slot in catalog:
 		var best: Dictionary = {}
 		for item in catalog[slot]:
-			if int(item.get("tier_min", 0)) > tier or not gs.has_tech(str(item.get("tech", ""))):
+			if not item_allowed(item, level, tier) or not gs.has_tech(str(item.get("tech", ""))):
 				continue
 			if best.is_empty() or int(item.get("rank", 0)) > int(best.get("rank", 0)):
 				best = item
@@ -50,6 +51,31 @@ static func interior_items(gs, b: Dictionary) -> Array:
 			var p := Vector2(float(l["pos"][0]) + i * float(cfg.get("extra_beds_step", 0.2)), float(l["pos"][1]))
 			out.append({"slot": slot, "item": best, "pos": p, "rot": float(l.get("rot", 0)), "index": i})
 	return out
+
+
+## Un objeto se permite si la casa cumple alguno de sus requisitos [nivel, calidad].
+static func item_allowed(item: Dictionary, level: int, tier: int) -> bool:
+	var reqs: Array = item.get("req", [[1, int(item.get("tier_min", 0))]])
+	for r in reqs:
+		if level >= int(r[0]) and tier >= int(r[1]):
+			return true
+	return false
+
+
+static func floor_color(b: Dictionary) -> Color:
+	var floors: Dictionary = GameData.interiors.get("floors", {})
+	var by_level: Dictionary = floors.get(str(int(b.get("level", 1))), floors.get("default", {}))
+	return MeshLib.arr_color(by_level.get(str(b.get("tier", "normal"))), Color(0.5, 0.4, 0.3))
+
+
+## Modelo exterior según nivel y calidad (algunas calidades tienen modelo propio).
+static func exterior_parts(b: Dictionary) -> Array:
+	var ld := GameData.level_def(str(b.get("type", "")), int(b.get("level", 1)))
+	var tm: Dictionary = ld.get("tier_models", {})
+	var tier := str(b.get("tier", "normal"))
+	if tm.has(tier):
+		return tm[tier]
+	return ld.get("model", [])
 
 
 static func room_def(b: Dictionary) -> Dictionary:

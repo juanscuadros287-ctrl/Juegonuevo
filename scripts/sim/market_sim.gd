@@ -36,6 +36,9 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 	var left := qty
 	var bonus := 0.0
 	var willing := ref_price * float(GameData.citizens.get("willing_markup", 1.6))
+	var total_stock := 0.0
+	for b in sellers(good):
+		total_stock += float(b["inventory"].get(good, 0.0))
 	for b in sellers(good):
 		if left <= 0.0001:
 			break
@@ -58,14 +61,15 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 		left -= take
 		bonus += (_quality(gs, b) - 1.0) * 2.0 * (take / qty)
 		bonus += float(GameData.legal_types.get(str(b.get("legal", "")), {}).get("happiness_bonus", 0)) * (take / qty)
+	EconomySim.record_purchase(gs, good, qty, qty - maxf(0.0, left), maxf(0.0, qty - total_stock))
 	if left <= 0.0001:
 		return {"ok": true, "bonus": bonus}
-	# Sin oferta local: autoabastecimiento (desempleados) o importación (empleados, más cara).
+	# Sin oferta local: autoabastecimiento (desempleados, a costo base) o importación (empleados, más cara).
 	var g: Dictionary = GameData.goods.get(good, {})
-	var mult := 1.0
+	var unit := ref_price / maxf(0.01, EconomySim.good_factor(gs, good))
 	if employed and float(g.get("import_price", 0.0)) > 0.0:
-		mult = float(GameData.citizens.get("import_markup_employed", 1.4))
-	var ok := PopulationSim.pay_with(gs, payers, left * ref_price * mult)
+		unit *= float(GameData.citizens.get("import_markup_employed", 1.4))
+	var ok := PopulationSim.pay_with(gs, payers, left * unit)
 	return {"ok": ok, "bonus": bonus}
 
 
@@ -178,7 +182,7 @@ static func monthly_housing(gs) -> void:
 			gs.notify("La familia %s alquiló en %s." % [head.last_name, gs.building_label(best)], "negocio")
 		elif homeless or crowded:
 			# 3) Autoconstrucción de una choza con sus ahorros.
-			var cost := float(GameData.citizens.get("self_build_cost", 150)) * float(gs.diff().get("price_mult", 1.0))
+			var cost: float = float(GameData.citizens.get("self_build_cost", 150)) * gs.price_mult()
 			if money >= cost and gs.rng.randf() < float(GameData.citizens.get("self_build_monthly_chance", 0.25)):
 				PopulationSim.pay_with(gs, members, cost)
 				var hut := PopulationSim.create_hut(gs)

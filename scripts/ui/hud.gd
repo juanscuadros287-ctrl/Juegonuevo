@@ -32,6 +32,7 @@ var building_panel: BuildingPanel
 var build_menu: BuildMenu
 var companies_panel: CompaniesPanel
 var player_panel: PlayerPanel
+var finance_panel: FinancePanel
 
 # Interior
 var interior_panel: PanelContainer
@@ -220,11 +221,12 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Mi Personaje", func(): _show_dock("player"), 160))
 	box.add_child(UIKit.button("Construir", func(): _show_dock("build"), 160))
 	box.add_child(UIKit.button("Mis Empresas", func(): _show_dock("companies"), 160))
+	box.add_child(UIKit.button("Finanzas", func(): _show_dock("finance"), 160))
 	box.add_child(UIKit.button("Población", _open_population, 160))
 	box.add_child(UIKit.button("Notificaciones", _open_log, 160))
 	box.add_child(UIKit.button("Menú (Esc)", _open_pause, 160))
 	box.add_child(HSeparator.new())
-	for entry in [["Finanzas", 3], ["Investigación", 4], ["Gobierno", 5]]:
+	for entry in [["Investigación", 4], ["Gobierno", 5]]:
 		var b := UIKit.button(entry[0], func(): pass, 160)
 		b.disabled = true
 		b.tooltip_text = "Disponible en la Fase %d" % entry[1]
@@ -313,6 +315,12 @@ func _build_dock() -> void:
 	player_panel.setup(self)
 	player_panel.closed.connect(close_dock)
 	player_panel.message.connect(toast)
+	finance_panel = FinancePanel.new()
+	finance_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	stack.add_child(finance_panel)
+	finance_panel.setup(self)
+	finance_panel.closed.connect(close_dock)
+	finance_panel.message.connect(toast)
 
 
 func _show_dock(mode: String) -> void:
@@ -326,7 +334,10 @@ func _show_dock(mode: String) -> void:
 	build_menu.visible = mode == "build"
 	companies_panel.visible = mode == "companies"
 	player_panel.visible = mode == "player"
+	finance_panel.visible = mode == "finance"
 	match mode:
+		"finance":
+			finance_panel.refresh()
 		"build":
 			build_menu.refresh()
 		"companies":
@@ -375,7 +386,7 @@ func _citizen_text(c: Citizen) -> String:
 		s += " · [color=#9cf]%s[/color]" % PlayerSim.relation_label(GameState, c)
 	s += "\n\nSalud: %s%s\n" % [bar(c.health), "  [color=#e88](enfermo/a)[/color]" if c.sick else ""]
 	s += "Felicidad: %s · Necesidades: %s\n" % [bar(c.happiness), bar(c.needs_met * 100.0)]
-	s += "Dinero: %s   Deudas: %s\n" % [Fmt.money(GameState.money if me else c.money), Fmt.money(c.debt)]
+	s += "Dinero: %s   Deudas: %s\n" % [Fmt.money(GameState.money if me else c.money), Fmt.money(EconomySim.player_debt(GameState) if me else c.debt)]
 	s += "Trabajo: %s\n" % ("Empresario(a)" if me else BusinessSim.job_label(GameState, c))
 	s += "Educación: %s · Experiencia: %.1f años\n\n" % [GameData.education_label(c.education), c.experience]
 	s += "[b]Habilidades[/b]\n"

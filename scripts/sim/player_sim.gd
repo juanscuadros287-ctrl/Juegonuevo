@@ -122,7 +122,7 @@ static func date(gs, c: Citizen) -> String:
 		return r
 	if affinity(gs, c.id) < float(cfg().get("date_min_affinity", 20)):
 		return "Primero conózcanse mejor (relación %d/%d)" % [int(affinity(gs, c.id)), int(cfg().get("date_min_affinity", 20))]
-	var cost := float(cfg().get("date_cost", 5)) * float(gs.diff().get("price_mult", 1.0))
+	var cost: float = float(cfg().get("date_cost", 5)) * gs.price_mult()
 	if gs.money < cost:
 		return "No tienes dinero para la cita"
 	gs.add_money(-cost)
@@ -235,7 +235,7 @@ static func adopt_orphan(gs, c: Citizen) -> String:
 	var r := can_adopt_orphan(gs, c)
 	if r != "":
 		return r
-	var fee := float(cfg().get("adopt_orphan_fee", 100)) * float(gs.diff().get("price_mult", 1.0))
+	var fee: float = float(cfg().get("adopt_orphan_fee", 100)) * gs.price_mult()
 	if gs.money < fee:
 		return "Necesitas %s" % Fmt.money(fee)
 	gs.add_money(-fee)
@@ -246,7 +246,7 @@ static func adopt_orphan(gs, c: Citizen) -> String:
 
 
 static func adopt_baby(gs) -> String:
-	var fee := float(cfg().get("adopt_baby_fee", 400)) * float(gs.diff().get("price_mult", 1.0))
+	var fee: float = float(cfg().get("adopt_baby_fee", 400)) * gs.price_mult()
 	if gs.money < fee:
 		return "Necesitas %s" % Fmt.money(fee)
 	var p: Citizen = gs.player_citizen()
@@ -263,7 +263,7 @@ static func adopt_baby(gs) -> String:
 
 
 static func visit_doctor(gs) -> String:
-	var fee := float(cfg().get("doctor_fee", 30)) * float(gs.diff().get("price_mult", 1.0))
+	var fee: float = float(cfg().get("doctor_fee", 30)) * gs.price_mult()
 	if gs.money < fee:
 		return "Necesitas %s" % Fmt.money(fee)
 	gs.add_money(-fee)

@@ -76,8 +76,8 @@ func _rebuild_actions(p: Citizen, kids: Array) -> void:
 	fp.button_pressed = bool(GameState.player.get("family_planning", true))
 	fp.toggled.connect(func(on): GameState.player["family_planning"] = on)
 	actions.add_child(fp)
-	actions.add_child(UIKit.button("Adoptar un bebé de otro pueblo (%s)" % Fmt.money(float(PlayerSim.cfg().get("adopt_baby_fee", 400)) * float(GameState.diff().get("price_mult", 1.0))), func(): _do(PlayerSim.adopt_baby(GameState))))
-	actions.add_child(UIKit.button("Ir al médico (%s)" % Fmt.money(float(PlayerSim.cfg().get("doctor_fee", 30)) * float(GameState.diff().get("price_mult", 1.0))), func(): _do(PlayerSim.visit_doctor(GameState))))
+	actions.add_child(UIKit.button("Adoptar un bebé de otro pueblo (%s)" % Fmt.money(float(PlayerSim.cfg().get("adopt_baby_fee", 400)) * GameState.price_mult()), func(): _do(PlayerSim.adopt_baby(GameState))))
+	actions.add_child(UIKit.button("Ir al médico (%s)" % Fmt.money(float(PlayerSim.cfg().get("doctor_fee", 30)) * GameState.price_mult()), func(): _do(PlayerSim.visit_doctor(GameState))))
 	if not kids.is_empty():
 		var row := HBoxContainer.new()
 		row.add_child(UIKit.label("Elegir heredero:"))

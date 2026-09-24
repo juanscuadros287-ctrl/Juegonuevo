@@ -110,6 +110,8 @@ static func rich(min_size := Vector2(0, 0)) -> RichTextLabel:
 	r.fit_content = true
 	r.scroll_active = false
 	r.custom_minimum_size = min_size
+	r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	r.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return r
 
 

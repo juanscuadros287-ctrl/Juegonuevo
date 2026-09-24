@@ -24,6 +24,10 @@ func _ready() -> void:
 	_test_phase2_player()
 	_test_interiors()
 	_test_time_speeds()
+	_test_phase3_prices()
+	_test_phase3_player_loans()
+	_test_phase3_bank()
+	_test_phase3_bankruptcy()
 	print("== %s (%d fallos) ==" % ["TODO OK" if failures == 0 else "CON FALLOS", failures])
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -281,7 +285,10 @@ func _test_interiors() -> void:
 	var labels_n := items_n.map(func(i): return i["item"]["id"])
 	var labels_a := items_a.map(func(i): return i["item"]["id"])
 	check(labels_n.has("jergon") and labels_n.has("bacinilla") and labels_n.has("fogon"), "casa normal 1700: jergón, bacinilla y fogón")
-	check(labels_a.has("cama_dosel") and labels_a.has("banera_hierro"), "casa alta: cama con dosel y bañera")
+	check(labels_a.has("cama_lana") and not labels_a.has("cama_dosel") and not labels_a.has("banera_hierro"), "choza alta: cama de lana, sin lujos de otra época")
+	var ladrillo_alta := Housing.interior_items(GameState, {"type": "vivienda", "level": 3, "tier": "alta"}).map(func(i): return i["item"]["id"])
+	check(ladrillo_alta.has("cama_dosel") and ladrillo_alta.has("banera_hierro"), "casa de ladrillo alta: cama con dosel y bañera")
+	check(ConstructionSim.level_block_reason(GameState, "vivienda", 2) != "", "la casa de adobe requiere investigación")
 	GameState.techs.append_array(["saneamiento", "electricidad"])
 	var labels_e := Housing.interior_items(GameState, {"type": "vivienda", "level": 1, "tier": "normal"}).map(func(i): return i["item"]["id"])
 	check(labels_e.has("inodoro") and labels_e.has("bombilla"), "otra época: inodoro y bombilla")
@@ -297,3 +304,102 @@ func _test_time_speeds() -> void:
 	TimeManager._process(2.0)
 	check(TimeManager.total_hours == h0 + 2, "x1: 2 s = 2 horas")
 	TimeManager.set_speed(0)
+
+
+
+func _hire_n(b: Dictionary, n: int) -> void:
+	for c in BusinessSim.candidates(GameState, b).slice(0, n):
+		BusinessSim.hire(GameState, b, c, BusinessSim.asked_wage(GameState, c, b["type"]))
+
+
+func _test_phase3_prices() -> void:
+	GameState.new_game({"seed": 41, "difficulty": "facil"})
+	var farm := _build_now("granja", 30, -8)
+	var well := _build_now("aguatero", -30, 8)
+	_hire_n(farm, 4)
+	_hire_n(well, 3)
+	for m in range(18):
+		TimeManager.advance_days(30)
+	var fw := EconomySim.good_factor(GameState, "agua")
+	print("    18 meses: agua x%.2f comida x%.2f · nivel precios %.3f · inflación %.1f%%" % [fw, EconomySim.good_factor(GameState, "comida"), GameState.price_level(), EconomySim.annual_inflation(GameState) * 100.0])
+	check(fw < 1.0, "exceso de agua: el precio de mercado baja")
+	var lvl := GameState.price_level()
+	check(lvl > 0.9 and lvl < 1.3, "inflación moderada (nivel %.3f)" % lvl)
+	# Escasez: una granja sin empleados que tenía clientes.
+	for c in GameState.employees_of(int(farm["id"])):
+		BusinessSim.fire(GameState, c)
+	farm["inventory"]["comida"] = 0.0
+	var before := EconomySim.good_factor(GameState, "comida")
+	TimeManager.advance_days(95)
+	check(EconomySim.good_factor(GameState, "comida") > before, "escasez de comida: el precio sube")
+	check(float(farm["price"]) > 0.0 and bool(farm.get("auto_price", false)), "precio automático activo")
+
+
+func _test_phase3_player_loans() -> void:
+	GameState.new_game({"seed": 42, "difficulty": "normal"})
+	var lim := BankSim.credit_limit(GameState)
+	check(lim > 0.0, "el banco externo ofrece crédito (%.0f)" % lim)
+	check(BankSim.request_player_loan(GameState, lim * 10.0, 12) != "", "no presta sobre el límite")
+	var m0 := GameState.money
+	check(BankSim.request_player_loan(GameState, 1000.0, 12) == "" and is_equal_approx(GameState.money, m0 + 1000.0), "préstamo de 1000 recibido")
+	var l: Dictionary = BankSim.player_loans(GameState)[0]
+	check(float(l["payment"]) > 1000.0 / 12.0, "cuota con intereses (%.2f)" % float(l["payment"]))
+	TimeManager.advance_days(95)
+	check(int(l["months_paid"]) >= 3 and float(l["balance"]) < 1000.0, "cuotas pagadas mes a mes")
+	check(BankSim.repay_loan(GameState, int(l["id"])) == "" and BankSim.player_loans(GameState).is_empty(), "pago anticipado")
+	# Impago → embargo
+	var shop := _build_now("tienda", 30, -8)
+	BankSim.request_player_loan(GameState, 800.0, 12)
+	GameState.money = -50000.0
+	TimeManager.advance_days(125)
+	check(shop["owner"] == "pueblo", "impago: el banco embarga tus propiedades")
+
+
+func _test_phase3_bank() -> void:
+	var results := {}
+	for rate in [0.05, 0.40]:
+		GameState.new_game({"seed": 43, "difficulty": "facil"})
+		GameState.money = 30000.0
+		var bank := _build_now("banco", 32, -6)
+		_hire_n(bank, 3)
+		BankSim.bank_settings(GameState, bank)
+		bank["loan_rate"] = rate
+		for c in GameState.citizens.values():
+			if not GameState.is_player(c.id):
+				c.money = minf(c.money, 5.0)
+		for m in range(12):
+			GameState.money = maxf(GameState.money, 30000.0)
+			TimeManager.advance_days(30)
+		results[rate] = {"loans": BankSim.bank_loans(GameState, bank).size() + BusinessSim.period_value(bank, "total", "prestado") / 100.0,
+			"interest": BusinessSim.period_value(bank, "total", "intereses")}
+	print("    banco tasa 5%%: %s · tasa 40%%: %s" % [str(results[0.05]), str(results[0.40])])
+	check(float(results[0.05]["loans"]) > 0.0, "tu banco presta a ciudadanos")
+	check(float(results[0.05]["interest"]) > 0.0, "cobra intereses")
+	check(float(results[0.05]["loans"]) > float(results[0.40]["loans"]), "tasas altas reducen la demanda de crédito")
+	# Guardar y cargar con préstamos y economía.
+	SaveManager.save_game("test_f3")
+	var n := GameState.loans.size()
+	var lvl := GameState.price_level()
+	SaveManager.load_game("test_f3")
+	check(GameState.loans.size() == n and is_equal_approx(GameState.price_level(), lvl), "préstamos y economía se guardan")
+	SaveManager.delete_save("test_f3")
+
+
+func _test_phase3_bankruptcy() -> void:
+	GameState.new_game({"seed": 44, "difficulty": "normal"})
+	var tav := _build_now("taberna", 30, -8)
+	_hire_n(tav, 3)
+	for c in GameState.employees_of(int(tav["id"])):
+		c.wage = 50.0  # salarios imposibles
+	var closed := false
+	for m in range(9):
+		TimeManager.advance_days(30)
+		GameState.money = minf(GameState.money, -10.0)
+		GameState.player["negative_months"] = 0
+		if tav["status"] == "cerrado":
+			closed = true
+			break
+	check(closed, "negocio con pérdidas constantes quiebra")
+	check(GameState.employees_of(int(tav["id"])).is_empty(), "la quiebra despide al personal")
+	GameState.money = 5000.0
+	check(BusinessSim.reopen(GameState, tav) == "" and tav["status"] == "activo", "se puede reabrir")
