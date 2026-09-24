@@ -1,5 +1,7 @@
 extends Node
-## Guardado y carga de partidas en user://saves/*.json
+## Guardado y carga de partidas en user://saves/*.sav (formato binario de Godot:
+## conserva los números exactos, así una partida cargada continúa idéntica).
+## Lee también partidas antiguas en .json.
 
 const SAVE_DIR := "user://saves/"
 const AUTOSAVE_SLOT := "autoguardado"
@@ -27,6 +29,10 @@ func sanitize(slot: String) -> String:
 
 
 func slot_path(slot: String) -> String:
+	return SAVE_DIR + sanitize(slot) + ".sav"
+
+
+func _legacy_path(slot: String) -> String:
 	return SAVE_DIR + sanitize(slot) + ".json"
 
 
@@ -47,17 +53,23 @@ func save_game(slot: String) -> bool:
 	if f == null:
 		push_error("No se pudo guardar: %s" % error_string(FileAccess.get_open_error()))
 		return false
-	f.store_string(JSON.stringify(data, "", true, true))
+	f.store_var(data)
 	f.close()
 	return true
 
 
 func _read(slot: String) -> Dictionary:
 	var path := slot_path(slot)
-	if not FileAccess.file_exists(path):
-		return {}
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return parsed if parsed is Dictionary else {}
+	if FileAccess.file_exists(path):
+		var f := FileAccess.open(path, FileAccess.READ)
+		if f == null:
+			return {}
+		var v = f.get_var()
+		return v if v is Dictionary else {}
+	if FileAccess.file_exists(_legacy_path(slot)):
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(_legacy_path(slot)))
+		return parsed if parsed is Dictionary else {}
+	return {}
 
 
 func load_game(slot: String) -> bool:
@@ -72,10 +84,14 @@ func load_game(slot: String) -> bool:
 ## Lista de partidas: [{slot, saved_at, summary}] ordenadas de más reciente a más antigua.
 func list_saves() -> Array:
 	var out := []
+	var seen := {}
 	for file in DirAccess.get_files_at(SAVE_DIR):
-		if not file.ends_with(".json"):
+		if not (file.ends_with(".sav") or file.ends_with(".json")):
 			continue
 		var slot := file.get_basename()
+		if seen.has(slot):
+			continue
+		seen[slot] = true
 		var data := _read(slot)
 		if data.is_empty():
 			continue
@@ -85,4 +101,6 @@ func list_saves() -> Array:
 
 
 func delete_save(slot: String) -> void:
-	DirAccess.remove_absolute(slot_path(slot))
+	for path in [slot_path(slot), _legacy_path(slot)]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
