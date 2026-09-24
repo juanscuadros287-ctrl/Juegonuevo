@@ -21,7 +21,8 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 - **Árbol de investigación visual** (botón *Investigación*): 3 épocas (Colonial → Revolución industrial → Moderna) y 10 ramas (agricultura, construcción, energía, transporte, medicina, industria, seguridad, comunicación, finanzas, educación). Proyecto actual, cola con prerrequisitos automáticos y tiempo estimado.
 - **Laboratorios** (Gabinete → Laboratorio → Centro de investigación): solo generan gastos; producen puntos según educación y habilidad de ciencia; especialidad por rama (+50%); los niveles altos exigen personal con educación.
 - **Efectos reales**: desbloquean niveles de casas/negocios y muebles de época; medicina reduce enfermedades y mortalidad (más esperanza de vida); mejoras de producción, velocidad de obra, felicidad e investigación.
-- **Educación**: escuela parroquial → colegio → universidad. Matriculan niños/jóvenes según cupos (profesores) y pensión opcional; al completar años suben su nivel educativo: la fuente de personal calificado.
+- **Educación**: la escuela y el colegio dan habilidades básicas/secundarias; las **profesiones** (científico, médico, ingeniero, administrador, profesor) solo las da la **universidad** con carreras que tú eliges. Laboratorios avanzados exigen científicos, constructoras grandes ingenieros, bancos grandes administradores (y los hospitales de la Fase 5, médicos). Al inicio algunos habitantes ya tienen estudios básicos y unos pocos una profesión.
+- **Construcción en modo libre**: coloca donde quieras y gira a cualquier ángulo (R/T 15°, Shift+rueda libre). Botón *Mover / girar* en tus edificios (girar gratis, trasladar cuesta 15% de la obra).
 
 ### Fase 3 incluye
 - **Economía cerrada y realista**: el dinero no aparece de la nada. Los desempleados se autoabastecen en especie (cultivan, buscan agua y leña) con peor calidad de vida; el dinero entra solo por salarios, obras y préstamos, circula cuando la gente compra en tus negocios (incluido el gasto de sus ahorros) y sale por importaciones. La inmigración y el comercio con otros pueblos llegarán con los caminos (Fase 6).
@@ -62,7 +63,7 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 | Pausa / velocidades | Espacio · 1 real · 2 x1 · 3 x2 · 4 x3 · 5 salto de años |
 | Menú (guardar/cargar) | Esc |
 | Seleccionar persona o edificio | Clic izquierdo |
-| Construir: rotar / cancelar | R / clic derecho o Esc |
+| Construir/mover: girar / cancelar | R-T (15°), Shift+rueda (libre) / clic derecho o Esc |
 | Interior: rotar / zoom / salir | Q-E / rueda / Esc |
 
 ## Ejecutar

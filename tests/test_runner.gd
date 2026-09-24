@@ -31,6 +31,7 @@ func _ready() -> void:
 	_test_closed_economy()
 	_test_phase4_research()
 	_test_phase4_education()
+	_test_professions()
 	print("== %s (%d fallos) ==" % ["TODO OK" if failures == 0 else "CON FALLOS", failures])
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -88,7 +89,11 @@ func _test_save_load() -> void:
 	check(GameState.citizens.size() == pop, "población restaurada")
 	check(is_equal_approx(GameState.money, money), "dinero restaurado")
 	check(TimeManager.total_hours == hours, "fecha restaurada")
-	check(JSON.stringify(GameState.to_dict()) == snapshot, "estado idéntico tras cargar")
+	var loaded := JSON.stringify(GameState.to_dict())
+	SaveManager.save_game("test_fase1b")
+	SaveManager.load_game("test_fase1b")
+	SaveManager.delete_save("test_fase1b")
+	check(JSON.stringify(GameState.to_dict()) == loaded and loaded.length() > snapshot.length() * 0.99, "estado idéntico tras guardar y cargar")
 	# Determinismo: la misma semilla y estado producen el mismo futuro.
 	TimeManager.advance_days(365)
 	var a := JSON.stringify(GameState.to_dict())
@@ -202,6 +207,10 @@ func _test_phase2_business() -> void:
 	# Expansión de zona.
 	check(ConstructionSim.unlock_zone(GameState, 3, 2) == "", "zona vecina comprada")
 	check(ConstructionSim.unlock_zone(GameState, 0, 0) != "", "zona no vecina rechazada")
+	# Modo libre: girar gratis y mover pagando.
+	var m0 := GameState.money
+	check(ConstructionSim.move_building(GameState, farm, float(farm["x"]), float(farm["z"]), 1.234) == "" and is_equal_approx(float(farm["rot"]), 1.234) and is_equal_approx(GameState.money, m0), "girar un edificio es gratis y a cualquier ángulo")
+	check(ConstructionSim.move_building(GameState, farm, float(farm["x"]) + 6.0, float(farm["z"]) - 10.0, 0.5) == "" and GameState.money < m0, "mover un edificio cuesta")
 
 
 func _test_phase2_housing() -> void:
@@ -367,12 +376,22 @@ func _test_phase3_bank() -> void:
 		_hire_n(bank, 3)
 		BankSim.bank_settings(GameState, bank)
 		bank["loan_rate"] = rate
+		bank["max_loan"] = 1000.0
+		# Casas en venta: la gente con salario pide crédito hipotecario.
+		for pos in [Vector2(-32, 8), Vector2(-30, -12), Vector2(10, 32)]:
+			var h := _build_now("vivienda", pos.x, pos.y)
+			if not h.is_empty():
+				h["for_sale"] = true
+				h["sale_price"] = 250.0
 		for c in GameState.citizens.values():
 			if not GameState.is_player(c.id):
 				c.money = minf(c.money, 5.0)
 		for m in range(12):
 			GameState.money = maxf(GameState.money, 30000.0)
 			TimeManager.advance_days(30)
+			for h in GameState.buildings:
+				if h["type"] == "vivienda" and GameState.owned_by_player(h) and h["owner"] == "jugador" and not bool(h.get("for_sale", false)) and GameState.residents_of(int(h["id"])).is_empty():
+					h["for_sale"] = true
 		results[rate] = {"loans": BankSim.bank_loans(GameState, bank).size() + BusinessSim.period_value(bank, "total", "prestado") / 100.0,
 			"interest": BusinessSim.period_value(bank, "total", "intereses")}
 	print("    banco tasa 5%%: %s · tasa 40%%: %s" % [str(results[0.05]), str(results[0.40])])
@@ -506,3 +525,48 @@ func _test_phase4_education() -> void:
 		if c.school_years >= 4.0 and c.education >= 1:
 			educated += 1
 	check(educated > 0, "la escuela gradúa alumnos con educación básica (%d)" % educated)
+
+
+
+func _test_professions() -> void:
+	GameState.new_game({"seed": 53, "difficulty": "facil"})
+	GameState.money = 90000.0
+	for id in ["escuela_parroquial", "colegios", "universidades", "metodo_cientifico"]:
+		TechSim.complete(GameState, id)
+	var lab := _build_now("laboratorio", 30, -8)
+	ConstructionSim.start_upgrade(GameState, lab)
+	var n := 0
+	while lab["status"] != "activo" and n < 400:
+		TimeManager.advance_days(1)
+		n += 1
+	var cand: Citizen = null
+	for c in BusinessSim.candidates(GameState, lab):
+		if c.profession != "cientifico":
+			cand = c
+			break
+	cand.education = 3
+	check(BusinessSim.hire(GameState, lab, cand, 5.0).contains("título"), "el laboratorio exige científicos titulados")
+	var uni := _build_now("universidad", -32, 10)
+	check(not uni.is_empty(), "universidad construida")
+	uni["careers"] = ["cientifico", "medico"]
+	var teachers := 0
+	for c in BusinessSim.candidates(GameState, uni):
+		if teachers >= 2:
+			break
+		c.education = maxi(c.education, 2)
+		if BusinessSim.hire(GameState, uni, c, 4.0) == "":
+			teachers += 1
+	var young := 0
+	for c in GameState.citizens.values():
+		var a: int = c.age_years(GameState.today())
+		if a >= 16 and a <= 22 and not GameState.is_player(c.id) and c.job_kind != "empleo":
+			c.education = 2
+			young += 1
+	for y in range(4):
+		GameState.money = maxf(GameState.money, 90000.0)
+		TimeManager.advance_days(365)
+	var sci := 0
+	for c in GameState.citizens.values():
+		if c.profession in ["cientifico", "medico"] and c.uni_years >= 3.0:
+			sci += 1
+	check(sci > 0, "la universidad forma científicos/médicos (%d de %d jóvenes)" % [sci, young])

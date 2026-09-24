@@ -1,0 +1,37 @@
+{
+ "_nota": "Profesiones universitarias. Se obtienen estudiando la carrera en una universidad (3 años). Algunos niveles de edificios exigen una profesión (required_profession).",
+ "initial_chance": 0.03,
+ "initial_min_age": 25,
+ "professions": {
+  "cientifico": {
+   "label": "Científico(a)",
+   "career": "Ciencias naturales",
+   "skill": "ciencia",
+   "order": 0
+  },
+  "medico": {
+   "label": "Médico(a)",
+   "career": "Medicina",
+   "skill": "medicina",
+   "order": 1
+  },
+  "ingeniero": {
+   "label": "Ingeniero(a)",
+   "career": "Ingeniería",
+   "skill": "construccion",
+   "order": 2
+  },
+  "administrador": {
+   "label": "Administrador(a)",
+   "career": "Administración y derecho",
+   "skill": "comercio",
+   "order": 3
+  },
+  "profesor": {
+   "label": "Profesor(a)",
+   "career": "Pedagogía",
+   "skill": "ciencia",
+   "order": 4
+  }
+ }
+}

@@ -60,6 +60,8 @@ static func set_price(gs, b: Dictionary, price: float) -> void:
 static func productivity(c: Citizen, skill: String) -> float:
 	var s := float(c.skills.get(skill, 0.0))
 	var p := 0.6 + s / 100.0 * 0.8 + minf(c.experience, 20.0) * 0.01 + c.education * 0.1
+	if c.profession != "" and str(GameData.professions.get("professions", {}).get(c.profession, {}).get("skill", "")) == skill:
+		p *= 1.3
 	p *= clampf(c.health / 100.0, 0.3, 1.0)
 	p *= 0.75 + c.happiness / 100.0 * 0.5
 	return p
@@ -68,7 +70,7 @@ static func productivity(c: Citizen, skill: String) -> float:
 static func asked_wage(gs, c: Citizen, type_id: String) -> float:
 	var def := GameData.building_def(type_id)
 	var s := float(c.skills.get(str(def.get("skill", "")), 0.0))
-	var w := float(def.get("base_wage", 2.0)) * (0.8 + s / 200.0 + minf(c.experience, 30.0) * 0.01 + c.education * 0.1)
+	var w := float(def.get("base_wage", 2.0)) * (0.8 + s / 200.0 + minf(c.experience, 30.0) * 0.01 + c.education * 0.1 + (0.4 if c.profession != "" else 0.0))
 	return snappedf(w * gs.price_mult(), 0.05)
 
 
@@ -268,6 +270,9 @@ static func hire(gs, b: Dictionary, c: Citizen, wage: float) -> String:
 	var min_edu := int(gs.level_def(b).get("min_education", 0))
 	if c.education < min_edu:
 		return "%s no está calificado(a): se requiere educación %s." % [c.full_name(), GameData.education_label(min_edu)]
+	var prof := str(gs.level_def(b).get("required_profession", ""))
+	if prof != "" and c.profession != prof:
+		return "%s no es %s: este nivel exige ese título universitario." % [c.full_name(), GameData.profession_label(prof).to_lower()]
 	c.job_id = int(b["id"])
 	c.job_kind = "empleo"
 	c.wage = maxf(0.1, wage)

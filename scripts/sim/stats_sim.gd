@@ -63,13 +63,16 @@ static func employment(gs) -> Dictionary:
 	var today: int = gs.today()
 	var adult := int(GameData.citizens.get("adult_age", 16))
 	var retire := int(GameData.citizens.get("retirement_age", 65))
-	var out := {"workforce": 0, "employed": 0, "day_laborers": 0, "unemployed": 0, "vacancies": 0, "by_skill": {}, "avg_wage": 0.0}
+	var out := {"workforce": 0, "employed": 0, "day_laborers": 0, "unemployed": 0, "vacancies": 0, "by_skill": {}, "avg_wage": 0.0, "professions": {}, "education": {}}
 	var wages := 0.0
 	for c in gs.citizens.values():
 		var age: int = c.age_years(today)
 		if age < adult or age >= retire or gs.is_player(c.id):
 			continue
 		out["workforce"] += 1
+		if c.profession != "":
+			out["professions"][c.profession] = int(out["professions"].get(c.profession, 0)) + 1
+		out["education"][c.education] = int(out["education"].get(c.education, 0)) + 1
 		if c.job_kind == "empleo":
 			out["employed"] += 1
 			wages += c.wage

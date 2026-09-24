@@ -114,10 +114,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		var mb := event as InputEventMouseButton
 		match mb.button_index:
 			MOUSE_BUTTON_WHEEL_UP:
-				if mb.pressed:
+				if mb.pressed and not mb.shift_pressed:
 					_zoom(0.88)
 			MOUSE_BUTTON_WHEEL_DOWN:
-				if mb.pressed:
+				if mb.pressed and not mb.shift_pressed:
 					_zoom(1.13)
 			MOUSE_BUTTON_RIGHT:
 				_dragging_pan = mb.pressed

@@ -95,6 +95,13 @@ static func create_citizen(gs, gender: String, age: int, last_name: String) -> C
 			if r <= 0.0:
 				c.education = i
 				break
+		var pcfg: Dictionary = GameData.professions
+		if age >= int(pcfg.get("initial_min_age", 25)) and gs.rng.randf() < float(pcfg.get("initial_chance", 0.03)):
+			var ids := GameData.profession_ids()
+			c.profession = ids[gs.rng.randi() % ids.size()]
+			c.education = 3
+			var psk := str(pcfg["professions"][c.profession].get("skill", "ciencia"))
+			c.skills[psk] = maxf(float(c.skills.get(psk, 0.0)), 45.0)
 		var money_range: Array = gs.diff().get("citizen_money", [20, 80])
 		c.money = roundf(gs.rng.randf_range(float(money_range[0]), float(money_range[1])))
 	gs.citizens[c.id] = c

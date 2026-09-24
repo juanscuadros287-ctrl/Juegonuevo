@@ -76,7 +76,11 @@ func refresh() -> void:
 	skills.sort_custom(func(a, b): return sk[a] > sk[b])
 	var es := "Fuerza laboral: %d · Con empleo: %d · Jornaleros: %d · [b]Buscan empleo: %d (%s)[/b]\n" % [e["workforce"], e["employed"], e["day_laborers"], e["unemployed"], Fmt.pct(100.0 * e["unemployed"] / maxf(1.0, e["workforce"]))]
 	es += "Vacantes en tus negocios: %d · Salario promedio: %s/día\n" % [e["vacancies"], Fmt.money2(e["avg_wage"])]
-	es += "Desempleados por habilidad: %s" % ", ".join(skills.slice(0, 6).map(func(k): return "%s %d" % [GameData.skill_label(k), sk[k]]))
+	es += "Desempleados por habilidad: %s\n" % ", ".join(skills.slice(0, 6).map(func(k): return "%s %d" % [GameData.skill_label(k), sk[k]]))
+	var edu: Dictionary = e["education"]
+	es += "Educación (adultos): %s\n" % ", ".join([0, 1, 2, 3].map(func(l): return "%s %d" % [GameData.education_label(l), int(edu.get(l, 0))]))
+	var pr: Dictionary = e["professions"]
+	es += "Profesionales: %s" % (", ".join(pr.keys().map(func(k): return "%s %d" % [GameData.profession_label(k), pr[k]])) if not pr.is_empty() else "ninguno (se forman en la universidad)")
 	_section("Empleo", es)
 
 	var h := StatsSim.housing(gs)

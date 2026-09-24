@@ -19,6 +19,7 @@ var technologies: Dictionary = {}
 var interiors: Dictionary = {}
 var economy: Dictionary = {}
 var eras: Dictionary = {}
+var professions: Dictionary = {}
 
 
 func _ready() -> void:
@@ -41,6 +42,7 @@ func load_all() -> void:
 	interiors = _load("interiors.json")
 	economy = _load("economy.json")
 	eras = _load("eras.json")
+	professions = _load("professions.json")
 
 
 func _load(file_name: String) -> Dictionary:
@@ -138,3 +140,15 @@ func branch_label(id: String) -> String:
 		if b[0] == id:
 			return str(b[1])
 	return id
+
+
+func profession_ids() -> Array:
+	return sorted_ids(professions.get("professions", {}))
+
+
+func profession_label(id: String) -> String:
+	return str(professions.get("professions", {}).get(id, {}).get("label", id))
+
+
+func career_label(id: String) -> String:
+	return str(professions.get("professions", {}).get(id, {}).get("career", id))

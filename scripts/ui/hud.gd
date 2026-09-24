@@ -409,8 +409,8 @@ func _citizen_text(c: Citizen) -> String:
 	s += "Dinero: %s   Deudas: %s\n" % [Fmt.money(GameState.money if me else c.money), Fmt.money(EconomySim.player_debt(GameState) if me else c.debt)]
 	s += "Trabajo: %s\n" % ("Empresario(a)" if me else BusinessSim.job_label(GameState, c))
 	if c.school_id >= 0:
-		s += "Estudia en: %s (%.1f años cursados)\n" % [GameState.building_label(GameState.get_building(c.school_id)), c.school_years + c.uni_years]
-	s += "Educación: %s · Experiencia: %.1f años\n\n" % [GameData.education_label(c.education), c.experience]
+		s += "Estudia en: %s (%.1f años cursados)%s\n" % [GameState.building_label(GameState.get_building(c.school_id)), c.school_years + c.uni_years, " · carrera: " + GameData.career_label(c.career) if c.career != "" else ""]
+	s += "Educación: %s%s · Experiencia: %.1f años\n\n" % [GameData.education_label(c.education), " · [b]%s[/b]" % GameData.profession_label(c.profession) if c.profession != "" else "", c.experience]
 	s += "[b]Habilidades[/b]\n"
 	var keys := c.skills.keys()
 	keys.sort_custom(func(a, b): return float(c.skills[a]) > float(c.skills[b]))
@@ -561,7 +561,7 @@ func _build_modals() -> void:
 	pb.add_child(UIKit.button("Cargar partida", func(): _close(pause_modal); _open_load()))
 	pb.add_child(UIKit.button("Menú principal", _to_main_menu))
 	pb.add_child(UIKit.button("Salir del juego", func(): get_tree().quit()))
-	var controls := UIKit.label("Cámara: WASD/flechas o clic derecho para mover · Q/E o botón central para rotar · rueda o pellizco para zoom · Espacio pausa · 1-4 velocidades · 5 salto de años · R rota al construir", 13, UIKit.TEXT_DIM)
+	var controls := UIKit.label("Cámara: WASD/flechas o clic derecho para mover · Q/E o botón central para rotar · rueda o pellizco para zoom · Espacio pausa · 1-4 velocidades · 5 salto de años · R/T gira 15° y Shift+rueda gira libre al construir o mover", 13, UIKit.TEXT_DIM)
 	controls.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	controls.custom_minimum_size.x = 420
 	pb.add_child(controls)

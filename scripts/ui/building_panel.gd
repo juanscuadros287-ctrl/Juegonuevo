@@ -105,6 +105,11 @@ func _summary_tab(b: Dictionary, mine: bool) -> Control:
 			_b()["name"] = _name_edit.text.strip_edges()
 			rebuild()))
 		v.add_child(row)
+		v.add_child(UIKit.button("Mover / girar (modo libre)", func():
+			var world := hud.get_parent()
+			if world.has_method("start_move"):
+				world.start_move(bid)
+				closed.emit()))
 		var del := UIKit.button("Demoler", func():
 			ConstructionSim.demolish(GameState, _b())
 			closed.emit())
@@ -200,7 +205,12 @@ func _employees_tab(b: Dictionary) -> Control:
 	var v := VBoxContainer.new()
 	var skill := str(GameState.building_def(b).get("skill", ""))
 	var min_edu := int(GameState.level_def(b).get("min_education", 0))
-	v.add_child(UIKit.label("Habilidad clave: %s%s" % [GameData.skill_label(skill), " · requiere educación %s" % GameData.education_label(min_edu) if min_edu > 0 else ""], 14, UIKit.TEXT_DIM))
+	var req_prof := str(GameState.level_def(b).get("required_profession", ""))
+	var req := UIKit.label("Habilidad clave: %s%s%s" % [GameData.skill_label(skill), " · requiere educación %s" % GameData.education_label(min_edu) if min_edu > 0 else "",
+		" · requiere título: %s" % GameData.profession_label(req_prof) if req_prof != "" else ""], 14, UIKit.TEXT_DIM)
+	req.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	req.custom_minimum_size.x = 380
+	v.add_child(req)
 	for c in GameState.employees_of(bid):
 		if c.job_kind != "empleo":
 			continue
@@ -242,6 +252,8 @@ func _open_hire() -> void:
 		var asked := BusinessSim.asked_wage(GameState, c, b["type"])
 		var row := HBoxContainer.new()
 		var status := " · jornalero" if c.job_kind == "obra" else ""
+		if c.profession != "":
+			status += " · " + GameData.profession_label(c.profession).to_upper()
 		var info := UIKit.label("%s, %d años · %s %d · exp %.1f · %s · pide %s%s" % [c.full_name(), c.age_years(today), GameData.skill_label(skill), int(c.skills.get(skill, 0)), c.experience, GameData.education_label(c.education), Fmt.money2(asked), status], 13)
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
@@ -461,9 +473,29 @@ func _school_tab(b: Dictionary) -> Control:
 	var rl := UIKit.rich()
 	rl.meta_clicked.connect(hud.on_meta_clicked)
 	for c in students.slice(0, 25):
-		t += "• %s (%d años, %.1f años cursados)\n" % [hud.link(c.id), c.age_years(GameState.today()), c.school_years + c.uni_years]
+		t += "• %s (%d años, %.1f años cursados%s)\n" % [hud.link(c.id), c.age_years(GameState.today()), c.school_years + c.uni_years, ", " + GameData.career_label(c.career) if c.career != "" else ""]
 	rl.text = t
 	v.add_child(rl)
+	if int(ld.get("grants_education", 1)) >= 3:
+		v.add_child(UIKit.label("Carreras que ofrece:", 15))
+		var offered: Array = b.get("careers", GameData.profession_ids())
+		for pid in GameData.profession_ids():
+			var cb := CheckBox.new()
+			var n := 0
+			for c in students:
+				if c.career == pid:
+					n += 1
+			cb.text = "%s → %s (%d estudiantes)" % [GameData.career_label(pid), GameData.profession_label(pid), n]
+			cb.button_pressed = offered.has(pid)
+			var prof_id: String = pid
+			cb.toggled.connect(func(on):
+				var list: Array = _b().get("careers", GameData.profession_ids()).duplicate()
+				if on and not list.has(prof_id):
+					list.append(prof_id)
+				elif not on:
+					list.erase(prof_id)
+				_b()["careers"] = list)
+			v.add_child(cb)
 	var row := HBoxContainer.new()
 	row.add_child(UIKit.label("Pensión mensual por alumno:"))
 	row.add_child(UIKit.spin(0, 1000, 0.5, float(b.get("fee", 0.0)), func(val): _b()["fee"] = val))

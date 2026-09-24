@@ -375,3 +375,33 @@ static func unlock_zone(gs, zx: int, zy: int) -> String:
 	gs.notify("Compraste un terreno al gobierno por %s. Ya puedes construir en esa zona." % Fmt.money(cost), "construccion")
 	EventBus.zones_changed.emit()
 	return ""
+
+
+
+# --- Mover / girar ---------------------------------------------------------------------------
+
+## Girar en el mismo sitio es gratis; trasladar cuesta desmontar y rearmar (15% de la obra).
+static func move_cost(gs, b: Dictionary, x: float, z: float) -> float:
+	if Vector2(x, z).distance_to(Vector2(float(b["x"]), float(b["z"]))) < 0.3:
+		return 0.0
+	return float(cost_for(gs, str(b["type"]), int(b["level"]), false, str(b.get("tier", "normal")))["total"]) * 0.15
+
+
+static func move_building(gs, b: Dictionary, x: float, z: float, rot: float) -> String:
+	if not gs.owned_by_player(b):
+		return "Solo puedes mover tus edificios"
+	var reason := placement_block_reason(gs, str(b["type"]), x, z, int(b["id"]))
+	if reason != "":
+		return reason
+	var cost := move_cost(gs, b, x, z)
+	if gs.money < cost:
+		return "Mover cuesta %s" % Fmt.money(cost)
+	if cost > 0.0:
+		gs.add_money(-cost)
+		BusinessSim.ledger_add(b, "obras", cost)
+	b["x"] = x
+	b["z"] = z
+	b["rot"] = rot
+	EventBus.building_changed.emit(int(b["id"]))
+	EventBus.citizens_moved.emit()
+	return ""

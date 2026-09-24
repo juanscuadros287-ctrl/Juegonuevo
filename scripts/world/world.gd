@@ -28,6 +28,7 @@ var place_rot := 0.0
 var place_pos := Vector3.ZERO
 var place_ok := false
 var place_reason := ""
+var move_id := -1
 var _ghost: Node3D
 var zone_mode := false
 var _zone_marker: MeshInstance3D
@@ -365,10 +366,27 @@ func start_placement(type_id: String, tier: String) -> void:
 	cancel_placement()
 	place_type = type_id
 	place_tier = tier
-	var parts: Array = GameData.level_def(type_id, 1).get("model", [])
+	var parts: Array = Housing.exterior_parts({"type": type_id, "level": 1, "tier": tier}) if type_id == "vivienda" else GameData.level_def(type_id, 1).get("model", [])
 	_ghost = MeshLib.build_model(parts, 1.0, MeshLib.ghost_mat(true))
 	add_child(_ghost)
 	EventBus.citizen_selected.emit(-1)
+
+
+## Modo mover/girar un edificio existente.
+func start_move(bid: int) -> void:
+	var b: Dictionary = GameState.get_building(bid)
+	if b.is_empty():
+		return
+	cancel_placement()
+	move_id = bid
+	place_type = str(b["type"])
+	place_tier = str(b.get("tier", "normal"))
+	place_rot = float(b.get("rot", 0.0))
+	var parts: Array = Housing.exterior_parts(b) if Housing.is_home(b) else GameState.level_def(b).get("model", [])
+	_ghost = MeshLib.build_model(parts, 1.0, MeshLib.ghost_mat(true))
+	add_child(_ghost)
+	if building_nodes.has(bid):
+		building_nodes[bid].visible = false
 
 
 func start_zone_mode() -> void:
@@ -380,6 +398,9 @@ func start_zone_mode() -> void:
 
 
 func cancel_placement() -> void:
+	if move_id >= 0 and building_nodes.has(move_id):
+		building_nodes[move_id].visible = true
+	move_id = -1
 	place_type = ""
 	zone_mode = false
 	if _ghost:
@@ -413,22 +434,28 @@ func _update_placement() -> void:
 		_zone_marker.material_override = MeshLib.ghost_mat(reason == "")
 		hud.set_placement_hint("Comprar terreno al gobierno: %s · %s   (clic para comprar, clic derecho/Esc cancela)" % [Fmt.money(ConstructionSim.zone_cost(GameState)), reason if reason != "" else "disponible"])
 		return
-	p.x = snappedf(p.x, 0.5)
-	p.z = snappedf(p.z, 0.5)
+	p.x = snappedf(p.x, 0.25)
+	p.z = snappedf(p.z, 0.25)
 	var fp := float(GameData.building_def(place_type).get("footprint", 4.0))
 	place_pos = Vector3(p.x, _ground(p.x, p.z, fp), p.z)
-	place_reason = ConstructionSim.placement_block_reason(GameState, place_type, p.x, p.z)
+	place_reason = ConstructionSim.placement_block_reason(GameState, place_type, p.x, p.z, move_id)
 	if place_reason == "":
 		place_reason = terrain.footprint_ok(p.x, p.z, fp)
-	if place_reason == "":
+	if place_reason == "" and move_id < 0:
 		place_reason = ConstructionSim.build_block_reason(GameState, place_type, place_tier)
 	place_ok = place_reason == ""
 	_ghost.position = place_pos
 	_ghost.rotation.y = place_rot
 	_set_ghost_mat(_ghost, MeshLib.ghost_mat(place_ok))
+	var deg := int(round(fposmod(rad_to_deg(place_rot), 360.0)))
+	if move_id >= 0:
+		var mb: Dictionary = GameState.get_building(move_id)
+		hud.set_placement_hint("Mover %s — %s · %d°   %s   (R/T gira 15° · Shift+rueda gira libre · clic confirma · Esc cancela)" % [
+			GameState.building_label(mb), "gratis" if ConstructionSim.move_cost(GameState, mb, p.x, p.z) <= 0.0 else Fmt.money(ConstructionSim.move_cost(GameState, mb, p.x, p.z)), deg, "✔" if place_ok else place_reason])
+		return
 	var cost := ConstructionSim.cost_for(GameState, place_type, 1, false, place_tier)
-	hud.set_placement_hint("%s — %s · %d días   %s   (R rota · clic construye · clic derecho/Esc cancela)" % [
-		GameData.level_def(place_type, 1).get("label", place_type), Fmt.money(cost["total"]), int(cost["days"]),
+	hud.set_placement_hint("%s — %s · %d días · %d°   %s   (R/T gira 15° · Shift+rueda gira libre · clic construye · Esc cancela)" % [
+		GameData.level_def(place_type, 1).get("label", place_type), Fmt.money(cost["total"]), int(cost["days"]), deg,
 		"✔" if place_ok else place_reason])
 
 
@@ -448,6 +475,13 @@ func _confirm_placement() -> void:
 		return
 	if not place_ok:
 		hud.toast(place_reason, "jugador")
+		return
+	if move_id >= 0:
+		var err := ConstructionSim.move_building(GameState, GameState.get_building(move_id), place_pos.x, place_pos.z, place_rot)
+		if err != "":
+			hud.toast(err, "jugador")
+			return
+		cancel_placement()
 		return
 	var def := GameData.building_def(place_type)
 	var type_id := place_type
@@ -500,9 +534,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif event.button_index == MOUSE_BUTTON_RIGHT:
 				cancel_placement()
 				get_viewport().set_input_as_handled()
-		elif event is InputEventKey and event.pressed and not event.echo:
+		elif event is InputEventMouseButton and event.pressed and event.shift_pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+			place_rot += deg_to_rad(5.0) * (1.0 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1.0)
+			get_viewport().set_input_as_handled()
+		elif event is InputEventKey and event.pressed:
 			if event.keycode == KEY_R:
-				place_rot += PI * 0.5
+				place_rot += deg_to_rad(15.0)
+				get_viewport().set_input_as_handled()
+			elif event.keycode == KEY_T:
+				place_rot -= deg_to_rad(15.0)
 				get_viewport().set_input_as_handled()
 			elif event.keycode == KEY_ESCAPE:
 				cancel_placement()

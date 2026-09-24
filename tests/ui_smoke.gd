@@ -44,6 +44,9 @@ func _ready() -> void:
 	await get_tree().process_frame
 	world._update_placement()
 	world.cancel_placement()
+	world.start_move(int(farm["id"]))
+	world._update_placement()
+	world.cancel_placement()
 	EventBus.zone_mode_requested.emit()
 	world.cancel_placement()
 	EventBus.interior_requested.emit(PlayerSim.player_home(GameState)["id"])

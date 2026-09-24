@@ -578,15 +578,14 @@
  },
  "universidades": {
   "label": "Universidades",
-  "era": 2,
+  "era": 1,
   "branch": "educacion",
-  "cost": 3600,
+  "cost": 1500,
   "requires": [
-   "colegios",
-   "revolucion_industrial"
+   "colegios"
   ],
   "effects": [],
-  "description": "Educación superior: científicos e ingenieros."
+  "description": "Universidades coloniales: carreras de ciencias, medicina, ingeniería, administración y pedagogía."
  },
  "investigacion_moderna": {
   "label": "Investigación moderna",

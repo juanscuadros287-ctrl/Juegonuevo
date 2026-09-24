@@ -47,7 +47,7 @@ func save_game(slot: String) -> bool:
 	if f == null:
 		push_error("No se pudo guardar: %s" % error_string(FileAccess.get_open_error()))
 		return false
-	f.store_string(JSON.stringify(data))
+	f.store_string(JSON.stringify(data, "", true, true))
 	f.close()
 	return true
 
