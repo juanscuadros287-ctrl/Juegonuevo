@@ -28,6 +28,7 @@ func _ready() -> void:
 	_test_phase3_player_loans()
 	_test_phase3_bank()
 	_test_phase3_bankruptcy()
+	_test_closed_economy()
 	print("== %s (%d fallos) ==" % ["TODO OK" if failures == 0 else "CON FALLOS", failures])
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -403,3 +404,26 @@ func _test_phase3_bankruptcy() -> void:
 	check(GameState.employees_of(int(tav["id"])).is_empty(), "la quiebra despide al personal")
 	GameState.money = 5000.0
 	check(BusinessSim.reopen(GameState, tav) == "" and tav["status"] == "activo", "se puede reabrir")
+
+
+
+func _test_closed_economy() -> void:
+	GameState.new_game({"seed": 45, "difficulty": "normal"})
+	var citizens_money := 0.0
+	for c in GameState.citizens.values():
+		if not GameState.is_player(c.id):
+			citizens_money += c.money
+	TimeManager.advance_days(365)
+	var after := 0.0
+	for c in GameState.citizens.values():
+		if not GameState.is_player(c.id):
+			after += c.money
+	check(after <= citizens_money + 0.01, "sin empresas el dinero no aparece de la nada (%.0f → %.0f)" % [citizens_money, after])
+	var needs := StatsSim.needs_table(GameState)
+	var food: Dictionary = needs.filter(func(r): return r["need"] == "comida")[0]
+	check(food["partial"] > 0.5, "sin negocios la gente se autoabastece de comida (a medias)")
+	var t0 := float(GameState.economy.get("treasury", 0.0))
+	GameState.money = 100000.0
+	ConstructionSim.unlock_zone(GameState, 1, 2)
+	check(float(GameState.economy.get("treasury", 0.0)) > t0, "el terreno se compra al gobierno (tesoro público)")
+	check(StatsSim.advice(GameState).size() > 0, "estadísticas generan recomendaciones")

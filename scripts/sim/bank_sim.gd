@@ -173,7 +173,10 @@ static func _citizen_requests(gs) -> void:
 		if purpose == "" or gs.rng.randf() > p:
 			continue
 		amount = minf(amount, float(bank["max_loan"]))
-		var income: float = c.wage if c.job_kind == "empleo" else float(GameData.citizens.get("subsistence_income", 1.5)) * gs.price_level()
+		# Solo quien tiene salario puede pagar un préstamo.
+		var income: float = c.wage if c.job_kind == "empleo" else 0.0
+		if income <= 0.0:
+			continue
 		var pay := payment(amount, rate, months)
 		if pay > income * 30.0 * float(cc.get("max_payment_income_ratio", 0.5)):
 			continue

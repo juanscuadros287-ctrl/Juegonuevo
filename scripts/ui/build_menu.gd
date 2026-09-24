@@ -71,4 +71,7 @@ func refresh() -> void:
 		v.add_child(b)
 		list.add_child(panel)
 	list.add_child(UIKit.label("Terreno", 16, UIKit.ACCENT))
-	list.add_child(UIKit.button("Expandir terreno (%s)" % Fmt.money(ConstructionSim.zone_cost(GameState)), func(): EventBus.zone_mode_requested.emit()))
+	var note := UIKit.label("Las zonas oscuras son terreno del gobierno. Para construir ahí, primero cómpralo (debe ser vecino de un terreno tuyo).", 12, UIKit.TEXT_DIM)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	list.add_child(note)
+	list.add_child(UIKit.button("Comprar terreno al gobierno (%s)" % Fmt.money(ConstructionSim.zone_cost(GameState)), func(): EventBus.zone_mode_requested.emit()))

@@ -33,6 +33,7 @@ var build_menu: BuildMenu
 var companies_panel: CompaniesPanel
 var player_panel: PlayerPanel
 var finance_panel: FinancePanel
+var stats_panel: StatsPanel
 
 # Interior
 var interior_panel: PanelContainer
@@ -222,6 +223,7 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Construir", func(): _show_dock("build"), 160))
 	box.add_child(UIKit.button("Mis Empresas", func(): _show_dock("companies"), 160))
 	box.add_child(UIKit.button("Finanzas", func(): _show_dock("finance"), 160))
+	box.add_child(UIKit.button("Estadísticas", func(): _show_dock("stats"), 160))
 	box.add_child(UIKit.button("Población", _open_population, 160))
 	box.add_child(UIKit.button("Notificaciones", _open_log, 160))
 	box.add_child(UIKit.button("Menú (Esc)", _open_pause, 160))
@@ -321,6 +323,11 @@ func _build_dock() -> void:
 	finance_panel.setup(self)
 	finance_panel.closed.connect(close_dock)
 	finance_panel.message.connect(toast)
+	stats_panel = StatsPanel.new()
+	stats_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	stack.add_child(stats_panel)
+	stats_panel.setup()
+	stats_panel.closed.connect(close_dock)
 
 
 func _show_dock(mode: String) -> void:
@@ -335,7 +342,10 @@ func _show_dock(mode: String) -> void:
 	companies_panel.visible = mode == "companies"
 	player_panel.visible = mode == "player"
 	finance_panel.visible = mode == "finance"
+	stats_panel.visible = mode == "stats"
 	match mode:
+		"stats":
+			stats_panel.refresh()
 		"finance":
 			finance_panel.refresh()
 		"build":

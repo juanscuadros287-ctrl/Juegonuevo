@@ -281,7 +281,7 @@ static func fire(gs, c: Citizen, message := "") -> void:
 
 static func job_label(gs, c: Citizen) -> String:
 	if c.job_id < 0:
-		return "Subsistencia (sin empleo)"
+		return "Autoabastecimiento (sin empleo)"
 	var b: Dictionary = gs.get_building(c.job_id)
 	if b.is_empty():
 		return "—"

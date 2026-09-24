@@ -169,6 +169,8 @@ static func daily(gs) -> void:
 			continue
 		_happiness(gs, c, occupancy, wdata)
 
+	if today % 7 == 3:
+		MarketSim.discretionary(gs)
 	_marriages(gs, today)
 	_births(gs, today)
 	if today % 7 == 0:
@@ -253,15 +255,8 @@ static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionar
 	var payers := _payers(gs, c, is_adult, adult_age)
 	var employed := c.job_id >= 0
 	if is_adult and not employed and not is_player:
-		# Sin empleo: subsistencia (cultivan y venden excedentes por su cuenta).
-		var skill := float(c.skills.get("agricultura", 0.0))
-		var income := float(cfg.get("subsistence_income", 1.5)) * (0.8 + skill / 250.0) * float(gs.price_level())
-		income *= float(season.get("farming", 1.0)) * float(wdata.get("farming", 1.0))
-		income *= clampf(c.health / 80.0, 0.2, 1.0)
-		if age >= int(cfg.get("retirement_age", 65)):
-			income *= float(cfg.get("retired_income_factor", 0.5))
-		c.money += income
-		c.experience += 1.0 / 365.0
+		# Sin empleo: viven de autoabastecerse (en especie, sin dinero) y ganan práctica agrícola.
+		c.experience += 0.5 / 365.0
 		c.skills["agricultura"] = minf(100.0, float(c.skills.get("agricultura", 0.0)) + 0.01)
 
 	var needs: Dictionary = cfg.get("needs", {})
@@ -282,20 +277,20 @@ static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionar
 		var qty := cost_factor
 		if need_id == "energia":
 			qty *= energy_mult
-		var satisfied := false
+		var quality := 0.0
 		if payers.is_empty() and need_id in ["comida", "agua"]:
-			satisfied = true  # Caridad del pueblo para huérfanos sin tutor.
+			quality = 0.8  # Caridad del pueblo para huérfanos sin tutor.
 		elif need_id == "vivienda":
-			satisfied = _pay_housing(gs, c, home, payers, ref * qty)
+			quality = 1.0 if _pay_housing(gs, c, home, payers, ref * qty) else 0.0
 		elif need.has("good"):
-			var r := MarketSim.purchase(gs, payers, str(need["good"]), qty, ref, employed)
-			satisfied = bool(r["ok"])
+			var r := MarketSim.purchase(gs, payers, str(need["good"]), qty, ref, employed or is_player)
+			quality = float(r["quality"])
 			bonus += float(r["bonus"])
 		else:
-			satisfied = pay_with(gs, payers, ref * qty)
-		if satisfied:
-			met_w += w
-		else:
+			quality = 1.0 if pay_with(gs, payers, ref * qty) else 0.0
+		EconomySim.record_need(gs, need_id, quality)
+		met_w += w * quality
+		if quality <= 0.0:
 			c.health -= float(need.get("health_penalty", 0.0))
 	c.needs_met = met_w / total_w if total_w > 0.0 else 1.0
 	c.set_meta("bonus", bonus)
@@ -324,7 +319,7 @@ static func _pay_housing(gs, c: Citizen, home: Dictionary, payers: Array, mainte
 			return true
 		c.unpaid_days += 1
 		return false
-	return pay_with(gs, payers, maintenance)
+	return true  # Chozas del pueblo: mantenimiento en especie (barro, paja).
 
 
 static func _health(gs, c: Citizen, age: int, season: Dictionary, wdata: Dictionary, diff: Dictionary) -> void:

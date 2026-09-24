@@ -8,7 +8,7 @@ func _ready() -> void:
 	add_child(world)
 	await get_tree().process_frame
 	var hud: Hud = world.hud
-	for mode in ["player", "build", "companies", "finance"]:
+	for mode in ["player", "build", "companies", "finance", "stats"]:
 		hud._show_dock(mode)
 		await get_tree().process_frame
 	BankSim.request_player_loan(GameState, 500.0, 12)
@@ -27,6 +27,9 @@ func _ready() -> void:
 		await get_tree().process_frame
 	hud._show_dock("finance")
 	await get_tree().process_frame
+	hud._show_dock("stats")
+	await get_tree().process_frame
+	print("RECOMENDACIONES: ", StatsSim.advice(GameState))
 	var some: Citizen = GameState.citizens.values()[3]
 	EventBus.citizen_selected.emit(some.id)
 	await get_tree().process_frame

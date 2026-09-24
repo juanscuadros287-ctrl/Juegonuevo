@@ -146,7 +146,7 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 	var zx := clampi(int((x + half) / zs), 0, gs.ZONE_GRID - 1)
 	var zy := clampi(int((z + half) / zs), 0, gs.ZONE_GRID - 1)
 	if not gs.is_zone_unlocked(zx, zy):
-		return "Zona bloqueada: expande el terreno"
+		return "Terreno del gobierno: cómpralo primero (Construir → Comprar terreno)"
 	for b in gs.buildings:
 		if int(b["id"]) == ignore_id:
 			continue
@@ -351,7 +351,7 @@ static func zone_block_reason(gs, zx: int, zy: int) -> String:
 	if zx < 0 or zy < 0 or zx >= gs.ZONE_GRID or zy >= gs.ZONE_GRID:
 		return "Fuera del mapa"
 	if gs.is_zone_unlocked(zx, zy):
-		return "Ya es tuya"
+		return "Ya compraste este terreno"
 	var adjacent := false
 	for z in gs.unlocked_zones:
 		if absi(int(z[0]) - zx) + absi(int(z[1]) - zy) == 1:
@@ -367,8 +367,11 @@ static func unlock_zone(gs, zx: int, zy: int) -> String:
 	var reason := zone_block_reason(gs, zx, zy)
 	if reason != "":
 		return reason
-	gs.add_money(-zone_cost(gs))
+	var cost := zone_cost(gs)
+	gs.add_money(-cost)
+	# El terreno se le compra al gobierno: el dinero va al tesoro público (Fase 5).
+	gs.economy["treasury"] = float(gs.economy.get("treasury", 0.0)) + cost
 	gs.unlocked_zones.append([zx, zy])
-	gs.notify("Terreno expandido: nueva zona desbloqueada.", "construccion")
+	gs.notify("Compraste un terreno al gobierno por %s. Ya puedes construir en esa zona." % Fmt.money(cost), "construccion")
 	EventBus.zones_changed.emit()
 	return ""

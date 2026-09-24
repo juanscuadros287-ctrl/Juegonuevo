@@ -31,10 +31,12 @@ static func sellers(good: String) -> Array:
 
 
 ## Compra `qty` unidades de un bien. ref_price = precio de referencia por unidad.
-## Devuelve {"ok": bool, "bonus": felicidad extra por calidad}.
+## Orden: tus negocios → importación (si trabaja y puede pagarla) → autoabastecimiento en especie.
+## Devuelve {"ok", "quality" (0-1, fracción de la necesidad cubierta), "bonus" (felicidad por calidad)}.
 static func purchase(gs, payers: Array, good: String, qty: float, ref_price: float, employed: bool) -> Dictionary:
 	var left := qty
 	var bonus := 0.0
+	var revenue := 0.0
 	var willing := ref_price * float(GameData.citizens.get("willing_markup", 1.6))
 	var total_stock := 0.0
 	for b in sellers(good):
@@ -58,19 +60,75 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 			break
 		inv[good] = stock - take
 		BusinessSim.earn(gs, b, cost, "ventas")
+		revenue += cost
 		left -= take
 		bonus += (_quality(gs, b) - 1.0) * 2.0 * (take / qty)
 		bonus += float(GameData.legal_types.get(str(b.get("legal", "")), {}).get("happiness_bonus", 0)) * (take / qty)
-	EconomySim.record_purchase(gs, good, qty, qty - maxf(0.0, left), maxf(0.0, qty - total_stock))
-	if left <= 0.0001:
-		return {"ok": true, "bonus": bonus}
-	# Sin oferta local: autoabastecimiento (desempleados, a costo base) o importación (empleados, más cara).
+	var local := qty - maxf(0.0, left)
+	var imported := 0.0
+	var self_q := 0.0
+	var quality := 1.0
 	var g: Dictionary = GameData.goods.get(good, {})
-	var unit := ref_price / maxf(0.01, EconomySim.good_factor(gs, good))
-	if employed and float(g.get("import_price", 0.0)) > 0.0:
-		unit *= float(GameData.citizens.get("import_markup_employed", 1.4))
-	var ok := PopulationSim.pay_with(gs, payers, left * unit)
-	return {"ok": ok, "bonus": bonus}
+	if left > 0.0001:
+		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult()
+		if employed and imp > 0.0 and PopulationSim.pay_with(gs, payers, left * imp):
+			imported = left  # El dinero sale del pueblo.
+		else:
+			# Autoabastecimiento en especie: cultivar, buscar agua, cortar leña… sin dinero, peor calidad.
+			var ss := float(g.get("self_supply", 0.0))
+			if employed:
+				ss *= float(GameData.citizens.get("employed_self_supply_factor", 0.7))
+			self_q = left
+			quality = (local + ss * left) / qty
+	EconomySim.record_purchase(gs, good, qty, local, imported, self_q, maxf(0.0, qty - total_stock), revenue)
+	return {"ok": quality > 0.0, "quality": quality, "bonus": bonus}
+
+
+## Consumo discrecional semanal: quien tiene ahorros de sobra gasta parte en tus
+## negocios (taberna, panadería, tienda…). Así el dinero vuelve a circular.
+static func discretionary(gs) -> void:
+	var cfg: Dictionary = GameData.citizens.get("discretionary", {})
+	var buffer_days := float(cfg.get("buffer_days", 45))
+	var share := float(cfg.get("weekly_share", 0.06))
+	var need_day := 0.0
+	for n in GameData.citizens.get("needs", {}).values():
+		need_day += float(n.get("cost", 0.1))
+	need_day *= gs.price_mult()
+	var goods := []
+	for gid in GameData.goods:
+		if GameData.goods[gid].get("discretionary", false) and not sellers(gid).is_empty():
+			goods.append(gid)
+	if goods.is_empty():
+		return
+	var today: int = gs.today()
+	var adult := int(GameData.citizens.get("adult_age", 16))
+	for c in gs.citizens.values():
+		if gs.is_player(c.id) or c.age_years(today) < adult:
+			continue
+		var excess: float = c.money - need_day * buffer_days
+		if excess <= 0.0:
+			continue
+		var budget := excess * share
+		var spent := 0.0
+		var units := 0.0
+		for gid in goods:
+			for b in sellers(gid):
+				var inv: Dictionary = b["inventory"]
+				var price := float(b["price"])
+				var stock := float(inv.get(gid, 0.0))
+				if stock <= 0.0 or price <= 0.0:
+					continue
+				var take := minf(stock, (budget - spent) / price)
+				if take <= 0.01:
+					break
+				inv[gid] = stock - take
+				c.money -= take * price
+				spent += take * price
+				units += take
+				BusinessSim.earn(gs, b, take * price, "ventas")
+				EconomySim.record_discretionary(gs, gid, take, take * price)
+		if units > 0.0:
+			c.happiness = minf(100.0, c.happiness + minf(float(cfg.get("max_bonus", 6)), units * float(cfg.get("happiness_per_unit", 0.4))))
 
 
 # --- Vivienda ------------------------------------------------------------------------------

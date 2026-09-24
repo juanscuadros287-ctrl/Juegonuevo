@@ -28,8 +28,6 @@
   },
   "health_regen_per_day": 0.6,
   "child_cost_factor": 0.35,
-  "subsistence_income": 1.9,
-  "retired_income_factor": 0.5,
   "needs": {
     "comida": {
       "label": "Comida",
@@ -98,5 +96,12 @@
   "self_build_monthly_chance": 0.25,
   "eviction_unpaid_days": 30,
   "quit_wage_ratio": 0.8,
-  "quit_monthly_chance": 0.3
+  "quit_monthly_chance": 0.3,
+  "employed_self_supply_factor": 0.7,
+  "discretionary": {
+    "buffer_days": 45,
+    "weekly_share": 0.06,
+    "happiness_per_unit": 0.4,
+    "max_bonus": 6
+  }
 }

@@ -33,14 +33,45 @@ static func market_price(gs, good: String) -> float:
 	return float(GameData.goods.get(good, {}).get("base_price", 0.0)) * gs.price_mult() * good_factor(gs, good)
 
 
-## Registra una compra: unidades pedidas, cubiertas localmente y faltantes por falta de stock.
-static func record_purchase(gs, good: String, qty: float, local: float, shortage: float) -> void:
+## Registra una compra: pedido, cubierto por tus negocios, importado, autoabastecido,
+## faltante por falta de inventario e ingresos. Alimenta precios y Estadísticas.
+static func record_purchase(gs, good: String, qty: float, local: float, imported: float, self_q: float, shortage: float, revenue: float) -> void:
 	var st := good_state(gs, good)
 	st["demand"] = float(st["demand"]) + qty
 	st["local"] = float(st["local"]) + local
 	st["shortfall"] = float(st["shortfall"]) + shortage
 	var m: Dictionary = gs.economy.get("month", {})
 	m["local_sales_units"] = float(m.get("local_sales_units", 0.0)) + local
+	var gm: Dictionary = m.get("goods", {})
+	var row: Dictionary = gm.get(good, {})
+	for pair in [["demand", qty], ["local", local], ["imported", imported], ["self", self_q], ["shortage", shortage], ["revenue", revenue]]:
+		row[pair[0]] = float(row.get(pair[0], 0.0)) + float(pair[1])
+	gm[good] = row
+	m["goods"] = gm
+	gs.economy["month"] = m
+
+
+static func record_discretionary(gs, good: String, units: float, revenue: float) -> void:
+	var m: Dictionary = gs.economy.get("month", {})
+	var gm: Dictionary = m.get("goods", {})
+	var row: Dictionary = gm.get(good, {})
+	row["extra"] = float(row.get("extra", 0.0)) + units
+	row["revenue"] = float(row.get("revenue", 0.0)) + revenue
+	gm[good] = row
+	m["goods"] = gm
+	m["local_sales_units"] = float(m.get("local_sales_units", 0.0)) + units
+	gs.economy["month"] = m
+
+
+## Necesidades: personas-día con la necesidad cubierta total, parcial o sin cubrir.
+static func record_need(gs, need: String, quality: float) -> void:
+	var m: Dictionary = gs.economy.get("month", {})
+	var nm: Dictionary = m.get("needs", {})
+	var row: Dictionary = nm.get(need, {})
+	var key := "met" if quality >= 0.99 else ("partial" if quality > 0.0 else "unmet")
+	row[key] = float(row.get(key, 0.0)) + 1.0
+	nm[need] = row
+	m["needs"] = nm
 	gs.economy["month"] = m
 
 
@@ -145,7 +176,17 @@ static func monthly(gs) -> void:
 	gs.economy["money_prev"] = money
 	gs.economy["output_prev"] = output
 	gs.economy["credit_prev"] = credit
-	gs.economy["last_month"] = gs.economy.get("month", {})
+	var closing: Dictionary = gs.economy.get("month", {})
+	var prices := {}
+	for g in GameData.goods:
+		prices[g] = market_price(gs, g)
+	closing["prices"] = prices
+	gs.economy["last_month"] = closing
+	var hist: Array = gs.economy.get("stats_hist", [])
+	hist.append({"day": gs.today(), "goods": closing.get("goods", {}), "prices": prices})
+	if hist.size() > 24:
+		hist.pop_front()
+	gs.economy["stats_hist"] = hist
 	gs.economy["month"] = {}
 
 

@@ -18,6 +18,9 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 | 7 | Turismo, publicidad, industria avanzada y herederos | ⏳ |
 
 ### Fase 3 incluye
+- **Economía cerrada y realista**: el dinero no aparece de la nada. Los desempleados se autoabastecen en especie (cultivan, buscan agua y leña) con peor calidad de vida; el dinero entra solo por salarios, obras y préstamos, circula cuando la gente compra en tus negocios (incluido el gasto de sus ahorros) y sale por importaciones. La inmigración y el comercio con otros pueblos llegarán con los caminos (Fase 6).
+- **Terreno del gobierno**: para construir en zonas nuevas hay que comprarle el terreno al gobierno (el dinero va al tesoro público).
+- **Estadísticas**: comercio por bien (precio y tendencia ▲▼, demanda, lo que venden tus negocios, lo que queda sin cubrir), qué se pide más y menos, necesidades cubiertas/a medias/sin cubrir, empleo buscado y vacantes, demanda de vivienda por calidad (normal/media/alta), población y recomendaciones automáticas.
 - **Oferta y demanda** por bien: el precio de mercado sube con escasez (tus negocios sin inventario) y baja con exceso de oferta. Precio automático con margen configurable.
 - **Inflación** según dinero en circulación, crédito y producción: afecta costos, salarios pedidos, construcción y subsistencia (si no subes sueldos, tus empleados renuncian).
 - **Clasificación** de cada negocio: rentable / equilibrio / deficitaria. **Quiebra** tras 6 meses de pérdidas con saldo negativo (se puede reabrir).
@@ -35,7 +38,6 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 - **Vista interior** (estilo Los Sims): objetos cotidianos automáticos según nivel, calidad y época. Choza: jergón o catre de paja, tinaja de barro, fogón, canastos de fique, mechero de sebo; adobe: catre, fogón de barro, baúl; ladrillo: cama con dosel, bañera, clavicordio; con investigación: inodoro, bombilla, radio… Interactúa con quien vive ahí.
 - **Tu personaje** es un ciudadano real: nombre, apellido, sexo y edad al inicio; enferma (médico), envejece y muere. Conoce gente en la calle (conversar, citas, matrimonio), busca hijos con tu pareja, adopta, invita a vivir contigo, elige heredero: **al morir, tu hijo(a) continúa la dinastía**.
 - **Tiempo real** (1 s = 1 s) además de x1/x2/x3/x4.
-- **Expandir terreno**: compra zonas vecinas.
 
 ### Fase 1 incluye
 - **Inicio**: dificultad (Fácil/Normal/Difícil/Extremo) y tipo de mapa (Interior, Costa, Montaña, Río), semilla.

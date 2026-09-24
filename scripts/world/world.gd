@@ -411,7 +411,7 @@ func _update_placement() -> void:
 		_zone_marker.position = Vector3(-half + (zc.x + 0.5) * zs, 10, -half + (zc.y + 0.5) * zs)
 		var reason := ConstructionSim.zone_block_reason(GameState, zc.x, zc.y)
 		_zone_marker.material_override = MeshLib.ghost_mat(reason == "")
-		hud.set_placement_hint("Expandir terreno: %s · %s   (clic para comprar, clic derecho/Esc cancela)" % [Fmt.money(ConstructionSim.zone_cost(GameState)), reason if reason != "" else "disponible"])
+		hud.set_placement_hint("Comprar terreno al gobierno: %s · %s   (clic para comprar, clic derecho/Esc cancela)" % [Fmt.money(ConstructionSim.zone_cost(GameState)), reason if reason != "" else "disponible"])
 		return
 	p.x = snappedf(p.x, 0.5)
 	p.z = snappedf(p.z, 0.5)

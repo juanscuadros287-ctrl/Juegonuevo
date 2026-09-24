@@ -12,9 +12,18 @@ func _ready() -> void:
 	GameState.new_game({"seed": 5, "difficulty": "facil", "map_type": "interior"})
 	GameState.money = 90000.0
 	var ids := []
-	var x := 28.0
+	var x := -10.0
 	for tier in ["normal", "media", "alta"]:
-		ids.append(ConstructionSim.start_construction(GameState, "vivienda", x, -30, 0.0, "", "sas", tier)["building"])
+		var r := {}
+		for dz in range(0, 60, 3):
+			r = ConstructionSim.start_construction(GameState, "vivienda", x, -37.0 + dz, 0.0, "", "sas", tier)
+			if r.has("building"):
+				break
+		if not r.has("building"):
+			print("ERR ", r)
+			get_tree().quit()
+			return
+		ids.append(r["building"])
 		x += 9.0
 	TimeManager.advance_days(80)
 	TimeManager.total_hours += 10 - TimeManager.hour()
@@ -23,7 +32,7 @@ func _ready() -> void:
 	var world: Node3D = load("res://scenes/main.tscn").instantiate()
 	add_child(world)
 	var rig: CameraRig = world.camera_rig
-	rig.target_pos = Vector3(37, 3, -30)
+	rig.target_pos = Vector3(float(ids[1]["x"]), 3, float(ids[1]["z"]))
 	rig.position = rig.target_pos
 	rig.distance = 24.0
 	rig.target_distance = 24.0
@@ -32,4 +41,7 @@ func _ready() -> void:
 	await _shot(out, "exterior")
 	EventBus.interior_requested.emit(int(ids[2]["id"]))
 	await _shot(out, "interior_alta")
+	world.hud._close_interior()
+	world.hud._show_dock("stats")
+	await _shot(out, "estadisticas")
 	get_tree().quit()

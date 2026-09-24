@@ -5,7 +5,9 @@
   "import_price": 0.75,
   "storable": true,
   "need": "comida",
-  "order": 0
+  "order": 0,
+  "self_supply": 0.7,
+  "discretionary": true
  },
  "agua": {
   "label": "Agua",
@@ -13,7 +15,8 @@
   "import_price": 0.15,
   "storable": true,
   "need": "agua",
-  "order": 1
+  "order": 1,
+  "self_supply": 0.9
  },
  "lena": {
   "label": "Leña",
@@ -21,7 +24,8 @@
   "import_price": 0.25,
   "storable": true,
   "need": "energia",
-  "order": 2
+  "order": 2,
+  "self_supply": 0.8
  },
  "ocio": {
   "label": "Ocio",
@@ -29,7 +33,9 @@
   "import_price": 0,
   "storable": false,
   "need": "ocio",
-  "order": 3
+  "order": 3,
+  "self_supply": 0.5,
+  "discretionary": true
  },
  "madera": {
   "label": "Madera",
