@@ -1,0 +1,98 @@
+{
+ "_nota": "Fase 7: otros pueblos, rutas comerciales, comercio exterior, inmigración y transporte externo. Todos los precios se multiplican por la dificultad y la inflación (price_mult).",
+ "towns": {
+  "count": [4, 6],
+  "distance_km": [35, 150],
+  "population": [250, 2600],
+  "names": ["Santa Bárbara", "Villa del Rosario", "San Gil", "Honda", "Mompox", "Girón", "Tunja", "Cartago", "Pamplona", "El Socorro", "Vélez", "Zipaquirá", "Ocaña", "Neiva", "Mariquita", "Anserma", "Salamina", "Barichara", "Chiquinquirá", "Guaduas"],
+  "required_archetypes": ["minero", "maderero", "agricola", "artesano"],
+  "water_chance": 0.5
+ },
+ "archetypes": {
+  "minero": {"label": "Real de minas", "produces": ["carbon", "hierro", "plata"], "rare": {"oro": 0.7}, "demands": ["comida", "trigo", "herramientas", "ropa", "madera", "lena"]},
+  "maderero": {"label": "Villa maderera", "produces": ["madera", "lena", "carbon"], "demands": ["herramientas", "comida", "piedra", "lana", "harina"]},
+  "agricola": {"label": "Pueblo agrícola", "produces": ["trigo", "comida", "lana", "algodon"], "demands": ["herramientas", "ropa", "piedra", "madera", "hierro"]},
+  "artesano": {"label": "Villa de artesanos", "produces": ["herramientas", "ropa", "harina"], "demands": ["trigo", "lana", "algodon", "hierro", "carbon", "madera"]},
+  "cantera": {"label": "Pueblo cantero", "produces": ["piedra", "hierro"], "rare": {"oro": 0.3}, "demands": ["comida", "madera", "trigo", "ropa"]},
+  "ciudad": {"label": "Ciudad", "produces": ["herramientas", "ropa", "joyas", "harina"], "demands": ["oro", "plata", "joyas", "comida", "madera", "piedra", "trigo", "lana", "algodon"]},
+  "puerto": {"label": "Puerto", "produces": ["ropa", "herramientas", "algodon"], "demands": ["oro", "plata", "madera", "comida", "trigo", "joyas"], "water": true}
+ },
+ "goods": {
+  "_nota": "Precio base de referencia para el comercio exterior (por unidad). La etiqueta se toma de GameData.goods si existe.",
+  "comida": {"label": "Comida", "base": 0.6},
+  "lena": {"label": "Leña", "base": 0.2},
+  "madera": {"label": "Madera", "base": 3.0},
+  "piedra": {"label": "Piedra", "base": 4.0},
+  "carbon": {"label": "Carbón", "base": 3.5},
+  "hierro": {"label": "Hierro", "base": 7.0},
+  "plata": {"label": "Plata", "base": 25.0},
+  "oro": {"label": "Oro", "base": 60.0},
+  "trigo": {"label": "Trigo", "base": 1.2},
+  "harina": {"label": "Harina", "base": 2.4},
+  "lana": {"label": "Lana", "base": 2.5},
+  "algodon": {"label": "Algodón", "base": 2.5},
+  "herramientas": {"label": "Herramientas", "base": 16.0},
+  "ropa": {"label": "Ropa", "base": 12.0},
+  "joyas": {"label": "Joyas", "base": 120.0}
+ },
+ "prices": {
+  "_nota": "Multiplicadores sobre el precio base. buy = lo que el pueblo te paga; sell = lo que te cobra.",
+  "produced_sell": [0.75, 0.95],
+  "produced_buy": [0.45, 0.6],
+  "demanded_buy": [1.25, 1.6],
+  "other_buy": [0.75, 0.95],
+  "demand_per_pop": 0.06,
+  "other_demand_per_pop": 0.02,
+  "supply_per_pop": 0.08,
+  "saturation_weight": 0.6,
+  "scarcity_weight": 0.5,
+  "min_factor": 0.35,
+  "max_factor": 2.2,
+  "fluct_volatility": 0.05,
+  "fluct_revert": 0.15,
+  "fluct_range": [0.65, 1.6],
+  "event_monthly_chance": 0.02,
+  "event_months": [3, 8],
+  "event_mult": [0.6, 1.6]
+ },
+ "difficulty": {
+  "facil": {"export": 1.1, "import": 0.92},
+  "normal": {"export": 1.0, "import": 1.0},
+  "dificil": {"export": 0.92, "import": 1.08},
+  "extremo": {"export": 0.85, "import": 1.15}
+ },
+ "connection": {
+  "_nota": "Acuerdo con el pueblo (derecho de paso) + camino de barro según la distancia.",
+  "agreement_base": 600,
+  "agreement_per_km": 6,
+  "min_days": 10
+ },
+ "roads": [
+  {"level": 0, "label": "Sin camino", "cost_per_km": 0, "days_per_km": 0, "speed_mult": 0.6, "immigration": 0.5, "upkeep_per_km": 0, "tech": ""},
+  {"level": 1, "label": "Camino de barro", "cost_per_km": 22, "days_per_km": 0.35, "speed_mult": 0.8, "immigration": 1.0, "upkeep_per_km": 0.05, "tech": ""},
+  {"level": 2, "label": "Camino empedrado", "cost_per_km": 30, "days_per_km": 0.45, "speed_mult": 1.0, "immigration": 1.25, "upkeep_per_km": 0.04, "tech": "caminos_empedrados"},
+  {"level": 3, "label": "Carretera de cemento", "cost_per_km": 70, "days_per_km": 0.35, "speed_mult": 1.3, "immigration": 1.5, "upkeep_per_km": 0.05, "tech": "automovil"}
+ ],
+ "rail": {"label": "Vía férrea", "cost_per_km": 90, "days_per_km": 0.5, "upkeep_per_km": 0.08, "tech": "ferrocarril"},
+ "transport_modes": {
+  "a_pie": {"label": "Cargadores y mulas", "order": 0, "tech": "", "capacity": 25, "speed_km_day": 25, "trip_fixed": 2, "per_km": 0.02, "fuel_per_km": 0, "crew": 2, "crew_wage": 1.5, "monthly_upkeep": 0, "immigration": 1.0, "min_road": 0, "description": "Cargadores a pie y mulas: poca carga, lento, no necesita más que un sendero."},
+  "carretas": {"label": "Carretas de bueyes", "order": 1, "tech": "carretas", "capacity": 80, "speed_km_day": 35, "trip_fixed": 4, "per_km": 0.03, "fuel_per_km": 0, "crew": 2, "crew_wage": 1.5, "monthly_upkeep": 15, "immigration": 1.3, "min_road": 1, "description": "Más carga por viaje; requiere camino. Los bueyes cuestan mantenimiento mensual."},
+  "barco": {"label": "Barco", "order": 2, "tech": "navegacion", "capacity": 300, "speed_km_day": 90, "trip_fixed": 15, "per_km": 0.04, "fuel_per_km": 0, "crew": 4, "crew_wage": 1.8, "monthly_upkeep": 40, "immigration": 1.5, "min_road": 0, "building": "puerto", "maps": ["costa", "rio"], "needs_water": true, "description": "Solo en mapas de costa o río, con puerto propio y hacia pueblos con acceso por agua."},
+  "tren": {"label": "Ferrocarril", "order": 3, "tech": "ferrocarril", "capacity": 500, "speed_km_day": 250, "trip_fixed": 25, "per_km": 0.25, "fuel_per_km": 0, "crew": 3, "crew_wage": 2.5, "monthly_upkeep": 60, "immigration": 2.0, "min_road": 0, "building": "estacion_tren", "rail": true, "description": "Gran capacidad y velocidad. Necesita estación de tren con personal y vía férrea hasta el pueblo."},
+  "camion": {"label": "Camiones", "order": 4, "tech": "automovil", "capacity": 150, "speed_km_day": 350, "trip_fixed": 8, "per_km": 0.05, "fuel_per_km": 0.12, "crew": 1, "crew_wage": 3.0, "monthly_upkeep": 40, "immigration": 2.2, "min_road": 3, "description": "Rápidos y flexibles; gastan gasolina y necesitan carretera de cemento."},
+  "avion": {"label": "Avión de carga", "order": 5, "tech": "aviacion", "capacity": 40, "speed_km_day": 3000, "trip_fixed": 60, "per_km": 0.1, "fuel_per_km": 0.5, "crew": 3, "crew_wage": 5.0, "monthly_upkeep": 150, "immigration": 3.0, "min_road": 0, "building": "aeropuerto", "description": "Llega en horas pero es caro: ideal para bienes valiosos (oro, joyas). Necesita aeropuerto."}
+ },
+ "fuel_price": 1.0,
+ "immigration": {
+  "_nota": "La gente solo llega por las conexiones. Familias esperadas por mes = base × conexiones × atractivo.",
+  "base_families_month": 0.35,
+  "max_families_month": 5,
+  "connection_exponent": 0.7,
+  "town_pop_ref": 1000,
+  "attract_min": 0.05,
+  "attract_max": 3.0,
+  "weights": {"jobs": 0.6, "housing": 0.5, "happiness": 0.6, "wages": 0.4},
+  "family": {"single": 0.35, "couple": 0.15, "kids_max": 3},
+  "age": [18, 40]
+ }
+}
