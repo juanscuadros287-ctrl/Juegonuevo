@@ -1,11 +1,11 @@
 {
- "_nota": "Fase 6: almacén de la compañía. warehouse_capacity suma espacio (1 unidad = 1 espacio). Los negocios de extracción a menos de warehouse.walk_reach (resources.json) de un almacén o de la bodega de la plaza guardan directo; más lejos necesitan rutas de transporte.",
+ "_nota": "Almacenes individuales: cada almacén tiene su propio stock y capacidad (warehouse_capacity, 1 unidad = 1 espacio). Las fábricas, talleres, minas y campos AL LADO de un almacén (a menos de warehouse.link_distance metros entre bordes, resources.json) quedan vinculados: toman insumos y guardan su producción solo en ese almacén. Lejos de un almacén, la producción queda en el sitio y se lleva con rutas de transporte.",
  "almacen": {
   "label": "Almacén",
   "category": "Logística",
   "order": 5,
   "footprint": 6.0,
-  "description": "Almacén de la compañía: guarda materias primas y productos (1 unidad = 1 espacio). Las minas y campos cercanos (a menos de 30 m) descargan directo aquí. Mejóralo para más capacidad.",
+  "description": "Almacén de la compañía con su propio stock (1 unidad = 1 espacio). Las fábricas, talleres, minas y campos construidos AL LADO (a pocos metros) quedan vinculados en verde: toman insumos de aquí y guardan aquí su producción. Mejóralo para más capacidad.",
   "levels": [
    {
     "label": "Bodega de madera",
