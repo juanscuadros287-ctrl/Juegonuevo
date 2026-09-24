@@ -227,6 +227,8 @@ static func monthly_housing(gs) -> void:
 				continue
 			if int(b["id"]) == head.home_id or bool(b.get("for_sale", false)) or int(b.get("owner_id", -1)) >= 0:
 				continue
+			if RealEstateSim.has_units(b):
+				continue   # Bienes raíces: los multifamiliares se arriendan por unidad (RealEstateSim).
 			if gs.building_capacity(b) - int(occ.get(int(b["id"]), 0)) < size:
 				continue
 			var q := home_quality(gs, b)
@@ -266,7 +268,7 @@ static func monthly_housing(gs) -> void:
 
 static func _try_buy_home(gs, members: Array, money: float, occ: Dictionary) -> bool:
 	for b in gs.buildings:
-		if not bool(b.get("for_sale", false)) or not gs.owned_by_player(b) or b["status"] != "activo":
+		if not bool(b.get("for_sale", false)) or not gs.owned_by_player(b) or b["status"] != "activo" or RealEstateSim.has_units(b):
 			continue
 		var price := float(b["sale_price"])
 		if money < price * 1.1 or gs.rng.randf() > 0.35:

@@ -71,6 +71,7 @@ static func repay_loan(gs, loan_id: int) -> String:
 			if gs.money < bal:
 				return "Necesitas %s" % Fmt.money(bal)
 			gs.add_money(-bal)
+			LoanContract.on_player_paid(gs, l, bal, 0.0)
 			gs.loans.erase(l)
 			gs.notify("Pagaste por completo tu préstamo de %s." % Fmt.money(float(l["principal"])), "importante")
 			return ""
@@ -203,13 +204,14 @@ static func monthly(gs) -> void:
 		var bal := float(l["balance"])
 		var r := float(l["rate"]) / 12.0
 		var interest := bal * r
-		var due := minf(float(l["payment"]), bal + interest)
+		var due := LoanContract.due(l, bal, interest)   # Bienes raíces: tipo de pago firmado.
 		var borrower := str(l["borrower"])
 		var paid := false
 		if borrower == "jugador":
 			if gs.money >= due:
 				gs.add_money(-due)
 				gs.add_counter("interest_paid", interest)
+				LoanContract.on_player_paid(gs, l, due, interest)
 				paid = true
 		else:
 			var c: Citizen = gs.citizens.get(int(borrower))
@@ -247,7 +249,7 @@ static func monthly(gs) -> void:
 			elif int(l["missed"]) >= cit_default:
 				_default(gs, l, borrower)
 				continue
-		if float(l["balance"]) <= 0.01:
+		if float(l["balance"]) <= 0.01 and not LoanContract.keep_open(l):
 			gs.loans.erase(l)
 			if borrower == "jugador":
 				gs.notify("Terminaste de pagar tu préstamo de %s." % Fmt.money(float(l["principal"])), "importante")
@@ -262,6 +264,7 @@ static func monthly(gs) -> void:
 
 
 static func _default(gs, l: Dictionary, borrower: String) -> void:
+	RealEstateSim.on_loan_default(gs, l, borrower)   # Hipoteca: embargo de la unidad.
 	var bank: Dictionary = gs.get_building(int(l["lender"]))
 	if not bank.is_empty():
 		BusinessSim.ledger_add(bank, "incobrables", float(l["balance"]))

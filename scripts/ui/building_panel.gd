@@ -74,6 +74,8 @@ func rebuild() -> void:
 		_add_tab("Almacén", WarehouseTab.build(GameState, b, hud))   # Almacenes individuales y vínculo.
 	if cat == "vivienda":
 		_add_tab("Vivienda", _home_tab(b, mine))
+	if UnitsTab.applies(GameState, b):
+		_add_tab("Unidades", UnitsTab.build(GameState, b, hud, rebuild))   # Bienes raíces: unidades, ficha y proyecto.
 	if mine:
 		_add_tab("Mejorar", _upgrade_tab(b))
 	refresh()
@@ -117,6 +119,10 @@ func _summary_tab(b: Dictionary, mine: bool) -> Control:
 				world.start_move(bid)
 				closed.emit()))
 		var del := UIKit.button("Demoler", func():
+			var why := RealEstateSim.demolish_block_reason(_b())   # Bienes raíces: unidades de ciudadanos.
+			if why != "":
+				_msg(why, "jugador")
+				return
 			ConstructionSim.demolish(GameState, _b())
 			closed.emit())
 		del.tooltip_text = "Elimina el edificio sin reembolso."
@@ -325,6 +331,9 @@ func _home_tab(b: Dictionary, mine: bool) -> Control:
 	v.add_child(rl)
 	v.add_child(UIKit.button("Ver interior", func(): EventBus.interior_requested.emit(bid)))
 	if not mine:
+		return v
+	if RealEstateSim.has_units(b):
+		v.add_child(UIKit.label("Edificio por unidades: fija precio, renta, venta y arriendo en «Unidades».", 13, UIKit.TEXT_DIM))
 		return v
 	var rent_row := HBoxContainer.new()
 	rent_row.add_child(UIKit.label("Renta por persona/mes:"))

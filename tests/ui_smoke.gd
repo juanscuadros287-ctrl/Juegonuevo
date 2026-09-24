@@ -8,7 +8,7 @@ func _ready() -> void:
 	add_child(world)
 	await get_tree().process_frame
 	var hud: Hud = world.hud
-	for mode in ["player", "build", "companies", "finance", "stats", "government", "logistics", "trade", "tourism"]:
+	for mode in ["player", "build", "companies", "finance", "stats", "government", "logistics", "trade", "tourism", "realestate"]:
 		hud._show_dock(mode)
 		await get_tree().process_frame
 	BankSim.request_player_loan(GameState, 500.0, 12)
@@ -25,7 +25,42 @@ func _ready() -> void:
 	for i in range(hud.building_panel.tabs.get_tab_count()):
 		hud.building_panel.tabs.current_tab = i
 		await get_tree().process_frame
+	# Bienes raíces: proyecto por etapas, pestaña Unidades, panel y diálogo de crédito.
+	for t in ["adobe", "ladrillo", "arquitectura_urbana"]:
+		if not GameState.techs.has(t):
+			GameState.techs.append(t)
+	GameState.money += 20000.0
+	var pr := RealEstateSim.start_project(GameState, 4, "media", 34, 24, 0.0, "Torres Test", {"credit_lender": "externo", "credit_ratio": 0.5})
+	print("PROYECTO: ", pr.get("error", "iniciado"))
+	if pr.has("building"):
+		hud.open_building(int(pr["building"]["id"]))
+		for i in range(hud.building_panel.tabs.get_tab_count()):
+			hud.building_panel.tabs.current_tab = i
+			await get_tree().process_frame
+	var apt := ConstructionSim.make_building(GameState, "vivienda", 4, -34, 26, 0.0, "jugador")
+	GameState.add_building(apt)
+	RealEstateSim.ensure_units(GameState, apt)
+	hud.open_building(int(apt["id"]))
+	for i in range(hud.building_panel.tabs.get_tab_count()):
+		hud.building_panel.tabs.current_tab = i
+		await get_tree().process_frame
+	hud._show_dock("realestate")
+	for i in range(hud.realestate_panel.tabs.get_tab_count()):
+		hud.realestate_panel.tabs.current_tab = i
+		await get_tree().process_frame
+	hud.realestate_panel._place()
+	await get_tree().process_frame
+	world._update_placement()
+	world.cancel_placement()
+	hud.close_dock()
+	LoanDialog.open(hud, func(): pass)
+	await get_tree().process_frame
+	hud._show_dock("build")
+	await get_tree().process_frame
 	hud._show_dock("finance")
+	await get_tree().process_frame
+	if not BankSim.player_loans(GameState).is_empty():
+		LoanDialog.show_schedule(hud, BankSim.player_loans(GameState)[0])
 	await get_tree().process_frame
 	hud._show_dock("stats")
 	await get_tree().process_frame

@@ -22,6 +22,7 @@ signal building_removed(id: int)
 signal zones_changed
 signal player_changed
 signal build_mode_requested(type_id: String, tier: String)
+signal project_mode_requested(level: int, tier: String, opts: Dictionary)   # Bienes raíces: obra de un multifamiliar
 signal zone_mode_requested
 signal interior_requested(building_id: int)
 signal interior_closed

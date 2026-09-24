@@ -232,6 +232,8 @@ static func annual_inflation(gs) -> float:
 static func property_value(gs, b: Dictionary) -> float:
 	if b["status"] == "cerrado":
 		return BusinessSim.period_value(b, "total", "obras") * 0.3
+	if RealEstateSim.has_units(b):
+		return RealEstateSim.owned_value(gs, b)   # Bienes raíces: solo las unidades que aún son tuyas.
 	if Housing.is_home(b):
 		return float(b.get("sale_price", 0.0)) * float(gs.economy.get("price_level", 1.0))
 	return BusinessSim.period_value(b, "total", "obras") * float(cfg().get("property_value_ratio", 0.7))
@@ -255,7 +257,8 @@ static func player_debt(gs) -> float:
 static func loans_granted(gs) -> float:
 	var d := 0.0
 	for l in gs.loans:
-		if str(l["lender"]) != "externo":
+		# Solo la cartera de tus bancos (los bancos NPC y el externo no son tuyos).
+		if str(l["lender"]).is_valid_int() and str(l["borrower"]) != "jugador":
 			d += float(l["balance"])
 	return d
 
