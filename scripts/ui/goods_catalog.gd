@@ -223,11 +223,12 @@ func setup() -> void:
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	body.add_child(sc)
 	grid = GridContainer.new()
-	grid.columns = 4
+	grid.columns = 5
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	grid.add_theme_constant_override("h_separation", 6)
 	grid.add_theme_constant_override("v_separation", 6)
 	sc.add_child(grid)
+	sc.resized.connect(func(): grid.columns = maxi(2, int(sc.size.x / 182.0)))
 	var side := PanelContainer.new()
 	side.custom_minimum_size = Vector2(520, 0)
 	body.add_child(side)
@@ -271,11 +272,11 @@ func _build_viewport() -> Control:
 	sun.shadow_enabled = true
 	viewport.add_child(sun)
 	var cam := Camera3D.new()
-	cam.position = Vector3(0, 1.1, 2.4)
+	cam.position = Vector3(0, 0.95, 2.1)
 	cam.fov = 40
 	viewport.add_child(cam)
-	cam.look_at_from_position(cam.position, Vector3(0, 0.38, 0))
-	var pedestal := MeshLib.mesh_node(MeshLib.cylinder(0.85, 0.95, 0.12, 24), MeshLib.mat(Color(0.3, 0.28, 0.26)), Vector3(0, -0.06, 0))
+	cam.look_at_from_position(cam.position, Vector3(0, 0.42, 0))
+	var pedestal := MeshLib.mesh_node(MeshLib.cylinder(0.72, 0.8, 0.12, 24), MeshLib.mat(Color(0.3, 0.28, 0.26)), Vector3(0, -0.06, 0))
 	viewport.add_child(pedestal)
 	pivot = Node3D.new()
 	viewport.add_child(pivot)
@@ -345,6 +346,7 @@ func _rebuild_cards() -> void:
 		var b := Button.new()
 		b.toggle_mode = true
 		b.custom_minimum_size = Vector2(170, 64)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
 		b.add_theme_font_size_override("font_size", 13)
@@ -358,9 +360,11 @@ func _rebuild_cards() -> void:
 		b.add_theme_stylebox_override("pressed", sbp)
 		b.add_theme_stylebox_override("hover_pressed", sbp)
 		var tech := first_tech(g)
-		var lock := "" if GameState.has_tech(tech) else "  (bloqueado)"
-		b.text = "%s\n%s · %s%s" % [GameData.good_label(g), Fmt.money2(EconomySim.market_price(GameState, g)), str(GameData.eras.get("eras", [])[clampi(era_of(g) - 1, 0, 2)].get("short", "")), lock]
+		var locked := not GameState.has_tech(tech)
+		b.text = "%s\n%s · %s%s" % [GameData.good_label(g), Fmt.money2(EconomySim.market_price(GameState, g)), str(GameData.eras.get("eras", [])[clampi(era_of(g) - 1, 0, 2)].get("short", "")), " · falta investigar" if locked else ""]
 		b.tooltip_text = str(GameData.goods[g].get("description", ""))
+		if locked:
+			b.modulate = Color(0.72, 0.72, 0.75)
 		var gid: String = g
 		b.pressed.connect(func(): select(gid))
 		grid.add_child(b)
@@ -385,7 +389,7 @@ func select(good: String) -> void:
 			ch.queue_free()
 		var m := build_good_model(good)
 		var ext := model_extent(good)
-		var s := 1.25 / maxf(ext.x, ext.y * 1.25)
+		var s := minf(1.25 / ext.x, 0.85 / ext.y)
 		m.scale = Vector3(s, s, s)
 		pivot.add_child(m)
 	if detail != null:
