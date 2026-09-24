@@ -397,6 +397,7 @@ static func _happiness(gs, c: Citizen, occupancy: Dictionary, wdata: Dictionary)
 		target += float(h.get("employed", 3))
 	target += float(c.get_meta("bonus", 0.0)) + TechSim.happiness_bonus(gs)
 	target += float(wdata.get("happiness", 0))
+	target += TransitSim.happiness_delta(gs, c)   # Transporte: caminar lejos cansa; bus y auto alegran.
 	target = clampf(target, 0.0, 100.0)
 	c.happiness = clampf(c.happiness + (target - c.happiness) * float(h.get("adjust_rate", 0.05)), 0.0, 100.0)
 
