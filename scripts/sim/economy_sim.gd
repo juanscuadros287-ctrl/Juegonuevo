@@ -29,8 +29,38 @@ static func good_factor(gs, good: String) -> float:
 
 
 ## Precio de mercado por unidad (referencia para ciudadanos y precios automáticos).
+## Incluye la fluctuación mensual de los bienes con "volatility" (economía real).
 static func market_price(gs, good: String) -> float:
-	return float(GameData.goods.get(good, {}).get("base_price", 0.0)) * gs.price_mult() * good_factor(gs, good)
+	return float(GameData.goods.get(good, {}).get("base_price", 0.0)) * gs.price_mult() * good_factor(gs, good) * fluct(gs, good)
+
+
+## Fluctuación de mercado de un bien (1 = sin fluctuación).
+static func fluct(gs, good: String) -> float:
+	var goods: Dictionary = gs.economy.get("goods", {})
+	return float(goods[good].get("fluct", 1.0)) if goods.has(good) else 1.0
+
+
+## Economía real: paseo aleatorio con reversión a 1 para los bienes con "volatility" (materias primas,
+## petróleo…). La amplitud escala con event_freq_mult de la dificultad. RNG propio y determinista
+## (semilla + mes + bien) para no alterar la simulación del resto.
+static func update_fluctuations(gs, month := -1) -> void:
+	var fc: Dictionary = cfg().get("fluctuation", {})
+	var mult := float(gs.diff().get("event_freq_mult", 1.0))
+	var revert := float(fc.get("revert", 0.25))
+	var lo := float(fc.get("min", 0.7))
+	var hi := float(fc.get("max", 1.4))
+	if month < 0:
+		month = int(float(gs.today()) / 30.0)
+	for g in GameData.goods:
+		var vol := float(GameData.goods[g].get("volatility", 0.0))
+		if vol <= 0.0:
+			continue
+		var st := good_state(gs, g)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(gs.settings.get("seed", 0)) * 1009 + month * 31 + str(g).hash()
+		var f := float(st.get("fluct", 1.0))
+		f = f + (1.0 - f) * revert + rng.randfn(0.0, vol * mult)
+		st["fluct"] = clampf(f, lo, hi)
 
 
 ## Registra una compra: pedido, cubierto por tus negocios, importado, autoabastecido,
@@ -173,6 +203,9 @@ static func monthly(gs) -> void:
 	gs.economy["inflation_month"] = infl
 	gs.economy["price_level"] = clampf(float(gs.economy.get("price_level", 1.0)) * (1.0 + infl),
 			float(inf_cfg.get("min_level", 0.5)), float(inf_cfg.get("max_level", 50.0)))
+	update_fluctuations(gs)
+	ShopSim.monthly(gs)
+	EnergySim.monthly(gs)
 	gs.economy["money_prev"] = money
 	gs.economy["output_prev"] = output
 	gs.economy["credit_prev"] = credit

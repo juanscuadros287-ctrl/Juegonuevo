@@ -1,0 +1,113 @@
+{
+  "_nota": "Yacimientos que solo aparecen al investigar su tecnología (RegionSim.reveal_tech_deposits) y parámetros de la electricidad (EnergySim). region_deposits = yacimientos seguros por región; map_chance = probabilidad de 1 yacimiento en las demás regiones del tipo de mapa.",
+  "resources": {
+    "petroleo": {
+      "label": "Petróleo",
+      "deposit": true,
+      "requires_tech": "petroleo",
+      "amount": [18000, 32000],
+      "color": [0.1, 0.09, 0.08],
+      "order": 20
+    },
+    "gas_natural": {
+      "label": "Gas natural",
+      "deposit": true,
+      "requires_tech": "petroleo",
+      "amount": [15000, 26000],
+      "color": [0.45, 0.7, 0.95],
+      "order": 21
+    },
+    "cobre": {
+      "label": "Cobre",
+      "deposit": true,
+      "requires_tech": "electricidad",
+      "amount": [9000, 15000],
+      "color": [0.82, 0.47, 0.24],
+      "order": 22
+    },
+    "uranio": {
+      "label": "Uranio",
+      "deposit": true,
+      "requires_tech": "energia_nuclear",
+      "amount": [250, 500],
+      "color": [0.55, 0.9, 0.2],
+      "order": 23
+    }
+  },
+  "region_deposits": {
+    "valle_fertil": {
+      "gas_natural": 1
+    },
+    "llanura_ferrera": {
+      "petroleo": 1,
+      "cobre": 1
+    },
+    "acantilados": {
+      "petroleo": 2,
+      "gas_natural": 1
+    },
+    "bahia_pesquera": {
+      "petroleo": 1
+    },
+    "cabo_dorado": {
+      "gas_natural": 1
+    },
+    "valle_minero": {
+      "cobre": 2,
+      "uranio": 1
+    },
+    "cumbre_plata": {
+      "cobre": 1
+    },
+    "veta_oro": {
+      "uranio": 1
+    },
+    "meandro_carbon": {
+      "petroleo": 1,
+      "gas_natural": 1
+    },
+    "praderas": {
+      "petroleo": 1
+    },
+    "cerros_plata": {
+      "cobre": 1
+    }
+  },
+  "map_chance": {
+    "interior": {
+      "petroleo": 0.3,
+      "gas_natural": 0.35,
+      "cobre": 1.0,
+      "uranio": 0.2
+    },
+    "costa": {
+      "petroleo": 0.45,
+      "gas_natural": 0.4,
+      "cobre": 1.0,
+      "uranio": 0.1
+    },
+    "montana": {
+      "petroleo": 0.15,
+      "gas_natural": 0.25,
+      "cobre": 1.0,
+      "uranio": 0.35
+    },
+    "rio": {
+      "petroleo": 0.35,
+      "gas_natural": 0.3,
+      "cobre": 1.0,
+      "uranio": 0.15
+    }
+  },
+  "energy": {
+    "grid_tech": "dinamo",
+    "home_tech": "electricidad",
+    "default_power_modern": 1.0,
+    "unpowered_output": 0.5,
+    "home_units_per_person_day": 0.3,
+    "home_unpowered_happiness": -3.0,
+    "home_powered_happiness": 1.5,
+    "grid_import": true,
+    "grid_note": "Con una ruta comercial terminada se puede comprar electricidad a la red regional (import_price × dificultad): el dinero sale del pueblo."
+  }
+}

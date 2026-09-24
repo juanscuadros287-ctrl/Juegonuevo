@@ -7,7 +7,15 @@
   "storable": false,
   "order": 30,
   "discretionary": true,
-  "tourism": true
+  "tourism": true,
+  "category": "servicio",
+  "era": 1,
+  "description": "Entradas a atracciones turísticas.",
+  "model": [
+   {"s": "box", "size": [0.6, 0.02, 0.3], "pos": [0.0, 0.2, 0.0], "c": [0.9, 0.3, 0.25], "rz": 12.0},
+   {"s": "box", "size": [0.6, 0.02, 0.3], "pos": [0.05, 0.18, 0.08], "c": [0.95, 0.85, 0.4], "rz": -8.0},
+   {"s": "box", "size": [0.02, 0.025, 0.25], "pos": [0.12, 0.215, 0.0], "c": [0.94, 0.93, 0.9], "rz": 12.0}
+  ]
  },
  "alojamiento": {
   "label": "Alojamiento (noches)",
@@ -15,7 +23,17 @@
   "import_price": 0,
   "storable": false,
   "order": 31,
-  "tourism": true
+  "tourism": true,
+  "category": "servicio",
+  "era": 1,
+  "description": "Noches de hotel para turistas.",
+  "model": [
+   {"s": "box", "size": [0.5, 0.2, 0.9], "pos": [0.0, 0.2, 0.0], "c": [0.55, 0.36, 0.2]},
+   {"s": "box", "size": [0.46, 0.08, 0.86], "pos": [0.0, 0.34, 0.0], "c": [0.94, 0.93, 0.9]},
+   {"s": "box", "size": [0.4, 0.08, 0.22], "pos": [0.0, 0.42, -0.3], "c": [0.9, 0.9, 0.85]},
+   {"s": "box", "size": [0.48, 0.04, 0.5], "pos": [0.0, 0.39, 0.15], "c": [0.7, 0.2, 0.2]},
+   {"s": "box", "size": [0.5, 0.45, 0.06], "pos": [0.0, 0.32, -0.47], "c": [0.55, 0.36, 0.2]}
+  ]
  },
  "publicidad": {
   "label": "Espacio publicitario",
@@ -23,6 +41,17 @@
   "import_price": 0,
   "storable": false,
   "order": 32,
-  "internal": true
+  "internal": true,
+  "category": "servicio",
+  "era": 2,
+  "tech": "periodico",
+  "description": "Espacios publicitarios en periódico, radio y TV.",
+  "model": [
+   {"s": "box", "size": [0.06, 0.8, 0.06], "pos": [-0.3, 0.4, 0.0], "c": [0.55, 0.36, 0.2]},
+   {"s": "box", "size": [0.06, 0.8, 0.06], "pos": [0.3, 0.4, 0.0], "c": [0.55, 0.36, 0.2]},
+   {"s": "box", "size": [0.8, 0.45, 0.04], "pos": [0.0, 0.65, 0.04], "c": [0.95, 0.85, 0.3]},
+   {"s": "box", "size": [0.5, 0.08, 0.01], "pos": [0.0, 0.72, 0.065], "c": [0.78, 0.16, 0.14]},
+   {"s": "box", "size": [0.4, 0.05, 0.01], "pos": [0.0, 0.58, 0.065], "c": [0.08, 0.08, 0.09]}
+  ]
  }
 }

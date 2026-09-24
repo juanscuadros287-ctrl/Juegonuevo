@@ -1,0 +1,62 @@
+{
+  "_nota": "Comercios especializados (ShopSim): el tipo de negocio → bienes que vende desde el almacén de la compañía (o su propio inventario). Precio = mercado × (precio de la tienda / precio de mercado de su producto): se ajusta en la pestaña Precio. Capacidad semanal = producción esperada (clientes/día) × 7. Los deseos de los vecinos están en data/citizens.json → wants.",
+  "shops": {
+    "tienda": {
+      "label": "Tienda general",
+      "sells": ["velas_jabon", "loza", "utensilios", "pan", "conservas", "periodicos", "papel", "carbon", "ropa", "herramientas"],
+      "customers_mult": 0.6
+    },
+    "panaderia": {
+      "label": "Panadería",
+      "sells": ["pan"],
+      "customers_mult": 1.0
+    },
+    "carniceria": {
+      "label": "Carnicería",
+      "sells": ["carne", "embutidos", "conservas"]
+    },
+    "madereria": {
+      "label": "Maderería",
+      "sells": ["madera", "lena"]
+    },
+    "carboneria": {
+      "label": "Carbonería y leñería",
+      "sells": ["carbon", "lena"]
+    },
+    "ferreteria": {
+      "label": "Ferretería",
+      "sells": ["herramientas", "utensilios", "vidrio"]
+    },
+    "tienda_ropa": {
+      "label": "Tienda de ropa",
+      "sells": ["ropa", "ropa_fina", "zapatos"]
+    },
+    "joyeria_tienda": {
+      "label": "Joyería",
+      "sells": ["joyas", "relojes"]
+    },
+    "muebleria": {
+      "label": "Mueblería",
+      "sells": ["muebles", "loza"]
+    },
+    "botica": {
+      "label": "Botica y farmacia",
+      "sells": ["remedios", "medicamentos", "velas_jabon"]
+    },
+    "concesionario": {
+      "label": "Concesionario",
+      "sells": ["automovil_bien"]
+    },
+    "gasolinera": {
+      "label": "Gasolinera",
+      "sells": ["combustible"]
+    },
+    "tienda_electro": {
+      "label": "Tienda de electrodomésticos",
+      "sells": ["electrodomesticos"]
+    }
+  },
+  "whole_unit_price": 20.0,
+  "max_markup": 1.0,
+  "min_markup": -0.5
+}
