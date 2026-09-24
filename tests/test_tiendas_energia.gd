@@ -17,6 +17,7 @@ func check(cond: bool, msg: String) -> void:
 func _ready() -> void:
 	print("== Dinastía: comercios, deseos, energía y catálogo ==")
 	_test_shop_data()
+	_test_power_fields()
 	_test_shop_sales()
 	_test_price_and_staff()
 	_test_unmet_wants()
@@ -108,6 +109,27 @@ func _test_shop_data() -> void:
 				wbad.append("%s/%s" % [w, g])
 	check(wants.size() >= 14 and wbad.is_empty(), "%d deseos de los vecinos, todos con un comercio que los vende %s" % [wants.size() - 1, "" if wbad.is_empty() else str(wbad)])
 	check(str(GameData.businesses["carniceria"].get("product", "")) == "comercio" and bool(GameData.goods["comercio"].get("internal", false)), "los comercios usan el índice de precios 'comercio' (pestaña Precio)")
+
+
+## Contrato con la futura red eléctrica: power_output en centrales y power_demand en consumidores (kW).
+func _test_power_fields() -> void:
+	var bad := []
+	var plants := 0
+	var users := 0
+	for t in GameData.businesses:
+		var def: Dictionary = GameData.businesses[t]
+		if str(t).begins_with("_") or not (bool(def.get("economia", false)) or bool(def.get("industrial", false))):
+			continue
+		for ld in def.get("levels", []):
+			if EnergySim.is_plant(def):
+				plants += 1
+				if float(ld.get("power_output", 0.0)) <= 0.0:
+					bad.append("%s sin power_output" % t)
+			elif EnergySim.level_power(def, ld) > 0.0:
+				users += 1
+				if not is_equal_approx(float(ld.get("power_demand", 0.0)), EnergySim.level_power(def, ld) * int(ld["jobs"])):
+					bad.append("%s/%s power_demand" % [t, ld.get("label", "")])
+	check(bad.is_empty() and plants >= 18 and users >= 40, "campos para la red: power_output en %d niveles de centrales, power_demand en %d niveles %s" % [plants, users, "" if bad.is_empty() else str(bad)])
 
 
 # --- Comercios -----------------------------------------------------------------------------------
@@ -250,7 +272,7 @@ func _test_energy() -> void:
 	var after := float(tex.get("produced_today", 0.0))
 	check(made > 0.0 and absf(after - made * 0.5) < 0.05 * made + 0.01, "sin electricidad la fábrica moderna rinde la mitad (%.2f → %.2f)" % [made, after])
 	check(WarehouseSim.stock(gs, "algodon") > alg, "los insumos no usados vuelven al almacén")
-	check(EnergySim.factor(gs, tex) < 0.99, "cobertura eléctrica registrada (factor %.2f)" % EnergySim.factor(gs, tex))
+	check(EnergySim.factor(gs, tex) < 0.99 and EnergySim.supply_ratio(gs, tex) < 0.01, "cobertura eléctrica registrada (supply_ratio %.2f, factor %.2f)" % [EnergySim.supply_ratio(gs, tex), EnergySim.factor(gs, tex)])
 	# Central de carbón vinculada a la plaza con carbón.
 	var plant := _place("central_carbon", -20, 0)
 	_hire(plant, 8)
@@ -260,7 +282,7 @@ func _test_energy() -> void:
 	var made2 := float(tex.get("produced_today", 0.0))
 	_energy_day()
 	check(e >= EnergySim.demand_of(gs, tex), "la central produce electricidad (%.0f) para la demanda (%.0f)" % [e, EnergySim.demand_of(gs, tex)])
-	check(is_equal_approx(float(tex.get("produced_today", 0.0)), made2) and is_equal_approx(EnergySim.factor(gs, tex), 1.0), "con electricidad propia produce completo")
+	check(is_equal_approx(float(tex.get("produced_today", 0.0)), made2) and is_equal_approx(EnergySim.supply_ratio(gs, tex), 1.0), "con electricidad propia produce completo (supply_ratio 1)")
 	check(BusinessSim.period_value(plant, "total", "ventas") > 0.0 and BusinessSim.period_value(tex, "total", "insumos") > 0.0, "la central factura y la fábrica paga (traspaso interno)")
 	BusinessSim.end_day(gs)
 	check(float(plant["inventory"].get("electricidad", 0.0)) == 0.0, "la electricidad no se almacena: se pierde al fin del día")
