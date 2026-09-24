@@ -182,6 +182,7 @@ func _record_month() -> void:
 		"health": avg_health(),
 		"births": int(month_counters.get("births", 0)),
 		"deaths": int(month_counters.get("deaths", 0)),
+		"immigrants": int(month_counters.get("immigrants", 0)),
 		"income": float(month_counters.get("income", 0.0)),
 		"expenses": float(month_counters.get("expenses", 0.0)),
 		"net_worth": EconomySim.net_worth(self),
