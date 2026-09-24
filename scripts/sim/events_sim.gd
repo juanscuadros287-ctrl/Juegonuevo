@@ -37,6 +37,8 @@ static func daily(gs) -> void:
 			if c.job_kind == "empleo":
 				staff += 1
 		cap[s] += staff * float(gs.level_def(b).get("prod_per_worker", 1.0))
+	for s in cap:
+		cap[s] += GovPlansSim.service_capacity(gs, s)   # Libre mercado: servicios del plan de gobierno.
 	var pop := maxf(1.0, gs.citizens.size())
 	gs.problems["coverage"] = {
 		"policia": clampf(cap["policia"] / pop, 0.0, 1.0),

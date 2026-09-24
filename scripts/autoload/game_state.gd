@@ -3,7 +3,7 @@ extends Node
 ## La lógica vive en scripts/sim/ (PopulationSim, WeatherSim, BusinessSim,
 ## ConstructionSim, MarketSim, PlayerSim).
 
-const SAVE_VERSION := 6
+const SAVE_VERSION := 7
 const MAP_SIZE := 400.0
 const ZONE_GRID := 5
 const START_ZONE := [2, 2]
@@ -28,6 +28,7 @@ var problems: Dictionary = {}          # crimen, contaminación, cobertura de se
 var logistics: Dictionary = {}         # Fase 6: almacén, yacimientos, transporte, rutas
 var trade: Dictionary = {}             # Fase 7: pueblos, conexiones, comercio exterior
 var tourism: Dictionary = {}           # Fase 8: turismo y publicidad
+var market: Dictionary = {}            # Libre mercado: empresas NPC, contratos, planes del gobierno
 var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
@@ -119,6 +120,7 @@ func _clear() -> void:
 	logistics = {}
 	trade = {}
 	tourism = {}
+	market = {}
 	economy = {}
 	loans = []
 	next_loan_id = 1
@@ -138,6 +140,7 @@ func _init_expansions() -> void:
 	LogisticsSim.init_state(self)
 	TradeSim.init_state(self)
 	TourismSim.init_state(self)
+	FreeMarketSim.init_state(self)
 
 
 # --- Simulación diaria -----------------------------------------------------
@@ -148,6 +151,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	WeatherSim.daily(self)
 	EventsSim.daily(self)
 	BusinessSim.produce(self)
+	FreeMarketSim.produce(self)   # Libre mercado: producción de las empresas NPC.
 	LogisticsSim.daily(self)
 	TradeSim.daily(self)
 	TourismSim.daily(self)
@@ -155,6 +159,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	MarketSim.begin_day(self)
 	PopulationSim.daily(self)
 	BusinessSim.end_day(self)
+	FreeMarketSim.daily(self)     # Empresas NPC, contratos y planes del gobierno.
 	TechSim.end_day(self)
 	PlayerSim.daily(self)
 	if new_month and running:
@@ -163,6 +168,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		EducationSim.monthly(self)
 		BusinessSim.monthly(self)
 		GovSim.monthly(self)
+		FreeMarketSim.monthly(self)
 		EventsSim.monthly(self)
 		LogisticsSim.monthly(self)
 		TradeSim.monthly(self)
@@ -435,6 +441,7 @@ func to_dict() -> Dictionary:
 		"logistics": logistics,
 		"trade": trade,
 		"tourism": tourism,
+		"market": market,
 		"economy": economy,
 		"loans": loans,
 		"next_loan_id": next_loan_id,
@@ -504,6 +511,7 @@ func load_dict(d: Dictionary) -> void:
 	logistics = d.get("logistics", {})
 	trade = d.get("trade", {})
 	tourism = d.get("tourism", {})
+	market = d.get("market", {})
 	_init_expansions()
 	TechSim._recompute_mods(self)
 	if player_id < 0:

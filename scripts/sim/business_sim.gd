@@ -132,6 +132,8 @@ static func is_nonprofit(b: Dictionary) -> bool:
 
 ## Ingreso de un edificio del jugador (ventas o alquiler).
 static func earn(gs, b: Dictionary, amount: float, key := "ventas") -> void:
+	if NpcBusinessSim.book(gs, b, amount, key, true):
+		return  # Libre mercado: empresa NPC (caja propia) u obra del gobierno (tesoro).
 	ledger_add(b, key, amount)
 	if is_nonprofit(b):
 		b["reserve"] = float(b["reserve"]) + amount
@@ -141,6 +143,8 @@ static func earn(gs, b: Dictionary, amount: float, key := "ventas") -> void:
 
 ## Gasto de un edificio del jugador. Las fundaciones pagan primero con su reserva.
 static func pay(gs, b: Dictionary, amount: float, key: String) -> void:
+	if NpcBusinessSim.book(gs, b, amount, key, false):
+		return  # Libre mercado: empresa NPC (caja propia) u obra del gobierno (tesoro).
 	ledger_add(b, key, amount)
 	var left := amount
 	if is_nonprofit(b):

@@ -135,6 +135,32 @@ func refresh() -> void:
 					closed.emit()))
 		body.add_child(row)
 
+	body.add_child(UIKit.label("Plan de gobierno", 16, UIKit.ACCENT))
+	var ptxt := ""
+	var shown := 0
+	var plist: Array = GovPlansSim.plans(gs)
+	for i in range(plist.size() - 1, -1, -1):
+		var pl: Dictionary = plist[i]
+		if shown >= 8:
+			break
+		shown += 1
+		var col := "#6c6" if str(pl["status"]) == "terminado" else ("#e66" if str(pl["status"]) == "cancelado" else "#e9b949")
+		var extra := ""
+		if str(pl["status"]) == "en_obra":
+			var pb: Dictionary = gs.get_building(int(pl.get("bid", -1)))
+			if not pb.is_empty():
+				extra = " · %d%%" % int(100.0 * float(pb["work_done"]) / maxf(1.0, float(pb["work_needed"])))
+		ptxt += "• [b]%s[/b] — %s · [color=%s]%s%s[/color] · %s\n" % [pl["label"], GovPlansSim.need_label(str(pl["need"])), col, GovPlansSim.status_label(str(pl["status"])), extra, Fmt.money(float(pl.get("cost", 0.0)))]
+	if ptxt == "":
+		ptxt = "[color=#999]El gobierno revisa cada trimestre salud, crimen, vivienda, educación y felicidad, y construye con el tesoro (o licita la obra).[/color]\n"
+	var nd := GovPlansSim.needs(gs)
+	if not nd.is_empty():
+		ptxt += "Necesidades medidas: %s\n" % ", ".join(nd.map(func(n): return GovPlansSim.need_label(str(n["need"]))))
+	ptxt += "Alumnos en escuelas públicas: %d" % GovPlansSim.students(gs)
+	var prl := UIKit.rich()
+	prl.text = ptxt
+	body.add_child(prl)
+
 	var pr: Dictionary = gs.problems
 	var cov: Dictionary = pr.get("coverage", {})
 	var ps := "Crimen: [b]%d/100[/b] · Robos el mes pasado: %d · Arrestos: %d · Presos: %d/%d\n" % [int(pr.get("crime", 0)), int(pr.get("incidents_last", 0)), int(pr.get("arrests_last", 0)),

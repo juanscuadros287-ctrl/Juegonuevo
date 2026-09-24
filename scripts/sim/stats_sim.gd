@@ -27,7 +27,7 @@ static func goods_table(gs) -> Array:
 		var stock := 0.0
 		var sellers := 0
 		for b in gs.buildings:
-			if gs.owned_by_player(b) and str(gs.building_def(b).get("product", "")) == g and b["status"] == "activo":
+			if (gs.owned_by_player(b) or NpcBusinessSim.is_npc(b)) and str(gs.building_def(b).get("product", "")) == g and b["status"] == "activo":
 				sellers += 1
 				stock += float(b["inventory"].get(g, 0.0))
 		var local := float(r.get("local", 0.0)) + float(r.get("extra", 0.0))

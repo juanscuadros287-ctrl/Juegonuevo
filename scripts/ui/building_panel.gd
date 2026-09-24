@@ -127,7 +127,34 @@ func _summary_tab(b: Dictionary, mine: bool) -> Control:
 				rebuild()))
 	if Housing.is_home(b) and b["status"] != "construccion":
 		v.add_child(UIKit.button("Ver interior", func(): EventBus.interior_requested.emit(bid)))
+	if NpcBusinessSim.is_npc(b):
+		_npc_actions(v, b)
 	return v
+
+
+## Libre mercado: comprar la empresa de un ciudadano (oferta al dueño) o la que vende el Estado.
+func _npc_actions(v: VBoxContainer, b: Dictionary) -> void:
+	var gs := GameState
+	if str(b.get("npc_state", "")) == NpcBusinessSim.STATE_FOR_SALE:
+		var price := float(b.get("npc_sale_price", 0.0))
+		var who := "el Estado" if int(b.get("owner_id", -1)) < 0 else gs.person_name(int(b.get("owner_id", -1)))
+		v.add_child(UIKit.label("En venta por %s (%s)." % [who, str(b.get("npc_sale_reason", ""))], 13, UIKit.TEXT_DIM))
+		v.add_child(UIKit.button("Comprar por %s" % Fmt.money(price), func():
+			var err := NpcBusinessSim.buy_listed(GameState, _b())
+			_msg(err if err != "" else "Compraste %s." % GameState.building_label(_b()), "jugador" if err != "" else "negocio")
+			rebuild()))
+		return
+	if str(b.get("npc_state", "")) == NpcBusinessSim.STATE_BUILDING:
+		return
+	var val := NpcBusinessSim.valuation(gs, b)
+	v.add_child(UIKit.label("Valor estimado: %s. El dueño responde en unos días." % Fmt.money(val), 13, UIKit.TEXT_DIM))
+	var row := HBoxContainer.new()
+	var spin := UIKit.spin(1, 1000000, 10, snappedf(val * 1.2, 10.0), func(_x): pass, 120)
+	row.add_child(spin)
+	row.add_child(UIKit.button("Ofrecer comprar", func():
+		var err := NpcBusinessSim.offer_purchase(GameState, _b(), spin.value)
+		_msg(err if err != "" else "Oferta enviada a %s." % GameState.person_name(int(_b().get("owner_id", -1))), "jugador" if err != "" else "negocio")))
+	v.add_child(row)
 
 
 func refresh() -> void:
@@ -145,8 +172,15 @@ func _summary_text(b: Dictionary) -> String:
 		s += " · calidad %s" % Housing.tier_label(str(b.get("tier", "normal")))
 	s += "\n"
 	var owner := str(b.get("owner", ""))
-	var owner_txt := "Tú" if owner == "jugador" else ("El pueblo" if owner == "pueblo" else GameState.person_name(int(b.get("owner_id", -1))))
+	var owner_txt := "Tú" if owner == "jugador" else ("El pueblo" if owner == "pueblo" else ("El gobierno" if owner == "gobierno" else GameState.person_name(int(b.get("owner_id", -1)))))
+	if NpcBusinessSim.is_npc(b):
+		owner_txt = "[url=%d]%s[/url] (empresa familiar)" % [int(b.get("owner_id", -1)), owner_txt] if int(b.get("owner_id", -1)) >= 0 else "el Estado (sin herederos)"
 	s += "Propietario: %s\n" % owner_txt
+	if NpcBusinessSim.is_npc(b):
+		s += "[color=#8ab4f8]Empresa NPC · fundada el %s · dueños: %s[/color]\n" % [TimeManager.date_from_day(int(b.get("founded_day", 0)), TimeManager.start_year()), NpcBusinessSim.owner_text(GameState, b)]
+		s += "Resultado del mes anterior: %s\n" % Fmt.money(BusinessSim.period_profit(b, "last_month"))
+	if str(b.get("gov_plan", "")) != "":
+		s += "[color=#e9b949]Obra del plan de gobierno[/color]\n"
 	if def.get("category", "") == "negocio":
 		s += "Sector: %s · Tipo legal: %s\n" % [def.get("sector", ""), GameData.legal_types.get(str(b.get("legal", "sas")), {}).get("label", "")]
 	match str(b["status"]):

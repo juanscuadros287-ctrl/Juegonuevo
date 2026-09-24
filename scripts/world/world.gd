@@ -45,6 +45,7 @@ func _ready() -> void:
 	terrain.name = "Terrain"
 	add_child(terrain)
 	terrain.generate(str(GameState.settings.get("map_type", "interior")), seed_value)
+	NpcBusinessSim.set_terrain_check(terrain.footprint_ok)   # Libre mercado: NPC y gobierno no construyen en agua.
 	terrain.build_mesh()
 	terrain.make_water()
 	terrain.scatter_nature(seed_value)
@@ -184,6 +185,11 @@ func _rebuild_building(id: int) -> void:
 		var flag := MeshLib.mesh_node(MeshLib.box(Vector3(0.05, 1.2, 0.05)), MeshLib.mat(Color(0.3, 0.2, 0.1)), Vector3(fp * 0.5, 0.6, fp * 0.5))
 		flag.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(0.5, 0.3, 0.03)), MeshLib.mat(Color(0.95, 0.75, 0.2)), Vector3(0.25, 0.45, 0)))
 		holder.add_child(flag)
+	elif NpcBusinessSim.is_npc(b):
+		# Empresas de otros ciudadanos (libre mercado): bandera azul.
+		var nflag := MeshLib.mesh_node(MeshLib.box(Vector3(0.05, 1.2, 0.05)), MeshLib.mat(Color(0.3, 0.2, 0.1)), Vector3(fp * 0.5, 0.6, fp * 0.5))
+		nflag.add_child(MeshLib.mesh_node(MeshLib.box(Vector3(0.5, 0.3, 0.03)), MeshLib.mat(Color(0.25, 0.45, 0.85)), Vector3(0.25, 0.45, 0)))
+		holder.add_child(nflag)
 	# Camino de tierra desde la plaza hasta el frente del edificio.
 	var flat := Vector2(pos.x, pos.z)
 	var length := flat.length()

@@ -1,0 +1,59 @@
+{
+ "_nota": "Obras del plan de gobierno (libre mercado). Las construye el gobierno con su presupuesto o las licita al jugador. 'gov_service' da cobertura de servicio (capacidad por empleado = prod_per_worker); jobs y upkeep se pagan del tesoro.",
+ "parque": {
+  "label": "Plan de gobierno", "category": "publico", "footprint": 6.0, "skill": "agricultura", "base_wage": 1.6,
+  "levels": [{"label": "Parque público", "cost": 600, "materials": {"madera": 6, "piedra": 8}, "build_days": 15, "workers": 3, "tech": "",
+   "jobs": 1, "upkeep": 0.08,
+   "model": [{"s": "cyl", "size": [5.4, 0.1, 5.4], "pos": [0, 0.05, 0], "c": [0.38, 0.6, 0.3]},
+    {"s": "cyl", "size": [0.3, 1.6, 0.3], "pos": [1.4, 0.8, 1.2], "c": [0.4, 0.28, 0.16]},
+    {"s": "cyl", "size": [1.6, 1.4, 1.6], "pos": [1.4, 2.1, 1.2], "c": [0.25, 0.5, 0.22]},
+    {"s": "cyl", "size": [0.3, 1.4, 0.3], "pos": [-1.5, 0.7, -1.0], "c": [0.4, 0.28, 0.16]},
+    {"s": "cyl", "size": [1.4, 1.2, 1.4], "pos": [-1.5, 1.8, -1.0], "c": [0.28, 0.55, 0.25]},
+    {"s": "box", "size": [1.4, 0.4, 0.4], "pos": [-0.6, 0.2, 1.4], "c": [0.45, 0.3, 0.18]}],
+   "effects": {"happiness": 1.5}}]
+ },
+ "centro_salud": {
+  "label": "Plan de gobierno", "category": "publico", "footprint": 5.0, "skill": "medicina", "base_wage": 2.4, "gov_service": "salud",
+  "levels": [{"label": "Centro de salud público", "cost": 1400, "materials": {"madera": 15, "piedra": 25}, "build_days": 30, "workers": 4, "tech": "herbolaria",
+   "jobs": 3, "upkeep": 0.25, "prod_per_worker": 10,
+   "model": [{"s": "box", "size": [4.6, 2.6, 3.6], "pos": [0, 1.3, 0], "c": [0.93, 0.93, 0.9]},
+    {"s": "prism", "size": [4.0, 1.2, 4.9], "pos": [0, 3.2, 0], "rot": 90, "c": [0.6, 0.28, 0.2]},
+    {"s": "box", "size": [0.9, 0.25, 0.08], "pos": [0, 2.2, 1.84], "c": [0.8, 0.15, 0.15]},
+    {"s": "box", "size": [0.25, 0.9, 0.08], "pos": [0, 2.2, 1.85], "c": [0.8, 0.15, 0.15]},
+    {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [1.2, 0.8, 1.82], "c": [0.28, 0.18, 0.1]}],
+   "effects": {"disease": 0.96, "mortality": 0.97}}]
+ },
+ "puesto_policia": {
+  "label": "Plan de gobierno", "category": "publico", "footprint": 4.5, "skill": "construccion", "base_wage": 2.0, "gov_service": "policia",
+  "levels": [{"label": "Comisaría pública", "cost": 900, "materials": {"madera": 15, "piedra": 20}, "build_days": 20, "workers": 3, "tech": "guardia_civil",
+   "jobs": 3, "upkeep": 0.2, "prod_per_worker": 25,
+   "model": [{"s": "box", "size": [4.0, 2.6, 3.4], "pos": [0, 1.3, 0], "c": [0.82, 0.84, 0.9]},
+    {"s": "prism", "size": [3.9, 1.3, 4.7], "pos": [0, 3.25, 0], "rot": 90, "c": [0.25, 0.3, 0.5]},
+    {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0, 0.8, 1.73], "c": [0.28, 0.18, 0.1]},
+    {"s": "box", "size": [0.15, 2.4, 0.15], "pos": [2.3, 1.2, 1.7], "c": [0.3, 0.3, 0.3]},
+    {"s": "box", "size": [0.7, 0.45, 0.04], "pos": [2.65, 2.2, 1.7], "c": [0.9, 0.8, 0.2]}],
+   "effects": {}}]
+ },
+ "escuela_publica": {
+  "label": "Plan de gobierno", "category": "publico", "footprint": 5.5, "skill": "ciencia", "base_wage": 2.2, "gov_service": "escuela",
+  "levels": [{"label": "Escuela pública", "cost": 1000, "materials": {"madera": 20, "piedra": 15}, "build_days": 25, "workers": 4, "tech": "escuela_parroquial",
+   "jobs": 2, "upkeep": 0.15, "prod_per_worker": 15,
+   "model": [{"s": "box", "size": [5.0, 2.4, 3.6], "pos": [0, 1.2, 0], "c": [0.9, 0.82, 0.62]},
+    {"s": "prism", "size": [4.0, 1.3, 5.3], "pos": [0, 3.05, 0], "rot": 90, "c": [0.62, 0.3, 0.2]},
+    {"s": "box", "size": [0.1, 1.2, 0.1], "pos": [0, 4.2, 0], "c": [0.3, 0.2, 0.1]},
+    {"s": "box", "size": [0.5, 0.5, 0.5], "pos": [0, 4.9, 0], "c": [0.7, 0.6, 0.3]},
+    {"s": "box", "size": [1.0, 1.6, 0.1], "pos": [0, 0.8, 1.83], "c": [0.28, 0.18, 0.1]}],
+   "effects": {}}]
+ },
+ "vivienda_social": {
+  "label": "Plan de gobierno", "category": "publico", "footprint": 6.0, "skill": "construccion", "base_wage": 1.8, "gov_service": "vivienda",
+  "levels": [{"label": "Vivienda social", "cost": 900, "materials": {"madera": 25, "piedra": 20}, "build_days": 25, "workers": 4, "tech": "",
+   "jobs": 0, "upkeep": 0.1, "capacity": 14,
+   "model": [{"s": "box", "size": [5.6, 2.4, 3.2], "pos": [0, 1.2, 0], "c": [0.86, 0.78, 0.64]},
+    {"s": "prism", "size": [3.6, 1.2, 5.9], "pos": [0, 2.95, 0], "rot": 90, "c": [0.66, 0.36, 0.22]},
+    {"s": "box", "size": [0.8, 1.4, 0.1], "pos": [-1.6, 0.7, 1.63], "c": [0.28, 0.18, 0.1]},
+    {"s": "box", "size": [0.8, 1.4, 0.1], "pos": [0, 0.7, 1.63], "c": [0.28, 0.18, 0.1]},
+    {"s": "box", "size": [0.8, 1.4, 0.1], "pos": [1.6, 0.7, 1.63], "c": [0.28, 0.18, 0.1]}],
+   "effects": {}}]
+ }
+}

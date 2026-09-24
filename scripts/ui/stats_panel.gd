@@ -96,6 +96,21 @@ func refresh() -> void:
 	_section("Población", "Habitantes: %d · Niños: %d · Adultos: %d · Mayores: %d\nÚltimos 12 meses: %d nacimientos, %d muertes · Felicidad: %s · Salud: %s\n[color=#999]La población solo crece por nacimientos. Con caminos a otros pueblos (Fase 6) llegarán inmigrantes y comercio.[/color]" % [
 		gs.citizens.size(), p["children"], p["adults"], p["elderly"], p["births_year"], p["deaths_year"], Fmt.pct(gs.avg_happiness()), Fmt.pct(gs.avg_health())])
 
+	# Libre mercado: empresas de otros ciudadanos y pueblos vecinos.
+	var rows := NpcBusinessSim.summary_rows(gs)
+	var ns := ""
+	for r in rows:
+		var st := "en obra" if r["state"] == NpcBusinessSim.STATE_BUILDING else ("en venta" if r["state"] == NpcBusinessSim.STATE_FOR_SALE else "%d/%d empleados · %s · resultado %s" % [r["staff"], r["jobs"], Fmt.money2(float(r["price"])), Fmt.money(float(r["profit"]))])
+		ns += "• [b]%s[/b] (%s) — %s\n" % [r["name"], r["owner"], st]
+	if rows.is_empty():
+		ns = "[color=#999]Aún no hay. Los ciudadanos con ahorros abren negocios donde nadie vende lo que se pide.[/color]"
+	_section("Empresas de otros ciudadanos (%d)" % rows.size(), ns)
+	var ts := ""
+	for t in TradeSim.towns(gs):
+		ts += "• %s: %d hab. · %d negocios · crece %.1f%%/año · ayuda del gobierno %d%%\n" % [t["name"], int(t["population"]), TownEconomySim.total_businesses(t), TownEconomySim.growth_rate(gs, t) * 100.0, int(float(t.get("gov_aid", 0.0)) * 100.0)]
+	if ts != "":
+		_section("Pueblos vecinos", ts)
+
 	var hist: Array = gs.economy.get("stats_hist", [])
 	if hist.size() >= 2:
 		var series := []

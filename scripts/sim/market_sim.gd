@@ -9,7 +9,8 @@ static var _offers := {}   # bien -> Array de edificios vendedores ordenados
 static func begin_day(gs) -> void:
 	_offers = {}
 	for b in gs.buildings:
-		if not gs.owned_by_player(b) or b["status"] != "activo":
+		# Libre mercado: las empresas NPC compiten con las tuyas por los mismos clientes.
+		if not (gs.owned_by_player(b) or NpcBusinessSim.is_npc(b)) or b["status"] != "activo":
 			continue
 		var product := str(gs.building_def(b).get("product", ""))
 		if product == "" or product == "construccion":

@@ -308,12 +308,14 @@ static func daily(gs) -> void:
 	if sites.is_empty():
 		return
 	var wage: float = float(GameData.game.get("construction_day_wage", 2.2)) * gs.price_mult()
-	var points_share: float = float(gs.get_meta("construction_points", 0.0)) / sites.size() if gs.has_meta("construction_points") else 0.0
+	# Tu constructora solo trabaja en tus obras (y en las públicas que ganaste), no en las de NPC ni del gobierno.
+	var mine := sites.filter(func(s): return gs.owned_by_player(s) or str(s.get("contractor", "")) == "jugador")
+	var points_share: float = float(gs.get_meta("construction_points", 0.0)) / maxi(1, mine.size()) if gs.has_meta("construction_points") else 0.0
 	for b in sites:
 		var lvl := int(b["target_level"])
 		var need_workers := int(GameData.level_def(b["type"], lvl).get("workers", 2))
 		var crew := _crew(gs, b, need_workers)
-		var work := points_share
+		var work := points_share if mine.has(b) else 0.0
 		for c in crew:
 			if c.sick:
 				continue
