@@ -61,19 +61,44 @@ static func _workers(gs, b: Dictionary) -> int:
 	return n
 
 
-## Demanda diaria de un edificio del jugador.
+## kW que pide un nivel a plantilla completa (campo "power_demand"; si falta, power × empleos).
+static func level_demand_kw(def: Dictionary, ld: Dictionary) -> float:
+	if is_plant(def):
+		return 0.0
+	if ld.has("power_demand"):
+		return float(ld["power_demand"])
+	return level_power(def, ld) * int(ld.get("jobs", 1))
+
+
+## kW nominales de una central a plantilla completa (campo "power_output").
+static func level_output_kw(def: Dictionary, ld: Dictionary) -> float:
+	if not is_plant(def):
+		return 0.0
+	return float(ld.get("power_output", float(ld.get("prod_per_worker", 0.0)) * int(ld.get("jobs", 1))))
+
+
+## Demanda diaria (kW) de un edificio del jugador: power_demand × fracción de la plantilla trabajando.
 static func demand_of(gs, b: Dictionary) -> float:
 	if not gs.owned_by_player(b) or b["status"] != "activo" or not BusinessSim.is_business(b):
 		return 0.0
-	return level_power(gs.building_def(b), gs.level_def(b)) * _workers(gs, b)
+	var ld: Dictionary = gs.level_def(b)
+	return level_demand_kw(gs.building_def(b), ld) * float(_workers(gs, b)) / maxf(1.0, float(ld.get("jobs", 1)))
 
 
-## Cobertura eléctrica del último día para un edificio (1 = sin problemas).
+## PUNTO ÚNICO para la red eléctrica: fracción (0–1) de la energía que pidió `b` que recibió en el
+## último día. Hoy es global (tus centrales + red regional, repartido a prorrata); la red de cables
+## podrá reemplazar el reparto de EnergySim.daily para contar solo lo conectado.
+static func supply_ratio(gs, b: Dictionary) -> float:
+	if not grid_active(gs):
+		return 1.0
+	return clampf(float(state(gs).get("coverage", {}).get(str(int(b["id"])), 1.0)), 0.0, 1.0)
+
+
+## Multiplicador de rendimiento por electricidad (1 = sin problemas; 0,5 sin nada).
 static func factor(gs, b: Dictionary) -> float:
 	if not grid_active(gs):
 		return 1.0
-	var cov: Dictionary = state(gs).get("coverage", {})
-	var c := float(cov.get(str(int(b["id"])), 1.0))
+	var c := supply_ratio(gs, b)
 	return 1.0 - (1.0 - c) * (1.0 - float(cfg().get("unpowered_output", 0.5)))
 
 

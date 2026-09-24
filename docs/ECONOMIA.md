@@ -113,6 +113,18 @@ superficies comerciales y automatización industrial (moderna). Todas con prerre
    centrales (ingreso de la central) o de la red regional; sin luz pierde un poco de felicidad.
 7. Estado: `gs.economy["energy"]` (cobertura por edificio, acumulados del mes); `EnergySim.summary(gs)` para la UI.
 
+**Contrato con la futura red eléctrica (cables y agua):**
+- Nivel de central: `"power_output"` = kW nominales a plantilla completa (= `prod_per_worker` × `jobs`). La
+  generación real del día sigue siendo lo que la central produjo (depende del personal, estación y combustible).
+- Nivel que consume: `"power_demand"` = kW a plantilla completa (= `power` × `jobs`, donde `power` es kW por
+  trabajador). Demanda real = `power_demand` × empleados trabajando / `jobs` (`EnergySim.demand_of`).
+- `EnergySim.supply_ratio(gs, b) -> float` (0–1): fracción de lo pedido que recibió el edificio el último día. Es el
+  único punto que usan los consumidores (`EnergySim.factor` = rendimiento, `ShopSim` = clientes). Hoy el reparto es
+  global en `EnergySim.daily` (centrales propias a prorrata + red regional); la red de cables debe reemplazar ese
+  reparto (guardado en `gs.economy["energy"]["coverage"][str(id)]`) para contar solo lo conectado.
+- Ayudantes: `EnergySim.level_output_kw(def, ld)`, `level_demand_kw(def, ld)`, `level_power(def, ld)`,
+  `is_plant(def)`, `grid_active(gs)`, `summary(gs)`.
+
 **Combustible**: el bien se llama `combustible` (gasolina y diésel). Lo refina la Refinería y lo compran los dueños de
 autos en la Gasolinera. La flota de camiones de la logística (otro módulo) cobra hoy su combustible en dinero con
 `trade.json → fuel_price`; si se quiere que consuma el bien, debe usar el id `combustible`.

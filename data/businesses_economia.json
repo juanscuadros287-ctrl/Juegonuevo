@@ -144,7 +144,8 @@
     "product": "ganado",
     "skill": "agricultura",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 46.0
    }
   ]
  },
@@ -661,7 +662,8 @@
     "product": "pan",
     "skill": "artesania",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 40.0
    }
   ]
  },
@@ -776,7 +778,8 @@
     "power": 2.0,
     "product": "carne",
     "skill": "artesania",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 36.0
    },
    {
     "label": "Planta cárnica automatizada",
@@ -814,7 +817,8 @@
     "power": 2.5,
     "product": "carne",
     "skill": "artesania",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 72.5
    }
   ]
  },
@@ -931,7 +935,8 @@
     "product": "embutidos",
     "skill": "artesania",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 40.0
    }
   ]
  },
@@ -1053,7 +1058,8 @@
     "product": "cuero",
     "skill": "artesania",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 40.0
    }
   ]
  },
@@ -1166,7 +1172,8 @@
     "power": 1.5,
     "product": "zapatos",
     "skill": "artesania",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 33.0
    },
    {
     "label": "Planta de calzado automatizada",
@@ -1203,7 +1210,8 @@
     "power": 2.0,
     "product": "zapatos",
     "skill": "artesania",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 72.0
    }
   ]
  },
@@ -1355,7 +1363,8 @@
     "product": "muebles",
     "skill": "artesania",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 52.0
    }
   ]
  },
@@ -1473,7 +1482,8 @@
     "product": "utensilios",
     "skill": "artesania",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 40.0
    }
   ]
  },
@@ -1590,7 +1600,8 @@
     "product": "velas_jabon",
     "skill": "artesania",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 32.0
    }
   ]
  },
@@ -1708,7 +1719,8 @@
     "product": "loza",
     "skill": "artesania",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 40.0
    }
   ]
  },
@@ -1828,7 +1840,8 @@
     "product": "vidrio",
     "skill": "artesania",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 40.0
    }
   ]
  },
@@ -2063,7 +2076,8 @@
     "product": "papel",
     "skill": "artesania",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 40.0
    }
   ]
  },
@@ -2177,7 +2191,8 @@
     "product": "periodicos",
     "skill": "comercio",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 32.0
    },
    {
     "label": "Editorial moderna",
@@ -2214,7 +2229,8 @@
     "product": "periodicos",
     "skill": "comercio",
     "output": "warehouse",
-    "power": 2.5
+    "power": 2.5,
+    "power_demand": 65.0
    }
   ]
  },
@@ -2299,7 +2315,8 @@
     "power": 2.0,
     "product": "conservas",
     "skill": "artesania",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 40.0
    },
    {
     "label": "Conservera automatizada",
@@ -2338,7 +2355,8 @@
     "power": 2.5,
     "product": "conservas",
     "skill": "artesania",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 80.0
    }
   ]
  },
@@ -2428,7 +2446,8 @@
     "power": 2.0,
     "product": "quimicos",
     "skill": "ciencia",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 40.0
    },
    {
     "label": "Complejo químico automatizado",
@@ -2469,7 +2488,8 @@
     "power": 2.5,
     "product": "quimicos",
     "skill": "ciencia",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 80.0
    }
   ]
  },
@@ -2590,7 +2610,8 @@
     "product": "relojes",
     "skill": "artesania",
     "output": "warehouse",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 40.0
    }
   ]
  },
@@ -2679,7 +2700,8 @@
     "requires_deposit": "petroleo",
     "product": "petroleo",
     "skill": "mineria",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 14.0
    },
    {
     "label": "Campo petrolero automatizado",
@@ -2721,7 +2743,8 @@
     "requires_deposit": "petroleo",
     "product": "petroleo",
     "skill": "mineria",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 46.0
    }
   ]
  },
@@ -2797,7 +2820,8 @@
     "requires_deposit": "gas_natural",
     "product": "gas_natural",
     "skill": "mineria",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 10.0
    },
    {
     "label": "Campo de gas automatizado",
@@ -2827,7 +2851,8 @@
     "requires_deposit": "gas_natural",
     "product": "gas_natural",
     "skill": "mineria",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 32.0
    }
   ]
  },
@@ -2913,7 +2938,8 @@
     "required_profession": "ingeniero",
     "product": "combustible",
     "skill": "ciencia",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 30.0
    },
    {
     "label": "Refinería automatizada",
@@ -2953,7 +2979,8 @@
     "required_profession": "ingeniero",
     "product": "combustible",
     "skill": "ciencia",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 64.0
    }
   ]
  },
@@ -3005,7 +3032,8 @@
     "power": 2.0,
     "product": "plasticos",
     "skill": "ciencia",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 28.0
    },
    {
     "label": "Complejo petroquímico",
@@ -3045,7 +3073,8 @@
     "required_profession": "ingeniero",
     "product": "plasticos",
     "skill": "ciencia",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 65.0
    },
    {
     "label": "Complejo petroquímico automatizado",
@@ -3087,7 +3116,8 @@
     "required_profession": "ingeniero",
     "product": "plasticos",
     "skill": "ciencia",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 126.0
    }
   ]
  },
@@ -3132,7 +3162,8 @@
     "power": 2.0,
     "product": "medicamentos",
     "skill": "medicina",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 20.0
    },
    {
     "label": "Industria farmacéutica",
@@ -3164,7 +3195,8 @@
     "required_profession": "cientifico",
     "product": "medicamentos",
     "skill": "medicina",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 45.0
    },
    {
     "label": "Farmacéutica automatizada",
@@ -3198,7 +3230,8 @@
     "required_profession": "cientifico",
     "product": "medicamentos",
     "skill": "medicina",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 87.0
    }
   ]
  },
@@ -3248,7 +3281,8 @@
     "requires_deposit": "cobre",
     "product": "cobre",
     "skill": "mineria",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 10.0
    },
    {
     "label": "Mina de cobre a cielo abierto",
@@ -3285,7 +3319,8 @@
     "requires_deposit": "cobre",
     "product": "cobre",
     "skill": "mineria",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 33.0
    },
    {
     "label": "Mina de cobre automatizada",
@@ -3324,7 +3359,8 @@
     "requires_deposit": "cobre",
     "product": "cobre",
     "skill": "mineria",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 72.0
    }
   ]
  },
@@ -3377,7 +3413,8 @@
     "requires_deposit": "uranio",
     "product": "uranio",
     "skill": "mineria",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 15.0
    },
    {
     "label": "Mina de uranio moderna",
@@ -3416,7 +3453,8 @@
     "requires_deposit": "uranio",
     "product": "uranio",
     "skill": "mineria",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 32.0
    },
    {
     "label": "Mina de uranio automatizada",
@@ -3457,7 +3495,8 @@
     "requires_deposit": "uranio",
     "product": "uranio",
     "skill": "mineria",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 65.0
    }
   ]
  },
@@ -3509,7 +3548,8 @@
     "power": 2.5,
     "product": "electrodomesticos",
     "skill": "construccion",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 45.0
    },
    {
     "label": "Planta de electrodomésticos",
@@ -3548,7 +3588,8 @@
     "required_profession": "ingeniero",
     "product": "electrodomesticos",
     "skill": "construccion",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 90.0
    },
    {
     "label": "Electrodomésticos automatizados",
@@ -3589,7 +3630,8 @@
     "required_profession": "ingeniero",
     "product": "electrodomesticos",
     "skill": "construccion",
-    "output": "warehouse"
+    "output": "warehouse",
+    "power_demand": 168.0
    }
   ]
  },
@@ -3636,7 +3678,8 @@
      "carbon": 0.13
     },
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 128.0
    },
    {
     "label": "Central térmica",
@@ -3669,7 +3712,8 @@
      "carbon": 0.11
     },
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 364.0
    },
    {
     "label": "Central térmica en red",
@@ -3704,7 +3748,8 @@
      "carbon": 0.1045
     },
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 687.7
    }
   ]
  },
@@ -3751,7 +3796,8 @@
      "gas_natural": 0.15
     },
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 192.0
    },
    {
     "label": "Ciclo combinado",
@@ -3786,7 +3832,8 @@
     },
     "required_profession": "ingeniero",
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 408.0
    },
    {
     "label": "Ciclo combinado en red",
@@ -3823,7 +3870,8 @@
     },
     "required_profession": "ingeniero",
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 782.0
    }
   ]
  },
@@ -3868,7 +3916,8 @@
      {"s": "box", "size": [1.4, 0.08, 0.08], "pos": [4.2, 5.8, 2.2], "c": [0.55, 0.58, 0.62]}
     ],
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 176.0
    },
    {
     "label": "Gran represa",
@@ -3897,7 +3946,8 @@
      {"s": "box", "size": [2.4, 0.2, 2.8], "pos": [6.3, 2.7, -0.4], "c": [0.35, 0.35, 0.38]}
     ],
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 328.9
    },
    {
     "label": "Represa automatizada",
@@ -3928,7 +3978,8 @@
      {"s": "box", "size": [2.4, 0.2, 2.8], "pos": [8.7, 3.1, -0.4], "c": [0.35, 0.35, 0.38]}
     ],
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 611.0
    }
   ]
  },
@@ -3982,7 +4033,8 @@
      {"s": "box", "size": [1.6, 1.4, 1.2], "pos": [2.4, 0.7, -2.2], "c": [0.94, 0.93, 0.9]}
     ],
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 88.0
    },
    {
     "label": "Gran parque eólico",
@@ -4021,7 +4073,8 @@
      {"s": "box", "size": [3.6, 0.22, 0.06], "pos": [1.559, 9.2, 3.05], "c": [0.94, 0.93, 0.9], "rz": 330.0}
     ],
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 182.0
    },
    {
     "label": "Parque eólico marino",
@@ -4062,7 +4115,8 @@
      {"s": "box", "size": [2.4, 0.2, 2.8], "pos": [7.559, 3.1, -0.4], "c": [0.35, 0.35, 0.38]}
     ],
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 358.8
    }
   ]
  },
@@ -4118,7 +4172,8 @@
      {"s": "box", "size": [1.2, 1.2, 1.0], "pos": [3.4, 0.6, 2.6], "c": [0.94, 0.93, 0.9]}
     ],
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 80.0
    },
    {
     "label": "Gran planta solar",
@@ -4171,7 +4226,8 @@
      {"s": "box", "size": [1.76, 0.06, 1.21], "pos": [2.42, 1.0, 3.19], "c": [0.12, 0.2, 0.45], "rx": -25}
     ],
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 168.0
    },
    {
     "label": "Planta solar automatizada",
@@ -4226,7 +4282,8 @@
      {"s": "box", "size": [2.4, 0.2, 2.8], "pos": [5.2, 3.1, -0.4], "c": [0.35, 0.35, 0.38]}
     ],
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 331.2
    }
   ]
  },
@@ -4273,7 +4330,8 @@
     },
     "required_profession": "ingeniero",
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 840.0
    },
    {
     "label": "Central nuclear en red",
@@ -4307,7 +4365,8 @@
     },
     "required_profession": "ingeniero",
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 1587.0
    },
    {
     "label": "Central nuclear avanzada",
@@ -4343,7 +4402,8 @@
     },
     "required_profession": "ingeniero",
     "product": "electricidad",
-    "skill": "construccion"
+    "skill": "construccion",
+    "power_output": 2935.9
    }
   ]
  },
@@ -4433,7 +4493,8 @@
     ],
     "power": 1.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 5.0
    },
    {
     "label": "Supermercado de carnes",
@@ -4474,7 +4535,8 @@
     ],
     "power": 2.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 16.0
    }
   ]
  },
@@ -4615,7 +4677,8 @@
     ],
     "product": "comercio",
     "skill": "comercio",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 16.0
    }
   ]
  },
@@ -4898,7 +4961,8 @@
     ],
     "product": "comercio",
     "skill": "comercio",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 16.0
    }
   ]
  },
@@ -5029,7 +5093,8 @@
     ],
     "power": 1.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 14.0
    },
    {
     "label": "Centro comercial de modas",
@@ -5070,7 +5135,8 @@
     ],
     "power": 2.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 46.0
    }
   ]
  },
@@ -5208,7 +5274,8 @@
     ],
     "product": "comercio",
     "skill": "comercio",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 14.0
    }
   ]
  },
@@ -5342,7 +5409,8 @@
     ],
     "product": "comercio",
     "skill": "comercio",
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 16.0
    }
   ]
  },
@@ -5437,7 +5505,8 @@
     ],
     "power": 1.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 5.0
    },
    {
     "label": "Gran farmacia",
@@ -5480,7 +5549,8 @@
     ],
     "power": 2.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 16.0
    }
   ]
  },
@@ -5531,7 +5601,8 @@
     ],
     "power": 1.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 3.0
    },
    {
     "label": "Gran concesionario",
@@ -5567,7 +5638,8 @@
     ],
     "power": 1.5,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 9.0
    },
    {
     "label": "Concesionario multimarca",
@@ -5605,7 +5677,8 @@
     ],
     "power": 2.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 20.0
    }
   ]
  },
@@ -5649,7 +5722,8 @@
     ],
     "power": 0.5,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 1.5
    },
    {
     "label": "Estación de servicio",
@@ -5679,7 +5753,8 @@
     ],
     "power": 1.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 6.0
    },
    {
     "label": "Área de servicio automatizada",
@@ -5711,7 +5786,8 @@
     ],
     "power": 2.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 20.0
    }
   ]
  },
@@ -5761,7 +5837,8 @@
     ],
     "power": 1.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 4.0
    },
    {
     "label": "Tienda de electrónica",
@@ -5798,7 +5875,8 @@
     ],
     "power": 2.0,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 14.0
    },
    {
     "label": "Hipermercado de electrónica",
@@ -5837,7 +5915,8 @@
     ],
     "power": 2.5,
     "product": "comercio",
-    "skill": "comercio"
+    "skill": "comercio",
+    "power_demand": 30.0
    }
   ]
  }

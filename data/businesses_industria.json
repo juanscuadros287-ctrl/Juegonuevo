@@ -331,7 +331,8 @@
       ]
      }
     ],
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 40.0
    },
    {
     "label": "Textil automatizada",
@@ -454,7 +455,8 @@
       ]
      }
     ],
-    "power": 2.5
+    "power": 2.5,
+    "power_demand": 80.0
    }
   ]
  },
@@ -1063,7 +1065,8 @@
       ]
      }
     ],
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 74.0
    }
   ]
  },
@@ -1632,7 +1635,8 @@
       ]
      }
     ],
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 78.0
    }
   ]
  },
@@ -2317,7 +2321,8 @@
       ]
      }
     ],
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 64.0
    }
   ]
  },
@@ -2892,7 +2897,8 @@
       ]
      }
     ],
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 52.0
    },
    {
     "label": "Maquinaria automatizada",
@@ -3158,7 +3164,8 @@
       ]
      }
     ],
-    "power": 2.5
+    "power": 2.5,
+    "power_demand": 105.0
    }
   ]
  },
@@ -3380,7 +3387,8 @@
       ]
      }
     ],
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 32.0
    },
    {
     "label": "Motores automatizados",
@@ -3505,7 +3513,8 @@
       ]
      }
     ],
-    "power": 2.5
+    "power": 2.5,
+    "power_demand": 65.0
    }
   ]
  },
@@ -3609,7 +3618,8 @@
       ]
      }
     ],
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 16.0
    },
    {
     "label": "Fábrica de electrónica",
@@ -3701,7 +3711,8 @@
       ]
      }
     ],
-    "power": 2.5
+    "power": 2.5,
+    "power_demand": 45.0
    },
    {
     "label": "Electrónica automatizada",
@@ -3829,7 +3840,8 @@
       ]
      }
     ],
-    "power": 3.0
+    "power": 3.0,
+    "power_demand": 87.0
    }
   ]
  },
@@ -4022,7 +4034,8 @@
       ]
      }
     ],
-    "power": 2.0
+    "power": 2.0,
+    "power_demand": 28.0
    },
    {
     "label": "Planta automotriz",
@@ -4114,7 +4127,8 @@
       ]
      }
     ],
-    "power": 2.5
+    "power": 2.5,
+    "power_demand": 75.0
    },
    {
     "label": "Planta automotriz robotizada",
@@ -4242,7 +4256,8 @@
       ]
      }
     ],
-    "power": 3.0
+    "power": 3.0,
+    "power_demand": 144.0
    }
   ]
  },
@@ -4367,7 +4382,8 @@
       "rot": 0
      }
     ],
-    "power": 2.5
+    "power": 2.5,
+    "power_demand": 50.0
    },
    {
     "label": "Planta aeronáutica",
@@ -4478,7 +4494,8 @@
       "rot": 0
      }
     ],
-    "power": 3.0
+    "power": 3.0,
+    "power_demand": 108.0
    },
    {
     "label": "Aeronáutica automatizada",
@@ -4625,7 +4642,8 @@
       ]
      }
     ],
-    "power": 3.5
+    "power": 3.5,
+    "power_demand": 203.0
    }
   ]
  },
