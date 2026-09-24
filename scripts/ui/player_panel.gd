@@ -48,6 +48,7 @@ func refresh() -> void:
 	var heir := int(GameState.player.get("heir_id", -1))
 	s += "Heredero: %s\n" % (hud.link(heir) if GameState.citizens.has(heir) else ("el hijo(a) mayor" if not kids.is_empty() else "[color=#e66]ninguno: si mueres, termina la partida[/color]"))
 	s += "Planificación familiar: %s\n\n" % ("buscando hijos" if bool(GameState.player.get("family_planning", true)) else "no desean hijos")
+	s += _dynasty_text(p, kids)
 	var rel: Dictionary = GameState.player.get("relations", {})
 	var known := rel.keys()
 	known.sort_custom(func(a, b): return float(rel[a]) > float(rel[b]))
@@ -62,6 +63,32 @@ func refresh() -> void:
 		s += "[color=#999]Haz clic en personas del pueblo para conocerlas.[/color]\n"
 	info.text = s
 	_rebuild_actions(p, kids)
+
+
+## Dinastía (Fase 8): aviso de sucesión, impuesto a la herencia, deudas heredables y jefes de familia.
+func _dynasty_text(p: Citizen, kids: Array) -> String:
+	var s := "[b]Dinastía[/b] · generación %d\n" % DynastySim.generation(GameState)
+	var age := p.age_years(GameState.today())
+	if kids.is_empty() and age >= int(DynastySim.cfg().get("old_age_warning", 60)):
+		s += "[color=#e66]⚠ Tienes %d años y no tienes heredero. Ten hijos o adopta antes de que sea tarde.[/color]\n" % age
+	var est := DynastySim.estimate_tax(GameState)
+	s += "Impuesto a la herencia del gobierno actual: %s sobre el patrimonio que supere %s\n" % [Fmt.pct(float(est["rate"]) * 100.0), Fmt.money(float(est["exempt"]))]
+	s += "Si murieras hoy: patrimonio %s → impuesto ≈ %s\n" % [Fmt.money(float(est["net_worth"])), Fmt.money(float(est["tax"]))]
+	if float(est["debt"]) > 0.0:
+		s += "Deudas que heredaría tu sucesor: %s (%d préstamo(s))\n" % [Fmt.money(float(est["debt"])), BankSim.player_loans(GameState).size()]
+	if float(est["pending"]) > 0.0:
+		s += "[color=#dc4]Impuesto a la herencia pendiente: %s (cuota mensual %s)[/color]\n" % [Fmt.money(float(est["pending"])), Fmt.money(minf(float(est["pending"]), float(GameState.player.get("inheritance_installment", 0.0))))]
+	s += "[color=#aaa]Jefes de familia:[/color]\n"
+	var list := DynastySim.heads(GameState)
+	for i in range(list.size() - 1, -1, -1):
+		var h: Dictionary = list[i]
+		var end_year := int(h.get("end_year", -1))
+		var years := DynastySim.years_of(GameState, h)
+		var worth := float(h["net_worth_end"]) if end_year >= 0 else EconomySim.net_worth(GameState)
+		s += "%d. %s — %d–%s (%d años al frente) · patrimonio %s%s\n" % [i + 1, str(h.get("name", "")), int(h.get("start_year", 0)),
+			str(end_year) if end_year >= 0 else "hoy", years, Fmt.money(worth),
+			" · impuesto %s" % Fmt.money(float(h.get("tax_paid", 0.0))) if float(h.get("tax_paid", 0.0)) > 0.0 else ""]
+	return s + "\n"
 
 
 func _rebuild_actions(p: Citizen, kids: Array) -> void:

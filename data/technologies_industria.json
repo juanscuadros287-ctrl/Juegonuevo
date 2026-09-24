@@ -1,0 +1,15 @@
+{
+ "_nota": "Fase 8 — tecnologías nuevas de industria avanzada.",
+ "electronica": {
+  "label": "Electrónica",
+  "era": 3,
+  "branch": "industria",
+  "cost": 14000,
+  "requires": [
+   "electricidad",
+   "radio"
+  ],
+  "effects": [],
+  "description": "Válvulas, transistores y circuitos: fábricas de electrónica y plantas automotrices y aeronáuticas modernas."
+ }
+}

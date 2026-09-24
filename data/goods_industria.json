@@ -1,0 +1,88 @@
+{
+ "_nota": "Fase 8 — productos intermedios y finales de la industria. Las materias primas (hierro, carbon, madera, piedra, lana, algodon, oro, plata, trigo) las define la Fase 6. export = producto pensado para vender a otros pueblos (Fase 7).",
+ "tela": {
+  "label": "Tela",
+  "base_price": 3.0,
+  "import_price": 4.5,
+  "storable": true,
+  "order": 40,
+  "intermediate": true,
+  "export": true
+ },
+ "acero": {
+  "label": "Acero",
+  "base_price": 4.5,
+  "import_price": 7.0,
+  "storable": true,
+  "order": 41,
+  "intermediate": true,
+  "export": true
+ },
+ "herramientas": {
+  "label": "Herramientas",
+  "base_price": 8.0,
+  "import_price": 12.0,
+  "storable": true,
+  "order": 42,
+  "intermediate": true,
+  "export": true
+ },
+ "ropa_fina": {
+  "label": "Ropa fina",
+  "base_price": 7.5,
+  "import_price": 11.0,
+  "storable": true,
+  "order": 43,
+  "export": true
+ },
+ "maquinaria": {
+  "label": "Maquinaria",
+  "base_price": 55.0,
+  "import_price": 80.0,
+  "storable": true,
+  "order": 44,
+  "export": true
+ },
+ "motor": {
+  "label": "Motor",
+  "base_price": 70.0,
+  "import_price": 100.0,
+  "storable": true,
+  "order": 45,
+  "intermediate": true,
+  "export": true
+ },
+ "componentes_electronicos": {
+  "label": "Componentes electrónicos",
+  "base_price": 16.0,
+  "import_price": 24.0,
+  "storable": true,
+  "order": 46,
+  "intermediate": true,
+  "export": true
+ },
+ "automovil_bien": {
+  "label": "Automóvil",
+  "base_price": 800.0,
+  "import_price": 1150.0,
+  "storable": true,
+  "order": 47,
+  "export": true
+ },
+ "avion_bien": {
+  "label": "Avión",
+  "base_price": 7000.0,
+  "import_price": 10000.0,
+  "storable": true,
+  "order": 48,
+  "export": true
+ },
+ "joyas": {
+  "label": "Joyas",
+  "base_price": 30.0,
+  "import_price": 45.0,
+  "storable": true,
+  "order": 49,
+  "export": true
+ }
+}

@@ -1,0 +1,24 @@
+{
+ "_nota": "Fase 8 — publicidad. monthly_cost en precios base (× dificultad × inflación × audiencia). demand = aumento de la disposición a comprarle al negocio anunciado; tourism = aumento de turistas. Los efectos se suman con rendimientos decrecientes hasta max_demand/max_tourism. El pregonero cobra un vecino (el dinero se queda en el pueblo); periódico, radio y TV se pagan a medios de afuera, salvo que tengas tu propio medio (descuento ad_discount del nivel).",
+ "channels": {
+  "pregonero": {"label": "Pregonero y carteles", "order": 0, "tech": "", "monthly_cost": 12, "demand": 0.1, "tourism": 0.05, "local_pay": true,
+   "description": "Un vecino pregona tus ofertas en la plaza y pega carteles. Barato y de poco alcance."},
+  "periodico": {"label": "Anuncios en el periódico", "order": 1, "tech": "periodico", "monthly_cost": 50, "demand": 0.18, "tourism": 0.15,
+   "description": "Avisos impresos: llegan a todo el pueblo y a los pueblos vecinos."},
+  "radio": {"label": "Cuñas de radio", "order": 2, "tech": "radio", "monthly_cost": 180, "demand": 0.3, "tourism": 0.3,
+   "description": "Llega a cada casa con radio, aquí y en la región."},
+  "television": {"label": "Comerciales de televisión", "order": 3, "tech": "television", "monthly_cost": 500, "demand": 0.45, "tourism": 0.5,
+   "description": "El medio más caro y poderoso: atrae clientes y turistas de todo el país."}
+ },
+ "targets": {
+  "negocio": {"label": "Un negocio", "cost_mult": 1.0, "demand_mult": 1.0, "tourism_mult": 0.0, "tourism_if_tourist_business": 0.4},
+  "todos": {"label": "Todos mis negocios", "cost_mult": 2.5, "demand_mult": 1.0, "tourism_mult": 0.4},
+  "turismo": {"label": "Promoción turística del pueblo", "cost_mult": 1.5, "demand_mult": 0.0, "tourism_mult": 1.0}
+ },
+ "audience": {"per_citizens": 100.0, "min": 0.5, "max": 5.0, "per_connection": 0.35},
+ "max_demand": 0.8,
+ "max_tourism": 1.2,
+ "max_months": 24,
+ "estimate_elasticity": 0.5,
+ "media_sales": {"units_per_connection": 4.0, "reach": {"periodico": 1.0, "radio": 2.0, "television": 4.0}, "willing_markup": 1.6}
+}
