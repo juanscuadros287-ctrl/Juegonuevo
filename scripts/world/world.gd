@@ -91,7 +91,7 @@ func _build_environment() -> void:
 	env.tonemap_exposure = 0.85
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.7, 0.78, 0.86)
-	env.fog_density = 0.0015
+	env.fog_density = 0.0003
 	env.fog_sky_affect = 0.3
 	var we := WorldEnvironment.new()
 	we.environment = env
