@@ -1,5 +1,5 @@
 {
- "_nota": "Fase 6: extracción (minas con requires_deposit, campos) y talleres con recetas. inputs = {bien: cantidad por unidad producida} tomados del almacén; output = 'warehouse' guarda lo producido en el almacén de la compañía; extraction = la producción queda en el sitio si está lejos de un almacén (la llevan las rutas de transporte); region_resource = recurso de la región que multiplica la producción.",
+ "_nota": "Fase 6: extracción (minas con requires_deposit, campos) y talleres con recetas. inputs = {bien: cantidad por unidad producida} tomados del almacén VINCULADO (el que está al lado, ver resources.json warehouse.link_distance) o del inventario local; output = 'warehouse' guarda lo producido en ese almacén vinculado; sin almacén al lado la producción queda en el sitio y la llevan las rutas de transporte; region_resource = recurso de la región que multiplica la producción. Central de transporte: transport_modes = medios que opera, vehicles_included = vehículos que trae el nivel, garage = vehículos comprados que caben.",
  "mina_oro": {
   "label": "Mina de oro",
   "category": "negocio",
@@ -8811,7 +8811,7 @@
   "skill": "construccion",
   "base_wage": 1.8,
   "footprint": 6.0,
-  "description": "Aporta cargadores (a pie, sin carretera) y luego arrieros con caballos y carretas (requieren carretera) para las rutas de transporte. Son trabajos sin estudios. Cada empleado es un cargador o un arriero; los caballos tienen mantenimiento diario.",
+  "description": "Cargadores a pie: empleados sin estudios que llevan la mercancía entre almacenes y fábricas. Sus niveles superiores traen algunas carretas y camiones incluidos; para COMPRAR vehículos construye una Caballeriza (mulas y carretas) o un Depósito de camiones (carros de vapor, camiones y tráileres).",
   "levels": [
    {
     "label": "Central de cargadores",
@@ -8958,7 +8958,8 @@
        0.33
       ]
      }
-    ]
+    ],
+    "garage": 0
    },
    {
     "label": "Caballerizas y carretas",
@@ -8979,7 +8980,6 @@
      "pie",
      "carreta"
     ],
-    "vehicle_upkeep": 0.35,
     "model": [
      {
       "s": "box",
@@ -9217,7 +9217,11 @@
       ],
       "rx": 90
      }
-    ]
+    ],
+    "vehicles_included": {
+     "carreta": 3
+    },
+    "garage": 0
    },
    {
     "label": "Transportes a motor",
@@ -9239,7 +9243,6 @@
      "carreta",
      "camion"
     ],
-    "vehicle_upkeep": 1.0,
     "pollution": 1,
     "model": [
      {
@@ -9512,6 +9515,1028 @@
        0.2,
        0.35,
        0.3
+      ]
+     }
+    ],
+    "vehicles_included": {
+     "carreta": 2,
+     "camion": 2
+    },
+    "garage": 0
+   }
+  ]
+ },
+ "caballeriza": {
+  "category": "negocio",
+  "sector": "Transporte",
+  "product": "transporte",
+  "skill": "construccion",
+  "base_wage": 1.8,
+  "label": "Caballeriza",
+  "order": 19.1,
+  "footprint": 6.5,
+  "description": "Establo donde compras mulas de carga y carretas de caballos. Cada animal consume alimento a diario y cada viaje necesita un arriero (empleado sin estudios). Las mulas no necesitan carretera; las carretas sí.",
+  "levels": [
+   {
+    "label": "Establo",
+    "cost": 450,
+    "materials": {
+     "madera": 25
+    },
+    "build_days": 12,
+    "workers": 2,
+    "jobs": 6,
+    "prod_per_worker": 1.0,
+    "quality": 1.0,
+    "upkeep": 0.15,
+    "unit_cost": 0.0,
+    "tech": "",
+    "transport_modes": [
+     "mula",
+     "carreta"
+    ],
+    "garage": 6,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6.0,
+       2.6,
+       3.6
+      ],
+      "pos": [
+       0,
+       1.3,
+       -0.8
+      ],
+      "c": [
+       0.55,
+       0.38,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.2,
+       1.3,
+       6.4
+      ],
+      "pos": [
+       0,
+       3.25,
+       -0.8
+      ],
+      "c": [
+       0.42,
+       0.26,
+       0.18
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       1.3,
+       1.9,
+       0.1
+      ],
+      "pos": [
+       -1.7999999999999998,
+       0.95,
+       1.02
+      ],
+      "c": [
+       0.12,
+       0.1,
+       0.09
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.3,
+       1.9,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.95,
+       1.02
+      ],
+      "c": [
+       0.12,
+       0.1,
+       0.09
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.3,
+       1.9,
+       0.1
+      ],
+      "pos": [
+       1.7999999999999998,
+       0.95,
+       1.02
+      ],
+      "c": [
+       0.12,
+       0.1,
+       0.09
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.1,
+       0.9,
+       3.0
+      ],
+      "pos": [
+       -3.0,
+       0.45,
+       2.6
+      ],
+      "c": [
+       0.45,
+       0.32,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.1,
+       0.9,
+       3.0
+      ],
+      "pos": [
+       3.0,
+       0.45,
+       2.6
+      ],
+      "c": [
+       0.45,
+       0.32,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       6.0,
+       0.08,
+       0.08
+      ],
+      "pos": [
+       0,
+       0.75,
+       4.1
+      ],
+      "c": [
+       0.45,
+       0.32,
+       0.18
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.7,
+       0.9,
+       0.7
+      ],
+      "pos": [
+       2.0999999999999996,
+       0.45,
+       2.8
+      ],
+      "c": [
+       0.85,
+       0.72,
+       0.35
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.6,
+       0.8,
+       0.6
+      ],
+      "pos": [
+       1.1999999999999997,
+       0.4,
+       3.1
+      ],
+      "c": [
+       0.85,
+       0.72,
+       0.35
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Caballeriza grande",
+    "cost": 1400,
+    "materials": {
+     "madera": 40,
+     "piedra": 20
+    },
+    "build_days": 25,
+    "workers": 3,
+    "jobs": 14,
+    "prod_per_worker": 1.0,
+    "quality": 1.0,
+    "upkeep": 0.35,
+    "unit_cost": 0.0,
+    "tech": "carretas",
+    "transport_modes": [
+     "mula",
+     "carreta"
+    ],
+    "garage": 16,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       8.100000000000001,
+       2.6,
+       3.6
+      ],
+      "pos": [
+       0,
+       1.3,
+       -0.8
+      ],
+      "c": [
+       0.55,
+       0.38,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.2,
+       1.3,
+       8.500000000000002
+      ],
+      "pos": [
+       0,
+       3.25,
+       -0.8
+      ],
+      "c": [
+       0.42,
+       0.26,
+       0.18
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       1.3,
+       1.9,
+       0.1
+      ],
+      "pos": [
+       -2.43,
+       0.95,
+       1.02
+      ],
+      "c": [
+       0.12,
+       0.1,
+       0.09
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.3,
+       1.9,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.95,
+       1.02
+      ],
+      "c": [
+       0.12,
+       0.1,
+       0.09
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.3,
+       1.9,
+       0.1
+      ],
+      "pos": [
+       2.43,
+       0.95,
+       1.02
+      ],
+      "c": [
+       0.12,
+       0.1,
+       0.09
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.1,
+       0.9,
+       3.0
+      ],
+      "pos": [
+       -4.050000000000001,
+       0.45,
+       2.6
+      ],
+      "c": [
+       0.45,
+       0.32,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.1,
+       0.9,
+       3.0
+      ],
+      "pos": [
+       4.050000000000001,
+       0.45,
+       2.6
+      ],
+      "c": [
+       0.45,
+       0.32,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.100000000000001,
+       0.08,
+       0.08
+      ],
+      "pos": [
+       0,
+       0.75,
+       4.1
+      ],
+      "c": [
+       0.45,
+       0.32,
+       0.18
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.7,
+       0.9,
+       0.7
+      ],
+      "pos": [
+       2.8350000000000004,
+       0.45,
+       2.8
+      ],
+      "c": [
+       0.85,
+       0.72,
+       0.35
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.6,
+       0.8,
+       0.6
+      ],
+      "pos": [
+       1.9350000000000005,
+       0.4,
+       3.1
+      ],
+      "c": [
+       0.85,
+       0.72,
+       0.35
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "deposito_camiones": {
+  "category": "negocio",
+  "sector": "Transporte",
+  "product": "transporte",
+  "skill": "construccion",
+  "base_wage": 1.8,
+  "label": "Depósito de camiones",
+  "order": 19.2,
+  "footprint": 7.5,
+  "description": "Garaje donde compras carros de carga a vapor, camiones y tráileres. Gastan combustible por km (el surtidor propio lo abarata) y exigen carretera empedrada o de cemento. Cada vehículo necesita un conductor (empleado sin estudios).",
+  "levels": [
+   {
+    "label": "Cochera de vapor",
+    "cost": 2500,
+    "materials": {
+     "madera": 20,
+     "piedra": 60
+    },
+    "build_days": 30,
+    "workers": 4,
+    "jobs": 8,
+    "prod_per_worker": 1.0,
+    "quality": 1.0,
+    "upkeep": 0.6,
+    "unit_cost": 0.0,
+    "tech": "maquina_vapor",
+    "pollution": 1,
+    "transport_modes": [
+     "carro_vapor"
+    ],
+    "garage": 6,
+    "fuel_pump_price": 1200,
+    "fuel_pump_discount": 0.3,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       7.0,
+       3.4,
+       4.6
+      ],
+      "pos": [
+       0,
+       1.7,
+       -0.6
+      ],
+      "c": [
+       0.5,
+       0.36,
+       0.28
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.3,
+       0.3,
+       4.9
+      ],
+      "pos": [
+       0,
+       3.55,
+       -0.6
+      ],
+      "c": [
+       0.3,
+       0.32,
+       0.34
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.6,
+       0.1
+      ],
+      "pos": [
+       -1.75,
+       1.3,
+       1.72
+      ],
+      "c": [
+       0.22,
+       0.24,
+       0.26
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.6,
+       0.1
+      ],
+      "pos": [
+       1.75,
+       1.3,
+       1.72
+      ],
+      "c": [
+       0.22,
+       0.24,
+       0.26
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.0,
+       0.05,
+       2.6
+      ],
+      "pos": [
+       0,
+       0.03,
+       3.0
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.35
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.5,
+       1.4,
+       0.5
+      ],
+      "pos": [
+       3.1,
+       0.7,
+       3.6
+      ],
+      "c": [
+       0.8,
+       0.15,
+       0.12
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.35,
+       0.3,
+       0.1
+      ],
+      "pos": [
+       3.1,
+       1.2,
+       3.86
+      ],
+      "c": [
+       0.95,
+       0.9,
+       0.6
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Depósito de camiones",
+    "cost": 7000,
+    "materials": {
+     "madera": 20,
+     "piedra": 150
+    },
+    "build_days": 45,
+    "workers": 6,
+    "jobs": 16,
+    "prod_per_worker": 1.0,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0.0,
+    "tech": "automovil",
+    "pollution": 1,
+    "transport_modes": [
+     "carro_vapor",
+     "camion"
+    ],
+    "garage": 16,
+    "fuel_pump_price": 2500,
+    "fuel_pump_discount": 0.3,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       8.049999999999999,
+       3.4,
+       4.6
+      ],
+      "pos": [
+       0,
+       1.7,
+       -0.6
+      ],
+      "c": [
+       0.62,
+       0.62,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.35,
+       0.3,
+       4.9
+      ],
+      "pos": [
+       0,
+       3.55,
+       -0.6
+      ],
+      "c": [
+       0.3,
+       0.32,
+       0.34
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.6,
+       0.1
+      ],
+      "pos": [
+       -2.0124999999999997,
+       1.3,
+       1.72
+      ],
+      "c": [
+       0.22,
+       0.24,
+       0.26
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.6,
+       0.1
+      ],
+      "pos": [
+       2.0124999999999997,
+       1.3,
+       1.72
+      ],
+      "c": [
+       0.22,
+       0.24,
+       0.26
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.049999999999999,
+       0.05,
+       2.6
+      ],
+      "pos": [
+       0,
+       0.03,
+       3.0
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.35
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.5,
+       1.4,
+       0.5
+      ],
+      "pos": [
+       3.6249999999999996,
+       0.7,
+       3.6
+      ],
+      "c": [
+       0.8,
+       0.15,
+       0.12
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.35,
+       0.3,
+       0.1
+      ],
+      "pos": [
+       3.6249999999999996,
+       1.2,
+       3.86
+      ],
+      "c": [
+       0.95,
+       0.9,
+       0.6
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Terminal de carga",
+    "cost": 18000,
+    "materials": {
+     "madera": 20,
+     "piedra": 350
+    },
+    "build_days": 70,
+    "workers": 10,
+    "jobs": 30,
+    "prod_per_worker": 1.0,
+    "quality": 1.0,
+    "upkeep": 2.5,
+    "unit_cost": 0.0,
+    "tech": "industria_automotriz",
+    "pollution": 2,
+    "transport_modes": [
+     "carro_vapor",
+     "camion",
+     "trailer"
+    ],
+    "garage": 32,
+    "fuel_pump_price": 5000,
+    "fuel_pump_discount": 0.35,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       9.450000000000001,
+       3.4,
+       4.6
+      ],
+      "pos": [
+       0,
+       1.7,
+       -0.6
+      ],
+      "c": [
+       0.7,
+       0.72,
+       0.75
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       9.750000000000002,
+       0.3,
+       4.9
+      ],
+      "pos": [
+       0,
+       3.55,
+       -0.6
+      ],
+      "c": [
+       0.3,
+       0.32,
+       0.34
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.6,
+       0.1
+      ],
+      "pos": [
+       -2.3625000000000003,
+       1.3,
+       1.72
+      ],
+      "c": [
+       0.22,
+       0.24,
+       0.26
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       2.6,
+       0.1
+      ],
+      "pos": [
+       2.3625000000000003,
+       1.3,
+       1.72
+      ],
+      "c": [
+       0.22,
+       0.24,
+       0.26
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       9.450000000000001,
+       0.05,
+       2.6
+      ],
+      "pos": [
+       0,
+       0.03,
+       3.0
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.35
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.5,
+       1.4,
+       0.5
+      ],
+      "pos": [
+       4.325,
+       0.7,
+       3.6
+      ],
+      "c": [
+       0.8,
+       0.15,
+       0.12
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.35,
+       0.3,
+       0.1
+      ],
+      "pos": [
+       4.325,
+       1.2,
+       3.86
+      ],
+      "c": [
+       0.95,
+       0.9,
+       0.6
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "hangar": {
+  "category": "negocio",
+  "sector": "Transporte",
+  "product": "transporte",
+  "skill": "construccion",
+  "base_wage": 1.8,
+  "label": "Hangar de carga",
+  "order": 19.3,
+  "footprint": 12.0,
+  "description": "PREVISTO: hangar para aviones de carga (tecnología Aviación). Los aviones se pueden comprar, pero el transporte aéreo internacional llegará en una fase posterior.",
+  "planned": true,
+  "levels": [
+   {
+    "label": "Hangar de carga",
+    "cost": 30000,
+    "materials": {
+     "madera": 20,
+     "piedra": 400
+    },
+    "build_days": 80,
+    "workers": 10,
+    "jobs": 10,
+    "prod_per_worker": 1.0,
+    "quality": 1.0,
+    "upkeep": 4.0,
+    "unit_cost": 0.0,
+    "tech": "aviacion",
+    "pollution": 2,
+    "transport_modes": [
+     "avion"
+    ],
+    "garage": 4,
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       12.0,
+       4.5,
+       9.0
+      ],
+      "pos": [
+       0,
+       2.25,
+       0
+      ],
+      "c": [
+       0.62,
+       0.64,
+       0.66
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       6.0,
+       12.0,
+       6.0
+      ],
+      "pos": [
+       0,
+       4.5,
+       0
+      ],
+      "c": [
+       0.55,
+       0.57,
+       0.6
+      ],
+      "rz": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       7.0,
+       4.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       2.0,
+       4.52
+      ],
+      "c": [
+       0.25,
+       0.27,
+       0.3
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.3,
+       5.0,
+       0.3
+      ],
+      "pos": [
+       6.5,
+       2.5,
+       5.0
+      ],
+      "c": [
+       0.9,
+       0.9,
+       0.9
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       1.2,
+       0.5,
+       0.05
+      ],
+      "pos": [
+       6.5,
+       4.7,
+       5.0
+      ],
+      "c": [
+       0.95,
+       0.5,
+       0.1
       ]
      }
     ]

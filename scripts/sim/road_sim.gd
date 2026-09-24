@@ -1,12 +1,12 @@
 class_name RoadSim
 extends RefCounted
 ## Fase 6 — Carreteras. Solo las necesitan caballos, carretas y vehículos: casas y negocios
-## no requieren carretera (la gente camina). Tramos rectos de barro o empedrado, con costo por
-## metro; se unen en una red (tramos que comparten extremo o se tocan). Una ruta con carretas
-## exige que origen y destino estén a menos de roads.reach de la misma red.
+## no requieren carretera (la gente camina). Tramos rectos de barro, empedrado o cemento, con costo
+## por metro; se unen en una red (tramos que comparten extremo o se tocan). Una ruta con carretas
+## exige que origen y destino estén a menos de roads.reach de la misma red; los carros de vapor y
+## camiones exigen una red de empedrado o cemento, y los tráileres de cemento (road_kinds del medio).
 
-static var _cache_version := -1
-static var _cache_comp: Array = []
+static var _comp_cache := {}   # clave (hash de tramos | tipos) -> componentes
 
 
 static func cfg() -> Dictionary:
@@ -129,33 +129,43 @@ static func remove(gs, id: int) -> void:
 			return
 
 
-## Empedrar todos los tramos de barro (con la tecnología de caminos empedrados).
-static func upgrade_all_cost(gs) -> Dictionary:
-	var length := total_length(gs, "barro")
-	var c := _cost_for_length(gs, length, "empedrado")
-	# Se descuenta lo ya invertido en el barro.
-	var paid: float = length * float(kind_def("barro").get("cost_per_unit", 1.0)) * gs.price_mult() * 0.5
+## Mejorar todos los tramos más lentos que `to_kind` (barro → empedrado, o todo → cemento).
+## Se descuenta la mitad de lo ya invertido en los tramos que se mejoran.
+static func upgrade_all_cost(gs, to_kind := "empedrado") -> Dictionary:
+	var target_speed := float(kind_def(to_kind).get("speed", 1.0))
+	var length := 0.0
+	var paid := 0.0
+	for r in roads(gs):
+		var kd := kind_def(str(r["kind"]))
+		if float(kd.get("speed", 1.0)) < target_speed:
+			var l := seg_a(r).distance_to(seg_b(r))
+			length += l
+			paid += l * float(kd.get("cost_per_unit", 1.0)) * gs.price_mult() * 0.5
+	var c := _cost_for_length(gs, length, to_kind)
 	c["money"] = maxf(0.0, float(c["money"]) - paid)
 	c["total"] = float(c["money"]) + float(c["import_cost"])
 	c["length"] = length
 	return c
 
 
-static func upgrade_all(gs) -> String:
-	if not gs.has_tech(str(kind_def("empedrado").get("tech", ""))):
-		return "Requiere investigar: %s" % GameData.tech_label(str(kind_def("empedrado").get("tech", "")))
-	var c := upgrade_all_cost(gs)
+static func upgrade_all(gs, to_kind := "empedrado") -> String:
+	var tech := str(kind_def(to_kind).get("tech", ""))
+	if not gs.has_tech(tech):
+		return "Requiere investigar: %s" % GameData.tech_label(tech)
+	var c := upgrade_all_cost(gs, to_kind)
 	if float(c["length"]) <= 0.0:
-		return "No hay caminos de barro"
+		return "No hay caminos que mejorar a %s" % kind_label(to_kind).to_lower()
 	if gs.money < float(c["total"]):
 		return "Dinero insuficiente (%s)" % Fmt.money(c["total"])
 	if float(c["stone_stock"]) > 0.0:
 		ConstructionSim._consume_stock(gs, "piedra", float(c["stone_stock"]))
 	gs.add_money(-float(c["total"]))
+	var target_speed := float(kind_def(to_kind).get("speed", 1.0))
 	for r in roads(gs):
-		r["kind"] = "empedrado"
+		if float(kind_def(str(r["kind"])).get("speed", 1.0)) < target_speed:
+			r["kind"] = to_kind
 	_bump(gs)
-	gs.notify("Empedraste %d m de caminos por %s." % [int(c["length"]), Fmt.money(c["total"])], "construccion")
+	gs.notify("Mejoraste %d m de caminos a %s por %s." % [int(c["length"]), kind_label(to_kind).to_lower(), Fmt.money(c["total"])], "construccion")
 	return ""
 
 
@@ -174,18 +184,28 @@ static func dist_point_segment(p: Vector2, a: Vector2, b: Vector2) -> float:
 	return p.distance_to(a + ab * t)
 
 
-## Componente conexa de cada tramo (unión de tramos que se tocan).
-static func components(gs) -> Array:
+## ¿El tramo sirve para esos tipos de camino? (lista vacía = cualquiera).
+static func _kind_ok(r: Dictionary, kinds: Array) -> bool:
+	return kinds.is_empty() or kinds.has(str(r["kind"]))
+
+
+## Componente conexa de cada tramo (unión de tramos que se tocan). Con `kinds` solo cuentan
+## los tramos de esos tipos (los demás quedan en -1): los camiones exigen empedrado o cemento.
+static func components(gs, kinds: Array = []) -> Array:
 	var rs := roads(gs)
-	var version := rs.hash()
-	if version == _cache_version and _cache_comp.size() == rs.size():
-		return _cache_comp
+	var key := "%d|%s" % [rs.hash(), ",".join(kinds)]
+	if _comp_cache.has(key):
+		return _comp_cache[key]
 	var parent := []
 	for i in range(rs.size()):
 		parent.append(i)
 	var touch := 1.5
 	for i in range(rs.size()):
+		if not _kind_ok(rs[i], kinds):
+			continue
 		for j in range(i + 1, rs.size()):
+			if not _kind_ok(rs[j], kinds):
+				continue
 			var a1 := seg_a(rs[i])
 			var b1 := seg_b(rs[i])
 			var a2 := seg_a(rs[j])
@@ -198,9 +218,10 @@ static func components(gs) -> Array:
 					parent[ri] = rj
 	var comp := []
 	for i in range(rs.size()):
-		comp.append(_root(parent, i))
-	_cache_version = version
-	_cache_comp = comp
+		comp.append(_root(parent, i) if _kind_ok(rs[i], kinds) else -1)
+	if _comp_cache.size() > 16:
+		_comp_cache.clear()
+	_comp_cache[key] = comp
 	return comp
 
 
@@ -216,39 +237,39 @@ static func _cross(a1: Vector2, b1: Vector2, a2: Vector2, b2: Vector2) -> bool:
 
 
 ## Componentes de la red a menos de `reach` de un punto.
-static func near_components(gs, p: Vector2, reach := -1.0) -> Array:
+static func near_components(gs, p: Vector2, reach := -1.0, kinds: Array = []) -> Array:
 	if reach < 0.0:
 		reach = float(cfg().get("reach", 12.0))
 	var rs := roads(gs)
-	var comp := components(gs)
+	var comp := components(gs, kinds)
 	var out := []
 	for i in range(rs.size()):
-		if dist_point_segment(p, seg_a(rs[i]), seg_b(rs[i])) <= reach and not out.has(comp[i]):
+		if int(comp[i]) >= 0 and dist_point_segment(p, seg_a(rs[i]), seg_b(rs[i])) <= reach and not out.has(comp[i]):
 			out.append(comp[i])
 	return out
 
 
-static func near_road(gs, p: Vector2) -> bool:
-	return not near_components(gs, p).is_empty()
+static func near_road(gs, p: Vector2, kinds: Array = []) -> bool:
+	return not near_components(gs, p, -1.0, kinds).is_empty()
 
 
-## ¿Están dos puntos unidos por la misma red de carreteras?
-static func connected(gs, p1: Vector2, p2: Vector2) -> bool:
-	var c1 := near_components(gs, p1)
+## ¿Están dos puntos unidos por la misma red de carreteras (de esos tipos)?
+static func connected(gs, p1: Vector2, p2: Vector2, kinds: Array = []) -> bool:
+	var c1 := near_components(gs, p1, -1.0, kinds)
 	if c1.is_empty():
 		return false
-	for c in near_components(gs, p2):
+	for c in near_components(gs, p2, -1.0, kinds):
 		if c1.has(c):
 			return true
 	return false
 
 
-## Multiplicador de velocidad de la red que une dos puntos (empedrado es más rápido).
-static func speed_mult(gs, p1: Vector2, p2: Vector2) -> float:
-	var c1 := near_components(gs, p1)
-	var c2 := near_components(gs, p2)
+## Multiplicador de velocidad de la red que une dos puntos (empedrado y cemento son más rápidos).
+static func speed_mult(gs, p1: Vector2, p2: Vector2, kinds: Array = []) -> float:
+	var c1 := near_components(gs, p1, -1.0, kinds)
+	var c2 := near_components(gs, p2, -1.0, kinds)
 	var rs := roads(gs)
-	var comp := components(gs)
+	var comp := components(gs, kinds)
 	var best := 1.0
 	for c in c1:
 		if not c2.has(c):

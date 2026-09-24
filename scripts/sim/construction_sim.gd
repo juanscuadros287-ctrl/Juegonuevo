@@ -177,6 +177,7 @@ static func start_construction(gs, type_id: String, x: float, z: float, rot: flo
 		apply_tier(b, tier)
 	BusinessSim.ledger_add(b, "obras", float(cost["total"]))
 	gs.add_building(b)
+	LogisticsSim.on_buildings_changed(gs)   # Vínculo fábrica ↔ almacén al lado.
 	gs.notify("Obra iniciada: %s (%d días con %d trabajadores)." % [gs.building_label(b), cost["days"], cost["workers"]], "construccion")
 	EventBus.building_changed.emit(int(b["id"]))
 	return {"building": b}
@@ -262,7 +263,9 @@ static func demolish(gs, b: Dictionary) -> void:
 			c.wage = 0.0
 		if c.home_id == id:
 			c.home_id = -1
+	LogisticsSim.before_demolish(gs, b)   # El stock de un almacén pasa a los demás.
 	gs.remove_building(id)
+	LogisticsSim.on_buildings_changed(gs)
 	gs.notify("Demoliste %s." % gs.building_label(b), "construccion")
 	EventBus.building_removed.emit(id)
 	EventBus.citizens_moved.emit()
@@ -344,6 +347,7 @@ static func _complete(gs, b: Dictionary, crew: Array) -> void:
 	b["status"] = "activo"
 	b["work_done"] = 0.0
 	b["work_needed"] = 0.0
+	LogisticsSim.on_buildings_changed(gs)   # Un almacén terminado vincula a sus vecinos.
 	var ld: Dictionary = gs.level_def(b)
 	if Housing.is_home(b):
 		var td := Housing.tier_def(b)
@@ -415,6 +419,7 @@ static func move_building(gs, b: Dictionary, x: float, z: float, rot: float) -> 
 	b["x"] = x
 	b["z"] = z
 	b["rot"] = rot
+	LogisticsSim.on_buildings_changed(gs)   # Recalcula el vínculo fábrica ↔ almacén.
 	EventBus.building_changed.emit(int(b["id"]))
 	EventBus.citizens_moved.emit()
 	return ""

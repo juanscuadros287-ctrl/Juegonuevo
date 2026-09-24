@@ -54,16 +54,25 @@
     "plaza_label": "Bodega de la plaza",
     "shop_share": 0.35,
     "shop_units_per_output": 0.4,
-    "full_warning_days": 20
+    "full_warning_days": 20,
+    "_nota_almacenes": "Almacenes individuales: cada almacén (y la bodega de la plaza, id 0) tiene su propio stock. Una fábrica/extracción queda VINCULADA al almacén cuyo borde esté a menos de link_distance metros del suyo (distancia entre bordes de las huellas). plaza_half = medio lado de la bodega de la plaza (la plazoleta). La plaza es el almacén principal y la salida del pueblo (ahí empieza el camino comercial).",
+    "link_distance": 12.0,
+    "plaza_half": 9.0,
+    "plaza_capacity": 200
   },
   "transport": {
+    "_nota": "Medios de transporte interno. capacity = unidades por viaje de UN vehículo (o cargador); speed = metros por día de juego; road = necesita carretera; road_kinds = tipos de carretera válidos (vacío = cualquiera); vehicle = vehículo individual que se compra en su edificio 'base' (caballeriza, deposito_camiones, hangar) con price, upkeep diario (alimento si animal=true, mantenimiento si no) y fuel_per_km = combustible por km recorrido; todo × price_mult. Cada vehículo necesita un conductor o arriero (empleado de su edificio). planned = previsto para una fase posterior (no hace rutas internas).",
     "route_factor": 1.25,
     "max_trips_per_day": 4,
     "depart_hour": 7,
     "modes": {
-      "pie": {"label": "A pie (cargadores)", "capacity": 10, "speed": 180, "road": false, "tech": "", "order": 0},
-      "carreta": {"label": "Caballos y carretas", "capacity": 60, "speed": 360, "road": true, "tech": "carretas", "order": 1},
-      "camion": {"label": "Camiones", "capacity": 250, "speed": 1200, "road": true, "tech": "automovil", "order": 2}
+      "pie": {"unit": "Cargador", "label": "A pie (cargadores)", "short": "cargadores", "capacity": 10, "speed": 180, "road": false, "tech": "", "vehicle": false, "base": "central_transporte", "order": 0},
+      "mula": {"unit": "Mula", "label": "Mulas de carga", "short": "mulas", "capacity": 25, "speed": 260, "road": false, "tech": "", "vehicle": true, "animal": true, "base": "caballeriza", "price": 60, "upkeep": 0.12, "fuel_per_km": 0.0, "order": 1},
+      "carreta": {"unit": "Carreta", "label": "Carretas de caballos", "short": "carretas", "capacity": 60, "speed": 360, "road": true, "tech": "carretas", "vehicle": true, "animal": true, "base": "caballeriza", "price": 150, "upkeep": 0.35, "fuel_per_km": 0.0, "order": 2},
+      "carro_vapor": {"unit": "Carro de vapor", "label": "Carros de carga a vapor", "short": "carros de vapor", "capacity": 140, "speed": 650, "road": true, "road_kinds": ["empedrado", "cemento"], "tech": "maquina_vapor", "vehicle": true, "base": "deposito_camiones", "price": 1200, "upkeep": 0.6, "fuel_per_km": 3.0, "order": 3},
+      "camion": {"unit": "Camión", "label": "Camiones de carga", "short": "camiones", "capacity": 250, "speed": 1200, "road": true, "road_kinds": ["empedrado", "cemento"], "tech": "automovil", "vehicle": true, "base": "deposito_camiones", "price": 3000, "upkeep": 0.8, "fuel_per_km": 4.0, "order": 4},
+      "trailer": {"unit": "Tráiler", "label": "Camiones grandes (tráiler)", "short": "tráileres", "capacity": 600, "speed": 1100, "road": true, "road_kinds": ["cemento"], "tech": "industria_automotriz", "vehicle": true, "base": "deposito_camiones", "price": 8000, "upkeep": 1.6, "fuel_per_km": 7.0, "order": 5},
+      "avion": {"unit": "Avión", "label": "Aviones de carga", "short": "aviones", "capacity": 400, "speed": 20000, "road": false, "tech": "aviacion", "vehicle": true, "base": "hangar", "price": 60000, "upkeep": 12.0, "fuel_per_km": 30.0, "planned": true, "order": 6}
     }
   },
   "roads": {
@@ -73,7 +82,8 @@
     "max_length": 80.0,
     "kinds": {
       "barro": {"label": "Camino de barro", "cost_per_unit": 1.2, "stone_per_unit": 0.0, "speed": 1.0, "tech": "", "color": [0.52, 0.4, 0.26], "width": 2.2},
-      "empedrado": {"label": "Camino empedrado", "cost_per_unit": 2.5, "stone_per_unit": 0.15, "speed": 1.4, "tech": "caminos_empedrados", "color": [0.55, 0.55, 0.53], "width": 2.6}
+      "empedrado": {"label": "Camino empedrado", "cost_per_unit": 2.5, "stone_per_unit": 0.15, "speed": 1.4, "tech": "caminos_empedrados", "color": [0.55, 0.55, 0.53], "width": 2.6},
+      "cemento": {"label": "Carretera de cemento", "cost_per_unit": 6.0, "stone_per_unit": 0.3, "speed": 2.0, "tech": "automovil", "color": [0.72, 0.72, 0.7], "width": 3.2}
     }
   }
 }

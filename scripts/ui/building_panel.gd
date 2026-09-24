@@ -68,6 +68,10 @@ func rebuild() -> void:
 			_add_tab("Alumnos", _school_tab(b))
 		if str(def.get("service", "")) != "":
 			_add_tab("Servicio", _service_tab(b))
+	if mine and FleetTab.applies(GameState, b):
+		_add_tab("Vehículos", FleetTab.build(GameState, b, hud, rebuild))   # Comprar/vender vehículos.
+	if mine and WarehouseTab.applies(GameState, b):
+		_add_tab("Almacén", WarehouseTab.build(GameState, b, hud))   # Almacenes individuales y vínculo.
 	if cat == "vivienda":
 		_add_tab("Vivienda", _home_tab(b, mine))
 	if mine:
@@ -154,6 +158,8 @@ func _summary_text(b: Dictionary) -> String:
 			s += "[color=#e66]CERRADO (quiebra o embargo)[/color]\n"
 		_:
 			s += "Estado: [color=#6c6]activo[/color]\n"
+	if GameState.owned_by_player(b):
+		s += WarehouseTab.summary_line(GameState, b)   # Almacén vinculado (verde) / ninguno (rojo).
 	var site_crew := 0
 	for c in GameState.employees_of(bid):
 		if c.job_kind == "obra":
