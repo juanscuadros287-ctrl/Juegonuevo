@@ -1,0 +1,26 @@
+{
+  "facil": {
+    "label": "Fácil", "order": 0,
+    "description": "Mucho capital inicial, más ciudadanos, pocas enfermedades y precios bajos.",
+    "start_money": 12000, "start_citizens": 40, "citizen_money": [40, 120],
+    "disease_mult": 0.6, "price_mult": 0.85, "event_freq_mult": 0.6, "bank_interest": 0.04
+  },
+  "normal": {
+    "label": "Normal", "order": 1,
+    "description": "Experiencia equilibrada.",
+    "start_money": 8000, "start_citizens": 30, "citizen_money": [25, 80],
+    "disease_mult": 1.0, "price_mult": 1.0, "event_freq_mult": 1.0, "bank_interest": 0.07
+  },
+  "dificil": {
+    "label": "Difícil", "order": 2,
+    "description": "Poco capital, pueblo pequeño, más enfermedades y eventos.",
+    "start_money": 5000, "start_citizens": 22, "citizen_money": [10, 50],
+    "disease_mult": 1.4, "price_mult": 1.15, "event_freq_mult": 1.4, "bank_interest": 0.10
+  },
+  "extremo": {
+    "label": "Extremo", "order": 3,
+    "description": "Casi sin dinero, pocos ciudadanos pobres, epidemias frecuentes y precios altos.",
+    "start_money": 2500, "start_citizens": 14, "citizen_money": [0, 25],
+    "disease_mult": 2.0, "price_mult": 1.35, "event_freq_mult": 2.0, "bank_interest": 0.14
+  }
+}

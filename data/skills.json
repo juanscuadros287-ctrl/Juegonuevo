@@ -1,0 +1,13 @@
+{
+  "skills": {
+    "agricultura": {"label": "Agricultura", "weight": 5},
+    "construccion": {"label": "Construcción", "weight": 2},
+    "comercio": {"label": "Comercio", "weight": 1.5},
+    "artesania": {"label": "Artesanía", "weight": 2},
+    "mineria": {"label": "Minería", "weight": 1},
+    "medicina": {"label": "Medicina", "weight": 0.3},
+    "ciencia": {"label": "Ciencia", "weight": 0.2}
+  },
+  "education_levels": ["Ninguna", "Básica", "Secundaria", "Universitaria"],
+  "education_chance_adults": [0.86, 0.11, 0.025, 0.005]
+}

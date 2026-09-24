@@ -1,0 +1,89 @@
+{
+  "adult_age": 16,
+  "retirement_age": 65,
+  "marriage_min_age": 18,
+  "marriage_max_age": 50,
+  "fertile_min_age": 18,
+  "fertile_max_age": 44,
+  "max_children": 9,
+  "min_days_between_births": 300,
+  "annual_birth_chance": 0.34,
+  "annual_marriage_chance": 0.6,
+  "max_age_gap": 15,
+  "mortality": {
+    "a": 0.0003,
+    "b": 0.09,
+    "infant_annual": 0.04,
+    "infant_age": 4
+  },
+  "disease": {
+    "daily_chance": 0.0008,
+    "daily_damage": [
+      1.0,
+      3.5
+    ],
+    "daily_recover_chance": 0.14,
+    "death_mult_when_sick": 3.0,
+    "vulnerable_mult": 2.0
+  },
+  "health_regen_per_day": 0.6,
+  "child_cost_factor": 0.35,
+  "subsistence_income": 1.9,
+  "retired_income_factor": 0.5,
+  "needs": {
+    "comida": {
+      "label": "Comida",
+      "cost": 0.5,
+      "weight": 0.4,
+      "health_penalty": 1.0
+    },
+    "agua": {
+      "label": "Agua",
+      "cost": 0.1,
+      "weight": 0.25,
+      "health_penalty": 1.5
+    },
+    "vivienda": {
+      "label": "Vivienda",
+      "cost": 0.2,
+      "weight": 0.15,
+      "health_penalty": 0.0
+    },
+    "energia": {
+      "label": "Energía (leña)",
+      "cost": 0.15,
+      "weight": 0.12,
+      "health_penalty": 0.3
+    },
+    "ocio": {
+      "label": "Ocio",
+      "cost": 0.1,
+      "weight": 0.08,
+      "health_penalty": 0.0
+    }
+  },
+  "needs_priority": [
+    "comida",
+    "agua",
+    "vivienda",
+    "energia",
+    "transporte",
+    "ocio"
+  ],
+  "happiness": {
+    "base": 40,
+    "needs_weight": 30,
+    "health_weight": 0.25,
+    "homeless": -15,
+    "overcrowded": -8,
+    "married": 4,
+    "rich_threshold": 60,
+    "rich_bonus": 5,
+    "poor_threshold": 5,
+    "poor_penalty": -6,
+    "adjust_rate": 0.05
+  },
+  "emigration_threshold": 22,
+  "emigration_weekly_chance": 0.06,
+  "home_capacity_default": 6
+}

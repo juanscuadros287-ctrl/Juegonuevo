@@ -1,0 +1,14 @@
+{
+  "name": "Dinastía",
+  "subtitle": "Simulación económica y de pueblo · desde 1700",
+  "version": "0.1.0 · Fase 1",
+  "currency_symbol": "$",
+  "start_year": 1700,
+  "start_month": 3,
+  "start_day": 1,
+  "start_hour": 6,
+  "player_start_age": 25,
+  "jump_options_years": [2, 5, 10],
+  "autosave_yearly": true,
+  "town_names": ["San Rafael", "Villa del Valle", "Santa Lucía", "Puerto Viejo", "Aldea Nueva", "San Telmo", "Robledal", "Peñaverde", "Los Olivos", "Montecristo"]
+}

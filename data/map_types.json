@@ -1,0 +1,26 @@
+{
+  "interior": {
+    "label": "Interior", "order": 0,
+    "description": "Llanuras y colinas fértiles con algunos lagos. Ideal para agricultura.",
+    "water_level": 0.0, "base_height": 4.5, "hill_amp": 7.0, "forest_density": 0.30,
+    "resources": ["agricultura", "madera"]
+  },
+  "costa": {
+    "label": "Costa", "order": 1,
+    "description": "Mar al este: permite puertos, pesca y barcos.",
+    "water_level": 0.0, "base_height": 4.0, "hill_amp": 5.5, "forest_density": 0.25,
+    "resources": ["pesca", "puerto", "comercio_maritimo"], "has_sea": true
+  },
+  "montana": {
+    "label": "Montaña", "order": 2,
+    "description": "Cordillera al norte con piedra y minerales. Terreno difícil.",
+    "water_level": 0.0, "base_height": 5.0, "hill_amp": 8.0, "forest_density": 0.35,
+    "resources": ["mineria", "piedra", "madera"]
+  },
+  "rio": {
+    "label": "Río", "order": 3,
+    "description": "Un río cruza el mapa: agua abundante, molinos y tierras fértiles.",
+    "water_level": 0.0, "base_height": 4.0, "hill_amp": 6.0, "forest_density": 0.30,
+    "resources": ["agricultura", "agua", "molinos"]
+  }
+}

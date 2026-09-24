@@ -1,0 +1,6 @@
+{
+  "_nota": "Fase 1: solo viviendas iniciales del pueblo. En Fase 2 se agregan casas, comercios e industrias aquí.",
+  "choza": {"label": "Choza", "category": "vivienda", "capacity": 6, "size": [3.0, 2.0, 3.0],
+    "wall_color": [0.55, 0.40, 0.26], "roof_color": [0.78, 0.66, 0.36]},
+  "pozo": {"label": "Pozo del pueblo", "category": "servicio"}
+}
