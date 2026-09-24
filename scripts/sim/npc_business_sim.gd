@@ -182,8 +182,32 @@ static func _spend(gs, b: Dictionary, amount: float, key: String, allow_owner :=
 	return paid
 
 
+## Proveedores locales: vecinos sin empleo que venden lo que cultivan, recogen o reparan.
+static var _suppliers: Array = []
+
+
+## Paga a proveedores del pueblo (el dinero de insumos y mantenimiento se queda en el pueblo).
+static func _pay_local(gs, amount: float) -> void:
+	if amount <= 0.0:
+		return
+	if _suppliers.is_empty():
+		GovSim.add_treasury(gs, amount)   # Sin vecinos que vendan: lo cobra el mercado municipal.
+		return
+	var n := mini(3, _suppliers.size())
+	var start := int(floorf(FreeMarketSim.rf(gs) * _suppliers.size()))
+	for i in range(n):
+		var c: Citizen = _suppliers[(start + i) % _suppliers.size()]
+		c.money += amount / n
+
+
 static func produce(gs) -> void:
 	staff_index(gs)
+	_suppliers = []
+	var today: int = gs.today()
+	var adult := int(GameData.citizens.get("adult_age", 16))
+	for c in gs.citizens.values():
+		if c.job_id < 0 and not gs.is_player(c.id) and c.prison_until < 0 and c.age_years(today) >= adult:
+			_suppliers.append(c)
 	var pm: float = gs.price_mult()
 	for b in gs.buildings:
 		if not is_npc(b) or str(b["status"]) != "activo":
@@ -202,7 +226,7 @@ static func produce(gs) -> void:
 			if paid + 0.0001 < c.wage:
 				unpaid = true
 		b["unpaid_days"] = int(b.get("unpaid_days", 0)) + 1 if unpaid else 0
-		_spend(gs, b, float(ld.get("upkeep", 0.0)) * pm, "mantenimiento", false)
+		_pay_local(gs, _spend(gs, b, float(ld.get("upkeep", 0.0)) * pm, "mantenimiento", false))
 		var product := str(def.get("product", ""))
 		if product == "" or not GameData.goods.has(product):
 			continue
@@ -227,7 +251,7 @@ static func produce(gs) -> void:
 			if cash < cost_units * unit_cost:
 				cost_units = cash / unit_cost
 				out = covered + cost_units
-			_spend(gs, b, cost_units * unit_cost, "insumos", false)
+			_pay_local(gs, _spend(gs, b, cost_units * unit_cost, "insumos", false))
 		inv[product] = float(inv.get(product, 0.0)) + maxf(0.0, out)
 
 
@@ -446,6 +470,14 @@ static func find_spot(gs, type_id: String) -> Dictionary:
 
 
 static func monthly(gs) -> void:
+	# Dueños cuyo negocio ya no existe o ya no es suyo (incendio, venta) vuelven a estar libres.
+	for c in gs.citizens.values():
+		if c.job_kind == "dueño":
+			var ob: Dictionary = gs.get_building(c.job_id)
+			if ob.is_empty() or not is_npc(ob) or int(ob.get("owner_id", -1)) != c.id or str(ob["status"]) != "activo":
+				c.job_id = -1
+				c.job_kind = ""
+				c.wage = 0.0
 	_monthly_accounts(gs)
 	_estate_sales(gs)
 	_consider_opening(gs)
@@ -594,6 +626,7 @@ static func _monthly_accounts(gs) -> void:
 	var npc_cfg := cfg()
 	var bk_neg := int(npc_cfg.get("bankrupt_negative_months", 3))
 	var bk_loss := int(npc_cfg.get("bankrupt_loss_months", 6))
+	var taxes_month := 0.0
 	for b in npc_buildings(gs):
 		var led: Dictionary = b["ledger"]
 		led["last_month"] = led["month"]
@@ -613,6 +646,7 @@ static func _monthly_accounts(gs) -> void:
 		var paid := _spend(gs, b, tax, "impuestos", false)
 		GovSim.add_treasury(gs, paid)
 		FreeMarketSim.stat(gs, "npc_taxes", paid)
+		taxes_month += paid
 		# Dividendos: lo que sobra del capital de trabajo va al dueño (y circula).
 		var daily_cost := BusinessSim.period_value(b, "last_month", "salarios") + BusinessSim.period_value(b, "last_month", "insumos") + BusinessSim.period_value(b, "last_month", "mantenimiento")
 		var working := daily_cost / 30.0 * float(npc_cfg.get("working_capital_days", 30))
@@ -656,6 +690,7 @@ static func _monthly_accounts(gs) -> void:
 			b["negative_months"] = 0
 		if int(b.get("negative_months", 0)) >= bk_neg or (int(b.get("loss_months", 0)) >= bk_loss and float(b["reserve"]) < working * 0.25):
 			bankrupt(gs, b)
+	gs.market["npc_tax_last"] = taxes_month
 
 
 static func bankrupt(gs, b: Dictionary) -> void:

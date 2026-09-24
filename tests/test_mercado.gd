@@ -415,7 +415,7 @@ func _test_money_conservation() -> void:
 		NpcBusinessSim.daily(gs)
 	var after: Dictionary = FreeMarketSim.money_snapshot(gs)
 	check(float(after["total"]) <= float(before["total"]) + 0.01, "producir y pagar sueldos no crea dinero (Δ %.2f, gastos que salen %.2f)" % [float(after["total"]) - float(before["total"]), spent])
-	check(absf(float(after["total"]) - (float(before["total"]) - spent)) < 0.05, "solo sale lo que se paga afuera (mantenimiento e insumos)")
+	check(absf(float(after["total"]) - float(before["total"])) < 0.05 and spent > 0.0, "insumos y mantenimiento se pagan a proveedores del pueblo: el dinero se conserva")
 	var b2 := _total()
 	NpcBusinessSim._monthly_accounts(gs)
 	check(absf(_total() - b2) < 0.01, "impuestos y dividendos solo cambian de manos")

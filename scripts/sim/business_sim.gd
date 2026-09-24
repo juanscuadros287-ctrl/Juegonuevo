@@ -264,7 +264,7 @@ static func candidates(gs, b: Dictionary) -> Array:
 	var retire := int(GameData.citizens.get("retirement_age", 65))
 	var out := []
 	for c in gs.citizens.values():
-		if c.job_kind == "empleo" or gs.is_player(c.id):
+		if c.job_kind == "empleo" or c.job_kind == "dueño" or gs.is_player(c.id):   # Libre mercado: el dueño NPC atiende su negocio.
 			continue
 		var age: int = c.age_years(today)
 		if age < adult or age >= retire:

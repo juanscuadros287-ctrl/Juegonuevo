@@ -1,7 +1,7 @@
 # Dinastía
 
 Simulación económica y construcción de pueblo desde 1700 (Godot 4, GDScript, 3D low‑poly).
-Eres el único empresario del pueblo: todo el crecimiento depende de tus decisiones.
+Empiezas como empresario en un pueblo que crece: con el libre mercado, otros ciudadanos abren sus negocios, los pueblos vecinos crecen y el gobierno ejecuta su propio plan.
 
 > El nombre del juego se cambia en `data/game.json` y `project.godot`.
 
@@ -17,6 +17,13 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 | 6 | Recursos, almacén, cadenas de producción, transporte interno y carreteras | ✅ |
 | 7 | Otros pueblos, rutas comerciales, comercio exterior, inmigración y transporte externo | ✅ |
 | 8 | Turismo, publicidad, industria avanzada y dinastía | ✅ |
+
+### Libre mercado
+Ver `docs/MERCADO_LIBRE.md`.
+- **Empresarios NPC:** los ciudadanos con ahorros abren negocios donde falta oferta y compiten contigo. Se heredan en la familia, pueden quebrar y se pueden comprar.
+- **Pueblos vecinos:** crecen según la época y la ayuda de su gobierno, y comercian entre ellos.
+- **Contratos de compraventa:** botón *Contratos*, con solicitudes entrantes que aceptas o rechazas, ofertas que envías, entregas, penalidades y reputación.
+- **Plan de gobierno:** parques, salud, policía, escuelas y vivienda social.
 
 ### Redes de servicios públicos
 Ver `docs/REDES.md`. Incluye tendido aéreo y cable subterráneo por tramos, reparto de energía por red,

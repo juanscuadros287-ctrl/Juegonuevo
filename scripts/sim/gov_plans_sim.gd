@@ -97,8 +97,11 @@ static func needs(gs) -> Array:
 		var sev := 0.0
 		match str(t.get("need", "")):
 			"felicidad":
-				if _count_type(gs, type_id) < 1 + pop / 80:
+				var parks := _count_type(gs, type_id)
+				if parks < 1 + pop / 80:
 					sev = (th - gs.avg_happiness()) / 10.0
+					if sev <= 0.0 and parks == 0:
+						sev = 0.05   # Todo pueblo quiere al menos un parque (si hay presupuesto).
 			"salud":
 				if _count_type(gs, type_id) < 1 + pop / 150:
 					var sick: int = gs.citizens.values().filter(func(c): return c.sick).size()
@@ -283,9 +286,7 @@ static func daily(gs) -> void:
 		if str(b["status"]) == "activo":
 			p["status"] = "terminado"
 			p["done_day"] = gs.today()
-			var jobs := int(gs.level_def(b).get("jobs", 0))
-			if jobs > 0:
-				NpcBusinessSim.fill_jobs(gs, b, jobs)
+			_staff(gs)
 			gs.notify("Plan de gobierno cumplido: %s ya funciona." % p["label"], "importante")
 			FreeMarketSim.log_event(gs, "Terminado: %s." % p["label"])
 	# Sueldos del personal público (del tesoro).
@@ -321,15 +322,52 @@ static func _pay_upkeep(gs) -> void:
 			BusinessSim.ledger_add(b, "mantenimiento", paid)
 
 
+## Presupuesto mensual sostenible para personal público: impuestos del último mes más una parte
+## pequeña de lo que el tesoro tiene por encima de su reserva (nunca se gasta la reserva).
+static func staff_budget(gs) -> float:
+	var income := 0.0
+	var tl: Dictionary = gs.government.get("taxes_last", {})
+	for k in tl:
+		income += float(tl[k])
+	income += float(gs.market.get("npc_tax_last", 0.0))
+	var reserve: float = float(cfg().get("min_treasury", 1500)) * gs.price_mult()
+	return income + maxf(0.0, float(gs.government.get("treasury", 0.0)) - reserve) / 36.0
+
+
+static func payroll(gs) -> float:
+	var total := 0.0
+	for b in gov_buildings(gs):
+		for c in NpcBusinessSim.staff_of(b):
+			total += c.wage * 30.0
+	return total
+
+
 static func _staff(gs) -> void:
+	var budget := staff_budget(gs)
+	var pay := payroll(gs)
 	for b in gov_buildings(gs):
 		var jobs := int(gs.level_def(b).get("jobs", 0))
 		if str(b["status"]) != "activo" or jobs <= 0:
 			continue
 		for c in NpcBusinessSim.staff_of(b):
 			c.wage = maxf(c.wage, BusinessSim.asked_wage(gs, c, str(b["type"])) * 0.95)
-		if float(gs.government.get("treasury", 0.0)) > 0.0:
-			NpcBusinessSim.fill_jobs(gs, b, jobs)
+	# Sin presupuesto: el gobierno recorta personal en vez de vaciar el tesoro.
+	for b in gov_buildings(gs):
+		if pay <= budget:
+			break
+		var emps: Array = NpcBusinessSim.staff_of(b).duplicate()
+		if not emps.is_empty():
+			pay -= emps[emps.size() - 1].wage * 30.0
+			NpcBusinessSim.release(gs, emps[emps.size() - 1])
+	for b in gov_buildings(gs):
+		var jobs := int(gs.level_def(b).get("jobs", 0))
+		if str(b["status"]) != "activo" or jobs <= 0:
+			continue
+		var wage_est: float = float(gs.building_def(b).get("base_wage", 2.0)) * gs.price_mult() * 30.0
+		while NpcBusinessSim.staff_of(b).size() < jobs and pay + wage_est <= budget:
+			if NpcBusinessSim.fill_jobs(gs, b, NpcBusinessSim.staff_of(b).size() + 1) <= 0:
+				break
+			pay += wage_est
 
 
 ## Capacidad de servicio del gobierno (se suma a la de tus servicios en EventsSim.daily).
