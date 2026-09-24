@@ -1,5 +1,5 @@
 extends Control
-## Menú principal: nueva partida (dificultad, tipo de mapa), cargar y salir.
+## Menú principal: nueva partida (dificultad, tipo de mapa, lugar de fundación), cargar y salir.
 
 var main_box: VBoxContainer
 var new_panel: PanelContainer
@@ -16,6 +16,9 @@ var desc_lbl: Label
 var load_list: ItemList
 var diff_ids: Array = []
 var map_ids: Array = []
+var region_opt: OptionButton          # Fase 6: dónde fundar el pueblo
+var region_list: Array = []
+var region_preview: RegionPreview
 
 
 func _ready() -> void:
@@ -62,7 +65,16 @@ func _build_new_panel(parent: Control) -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	new_panel.add_child(v)
-	v.add_child(grid)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 18)
+	v.add_child(top)
+	top.add_child(grid)
+	var side := VBoxContainer.new()
+	top.add_child(side)
+	side.add_child(UIKit.label("Lugar de fundación", 15, UIKit.ACCENT))
+	region_preview = RegionPreview.new()
+	side.add_child(region_preview)
+	side.add_child(UIKit.label("● pueblo  ○ alcance a pie de la bodega  ● yacimientos", 11, UIKit.TEXT_DIM))
 	var defaults := GameState.default_settings()
 
 
@@ -110,14 +122,20 @@ func _build_new_panel(parent: Control) -> void:
 	map_ids = GameData.sorted_ids(GameData.map_types)
 	for id in map_ids:
 		map_opt.add_item(str(GameData.map_types[id].get("label", id)))
-	map_opt.item_selected.connect(func(_i): _update_desc())
+	map_opt.item_selected.connect(func(_i): _refresh_regions())
 	grid.add_child(map_opt)
 
 	grid.add_child(UIKit.label("Semilla"))
 	seed_edit = SpinBox.new()
 	seed_edit.max_value = 999999
 	seed_edit.value = defaults["seed"]
+	seed_edit.value_changed.connect(func(_v): _refresh_regions())
 	grid.add_child(seed_edit)
+
+	grid.add_child(UIKit.label("Lugar de fundación"))
+	region_opt = OptionButton.new()
+	region_opt.item_selected.connect(func(_i): _update_desc())
+	grid.add_child(region_opt)
 
 	desc_lbl = UIKit.label("", 14, UIKit.TEXT_DIM)
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -128,6 +146,17 @@ func _build_new_panel(parent: Control) -> void:
 	v.add_child(row)
 	row.add_child(UIKit.button("Comenzar", _start, 160))
 	row.add_child(UIKit.button("Volver", _show_main, 120))
+	_refresh_regions()
+
+
+## Lugares candidatos para fundar según tipo de mapa y semilla (Fase 6).
+func _refresh_regions() -> void:
+	var prev := region_opt.selected
+	region_list = RegionSim.candidates(str(map_ids[map_opt.selected]), int(seed_edit.value))
+	region_opt.clear()
+	for r in region_list:
+		region_opt.add_item(str(r.get("name", r.get("label", ""))))
+	region_opt.select(clampi(prev, 0, region_list.size() - 1))
 	_update_desc()
 
 
@@ -138,6 +167,10 @@ func _update_desc() -> void:
 		d.get("label", ""), d.get("description", ""), Fmt.money(float(d.get("start_money", 0))),
 		int(d.get("start_citizens", 0)), float(d.get("disease_mult", 1)), float(d.get("price_mult", 1)),
 		float(d.get("event_freq_mult", 1)), m.get("label", ""), m.get("description", "")]
+	if not region_list.is_empty() and region_opt.selected >= 0:
+		var r: Dictionary = region_list[region_opt.selected]
+		desc_lbl.text += "\n\n%s: %s\nRecursos: %s" % [r.get("name", ""), r.get("description", ""), RegionSim.strengths_text(r)]
+		region_preview.show_region(str(map_ids[map_opt.selected]), int(seed_edit.value), r)
 
 
 func _build_load_panel(parent: Control) -> void:
@@ -198,5 +231,6 @@ func _start() -> void:
 		"difficulty": diff_ids[diff_opt.selected],
 		"map_type": map_ids[map_opt.selected],
 		"seed": int(seed_edit.value),
+		"region": str(region_list[region_opt.selected].get("id", "")) if not region_list.is_empty() else "",
 	})
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
