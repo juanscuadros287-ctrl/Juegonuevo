@@ -76,7 +76,7 @@ static func cost_for(gs, type_id: String, level: int, is_upgrade: bool, tier := 
 		var use := minf(have, need)
 		from_stock[g] = use
 		imports[g] = need - use
-		import_cost += (need - use) * float(GameData.goods.get(g, {}).get("import_price", 5.0)) * pm
+		import_cost += (need - use) * float(GameData.goods.get(g, {}).get("import_price", 5.0)) * pm * GovSim.import_mult(gs)
 	return {
 		"money": money, "materials": mats, "from_stock": from_stock, "import": imports,
 		"import_cost": import_cost, "total": money + import_cost,
@@ -128,7 +128,7 @@ static func build_block_reason(gs, type_id: String, tier := "normal") -> String:
 	if r != "":
 		return r
 	var def := GameData.building_def(type_id)
-	if str(def.get("category", "")) == "negocio" and BusinessSim.business_count(gs) >= BusinessSim.max_businesses(gs):
+	if str(def.get("category", "")) == "negocio" and not def.has("service") and BusinessSim.business_count(gs) >= BusinessSim.max_businesses(gs):
 		return "Límite de negocios (%d). Construye o mejora tu oficina." % BusinessSim.max_businesses(gs)
 	var cost := cost_for(gs, type_id, 1, false, tier)
 	if gs.money < float(cost["total"]):
@@ -324,6 +324,17 @@ static func _complete(gs, b: Dictionary, crew: Array) -> void:
 		c.job_kind = ""
 		c.wage = 0.0
 	var upgraded: bool = b["status"] == "mejorando"
+	if str(b.get("owner", "")) == "gobierno":
+		b["status"] = "activo"
+		b["work_done"] = 0.0
+		gs.notify("Obra pública terminada: %s." % gs.level_def(b).get("label", ""), "construccion")
+		GovSim.on_project_complete(gs, b)
+		EventBus.building_changed.emit(int(b["id"]))
+		for c in crew:
+			c.job_id = -1
+			c.job_kind = ""
+			c.wage = 0.0
+		return
 	b["level"] = int(b["target_level"])
 	if b.has("target_tier"):
 		apply_tier(b, str(b["target_tier"]))
@@ -369,8 +380,8 @@ static func unlock_zone(gs, zx: int, zy: int) -> String:
 		return reason
 	var cost := zone_cost(gs)
 	gs.add_money(-cost)
-	# El terreno se le compra al gobierno: el dinero va al tesoro público (Fase 5).
-	gs.economy["treasury"] = float(gs.economy.get("treasury", 0.0)) + cost
+	# El terreno se le compra al gobierno: el dinero va al tesoro público.
+	GovSim.add_treasury(gs, cost)
 	gs.unlocked_zones.append([zx, zy])
 	gs.notify("Compraste un terreno al gobierno por %s. Ya puedes construir en esa zona." % Fmt.money(cost), "construccion")
 	EventBus.zones_changed.emit()

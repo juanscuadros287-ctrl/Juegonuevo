@@ -2026,5 +2026,459 @@
     ]
    }
   ]
+ },
+ "plaza_empedrada": {
+  "label": "Obra pública",
+  "category": "publico",
+  "footprint": 7.0,
+  "levels": [
+   {
+    "label": "Plaza empedrada y fuente",
+    "cost": 1500,
+    "materials": {
+     "piedra": 37
+    },
+    "build_days": 30,
+    "workers": 4,
+    "tech": "",
+    "model": [
+     {
+      "s": "cyl",
+      "size": [
+       3.4,
+       0.15,
+       3.4
+      ],
+      "pos": [
+       0,
+       0.08,
+       0
+      ],
+      "c": [
+       0.55,
+       0.55,
+       0.53
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       1.0,
+       0.8,
+       1.0
+      ],
+      "pos": [
+       0,
+       0.4,
+       0
+      ],
+      "c": [
+       0.6,
+       0.6,
+       0.62
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.8,
+       0.1,
+       0.8
+      ],
+      "pos": [
+       0,
+       0.82,
+       0
+      ],
+      "c": [
+       0.3,
+       0.5,
+       0.7
+      ]
+     }
+    ],
+    "effects": {
+     "happiness": 2
+    }
+   }
+  ]
+ },
+ "iglesia": {
+  "label": "Obra pública",
+  "category": "publico",
+  "footprint": 7.0,
+  "levels": [
+   {
+    "label": "Iglesia",
+    "cost": 3000,
+    "materials": {
+     "piedra": 75
+    },
+    "build_days": 60,
+    "workers": 6,
+    "tech": "",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6,
+       5,
+       10
+      ],
+      "pos": [
+       0,
+       2.5,
+       0
+      ],
+      "c": [
+       0.9,
+       0.87,
+       0.8
+      ],
+      "rot": 0
+     },
+     {
+      "s": "prism",
+      "size": [
+       10.5,
+       2.5,
+       6.6
+      ],
+      "pos": [
+       0,
+       6.25,
+       0
+      ],
+      "c": [
+       0.66,
+       0.3,
+       0.2
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       2.2,
+       10,
+       2.2
+      ],
+      "pos": [
+       0,
+       5,
+       5.5
+      ],
+      "c": [
+       0.9,
+       0.87,
+       0.8
+      ],
+      "rot": 0
+     },
+     {
+      "s": "prism",
+      "size": [
+       2.4,
+       2.5,
+       2.4
+      ],
+      "pos": [
+       0,
+       11.25,
+       5.5
+      ],
+      "c": [
+       0.66,
+       0.3,
+       0.2
+      ],
+      "rot": 0
+     }
+    ],
+    "effects": {
+     "happiness": 3
+    }
+   }
+  ]
+ },
+ "acueducto_publico": {
+  "label": "Obra pública",
+  "category": "publico",
+  "footprint": 7.0,
+  "levels": [
+   {
+    "label": "Acueducto público",
+    "cost": 4000,
+    "materials": {
+     "piedra": 100
+    },
+    "build_days": 60,
+    "workers": 8,
+    "tech": "acueductos",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       12,
+       4,
+       1.2
+      ],
+      "pos": [
+       0,
+       2,
+       0
+      ],
+      "c": [
+       0.55,
+       0.55,
+       0.53
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.5,
+       2.4,
+       1.3
+      ],
+      "pos": [
+       -4.5,
+       1.2,
+       0
+      ],
+      "c": [
+       0.45,
+       0.45,
+       0.43
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.5,
+       2.4,
+       1.3
+      ],
+      "pos": [
+       -1.5,
+       1.2,
+       0
+      ],
+      "c": [
+       0.45,
+       0.45,
+       0.43
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.5,
+       2.4,
+       1.3
+      ],
+      "pos": [
+       1.5,
+       1.2,
+       0
+      ],
+      "c": [
+       0.45,
+       0.45,
+       0.43
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.5,
+       2.4,
+       1.3
+      ],
+      "pos": [
+       4.5,
+       1.2,
+       0
+      ],
+      "c": [
+       0.45,
+       0.45,
+       0.43
+      ],
+      "rot": 0
+     }
+    ],
+    "effects": {
+     "disease": 0.9
+    }
+   }
+  ]
+ },
+ "puente": {
+  "label": "Obra pública",
+  "category": "publico",
+  "footprint": 7.0,
+  "levels": [
+   {
+    "label": "Puente de piedra",
+    "cost": 3500,
+    "materials": {
+     "piedra": 87
+    },
+    "build_days": 50,
+    "workers": 8,
+    "tech": "",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4,
+       0.6,
+       14
+      ],
+      "pos": [
+       0,
+       2,
+       0
+      ],
+      "c": [
+       0.55,
+       0.55,
+       0.53
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1,
+       2,
+       1
+      ],
+      "pos": [
+       0,
+       1,
+       -4
+      ],
+      "c": [
+       0.55,
+       0.55,
+       0.53
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1,
+       2,
+       1
+      ],
+      "pos": [
+       0,
+       1,
+       4
+      ],
+      "c": [
+       0.55,
+       0.55,
+       0.53
+      ],
+      "rot": 0
+     }
+    ],
+    "effects": {
+     "happiness": 1
+    }
+   }
+  ],
+  "map_types": [
+   "rio",
+   "costa"
+  ]
+ },
+ "hospital_caridad": {
+  "label": "Obra pública",
+  "category": "publico",
+  "footprint": 7.0,
+  "levels": [
+   {
+    "label": "Hospital de caridad",
+    "cost": 5000,
+    "materials": {
+     "piedra": 125
+    },
+    "build_days": 70,
+    "workers": 8,
+    "tech": "herbolaria",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       8,
+       3.4,
+       6
+      ],
+      "pos": [
+       0,
+       1.7,
+       0
+      ],
+      "c": [
+       0.92,
+       0.92,
+       0.9
+      ],
+      "rot": 0
+     },
+     {
+      "s": "prism",
+      "size": [
+       6.5,
+       1.4,
+       8.7
+      ],
+      "pos": [
+       0,
+       4.1,
+       0
+      ],
+      "c": [
+       0.66,
+       0.3,
+       0.2
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       1.6,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.8,
+       3.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     }
+    ],
+    "effects": {
+     "mortality": 0.92,
+     "disease": 0.93
+    }
+   }
+  ]
  }
 }

@@ -30,9 +30,10 @@ func _ready() -> void:
 						money += c.money
 						if c.spouse_id >= 0:
 							married += 1
-				line += "\n  año %d: pobl %d adultos %d casados %d dinero_prom %.0f feliz %.0f salud %.0f" % [
+				line += "\n  año %d: pobl %d adultos %d casados %d dinero_prom %.0f feliz %.0f salud %.0f crimen %d eventos %d gob %s tesoro %.0f" % [
 					TimeManager.year(), GameState.citizens.size(), adults, married,
-					money / maxf(1, adults), GameState.avg_happiness(), GameState.avg_health()]
+					money / maxf(1, adults), GameState.avg_happiness(), GameState.avg_health(),
+					int(GameState.problems.get("crime", 0)), GameState.problems.get("events", []).size(), GameState.government.get("gov_id", ""), float(GameState.government.get("treasury", 0))]
 		var c := {}
 		for h in GameState.history:
 			for k in ["births", "deaths"]:

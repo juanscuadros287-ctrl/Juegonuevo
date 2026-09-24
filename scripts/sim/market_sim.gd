@@ -70,7 +70,7 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 	var quality := 1.0
 	var g: Dictionary = GameData.goods.get(good, {})
 	if left > 0.0001:
-		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult()
+		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs)
 		if employed and imp > 0.0 and PopulationSim.pay_with(gs, payers, left * imp):
 			imported = left  # El dinero sale del pueblo.
 		else:
@@ -89,7 +89,7 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 static func discretionary(gs) -> void:
 	var cfg: Dictionary = GameData.citizens.get("discretionary", {})
 	var buffer_days := float(cfg.get("buffer_days", 45))
-	var share := float(cfg.get("weekly_share", 0.06))
+	var share := float(cfg.get("weekly_share", 0.06)) * EventsSim.mult(gs, "discretionary")
 	var need_day := 0.0
 	for n in GameData.citizens.get("needs", {}).values():
 		need_day += float(n.get("cost", 0.1))

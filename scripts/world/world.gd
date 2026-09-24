@@ -29,6 +29,7 @@ var place_pos := Vector3.ZERO
 var place_ok := false
 var place_reason := ""
 var move_id := -1
+var place_tender: Dictionary = {}
 var _ghost: Node3D
 var zone_mode := false
 var _zone_marker: MeshInstance3D
@@ -372,6 +373,12 @@ func start_placement(type_id: String, tier: String) -> void:
 	EventBus.citizen_selected.emit(-1)
 
 
+## Colocar una obra pública ganada en licitación.
+func start_public_placement(tender: Dictionary) -> void:
+	start_placement(str(tender["type"]), "normal")
+	place_tender = tender
+
+
 ## Modo mover/girar un edificio existente.
 func start_move(bid: int) -> void:
 	var b: Dictionary = GameState.get_building(bid)
@@ -401,6 +408,7 @@ func cancel_placement() -> void:
 	if move_id >= 0 and building_nodes.has(move_id):
 		building_nodes[move_id].visible = true
 	move_id = -1
+	place_tender = {}
 	place_type = ""
 	zone_mode = false
 	if _ghost:
@@ -441,7 +449,7 @@ func _update_placement() -> void:
 	place_reason = ConstructionSim.placement_block_reason(GameState, place_type, p.x, p.z, move_id)
 	if place_reason == "":
 		place_reason = terrain.footprint_ok(p.x, p.z, fp)
-	if place_reason == "" and move_id < 0:
+	if place_reason == "" and move_id < 0 and place_tender.is_empty():
 		place_reason = ConstructionSim.build_block_reason(GameState, place_type, place_tier)
 	place_ok = place_reason == ""
 	_ghost.position = place_pos
@@ -475,6 +483,13 @@ func _confirm_placement() -> void:
 		return
 	if not place_ok:
 		hud.toast(place_reason, "jugador")
+		return
+	if not place_tender.is_empty():
+		var perr := GovSim.start_public_project(GameState, place_tender, place_pos.x, place_pos.z, place_rot)
+		if perr != "":
+			hud.toast(perr, "jugador")
+			return
+		cancel_placement()
 		return
 	if move_id >= 0:
 		var err := ConstructionSim.move_building(GameState, GameState.get_building(move_id), place_pos.x, place_pos.z, place_rot)

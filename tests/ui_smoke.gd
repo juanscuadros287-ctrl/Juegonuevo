@@ -8,7 +8,7 @@ func _ready() -> void:
 	add_child(world)
 	await get_tree().process_frame
 	var hud: Hud = world.hud
-	for mode in ["player", "build", "companies", "finance", "stats"]:
+	for mode in ["player", "build", "companies", "finance", "stats", "government"]:
 		hud._show_dock(mode)
 		await get_tree().process_frame
 	BankSim.request_player_loan(GameState, 500.0, 12)

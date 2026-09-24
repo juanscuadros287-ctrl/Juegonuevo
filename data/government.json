@@ -1,0 +1,211 @@
+{
+ "_nota": "Gobiernos, leyes, misiones y proyectos públicos (Fase 5). Tasas: profit_tax sobre utilidad mensual de empresas con fines de lucro; property_tax anual sobre valor de propiedades (cobrado mensual); wage_tax sobre nómina; public_service_subsidy = fracción de salarios de servicios públicos que paga el gobierno.",
+ "initial_treasury": 4000,
+ "regimes": {
+  "1": {
+   "label": "Virreinato (Corona)",
+   "type": "decree",
+   "min_years": 15,
+   "max_years": 25
+  },
+  "2": {
+   "label": "República",
+   "type": "election",
+   "term_years": 4
+  },
+  "3": {
+   "label": "Democracia moderna",
+   "type": "election",
+   "term_years": 4
+  }
+ },
+ "governments": {
+  "virrey_austero": {
+   "label": "Virrey austero",
+   "min_era": 1,
+   "max_era": 1,
+   "profit_tax": 0.1,
+   "property_tax": 0.01,
+   "wage_tax": 0.0,
+   "public_service_subsidy": 0.3,
+   "min_wage": 0.0,
+   "import_tariff": 1.2,
+   "poor_relief": 0.0,
+   "env_fine": 0.0,
+   "social": 0.2,
+   "description": "Pocos impuestos y poco gasto público. Aranceles altos a lo importado."
+  },
+  "virrey_mercantil": {
+   "label": "Virrey mercantilista",
+   "min_era": 1,
+   "max_era": 1,
+   "profit_tax": 0.15,
+   "property_tax": 0.015,
+   "wage_tax": 0.02,
+   "public_service_subsidy": 0.5,
+   "min_wage": 0.0,
+   "import_tariff": 1.3,
+   "poor_relief": 0.1,
+   "env_fine": 0.0,
+   "social": 0.4,
+   "description": "Fomenta la producción local con aranceles y apoya los servicios públicos."
+  },
+  "virrey_reformista": {
+   "label": "Virrey reformista",
+   "min_era": 1,
+   "max_era": 1,
+   "profit_tax": 0.18,
+   "property_tax": 0.012,
+   "wage_tax": 0.03,
+   "public_service_subsidy": 0.7,
+   "min_wage": 1.5,
+   "import_tariff": 1.1,
+   "poor_relief": 0.3,
+   "env_fine": 0.0,
+   "social": 0.7,
+   "description": "Reformas ilustradas: salario mínimo, ayuda a los pobres y subsidios a escuelas y hospitales."
+  },
+  "liberal": {
+   "label": "Partido Liberal",
+   "min_era": 2,
+   "max_era": 3,
+   "profit_tax": 0.12,
+   "property_tax": 0.008,
+   "wage_tax": 0.02,
+   "public_service_subsidy": 0.4,
+   "min_wage": 0.0,
+   "import_tariff": 1.0,
+   "poor_relief": 0.1,
+   "env_fine": 0.5,
+   "social": 0.2,
+   "description": "Libre comercio, impuestos bajos, poco Estado."
+  },
+  "conservador": {
+   "label": "Partido Conservador",
+   "min_era": 2,
+   "max_era": 3,
+   "profit_tax": 0.18,
+   "property_tax": 0.012,
+   "wage_tax": 0.03,
+   "public_service_subsidy": 0.5,
+   "min_wage": 2.0,
+   "import_tariff": 1.25,
+   "poor_relief": 0.2,
+   "env_fine": 0.5,
+   "social": 0.4,
+   "description": "Proteccionismo, orden y seguridad."
+  },
+  "social": {
+   "label": "Partido Social",
+   "min_era": 2,
+   "max_era": 3,
+   "profit_tax": 0.28,
+   "property_tax": 0.015,
+   "wage_tax": 0.06,
+   "public_service_subsidy": 0.85,
+   "min_wage": 3.0,
+   "import_tariff": 1.1,
+   "poor_relief": 0.6,
+   "env_fine": 2.0,
+   "social": 0.9,
+   "description": "Impuestos altos, salario mínimo alto, fuerte ayuda social y regulación ambiental."
+  },
+  "verde": {
+   "label": "Partido Verde",
+   "min_era": 3,
+   "max_era": 3,
+   "profit_tax": 0.22,
+   "property_tax": 0.012,
+   "wage_tax": 0.04,
+   "public_service_subsidy": 0.7,
+   "min_wage": 2.5,
+   "import_tariff": 1.05,
+   "poor_relief": 0.4,
+   "env_fine": 6.0,
+   "social": 0.7,
+   "description": "Multas altas por contaminación y apoyo a servicios públicos."
+  }
+ },
+ "election": {
+  "donation_per_vote": 40,
+  "campaign_note": "Puedes financiar campañas: cada aporte suma apoyo al candidato."
+ },
+ "missions": [
+  {
+   "id": "empleo",
+   "label": "Da empleo formal a {n} personas",
+   "type": "jobs",
+   "reward_money": 500,
+   "reward_exemption_months": 6,
+   "months": 24
+  },
+  {
+   "id": "crimen",
+   "label": "Reduce el crimen del pueblo a {n} o menos",
+   "type": "crime",
+   "reward_money": 600,
+   "reward_exemption_months": 0,
+   "months": 24
+  },
+  {
+   "id": "hospital",
+   "label": "Construye y abre un hospital",
+   "type": "service",
+   "service": "salud",
+   "reward_money": 800,
+   "reward_exemption_months": 6,
+   "months": 36
+  },
+  {
+   "id": "escuela",
+   "label": "Construye y abre una escuela",
+   "type": "service",
+   "service": "escuela",
+   "reward_money": 500,
+   "reward_exemption_months": 3,
+   "months": 36
+  },
+  {
+   "id": "policia",
+   "label": "Construye un puesto de guardia",
+   "type": "service",
+   "service": "policia",
+   "reward_money": 500,
+   "reward_exemption_months": 3,
+   "months": 24
+  },
+  {
+   "id": "sin_hogar",
+   "label": "Que ninguna familia quede sin hogar",
+   "type": "homeless",
+   "reward_money": 400,
+   "reward_exemption_months": 3,
+   "months": 24
+  },
+  {
+   "id": "alumnos",
+   "label": "Que {n} niños y jóvenes estudien",
+   "type": "students",
+   "reward_money": 500,
+   "reward_exemption_months": 0,
+   "months": 36
+  },
+  {
+   "id": "contaminacion",
+   "label": "Reduce la contaminación a {n} o menos",
+   "type": "pollution",
+   "reward_money": 700,
+   "reward_exemption_months": 6,
+   "months": 24
+  }
+ ],
+ "tenders": {
+  "yearly_chance": 0.6,
+  "competitors": 2,
+  "competitor_range": [
+   0.85,
+   1.2
+  ],
+  "upfront_cost_ratio": 0.6
+ }
+}

@@ -5,7 +5,7 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 
 > El nombre del juego se cambia en `data/game.json` y `project.godot`.
 
-## Estado: Fase 4 de 7
+## Estado: Fase 5 de 7
 
 | Fase | Contenido | Estado |
 |---|---|---|
@@ -13,9 +13,17 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 | 2 | Construcción, negocios, tu personaje y vivienda | ✅ |
 | 3 | Economía, precios y banca | ✅ |
 | 4 | Árbol de investigación y épocas | ✅ |
-| 5 | Gobierno, impuestos, servicios públicos y proyectos | ⏳ |
+| 5 | Gobierno, impuestos, servicios públicos y proyectos | ✅ |
 | 6 | Transporte y otros pueblos | ⏳ |
 | 7 | Turismo, publicidad, industria avanzada y herederos | ⏳ |
+
+### Fase 5 incluye
+- **Gobierno** (botón *Gobierno*): en la colonia, virreyes por decreto que cambian cada 15–25 años; desde la república, **elecciones** cada 4 años donde votan los ciudadanos (pobres y ricos prefieren políticas distintas) y puedes **financiar campañas**. Cada gobierno trae sus políticas.
+- **Impuestos**: ganancias (fundaciones exentas), propiedad y nómina; **salario mínimo**, **aranceles** a lo importado, **ayuda a los pobres**, **multas ambientales**. Todo va al **tesoro público**.
+- **Misiones del gobierno** según las necesidades del pueblo (empleos, crimen, hospital, escuela, sin hogar, alumnos, contaminación) con recompensas en dinero y meses sin impuesto de renta.
+- **Licitaciones de obras públicas** (plaza, iglesia, acueducto, puente, hospital de caridad): ofertas contra competidores (tu reputación ayuda), construyes y el gobierno paga el contrato; la obra da beneficios al pueblo.
+- **Servicios públicos** por investigación, gestionados como negocios subsidiados (no cuentan para el límite de negocios): policía, bomberos, hospitales (exigen médicos; puedes cobrar la consulta) y cárceles (contrato del gobierno por preso y día).
+- **Problemas y eventos**: crimen según pobreza, desempleo e infelicidad (robos a tus negocios y a ciudadanos, arrestos, presos); incendios (peores en chozas de paja y en verano); contaminación de la industria; epidemias, sequías, buenas cosechas, crisis económicas, auges comerciales, temporadas de incendios.
 
 ### Fase 4 incluye
 - **Árbol de investigación visual** (botón *Investigación*): 3 épocas (Colonial → Revolución industrial → Moderna) y 10 ramas (agricultura, construcción, energía, transporte, medicina, industria, seguridad, comunicación, finanzas, educación). Proyecto actual, cola con prerrequisitos automáticos y tiempo estimado.
@@ -84,7 +92,7 @@ scripts/world    Terreno, cámara, agentes 3D, clima visual
 scripts/ui       HUD y menú principal
 tests/           Pruebas headless y diagnóstico de balance
 ```
-Para agregar contenido basta con editar los JSON de `data/` — `businesses.json` (negocios y niveles), `buildings.json` (viviendas, calidades, oficina), `interiors.json` (muebles por época y calidad), `goods.json`, `legal_types.json`, `economy.json` (inflación, precios, banca, quiebras), `technologies.json` y `eras.json` (árbol de investigación), `technologies.json`. Los modelos 3D de cada nivel también están en JSON.
+Para agregar contenido basta con editar los JSON de `data/` — `businesses.json` (negocios y niveles), `buildings.json` (viviendas, calidades, oficina), `interiors.json` (muebles por época y calidad), `goods.json`, `legal_types.json`, `economy.json` (inflación, precios, banca, quiebras), `technologies.json` y `eras.json` (árbol de investigación), `professions.json`, `government.json` (gobiernos, leyes, misiones, licitaciones) y `events.json` (crimen, incendios, contaminación, eventos), `technologies.json`. Los modelos 3D de cada nivel también están en JSON.
 
 ## Pruebas
 ```

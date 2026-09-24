@@ -20,6 +20,8 @@ var interiors: Dictionary = {}
 var economy: Dictionary = {}
 var eras: Dictionary = {}
 var professions: Dictionary = {}
+var government: Dictionary = {}
+var events: Dictionary = {}
 
 
 func _ready() -> void:
@@ -43,6 +45,8 @@ func load_all() -> void:
 	economy = _load("economy.json")
 	eras = _load("eras.json")
 	professions = _load("professions.json")
+	government = _load("government.json")
+	events = _load("events.json")
 
 
 func _load(file_name: String) -> Dictionary:
@@ -111,7 +115,7 @@ func max_level(type_id: String) -> int:
 
 ## Todos los tipos construibles ordenados: viviendas, oficina y luego negocios.
 func buildable_ids() -> Array:
-	var out := sorted_ids(buildings)
+	var out := sorted_ids(buildings).filter(func(id): return str(buildings[id].get("category", "")) != "publico")
 	out.append_array(sorted_ids(businesses))
 	return out
 

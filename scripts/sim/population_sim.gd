@@ -145,7 +145,7 @@ static func annual_mortality(age: int) -> float:
 
 
 static func daily_death_probability(age: int, health: float, sick: bool) -> float:
-	var p := annual_mortality(age) / 365.0 * TechSim.mult(GameState, "mortality")
+	var p := annual_mortality(age) / 365.0 * TechSim.world_mult(GameState, "mortality") * (1.0 - 0.35 * EventsSim.coverage(GameState, "salud"))
 	p *= 1.0 + (100.0 - health) / 40.0
 	if sick:
 		p *= float(GameData.citizens.get("disease", {}).get("death_mult_when_sick", 4.0))
@@ -169,7 +169,11 @@ static func daily(gs) -> void:
 			continue
 		var c: Citizen = gs.citizens[id]
 		var age := c.age_years(today)
-		_economy(gs, c, age, adult_age, season, wdata, diff)
+		if c.prison_until >= 0:
+			c.needs_met = 0.7
+			c.happiness = maxf(5.0, c.happiness - 0.1)
+		else:
+			_economy(gs, c, age, adult_age, season, wdata, diff)
 		_health(gs, c, age, season, wdata, diff)
 		if c.health <= 0.0 or gs.rng.randf() < daily_death_probability(age, c.health, c.sick):
 			die(gs, c, "enfermedad" if c.sick else ("vejez" if age >= 60 else "causas naturales"))
@@ -333,11 +337,15 @@ static func _health(gs, c: Citizen, age: int, season: Dictionary, wdata: Diction
 	var dcfg: Dictionary = GameData.citizens.get("disease", {})
 	if c.sick:
 		var dmg: Array = dcfg.get("daily_damage", [1.5, 5.0])
-		c.health -= gs.rng.randf_range(float(dmg[0]), float(dmg[1]))
-		if gs.rng.randf() < float(dcfg.get("daily_recover_chance", 0.1)):
+		var hcov := EventsSim.coverage(gs, "salud")
+		var treated: bool = hcov > 0.0 and gs.rng.randf() < hcov
+		c.health -= gs.rng.randf_range(float(dmg[0]), float(dmg[1])) * (0.5 if treated else 1.0)
+		if treated:
+			_pay_hospital(gs, c)
+		if gs.rng.randf() < float(dcfg.get("daily_recover_chance", 0.1)) * (2.5 if treated else 1.0):
 			c.sick = false
 	else:
-		var chance := float(dcfg.get("daily_chance", 0.0012)) * float(diff.get("disease_mult", 1.0)) * TechSim.mult(gs, "disease")
+		var chance := float(dcfg.get("daily_chance", 0.0012)) * float(diff.get("disease_mult", 1.0)) * TechSim.world_mult(gs, "disease")
 		chance *= float(season.get("disease", 1.0)) * float(wdata.get("disease", 1.0))
 		if age <= 5 or age >= 60:
 			chance *= float(dcfg.get("vulnerable_mult", 2.0))
@@ -351,6 +359,16 @@ static func _health(gs, c: Citizen, age: int, season: Dictionary, wdata: Diction
 			var max_health := 100.0 - maxf(0.0, age - 50) * 0.8
 			c.health = minf(max_health, c.health + float(GameData.citizens.get("health_regen_per_day", 0.6)))
 	c.health = clampf(c.health, 0.0, 100.0)
+
+
+## Consulta médica: el paciente paga la tarifa del hospital (si la hay).
+static func _pay_hospital(gs, c: Citizen) -> void:
+	for b in gs.buildings:
+		if gs.owned_by_player(b) and b["status"] == "activo" and str(gs.building_def(b).get("service", "")) == "salud":
+			var fee := float(b.get("fee", 0.0))
+			if fee > 0.0 and pay_with(gs, [c], fee):
+				BusinessSim.earn(gs, b, fee, "ventas")
+			return
 
 
 static func _happiness(gs, c: Citizen, occupancy: Dictionary, wdata: Dictionary) -> void:
@@ -522,7 +540,7 @@ static func _emigration(gs, today: int) -> void:
 	var adult_age := int(cfg.get("adult_age", 16))
 	var leavers := []
 	for c in gs.citizens.values():
-		if c.age_years(today) >= adult_age and c.happiness < threshold and gs.rng.randf() < chance and not _in_player_family(gs, c):
+		if c.age_years(today) >= adult_age and c.happiness < threshold and gs.rng.randf() < chance and not _in_player_family(gs, c) and c.prison_until < 0:
 			leavers.append(c)
 	for c in leavers:
 		if not gs.citizens.has(c.id):

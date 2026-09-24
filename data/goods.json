@@ -84,5 +84,13 @@
   "storable": false,
   "internal": true,
   "order": 9
+ },
+ "servicio": {
+  "label": "Servicio público",
+  "base_price": 0,
+  "import_price": 0,
+  "storable": false,
+  "internal": true,
+  "order": 10
  }
 }

@@ -66,6 +66,8 @@ func rebuild() -> void:
 			_add_tab("Laboratorio", _lab_tab(b))
 		if str(def.get("product", "")) == "educacion":
 			_add_tab("Alumnos", _school_tab(b))
+		if str(def.get("service", "")) != "":
+			_add_tab("Servicio", _service_tab(b))
 	if cat == "vivienda":
 		_add_tab("Vivienda", _home_tab(b, mine))
 	if mine:
@@ -501,6 +503,43 @@ func _school_tab(b: Dictionary) -> Control:
 	row.add_child(UIKit.spin(0, 1000, 0.5, float(b.get("fee", 0.0)), func(val): _b()["fee"] = val))
 	v.add_child(row)
 	var note := UIKit.label("Sin pensión la escuela solo genera gastos, pero forma empleados calificados para laboratorios y negocios. Con pensión alta, las familias pobres no matriculan a sus hijos. La matrícula se hace cada mes.", 12, UIKit.TEXT_DIM)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size.x = 380
+	v.add_child(note)
+	return v
+
+
+
+func _service_tab(b: Dictionary) -> Control:
+	var v := VBoxContainer.new()
+	var def: Dictionary = GameState.building_def(b)
+	var service := str(def.get("service", ""))
+	var staff := 0
+	for c in GameState.employees_of(bid):
+		if c.job_kind == "empleo":
+			staff += 1
+	var cap := staff * float(GameState.level_def(b).get("prod_per_worker", 1.0))
+	var cov := EventsSim.coverage(GameState, service)
+	var unit: String = {"policia": "habitantes protegidos", "bomberos": "edificios protegidos", "salud": "camas", "carcel": "presos"}.get(service, "")
+	var t := "Capacidad: %d %s (%d empleados)\n" % [int(cap), unit, staff]
+	if service != "carcel":
+		t += "Cobertura del pueblo: %s\n" % Fmt.pct(cov * 100.0)
+	else:
+		var n := GameState.citizens.values().filter(func(c): return c.prison_id == bid and c.prison_until >= 0).size()
+		t += "Presos: %d · Contrato del gobierno: %s por preso y día\n" % [n, Fmt.money2(float(GameState.level_def(b).get("contract_per_prisoner", 1.0)) * GameState.price_level())]
+	t += "El gobierno subsidia el %s de los salarios de este servicio." % Fmt.pct(float(GovSim.policy(GameState).get("public_service_subsidy", 0.0)) * 100.0)
+	var rl := UIKit.rich()
+	rl.text = t
+	v.add_child(rl)
+	if service == "salud":
+		var row := HBoxContainer.new()
+		row.add_child(UIKit.label("Tarifa por día de atención:"))
+		row.add_child(UIKit.spin(0, 100, 0.1, float(b.get("fee", 0.0)), func(val): _b()["fee"] = val))
+		v.add_child(row)
+	var note := UIKit.label({"policia": "Reduce el crimen y aumenta los arrestos. Sin cárcel con cupo, los arrestados quedan libres.",
+		"bomberos": "Reduce la probabilidad de que un incendio cause daños graves o destruya casas.",
+		"salud": "Los enfermos atendidos se recuperan más rápido y mueren menos. Si cobras, pagan quienes pueden.",
+		"carcel": "Los presos no trabajan ni delinquen. El gobierno paga por cada día de cada preso."}.get(service, ""), 12, UIKit.TEXT_DIM)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.custom_minimum_size.x = 380
 	v.add_child(note)

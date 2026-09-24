@@ -1,0 +1,118 @@
+{
+ "_nota": "Problemas y eventos aleatorios. chance_monthly se multiplica por event_freq_mult de la dificultad. effects: farming, disease, discretionary, import, fire (multiplicadores mientras dura).",
+ "crime": {
+  "poverty_weight": 60,
+  "unemployment_weight": 20,
+  "unhappy_weight": 40,
+  "police_reduction": 0.7,
+  "incidents_per_100": 5,
+  "arrest_base": 0.2,
+  "arrest_security": 0.7,
+  "prison_days": [
+   60,
+   300
+  ]
+ },
+ "fire": {
+  "base_monthly": 0.004,
+  "summer_mult": 1.6,
+  "thatch_mult": 1.5,
+  "coverage_reduction": 0.8,
+  "damage_ratio": [
+   0.1,
+   0.3
+  ],
+  "destroy_chance_uncovered": 0.25
+ },
+ "pollution": {
+  "disease_per_point": 0.004,
+  "happiness_per_point": 0.08,
+  "normalizer": 0.3
+ },
+ "events": {
+  "epidemia": {
+   "label": "Epidemia",
+   "chance_monthly": 0.012,
+   "months": [
+    2,
+    4
+   ],
+   "effects": {
+    "disease": 3.0
+   },
+   "text": "¡Epidemia en el pueblo! Las enfermedades se multiplican. Los hospitales reducen su efecto."
+  },
+  "sequia": {
+   "label": "Sequía",
+   "chance_monthly": 0.015,
+   "months": [
+    2,
+    4
+   ],
+   "seasons": [
+    "verano",
+    "primavera"
+   ],
+   "effects": {
+    "farming": 0.5
+   },
+   "text": "Sequía: las cosechas caen a la mitad."
+  },
+  "buena_cosecha": {
+   "label": "Buena cosecha",
+   "chance_monthly": 0.02,
+   "months": [
+    2,
+    3
+   ],
+   "seasons": [
+    "verano",
+    "otono"
+   ],
+   "effects": {
+    "farming": 1.35
+   },
+   "text": "Buena cosecha: los campos rinden más."
+  },
+  "crisis": {
+   "label": "Crisis económica",
+   "chance_monthly": 0.008,
+   "months": [
+    4,
+    10
+   ],
+   "effects": {
+    "discretionary": 0.3,
+    "import": 1.3
+   },
+   "text": "Crisis económica: la gente gasta menos y lo importado se encarece."
+  },
+  "auge": {
+   "label": "Auge comercial",
+   "chance_monthly": 0.01,
+   "months": [
+    3,
+    8
+   ],
+   "effects": {
+    "discretionary": 2.0
+   },
+   "text": "Auge comercial: la gente gasta más en tus negocios."
+  },
+  "ola_incendios": {
+   "label": "Temporada de incendios",
+   "chance_monthly": 0.008,
+   "months": [
+    1,
+    2
+   ],
+   "seasons": [
+    "verano"
+   ],
+   "effects": {
+    "fire": 3.0
+   },
+   "text": "Temporada seca: alto riesgo de incendios."
+  }
+ }
+}

@@ -3,7 +3,7 @@ extends Node
 ## La lógica vive en scripts/sim/ (PopulationSim, WeatherSim, BusinessSim,
 ## ConstructionSim, MarketSim, PlayerSim).
 
-const SAVE_VERSION := 4
+const SAVE_VERSION := 5
 const MAP_SIZE := 400.0
 const ZONE_GRID := 5
 const START_ZONE := [2, 2]
@@ -23,6 +23,8 @@ var player_id: int = -1
 var player: Dictionary = {}
 var techs: Array = []                  # tecnologías investigadas (Fase 4)
 var research: Dictionary = {}          # época, proyecto actual, progreso, cola, modificadores
+var government: Dictionary = {}        # régimen, políticas, tesoro, misiones, licitaciones
+var problems: Dictionary = {}          # crimen, contaminación, cobertura de servicios, eventos
 var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
@@ -86,9 +88,11 @@ func new_game(opts: Dictionary) -> void:
 	unlocked_zones = [START_ZONE.duplicate()]
 	EconomySim.init_state(self)
 	TechSim.init_state(self)
+	EventsSim.init_state(self)
 	WeatherSim.init_weather(self)
 	PopulationSim.generate_initial(self, int(diff().get("start_citizens", 30)))
 	PlayerSim.create_player(self)
+	GovSim.init_state(self)
 	running = true
 	notify("Bienvenido a %s, %s. Eres el único empresario del pueblo." % [settings["town_name"], player_name()], "info")
 
@@ -106,6 +110,8 @@ func _clear() -> void:
 	player = {}
 	techs = []
 	research = {}
+	government = {}
+	problems = {}
 	economy = {}
 	loans = []
 	next_loan_id = 1
@@ -126,6 +132,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	if not running:
 		return
 	WeatherSim.daily(self)
+	EventsSim.daily(self)
 	BusinessSim.produce(self)
 	ConstructionSim.daily(self)
 	MarketSim.begin_day(self)
@@ -138,6 +145,8 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		BankSim.monthly(self)
 		EducationSim.monthly(self)
 		BusinessSim.monthly(self)
+		GovSim.monthly(self)
+		EventsSim.monthly(self)
 		EconomySim.monthly(self)
 		PlayerSim.monthly(self)
 		_record_month()
@@ -162,6 +171,10 @@ func _record_month() -> void:
 		"unemployment": EconomySim.unemployment(self),
 		"interest_paid": float(month_counters.get("interest_paid", 0.0)),
 		"interest_earned": float(month_counters.get("interest_earned", 0.0)),
+		"taxes_paid": float(month_counters.get("taxes_paid", 0.0)),
+		"subsidies": float(month_counters.get("subsidies", 0.0)),
+		"crime": float(problems.get("crime", 0.0)),
+		"pollution": float(problems.get("pollution", 0.0)),
 	})
 	if history.size() > MAX_HISTORY:
 		history.pop_front()
@@ -390,6 +403,8 @@ func to_dict() -> Dictionary:
 		"player": player,
 		"techs": techs,
 		"research": research,
+		"government": government,
+		"problems": problems,
 		"economy": economy,
 		"loans": loans,
 		"next_loan_id": next_loan_id,
@@ -450,6 +465,12 @@ func load_dict(d: Dictionary) -> void:
 	if research.is_empty():
 		TechSim.init_state(self)
 	research["era"] = int(research.get("era", 1))
+	problems = d.get("problems", {})
+	if problems.is_empty():
+		EventsSim.init_state(self)
+	government = d.get("government", {})
+	if government.is_empty():
+		GovSim.init_state(self)
 	TechSim._recompute_mods(self)
 	if player_id < 0:
 		# Partida de la Fase 1: el jugador aún no era un ciudadano.

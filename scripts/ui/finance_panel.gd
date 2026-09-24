@@ -43,7 +43,7 @@ func refresh() -> void:
 	s += "[b]Mes anterior[/b]\n"
 	s += "Ingresos: %s · Gastos: %s\n" % [Fmt.money(float(last.get("income", 0))), Fmt.money(float(last.get("expenses", 0)))]
 	s += "Intereses pagados: %s · cobrados: %s\n" % [Fmt.money(float(last.get("interest_paid", 0))), Fmt.money(float(last.get("interest_earned", 0)))]
-	s += "Impuestos pagados: %s · Subsidios: %s [color=#999](Fase 5)[/color]\n\n" % [Fmt.money(0), Fmt.money(0)]
+	s += "Impuestos pagados: %s · Subsidios y pagos del gobierno: %s\n\n" % [Fmt.money(float(last.get("taxes_paid", 0))), Fmt.money(float(last.get("subsidies", 0)))]
 	s += "[b]Economía del pueblo[/b]\n"
 	s += "Nivel de precios: %.2f · Inflación anual: %s\n" % [gs.price_level(), _pct(EconomySim.annual_inflation(gs))]
 	s += "Desempleo: %s · Dinero en circulación: %s\n" % [Fmt.pct(EconomySim.unemployment(gs) * 100.0), Fmt.money(EconomySim.total_money(gs))]

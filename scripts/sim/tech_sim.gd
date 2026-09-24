@@ -142,7 +142,15 @@ static func mult(gs, type: String, key := "") -> float:
 
 
 static func happiness_bonus(gs) -> float:
-	return float(gs.research.get("mods", {}).get("happiness", 0.0))
+	return float(gs.research.get("mods", {}).get("happiness", 0.0)) + GovSim.project_happiness(gs) + EventsSim.pollution_happiness(gs)
+
+
+## Multiplicador combinado de tecnología, obras públicas, eventos y contaminación.
+static func world_mult(gs, key: String) -> float:
+	var m := mult(gs, key) * GovSim.project_mult(gs, key) * EventsSim.mult(gs, key)
+	if key == "disease":
+		m *= EventsSim.pollution_disease_mult(gs)
+	return m
 
 
 ## Qué desbloquea una tecnología (niveles de edificios y objetos de las casas).

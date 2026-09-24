@@ -3,8 +3,8 @@ extends RefCounted
 ## Negocios del jugador: producción, salarios, mantenimiento, contabilidad,
 ## contratación manual y renuncias. Parámetros en data/businesses.json.
 
-const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "salarios", "mantenimiento", "insumos", "incobrables", "obras"]
-const INCOME_KEYS := ["ventas", "alquileres", "intereses"]
+const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "subsidios", "salarios", "mantenimiento", "insumos", "impuestos", "multas", "reparaciones", "robos", "incobrables", "obras"]
+const INCOME_KEYS := ["ventas", "alquileres", "intereses", "subsidios"]
 ## Movimientos que no son ingreso ni gasto (inversión y capital prestado).
 const NON_PNL_KEYS := ["obras", "prestado"]
 
@@ -15,10 +15,11 @@ static func is_business(b: Dictionary) -> bool:
 	return str(GameData.building_def(str(b.get("type", ""))).get("category", "")) == "negocio"
 
 
+## Negocios que cuentan para el límite de la oficina (los servicios públicos no cuentan).
 static func business_count(gs) -> int:
 	var n := 0
 	for b in gs.buildings:
-		if gs.owned_by_player(b) and is_business(b):
+		if gs.owned_by_player(b) and is_business(b) and not gs.building_def(b).has("service"):
 			n += 1
 	return n
 
@@ -84,7 +85,7 @@ static func expected_output(gs, b: Dictionary) -> float:
 			total += productivity(c, str(def.get("skill", "")))
 	total *= float(ld.get("prod_per_worker", 1.0))
 	if def.get("seasonal", false):
-		total *= float(WeatherSim.season_data(gs).get("farming", 1.0)) * float(WeatherSim.weather_data(gs).get("farming", 1.0))
+		total *= float(WeatherSim.season_data(gs).get("farming", 1.0)) * float(WeatherSim.weather_data(gs).get("farming", 1.0)) * EventsSim.mult(gs, "farming")
 	total *= float(def.get("resource_bonus", {}).get(str(gs.settings.get("map_type", "")), 1.0))
 	total *= TechSim.mult(gs, "production", str(def.get("product", "")))
 	return total
@@ -169,7 +170,7 @@ static func produce(gs) -> void:
 		if b["status"] != "activo":
 			continue  # En mejora: no produce ni factura.
 		var product := str(def.get("product", ""))
-		if product == "credito" or product == "educacion":
+		if product == "credito" or product == "educacion" or product == "servicio":
 			continue
 		if product == "investigacion":
 			TechSim.add_points(gs, TechSim.lab_output(gs, b) / TechSim.mult(gs, "research"))
@@ -270,6 +271,8 @@ static func hire(gs, b: Dictionary, c: Citizen, wage: float) -> String:
 	var min_edu := int(gs.level_def(b).get("min_education", 0))
 	if c.education < min_edu:
 		return "%s no está calificado(a): se requiere educación %s." % [c.full_name(), GameData.education_label(min_edu)]
+	if wage < GovSim.min_wage(gs):
+		return "El salario mínimo legal es %s/día." % Fmt.money2(GovSim.min_wage(gs))
 	var prof := str(gs.level_def(b).get("required_profession", ""))
 	if prof != "" and c.profession != prof:
 		return "%s no es %s: este nivel exige ese título universitario." % [c.full_name(), GameData.profession_label(prof).to_lower()]

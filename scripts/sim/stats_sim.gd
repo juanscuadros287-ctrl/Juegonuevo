@@ -186,6 +186,15 @@ static func advice(gs) -> Array:
 		if n > int(h["vacant"].get(tier, 0)) + 1:
 			out.append("%d familias pueden pagar vivienda de calidad %s." % [n, Housing.tier_label(tier)])
 			break
+	var crime := float(gs.problems.get("crime", 0.0))
+	if crime > 25.0:
+		out.append("Crimen alto (%d/100): da empleo, sube la felicidad o construye policía y cárcel." % int(crime))
+	if float(gs.problems.get("pollution", 0.0)) > 30.0:
+		out.append("Contaminación alta: afecta la salud y la felicidad (y puede traer multas).")
+	if gs.problems.get("coverage", {}).get("salud", 0.0) < 0.3 and gs.citizens.values().filter(func(c): return c.sick).size() > 2:
+		out.append("Hay varios enfermos sin atención médica: un hospital reduce muertes.")
+	if not gs.government.get("missions_available", []).is_empty():
+		out.append("El gobierno tiene misiones disponibles con recompensa (ver «Gobierno»).")
 	if out.is_empty():
 		out.append("Sin alertas. Los datos se actualizan al cerrar cada mes.")
 	return out

@@ -35,6 +35,7 @@ var player_panel: PlayerPanel
 var finance_panel: FinancePanel
 var stats_panel: StatsPanel
 var research_screen: ResearchScreen
+var government_panel: GovernmentPanel
 var era_lbl: Label
 
 # Interior
@@ -238,11 +239,7 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Menú (Esc)", _open_pause, 160))
 	box.add_child(HSeparator.new())
 	box.add_child(UIKit.button("Investigación", _open_research, 160))
-	for entry in [["Gobierno", 5]]:
-		var b := UIKit.button(entry[0], func(): pass, 160)
-		b.disabled = true
-		b.tooltip_text = "Disponible en la Fase %d" % entry[1]
-		box.add_child(b)
+	box.add_child(UIKit.button("Gobierno", func(): _show_dock("government"), 160))
 
 
 # --- Notificaciones -----------------------------------------------------------------
@@ -338,6 +335,12 @@ func _build_dock() -> void:
 	stack.add_child(stats_panel)
 	stats_panel.setup()
 	stats_panel.closed.connect(close_dock)
+	government_panel = GovernmentPanel.new()
+	government_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	stack.add_child(government_panel)
+	government_panel.setup(self)
+	government_panel.closed.connect(close_dock)
+	government_panel.message.connect(toast)
 
 
 func _show_dock(mode: String) -> void:
@@ -353,7 +356,10 @@ func _show_dock(mode: String) -> void:
 	player_panel.visible = mode == "player"
 	finance_panel.visible = mode == "finance"
 	stats_panel.visible = mode == "stats"
+	government_panel.visible = mode == "government"
 	match mode:
+		"government":
+			government_panel.refresh()
 		"stats":
 			stats_panel.refresh()
 		"finance":
@@ -408,6 +414,8 @@ func _citizen_text(c: Citizen) -> String:
 	s += "Felicidad: %s · Necesidades: %s\n" % [bar(c.happiness), bar(c.needs_met * 100.0)]
 	s += "Dinero: %s   Deudas: %s\n" % [Fmt.money(GameState.money if me else c.money), Fmt.money(EconomySim.player_debt(GameState) if me else c.debt)]
 	s += "Trabajo: %s\n" % ("Empresario(a)" if me else BusinessSim.job_label(GameState, c))
+	if c.prison_until >= 0:
+		s += "[color=#e88]En la cárcel hasta el %s[/color]\n" % TimeManager.date_from_day(c.prison_until, TimeManager.start_year())
 	if c.school_id >= 0:
 		s += "Estudia en: %s (%.1f años cursados)%s\n" % [GameState.building_label(GameState.get_building(c.school_id)), c.school_years + c.uni_years, " · carrera: " + GameData.career_label(c.career) if c.career != "" else ""]
 	s += "Educación: %s%s · Experiencia: %.1f años\n\n" % [GameData.education_label(c.education), " · [b]%s[/b]" % GameData.profession_label(c.profession) if c.profession != "" else "", c.experience]

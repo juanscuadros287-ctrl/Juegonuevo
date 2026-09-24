@@ -31,6 +31,8 @@ var school_level: int = 0           # nivel máximo de escuela cursado (1 escuel
 var uni_years: float = 0.0
 var profession: String = ""         # profesión universitaria (cientifico, medico…)
 var career: String = ""             # carrera que estudia
+var prison_until: int = -1          # día en que sale de la cárcel (-1 = libre)
+var prison_id: int = -1
 var visual_seed: int = 0
 
 
@@ -67,7 +69,7 @@ func to_dict() -> Dictionary:
 		"parent_ids": parent_ids, "children_ids": children_ids,
 		"last_birth_day": last_birth_day, "needs_met": needs_met, "visual_seed": visual_seed,
 		"school_id": school_id, "school_years": school_years, "school_level": school_level, "uni_years": uni_years,
-		"profession": profession, "career": career,
+		"profession": profession, "career": career, "prison_until": prison_until, "prison_id": prison_id,
 	}
 
 
@@ -109,4 +111,6 @@ static func from_dict(d: Dictionary) -> Citizen:
 	c.uni_years = float(d.get("uni_years", 0.0))
 	c.profession = str(d.get("profession", ""))
 	c.career = str(d.get("career", ""))
+	c.prison_until = int(d.get("prison_until", -1))
+	c.prison_id = int(d.get("prison_id", -1))
 	return c

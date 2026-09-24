@@ -299,7 +299,8 @@
        0.72
       ]
      }
-    ]
+    ],
+    "pollution": 1
    }
   ]
  },
@@ -703,7 +704,8 @@
        0.2
       ]
      }
-    ]
+    ],
+    "pollution": 3
    }
   ]
  },
@@ -897,7 +899,8 @@
        0.2
       ]
      }
-    ]
+    ],
+    "pollution": 1
    }
   ]
  },
@@ -984,7 +987,8 @@
        0.64
       ]
      }
-    ]
+    ],
+    "pollution": 1
    },
    {
     "label": "Cantera con pólvora",
@@ -1038,7 +1042,8 @@
        0.64
       ]
      }
-    ]
+    ],
+    "pollution": 2
    }
   ]
  },
@@ -1473,7 +1478,8 @@
        0.1
       ]
      }
-    ]
+    ],
+    "pollution": 2
    }
   ]
  },
@@ -3458,6 +3464,1128 @@
     "max_age": 24,
     "required_profession": "profesor",
     "min_student_education": 2
+   }
+  ]
+ },
+ "comisaria": {
+  "label": "Policía",
+  "category": "negocio",
+  "sector": "Servicio público",
+  "order": 20,
+  "product": "servicio",
+  "service": "policia",
+  "skill": "construccion",
+  "base_wage": 2.3,
+  "footprint": 4.5,
+  "description": "Reduce el crimen y arresta delincuentes. Cada agente cubre a unos habitantes. El gobierno subsidia parte de los salarios.",
+  "levels": [
+   {
+    "label": "Puesto de guardia",
+    "cost": 700,
+    "materials": {
+     "madera": 20,
+     "piedra": 30
+    },
+    "build_days": 15,
+    "workers": 3,
+    "jobs": 4,
+    "prod_per_worker": 30,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0,
+    "tech": "guardia_civil",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4,
+       2.6,
+       3.4
+      ],
+      "pos": [
+       0,
+       1.3,
+       0
+      ],
+      "c": [
+       0.9,
+       0.87,
+       0.8
+      ],
+      "rot": 0
+     },
+     {
+      "s": "prism",
+      "size": [
+       3.9,
+       1.4,
+       4.7
+      ],
+      "pos": [
+       0,
+       3.3,
+       0
+      ],
+      "c": [
+       0.66,
+       0.3,
+       0.2
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       1.6,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.8,
+       1.73
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       0.2,
+       2.2,
+       0.2
+      ],
+      "pos": [
+       2.4,
+       1.1,
+       1.8
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       0.6,
+       0.4,
+       0.05
+      ],
+      "pos": [
+       2.7,
+       2.0,
+       1.8
+      ],
+      "c": [
+       0.25,
+       0.35,
+       0.6
+      ],
+      "rot": 0
+     }
+    ]
+   },
+   {
+    "label": "Comisaría",
+    "cost": 3500,
+    "materials": {
+     "madera": 30,
+     "piedra": 120
+    },
+    "build_days": 40,
+    "workers": 6,
+    "jobs": 10,
+    "prod_per_worker": 45,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0,
+    "tech": "carceles",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       6,
+       6,
+       5
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.8,
+       0.8,
+       0.85
+      ],
+      "c2": [
+       0.25,
+       0.35,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       6.2,
+       0.3,
+       5.2
+      ],
+      "pos": [
+       0,
+       6.15,
+       0
+      ],
+      "c": [
+       0.3,
+       0.3,
+       0.4
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.4,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       2.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     }
+    ]
+   },
+   {
+    "label": "Policía moderna",
+    "cost": 12000,
+    "materials": {
+     "madera": 30,
+     "piedra": 300
+    },
+    "build_days": 80,
+    "workers": 10,
+    "jobs": 20,
+    "prod_per_worker": 70,
+    "quality": 1.0,
+    "upkeep": 3.0,
+    "unit_cost": 0,
+    "tech": "policia_moderna",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       8,
+       9,
+       7
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 3,
+      "c": [
+       0.85,
+       0.87,
+       0.9
+      ],
+      "c2": [
+       0.25,
+       0.35,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.2,
+       0.3,
+       7.2
+      ],
+      "pos": [
+       0,
+       9.15,
+       0
+      ],
+      "c": [
+       0.2,
+       0.25,
+       0.5
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.4,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       3.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     }
+    ]
+   }
+  ]
+ },
+ "bomberos": {
+  "label": "Bomberos",
+  "category": "negocio",
+  "sector": "Servicio público",
+  "order": 21,
+  "product": "servicio",
+  "service": "bomberos",
+  "skill": "construccion",
+  "base_wage": 2.2,
+  "footprint": 5.0,
+  "description": "Previene y apaga incendios. Cada bombero protege varios edificios.",
+  "levels": [
+   {
+    "label": "Brigada de baldes",
+    "cost": 400,
+    "materials": {
+     "madera": 25
+    },
+    "build_days": 10,
+    "workers": 2,
+    "jobs": 4,
+    "prod_per_worker": 6,
+    "quality": 1.0,
+    "upkeep": 0.2,
+    "unit_cost": 0,
+    "tech": "",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4.4,
+       2.6,
+       3.6
+      ],
+      "pos": [
+       0,
+       1.3,
+       0
+      ],
+      "c": [
+       0.6,
+       0.45,
+       0.3
+      ],
+      "rot": 0
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.1,
+       1.4,
+       5.1000000000000005
+      ],
+      "pos": [
+       0,
+       3.3,
+       0
+      ],
+      "c": [
+       0.4,
+       0.3,
+       0.2
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       1.6,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.8,
+       1.83
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.3,
+       0.5,
+       0.3
+      ],
+      "pos": [
+       1.8,
+       0.25,
+       2.2
+      ],
+      "c": [
+       0.5,
+       0.35,
+       0.2
+      ]
+     },
+     {
+      "s": "cyl",
+      "size": [
+       0.3,
+       0.5,
+       0.3
+      ],
+      "pos": [
+       2.4,
+       0.25,
+       2.2
+      ],
+      "c": [
+       0.5,
+       0.35,
+       0.2
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Estación de bomberos",
+    "cost": 3000,
+    "materials": {
+     "madera": 30,
+     "piedra": 100
+    },
+    "build_days": 35,
+    "workers": 5,
+    "jobs": 10,
+    "prod_per_worker": 12,
+    "quality": 1.0,
+    "upkeep": 1.0,
+    "unit_cost": 0,
+    "tech": "bomberos",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6,
+       4,
+       5
+      ],
+      "pos": [
+       0,
+       2.0,
+       0
+      ],
+      "c": [
+       0.66,
+       0.3,
+       0.22
+      ],
+      "rot": 0
+     },
+     {
+      "s": "prism",
+      "size": [
+       5.5,
+       1.4,
+       6.7
+      ],
+      "pos": [
+       0,
+       4.7,
+       0
+      ],
+      "c": [
+       0.35,
+       0.2,
+       0.16
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       1.6,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.8,
+       2.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       2.4,
+       3,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.5,
+       2.53
+      ],
+      "c": [
+       0.75,
+       0.18,
+       0.15
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       0.8,
+       6,
+       0.8
+      ],
+      "pos": [
+       2.4,
+       3,
+       -1.8
+      ],
+      "c": [
+       0.66,
+       0.3,
+       0.22
+      ],
+      "rot": 0
+     }
+    ]
+   },
+   {
+    "label": "Bomberos modernos",
+    "cost": 10000,
+    "materials": {
+     "madera": 30,
+     "piedra": 250
+    },
+    "build_days": 70,
+    "workers": 8,
+    "jobs": 20,
+    "prod_per_worker": 20,
+    "quality": 1.0,
+    "upkeep": 2.5,
+    "unit_cost": 0,
+    "tech": "electricidad",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       8,
+       8,
+       7
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.92,
+       0.92,
+       0.9
+      ],
+      "c2": [
+       0.75,
+       0.18,
+       0.15
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.2,
+       0.3,
+       7.2
+      ],
+      "pos": [
+       0,
+       8.15,
+       0
+      ],
+      "c": [
+       0.6,
+       0.1,
+       0.1
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.4,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       3.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     }
+    ]
+   }
+  ]
+ },
+ "hospital": {
+  "label": "Hospital",
+  "category": "negocio",
+  "sector": "Servicio público",
+  "order": 22,
+  "product": "servicio",
+  "service": "salud",
+  "skill": "medicina",
+  "base_wage": 2.6,
+  "footprint": 6.0,
+  "description": "Cura enfermos y reduce la mortalidad de la población cubierta (camas = personal × camas por trabajador). El hospital exige médicos titulados. Puedes cobrar la consulta.",
+  "levels": [
+   {
+    "label": "Botica y enfermería",
+    "cost": 800,
+    "materials": {
+     "madera": 25,
+     "piedra": 30
+    },
+    "build_days": 20,
+    "workers": 3,
+    "jobs": 3,
+    "prod_per_worker": 12,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0,
+    "tech": "herbolaria",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5,
+       2.8,
+       4
+      ],
+      "pos": [
+       0,
+       1.4,
+       0
+      ],
+      "c": [
+       0.9,
+       0.87,
+       0.8
+      ],
+      "rot": 0
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.5,
+       1.4,
+       5.7
+      ],
+      "pos": [
+       0,
+       3.5,
+       0
+      ],
+      "c": [
+       0.66,
+       0.3,
+       0.2
+      ],
+      "rot": 90
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       1.6,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.8,
+       2.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.2,
+       0.8,
+       0.08
+      ],
+      "pos": [
+       0,
+       2.2,
+       2.03
+      ],
+      "c": [
+       0.3,
+       0.55,
+       0.35
+      ],
+      "rot": 0
+     }
+    ],
+    "min_education": 1
+   },
+   {
+    "label": "Hospital",
+    "cost": 5000,
+    "materials": {
+     "madera": 30,
+     "piedra": 160
+    },
+    "build_days": 50,
+    "workers": 8,
+    "jobs": 10,
+    "prod_per_worker": 20,
+    "quality": 1.0,
+    "upkeep": 1.5,
+    "unit_cost": 0,
+    "tech": "vacunas",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       9,
+       6.4,
+       7
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.92,
+       0.92,
+       0.9
+      ],
+      "c2": [
+       0.3,
+       0.45,
+       0.55
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       9.2,
+       0.3,
+       7.2
+      ],
+      "pos": [
+       0,
+       6.550000000000001,
+       0
+      ],
+      "c": [
+       0.7,
+       0.7,
+       0.72
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.4,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       3.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     }
+    ],
+    "required_profession": "medico"
+   },
+   {
+    "label": "Hospital moderno",
+    "cost": 20000,
+    "materials": {
+     "madera": 40,
+     "piedra": 400
+    },
+    "build_days": 100,
+    "workers": 14,
+    "jobs": 25,
+    "prod_per_worker": 30,
+    "quality": 1.0,
+    "upkeep": 4.5,
+    "unit_cost": 0,
+    "tech": "medicina_moderna",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       11,
+       15,
+       9
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 5,
+      "c": [
+       0.92,
+       0.92,
+       0.9
+      ],
+      "c2": [
+       0.3,
+       0.55,
+       0.7
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       11.2,
+       0.3,
+       9.2
+      ],
+      "pos": [
+       0,
+       15.15,
+       0
+      ],
+      "c": [
+       0.8,
+       0.2,
+       0.2
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.4,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       4.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     }
+    ],
+    "required_profession": "medico"
+   }
+  ]
+ },
+ "carcel": {
+  "label": "Cárcel",
+  "category": "negocio",
+  "sector": "Servicio público",
+  "order": 23,
+  "product": "servicio",
+  "service": "carcel",
+  "skill": "construccion",
+  "base_wage": 2.3,
+  "footprint": 6.0,
+  "description": "Encierra a los delincuentes arrestados (capacidad = guardias × presos por guardia). El gobierno paga un contrato por preso y día. Si está llena, los arrestados quedan libres.",
+  "levels": [
+   {
+    "label": "Calabozo",
+    "cost": 600,
+    "materials": {
+     "madera": 10,
+     "piedra": 60
+    },
+    "build_days": 20,
+    "workers": 3,
+    "jobs": 3,
+    "prod_per_worker": 5,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0,
+    "tech": "guardia_civil",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5,
+       2.8,
+       4
+      ],
+      "pos": [
+       0,
+       1.4,
+       0
+      ],
+      "c": [
+       0.55,
+       0.55,
+       0.53
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       5.2,
+       0.3,
+       4.2
+      ],
+      "pos": [
+       0,
+       2.95,
+       0
+      ],
+      "c": [
+       0.4,
+       0.4,
+       0.4
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1,
+       1.6,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.8,
+       2.03
+      ],
+      "c": [
+       0.2,
+       0.2,
+       0.22
+      ],
+      "rot": 0
+     }
+    ],
+    "contract_per_prisoner": 1.2
+   },
+   {
+    "label": "Cárcel",
+    "cost": 4000,
+    "materials": {
+     "madera": 20,
+     "piedra": 200
+    },
+    "build_days": 50,
+    "workers": 6,
+    "jobs": 8,
+    "prod_per_worker": 8,
+    "quality": 1.0,
+    "upkeep": 1.2,
+    "unit_cost": 0,
+    "tech": "carceles",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       9,
+       4,
+       7
+      ],
+      "pos": [
+       0,
+       2,
+       0
+      ],
+      "c": [
+       0.55,
+       0.55,
+       0.53
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       0.6,
+       6,
+       0.6
+      ],
+      "pos": [
+       4.5,
+       3,
+       3.5
+      ],
+      "c": [
+       0.55,
+       0.55,
+       0.53
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       0.6,
+       6,
+       0.6
+      ],
+      "pos": [
+       -4.5,
+       3,
+       -3.5
+      ],
+      "c": [
+       0.55,
+       0.55,
+       0.53
+      ],
+      "rot": 0
+     }
+    ],
+    "contract_per_prisoner": 1.8
+   },
+   {
+    "label": "Penitenciaría moderna",
+    "cost": 14000,
+    "materials": {
+     "madera": 20,
+     "piedra": 450
+    },
+    "build_days": 90,
+    "workers": 10,
+    "jobs": 16,
+    "prod_per_worker": 12,
+    "quality": 1.0,
+    "upkeep": 3.5,
+    "unit_cost": 0,
+    "tech": "policia_moderna",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       12,
+       9.600000000000001,
+       10
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 3,
+      "c": [
+       0.7,
+       0.7,
+       0.72
+      ],
+      "c2": [
+       0.2,
+       0.2,
+       0.25
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       12.2,
+       0.3,
+       10.2
+      ],
+      "pos": [
+       0,
+       9.750000000000002,
+       0
+      ],
+      "c": [
+       0.4,
+       0.4,
+       0.42
+      ],
+      "rot": 0
+     },
+     {
+      "s": "box",
+      "size": [
+       1.4,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       5.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ],
+      "rot": 0
+     }
+    ],
+    "contract_per_prisoner": 2.5
    }
   ]
  }

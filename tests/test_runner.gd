@@ -32,6 +32,8 @@ func _ready() -> void:
 	_test_phase4_research()
 	_test_phase4_education()
 	_test_professions()
+	_test_phase5_government()
+	_test_phase5_problems()
 	print("== %s (%d fallos) ==" % ["TODO OK" if failures == 0 else "CON FALLOS", failures])
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -443,10 +445,10 @@ func _test_closed_economy() -> void:
 	var needs := StatsSim.needs_table(GameState)
 	var food: Dictionary = needs.filter(func(r): return r["need"] == "comida")[0]
 	check(food["partial"] > 0.5, "sin negocios la gente se autoabastece de comida (a medias)")
-	var t0 := float(GameState.economy.get("treasury", 0.0))
+	var t0 := float(GameState.government.get("treasury", 0.0))
 	GameState.money = 100000.0
 	ConstructionSim.unlock_zone(GameState, 1, 2)
-	check(float(GameState.economy.get("treasury", 0.0)) > t0, "el terreno se compra al gobierno (tesoro público)")
+	check(float(GameState.government.get("treasury", 0.0)) > t0, "el terreno se compra al gobierno (tesoro público)")
 	check(StatsSim.advice(GameState).size() > 0, "estadísticas generan recomendaciones")
 
 
@@ -570,3 +572,134 @@ func _test_professions() -> void:
 		if c.profession in ["cientifico", "medico"] and c.uni_years >= 3.0:
 			sci += 1
 	check(sci > 0, "la universidad forma científicos/médicos (%d de %d jóvenes)" % [sci, young])
+
+
+
+func _test_phase5_government() -> void:
+	GameState.new_game({"seed": 61, "difficulty": "facil"})
+	GameState.money = 60000.0
+	var g: Dictionary = GameState.government
+	check(GovSim.regime(GameState).get("type", "") == "decree" and str(g["gov_id"]).begins_with("virrey"), "época colonial: virrey por decreto")
+	g["gov_id"] = "virrey_mercantil"
+	var t0 := float(g["treasury"])
+	var farm := _build_now("granja", 30, -8)
+	_hire_n(farm, 4)
+	var shop := _build_now("tienda", -30, 8)
+	shop["legal"] = "sin_lucro"
+	TimeManager.advance_days(95)
+	check(float(g["taxes_last"].get("propiedad", 0.0)) > 0.0, "se cobra impuesto a la propiedad")
+	check(float(g["treasury"]) > t0 - 1.0, "los impuestos llegan al tesoro público")
+	# Salario mínimo
+	g["gov_id"] = "virrey_reformista"
+	var cand: Citizen = BusinessSim.candidates(GameState, shop)[0]
+	check(BusinessSim.hire(GameState, shop, cand, 0.5).contains("mínimo"), "salario mínimo legal")
+	# Subsidio a servicio público (brigada de bomberos)
+	var fire := {}
+	for pos in [Vector2(-12, -34), Vector2(0, -36), Vector2(34, 22), Vector2(-34, -20), Vector2(20, -32)]:
+		fire = _build_now("bomberos", pos.x, pos.y)
+		if not fire.is_empty():
+			break
+	_hire_n(fire, 2)
+	TimeManager.advance_days(62)
+	check(BusinessSim.period_value(fire, "total", "subsidios") > 0.0, "el gobierno subsidia los servicios públicos")
+	# Misión de empleo
+	var jobs_m := {}
+	for m in GovSim.cfg()["missions"]:
+		if m["id"] == "empleo":
+			jobs_m = m.duplicate()
+	jobs_m["target"] = float(StatsSim.employment(GameState)["employed"] + 1)
+	jobs_m["reward_money"] = 300.0
+	g["missions_available"] = [jobs_m]
+	check(GovSim.accept_mission(GameState, 0).begins_with("Misión aceptada"), "aceptar misión")
+	for c in BusinessSim.candidates(GameState, shop).slice(0, 2):
+		BusinessSim.hire(GameState, shop, c, 5.0)
+	g["treasury"] = 5000.0
+	var m0 := GameState.money
+	TimeManager.advance_days(31)
+	check(int(g["missions_done"]) == 1 and GameState.money > m0 - 1000.0, "misión cumplida con recompensa")
+	# Licitación
+	var tender := {"id": 1, "type": "plaza_empedrada", "value": 1500.0, "status": "open", "deadline": GameState.today() + 90, "bid": 0.0}
+	g["tenders"] = [tender]
+	g["reputation"] = 100.0
+	var res := GovSim.bid(GameState, tender, 700.0)
+	check(tender["status"] == "won", "licitación ganada con oferta baja")
+	var err := "x"
+	for pos in [Vector2(-12, -34), Vector2(0, -36), Vector2(-34, -20), Vector2(34, 20)]:
+		err = GovSim.start_public_project(GameState, tender, pos.x, pos.y, 0.0)
+		if err == "":
+			break
+	check(err == "", "obra pública iniciada")
+	g["treasury"] = 5000.0
+	var before := GameState.money
+	var hap0 := TechSim.happiness_bonus(GameState)
+	for i in range(200):
+		TimeManager.advance_days(1)
+		if GameState.buildings.any(func(b): return b["type"] == "plaza_empedrada" and b["status"] == "activo"):
+			break
+	check(GameState.buildings.any(func(b): return b["type"] == "plaza_empedrada" and b["status"] == "activo"), "obra pública terminada")
+	check(TechSim.happiness_bonus(GameState) > hap0, "la obra pública sube la felicidad")
+	# Cambio de época: república y elecciones
+	GameState.research["era"] = 2
+	GovSim.monthly(GameState)
+	check(GovSim.regime(GameState).get("type", "") == "election", "época industrial: república con elecciones")
+	g["election_day"] = GameState.today() + 100
+	GovSim.monthly(GameState)
+	check(g["candidates"].size() >= 2, "candidatos en campaña")
+	var fav: String = g["candidates"][-1]
+	GameState.money = 1000000.0
+	for i in range(20):
+		GovSim.donate(GameState, fav, 5000.0)
+	g["election_day"] = GameState.today()
+	GovSim.monthly(GameState)
+	check(str(g["gov_id"]) == fav, "financiar campañas influye en las elecciones")
+	SaveManager.save_game("test_f5")
+	SaveManager.load_game("test_f5")
+	check(str(GameState.government["gov_id"]) == fav and GameState.problems.has("crime"), "gobierno y problemas se guardan")
+	SaveManager.delete_save("test_f5")
+
+
+func _test_phase5_problems() -> void:
+	GameState.new_game({"seed": 62, "difficulty": "normal"})
+	GameState.money = 60000.0
+	for c in GameState.citizens.values():
+		if not GameState.is_player(c.id):
+			c.money = 0.0
+			c.happiness = 20.0
+			c.needs_met = 0.4
+	EventsSim.monthly(GameState)
+	var crime_no_police := float(GameState.problems["crime"])
+	check(crime_no_police > 10.0, "pobreza e infelicidad generan crimen (%d)" % int(crime_no_police))
+	TechSim.complete(GameState, "guardia_civil")
+	var police := _build_now("comisaria", 30, -8)
+	var jail := _build_now("carcel", -30, 8)
+	_hire_n(police, 4)
+	_hire_n(jail, 3)
+	for c in GameState.citizens.values():
+		if not GameState.is_player(c.id) and c.job_kind != "empleo":
+			c.money = 0.0
+			c.happiness = 20.0
+			c.needs_met = 0.4
+	EventsSim.daily(GameState)
+	EventsSim.monthly(GameState)
+	check(float(GameState.problems["crime"]) < crime_no_police * 1.2, "la policía reduce el crimen (%d → %d)" % [int(crime_no_police), int(GameState.problems["crime"])])
+	var arrested := 0
+	for i in range(6):
+		for c in GameState.citizens.values():
+			if not GameState.is_player(c.id) and c.job_kind != "empleo":
+				c.needs_met = 0.4
+				c.happiness = 20.0
+		EventsSim.daily(GameState)
+		EventsSim.monthly(GameState)
+	for c in GameState.citizens.values():
+		if c.prison_until >= 0:
+			arrested += 1
+	check(arrested > 0, "delincuentes arrestados y en la cárcel (%d)" % arrested)
+	# Incendios y epidemias
+	GameState.problems["events"] = [{"id": "ola_incendios", "until": GameState.today() + 600}]
+	var fires0 := int(GameState.month_counters.get("fires", 0))
+	for i in range(12):
+		EventsSim._fires(GameState)
+	check(int(GameState.month_counters.get("fires", 0)) > fires0, "incendios en temporada seca")
+	var d0 := TechSim.world_mult(GameState, "disease")
+	GameState.problems["events"] = [{"id": "epidemia", "until": GameState.today() + 60}]
+	check(TechSim.world_mult(GameState, "disease") > d0 * 2.0, "la epidemia multiplica las enfermedades")
