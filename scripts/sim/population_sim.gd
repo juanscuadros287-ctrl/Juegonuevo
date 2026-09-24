@@ -51,14 +51,9 @@ static func create_hut(gs) -> Dictionary:
 				break
 		if ok:
 			break
-	var cfg: Dictionary = GameData.buildings.get("choza", {})
-	var hut := {
-		"id": gs.next_building_id, "type": "choza", "owner": "pueblo",
-		"x": pos.x, "z": pos.y, "rot": atan2(-pos.x, -pos.y),
-		"capacity": int(cfg.get("capacity", GameData.citizens.get("home_capacity_default", 6))),
-	}
-	gs.next_building_id += 1
-	gs.buildings.append(hut)
+	var hut := ConstructionSim.make_building(gs, "vivienda", 1, pos.x, pos.y, atan2(-pos.x, -pos.y), "pueblo")
+	hut["tier"] = "normal"
+	gs.add_building(hut)
 	return hut
 
 
@@ -208,69 +203,113 @@ static func _payers(gs, c: Citizen, is_adult: bool, adult_age: int) -> Array:
 	return out
 
 
-static func _pay(payers: Array, amount: float) -> bool:
-	for p in payers:
-		if p.money >= amount:
-			p.money -= amount
-			return true
+## Paga con la billetera familiar. El dinero del jugador es GameState.money.
+static func pay_with(gs, payers: Array, amount: float) -> bool:
+	if amount <= 0.0:
+		return true
 	var total := 0.0
 	for p in payers:
-		total += maxf(0.0, p.money)
+		total += maxf(0.0, _wallet(gs, p))
 	if total < amount:
 		return false
 	var left := amount
 	for p in payers:
-		var take := minf(maxf(0.0, p.money), left)
-		p.money -= take
+		if left <= 0.0:
+			break
+		var take := minf(maxf(0.0, _wallet(gs, p)), left)
+		if gs.is_player(p.id):
+			gs.add_money(-take)
+		else:
+			p.money -= take
 		left -= take
 	return true
+
+
+static func _wallet(gs, p: Citizen) -> float:
+	return gs.money if gs.is_player(p.id) else p.money
 
 
 static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionary, wdata: Dictionary, diff: Dictionary) -> void:
 	var cfg := GameData.citizens
 	var price_mult := float(diff.get("price_mult", 1.0))
 	var is_adult := age >= adult_age
+	var is_player: bool = gs.is_player(c.id)
 	var cost_factor := 1.0 if is_adult else float(cfg.get("child_cost_factor", 0.4))
+	if is_player:
+		cost_factor = float(PlayerSim.cfg().get("living_cost_factor", 2.0))
 	var payers := _payers(gs, c, is_adult, adult_age)
-	if is_adult:
-		# Sin empleos formales (Fase 1) los adultos viven de la subsistencia.
-		if c.job == "":
-			var skill := float(c.skills.get("agricultura", 0.0))
-			var income := float(cfg.get("subsistence_income", 1.5)) * (0.8 + skill / 250.0)
-			income *= float(season.get("farming", 1.0)) * float(wdata.get("farming", 1.0))
-			income *= clampf(c.health / 80.0, 0.2, 1.0)
-			if age >= int(cfg.get("retirement_age", 65)):
-				income *= float(cfg.get("retired_income_factor", 0.5))
-			c.money += income
-			c.experience += 1.0 / 365.0
-			c.skills["agricultura"] = minf(100.0, float(c.skills.get("agricultura", 0.0)) + 0.01)
+	var employed := c.job_id >= 0
+	if is_adult and not employed and not is_player:
+		# Sin empleo: subsistencia (cultivan y venden excedentes por su cuenta).
+		var skill := float(c.skills.get("agricultura", 0.0))
+		var income := float(cfg.get("subsistence_income", 1.5)) * (0.8 + skill / 250.0)
+		income *= float(season.get("farming", 1.0)) * float(wdata.get("farming", 1.0))
+		income *= clampf(c.health / 80.0, 0.2, 1.0)
+		if age >= int(cfg.get("retirement_age", 65)):
+			income *= float(cfg.get("retired_income_factor", 0.5))
+		c.money += income
+		c.experience += 1.0 / 365.0
+		c.skills["agricultura"] = minf(100.0, float(c.skills.get("agricultura", 0.0)) + 0.01)
 
 	var needs: Dictionary = cfg.get("needs", {})
 	var total_w := 0.0
 	var met_w := 0.0
+	var bonus := 0.0
 	var energy_mult := float(wdata.get("energy_demand", 1.0))
+	var home: Dictionary = gs.get_building(c.home_id)
 	for need_id in cfg.get("needs_priority", []):
 		if not needs.has(need_id):
 			continue
 		var need: Dictionary = needs[need_id]
 		var w := float(need.get("weight", 0.1))
 		total_w += w
-		var amount := float(need.get("cost", 0.1)) * price_mult * cost_factor
+		var ref := float(need.get("cost", 0.1)) * price_mult
+		var qty := cost_factor
 		if need_id == "energia":
-			amount *= energy_mult
+			qty *= energy_mult
 		var satisfied := false
-		if need_id == "vivienda" and c.home_id < 0:
-			satisfied = false
-		elif payers.is_empty():
-			# Caridad del pueblo: huérfanos sin tutor reciben lo básico.
-			satisfied = need_id in ["comida", "agua"]
+		if payers.is_empty() and need_id in ["comida", "agua"]:
+			satisfied = true  # Caridad del pueblo para huérfanos sin tutor.
+		elif need_id == "vivienda":
+			satisfied = _pay_housing(gs, c, home, payers, ref * qty)
+		elif need.has("good"):
+			var r := MarketSim.purchase(gs, payers, str(need["good"]), qty, ref, employed)
+			satisfied = bool(r["ok"])
+			bonus += float(r["bonus"])
 		else:
-			satisfied = _pay(payers, amount)
+			satisfied = pay_with(gs, payers, ref * qty)
 		if satisfied:
 			met_w += w
 		else:
 			c.health -= float(need.get("health_penalty", 0.0))
 	c.needs_met = met_w / total_w if total_w > 0.0 else 1.0
+	c.set_meta("bonus", bonus)
+
+
+## Vivienda: gratis si es propia, alquiler si es tuya (del jugador), mantenimiento si es del pueblo.
+static func _pay_housing(gs, c: Citizen, home: Dictionary, payers: Array, maintenance: float) -> bool:
+	if home.is_empty():
+		return false
+	var owner := str(home.get("owner", "pueblo"))
+	if owner == "ciudadano" or gs.is_player(c.id):
+		return true
+	if owner == "jugador":
+		# La familia del jugador no paga alquiler.
+		var p: Citizen = gs.player_citizen()
+		if p != null and (c.id == p.spouse_id or p.children_ids.has(c.id) or c.home_id == p.home_id):
+			return true
+		var rent := MarketSim.daily_rent(gs, home)
+		var factor := 1.0 if c.age_years(gs.today()) >= int(GameData.citizens.get("adult_age", 16)) else float(GameData.citizens.get("child_cost_factor", 0.4))
+		rent *= factor
+		if rent <= 0.0:
+			return true
+		if pay_with(gs, payers, rent):
+			BusinessSim.earn(gs, home, rent, "alquileres")
+			c.unpaid_days = 0
+			return true
+		c.unpaid_days += 1
+		return false
+	return pay_with(gs, payers, maintenance)
 
 
 static func _health(gs, c: Citizen, age: int, season: Dictionary, wdata: Dictionary, diff: Dictionary) -> void:
@@ -305,14 +344,18 @@ static func _happiness(gs, c: Citizen, occupancy: Dictionary, wdata: Dictionary)
 		target += float(h.get("homeless", -15))
 	else:
 		var b: Dictionary = gs.get_building(c.home_id)
-		if not b.is_empty() and int(occupancy.get(c.home_id, 0)) > int(b.get("capacity", 6)):
+		if not b.is_empty() and int(occupancy.get(c.home_id, 0)) > gs.building_capacity(b):
 			target += float(h.get("overcrowded", -8))
+		target += (MarketSim.home_quality(gs, b) - 1.0) * float(h.get("home_quality_weight", 5))
 	if c.spouse_id >= 0:
 		target += float(h.get("married", 4))
 	if c.money >= float(h.get("rich_threshold", 60)):
 		target += float(h.get("rich_bonus", 5))
 	elif c.money < float(h.get("poor_threshold", 5)):
 		target += float(h.get("poor_penalty", -6))
+	if c.job_kind == "empleo":
+		target += float(h.get("employed", 3))
+	target += float(c.get_meta("bonus", 0.0))
 	target += float(wdata.get("happiness", 0))
 	target = clampf(target, 0.0, 100.0)
 	c.happiness = clampf(c.happiness + (target - c.happiness) * float(h.get("adjust_rate", 0.05)), 0.0, 100.0)
@@ -325,7 +368,11 @@ static func die(gs, c: Citizen, cause: String) -> void:
 	_remove(gs, c, "murió")
 	gs.count("deaths")
 	gs.count("death_" + cause.replace(" ", "_"))
-	gs.notify("Murió %s a los %d años (%s)." % [c.full_name(), age, cause], "muerte")
+	if gs.is_player(c.id):
+		gs.notify("Tu personaje %s murió a los %d años (%s)." % [c.full_name(), age, cause], "jugador")
+		PlayerSim.on_player_death(gs, c)
+	else:
+		gs.notify("Murió %s a los %d años (%s)." % [c.full_name(), age, cause], "muerte")
 
 
 static func _remove(gs, c: Citizen, reason: String) -> void:
@@ -336,7 +383,7 @@ static func _remove(gs, c: Citizen, reason: String) -> void:
 	EventBus.citizen_removed.emit(c.id, reason)
 
 
-static func _is_related(a: Citizen, b: Citizen) -> bool:
+static func is_related(a: Citizen, b: Citizen) -> bool:
 	if a.parent_ids.has(b.id) or b.parent_ids.has(a.id):
 		return true
 	for p in a.parent_ids:
@@ -354,7 +401,7 @@ static func _marriages(gs, today: int) -> void:
 	var single_women := []
 	var single_men := []
 	for c in gs.citizens.values():
-		if c.spouse_id >= 0:
+		if c.spouse_id >= 0 or gs.is_player(c.id):
 			continue
 		var age: int = c.age_years(today)
 		if age < min_age or age > max_age:
@@ -369,7 +416,7 @@ static func _marriages(gs, today: int) -> void:
 		if gs.rng.randf() >= chance:
 			continue
 		var m_age: int = man.age_years(today)
-		var candidates := single_women.filter(func(w): return absi(w.age_years(today) - m_age) <= gap and not _is_related(man, w))
+		var candidates := single_women.filter(func(w): return absi(w.age_years(today) - m_age) <= gap and not is_related(man, w))
 		if candidates.is_empty():
 			continue
 		var wife: Citizen = candidates[gs.rng.randi() % candidates.size()]
@@ -384,7 +431,7 @@ static func _house_couple(gs, a: Citizen, b: Citizen) -> void:
 	var occ := home_occupancy(gs)
 	# Preferencia: vivienda vacía, luego la casa de él, luego la de ella.
 	for bld in gs.buildings:
-		if bld.get("type") == "choza" and int(occ.get(int(bld["id"]), 0)) == 0:
+		if bld.get("type") == "vivienda" and bld.get("owner") == "pueblo" and int(occ.get(int(bld["id"]), 0)) == 0:
 			a.home_id = int(bld["id"])
 			b.home_id = int(bld["id"])
 			EventBus.citizens_moved.emit()
@@ -393,7 +440,7 @@ static func _house_couple(gs, a: Citizen, b: Citizen) -> void:
 		var host: Citizen = pair[0]
 		var guest: Citizen = pair[1]
 		var bld: Dictionary = gs.get_building(host.home_id)
-		if not bld.is_empty() and int(occ.get(host.home_id, 0)) < int(bld.get("capacity", 6)):
+		if not bld.is_empty() and int(occ.get(host.home_id, 0)) < gs.building_capacity(bld):
 			guest.home_id = host.home_id
 			EventBus.citizens_moved.emit()
 			return
@@ -424,6 +471,11 @@ static func _births(gs, today: int) -> void:
 			p *= 0.5
 		if mother.home_id != father.home_id:
 			p *= 0.3
+		if gs.is_player(mother.id) or gs.is_player(father.id):
+			if not bool(gs.player.get("family_planning", true)):
+				continue
+			if int(gs.player.get("try_child_until", -1)) >= today:
+				p *= float(PlayerSim.cfg().get("try_child_mult", 4.0))
 		if gs.rng.randf() >= p:
 			continue
 		var baby := create_citizen(gs, "M" if gs.rng.randf() < 0.51 else "F", 0, father.last_name)
@@ -434,8 +486,16 @@ static func _births(gs, today: int) -> void:
 		link_parents(baby, father, mother)
 		mother.last_birth_day = today
 		gs.count("births")
-		gs.notify("Nació %s, hijo(a) de %s y %s." % [baby.full_name(), father.first_name, mother.first_name], "nacimiento")
+		var ours: bool = gs.is_player(mother.id) or gs.is_player(father.id)
+		gs.notify("%s %s, hijo(a) de %s y %s." % ["¡Nació tu hijo(a)" if ours else "Nació", baby.full_name(), father.first_name, mother.first_name], "familia" if ours else "nacimiento")
 		EventBus.citizen_born.emit(baby.id)
+
+
+static func _in_player_family(gs, c: Citizen) -> bool:
+	var p: Citizen = gs.player_citizen()
+	if p == null:
+		return false
+	return c.id == p.id or c.id == p.spouse_id or p.children_ids.has(c.id) or c.home_id == p.home_id
 
 
 static func _emigration(gs, today: int) -> void:
@@ -445,7 +505,7 @@ static func _emigration(gs, today: int) -> void:
 	var adult_age := int(cfg.get("adult_age", 16))
 	var leavers := []
 	for c in gs.citizens.values():
-		if c.age_years(today) >= adult_age and c.happiness < threshold and gs.rng.randf() < chance:
+		if c.age_years(today) >= adult_age and c.happiness < threshold and gs.rng.randf() < chance and not _in_player_family(gs, c):
 			leavers.append(c)
 	for c in leavers:
 		if not gs.citizens.has(c.id):

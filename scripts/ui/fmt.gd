@@ -22,3 +22,7 @@ static func money(v: float) -> String:
 
 static func pct(v: float) -> String:
 	return "%d%%" % int(roundf(v))
+
+
+static func money2(v: float) -> String:
+	return GameData.currency() + String.num(v, 2).replace(".", ",")

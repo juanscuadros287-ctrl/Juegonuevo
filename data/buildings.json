@@ -1,6 +1,836 @@
 {
-  "_nota": "Fase 1: solo viviendas iniciales del pueblo. En Fase 2 se agregan casas, comercios e industrias aquí.",
-  "choza": {"label": "Choza", "category": "vivienda", "capacity": 6, "size": [3.0, 2.0, 3.0],
-    "wall_color": [0.55, 0.40, 0.26], "roof_color": [0.78, 0.66, 0.36]},
-  "pozo": {"label": "Pozo del pueblo", "category": "servicio"}
+ "vivienda": {
+  "label": "Vivienda",
+  "category": "vivienda",
+  "order": 0,
+  "footprint": 3.8,
+  "description": "Aloja familias. Puedes rentarla, venderla o vivir en ella. Evoluciona con la investigación.",
+  "levels": [
+   {
+    "label": "Choza",
+    "cost": 250,
+    "materials": {
+     "madera": 15
+    },
+    "build_days": 15,
+    "workers": 2,
+    "capacity": 6,
+    "quality": 1.0,
+    "rent": 5,
+    "sale_price": 350,
+    "upkeep": 0.05,
+    "tech": "",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       3,
+       2,
+       3
+      ],
+      "pos": [
+       0,
+       1.0,
+       0
+      ],
+      "c": [
+       0.62,
+       0.46,
+       0.3
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       3.5,
+       1.5,
+       3.7
+      ],
+      "pos": [
+       0,
+       2.75,
+       0
+      ],
+      "rot": 90,
+      "c": [
+       0.78,
+       0.66,
+       0.36
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.8,
+       1.3,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.65,
+       1.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Casa de adobe",
+    "cost": 600,
+    "materials": {
+     "madera": 20,
+     "piedra": 15
+    },
+    "build_days": 25,
+    "workers": 3,
+    "capacity": 8,
+    "quality": 1.4,
+    "rent": 8,
+    "sale_price": 900,
+    "upkeep": 0.08,
+    "tech": "",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4,
+       2.4,
+       3.6
+      ],
+      "pos": [
+       0,
+       1.2,
+       0
+      ],
+      "c": [
+       0.8,
+       0.66,
+       0.48
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.1,
+       1.5,
+       4.7
+      ],
+      "pos": [
+       0,
+       3.15,
+       0
+      ],
+      "rot": 90,
+      "c": [
+       0.62,
+       0.33,
+       0.2
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.8,
+       1.3,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.65,
+       1.83
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Casa de ladrillo",
+    "cost": 1500,
+    "materials": {
+     "madera": 25,
+     "piedra": 40
+    },
+    "build_days": 40,
+    "workers": 4,
+    "capacity": 10,
+    "quality": 1.8,
+    "rent": 12,
+    "sale_price": 2200,
+    "upkeep": 0.12,
+    "tech": "ladrillo",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4.4,
+       4.2,
+       4
+      ],
+      "pos": [
+       0,
+       2.1,
+       0
+      ],
+      "c": [
+       0.66,
+       0.3,
+       0.22
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.5,
+       1.6,
+       5.0
+      ],
+      "pos": [
+       0,
+       5.0,
+       0
+      ],
+      "rot": 90,
+      "c": [
+       0.35,
+       0.2,
+       0.16
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.9,
+       1.6,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.8,
+       2.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       3.2,
+       0.7,
+       0.1
+      ],
+      "pos": [
+       0,
+       3.1,
+       2.03
+      ],
+      "c": [
+       0.2,
+       0.3,
+       0.4
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Edificio de apartamentos",
+    "cost": 5000,
+    "materials": {
+     "madera": 30,
+     "piedra": 120
+    },
+    "build_days": 70,
+    "workers": 8,
+    "capacity": 30,
+    "quality": 2.2,
+    "rent": 14,
+    "sale_price": 7000,
+    "upkeep": 0.4,
+    "tech": "arquitectura_urbana",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       5,
+       10.4,
+       5
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 4,
+      "c": [
+       0.82,
+       0.76,
+       0.66
+      ],
+      "c2": [
+       0.25,
+       0.32,
+       0.42
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       5.2,
+       0.3,
+       5.2
+      ],
+      "pos": [
+       0,
+       10.55,
+       0
+      ],
+      "c": [
+       0.4,
+       0.38,
+       0.36
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.2,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       2.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Edificio residencial",
+    "cost": 15000,
+    "materials": {
+     "madera": 40,
+     "piedra": 300
+    },
+    "build_days": 120,
+    "workers": 14,
+    "capacity": 80,
+    "quality": 2.6,
+    "rent": 18,
+    "sale_price": 22000,
+    "upkeep": 1.0,
+    "tech": "acero_estructural",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       6,
+       26.0,
+       6
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 10,
+      "c": [
+       0.7,
+       0.72,
+       0.75
+      ],
+      "c2": [
+       0.3,
+       0.42,
+       0.55
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       6.2,
+       0.3,
+       6.2
+      ],
+      "pos": [
+       0,
+       26.15,
+       0
+      ],
+      "c": [
+       0.35,
+       0.35,
+       0.38
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.2,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       3.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Rascacielos",
+    "cost": 60000,
+    "materials": {
+     "madera": 50,
+     "piedra": 800
+    },
+    "build_days": 240,
+    "workers": 30,
+    "capacity": 250,
+    "quality": 3.2,
+    "rent": 25,
+    "sale_price": 90000,
+    "upkeep": 3.5,
+    "tech": "rascacielos",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       7,
+       78.0,
+       7
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 30,
+      "c": [
+       0.55,
+       0.62,
+       0.7
+      ],
+      "c2": [
+       0.35,
+       0.55,
+       0.75
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.2,
+       0.3,
+       7.2
+      ],
+      "pos": [
+       0,
+       78.15,
+       0
+      ],
+      "c": [
+       0.3,
+       0.3,
+       0.33
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.2,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       3.53
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   }
+  ],
+  "tiers": {
+   "normal": {
+    "label": "Normal",
+    "order": 0,
+    "cost_mult": 1.0,
+    "rent_mult": 1.0,
+    "sale_mult": 1.0,
+    "quality_add": 0.0,
+    "tint": 1.0
+   },
+   "media": {
+    "label": "Media",
+    "order": 1,
+    "cost_mult": 1.8,
+    "rent_mult": 1.7,
+    "sale_mult": 1.8,
+    "quality_add": 0.4,
+    "tint": 1.08
+   },
+   "alta": {
+    "label": "Alta",
+    "order": 2,
+    "cost_mult": 3.2,
+    "rent_mult": 2.8,
+    "sale_mult": 3.2,
+    "quality_add": 0.9,
+    "tint": 1.16
+   }
+  }
+ },
+ "oficina": {
+  "label": "Oficina",
+  "category": "oficina",
+  "order": 1,
+  "footprint": 4.2,
+  "description": "Tu centro de operaciones. Sin oficina solo puedes tener 2 negocios; cada nivel amplía el límite y reduce el mantenimiento de tus negocios.",
+  "levels": [
+   {
+    "label": "Despacho",
+    "cost": 800,
+    "materials": {
+     "madera": 20,
+     "piedra": 20
+    },
+    "build_days": 20,
+    "workers": 3,
+    "business_slots": 5,
+    "upkeep_discount": 0.05,
+    "upkeep": 0.3,
+    "tech": "",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       4,
+       2.6,
+       3.6
+      ],
+      "pos": [
+       0,
+       1.3,
+       0
+      ],
+      "c": [
+       0.85,
+       0.8,
+       0.7
+      ]
+     },
+     {
+      "s": "prism",
+      "size": [
+       4.1,
+       1.5,
+       4.7
+      ],
+      "pos": [
+       0,
+       3.35,
+       0
+      ],
+      "rot": 90,
+      "c": [
+       0.45,
+       0.25,
+       0.18
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       0.8,
+       1.3,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.65,
+       1.83
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.6,
+       0.5,
+       0.1
+      ],
+      "pos": [
+       0,
+       2.2,
+       1.84
+      ],
+      "c": [
+       0.9,
+       0.75,
+       0.3
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Oficina comercial",
+    "cost": 2500,
+    "materials": {
+     "madera": 30,
+     "piedra": 60
+    },
+    "build_days": 35,
+    "workers": 5,
+    "business_slots": 15,
+    "upkeep_discount": 0.1,
+    "upkeep": 0.8,
+    "tech": "contabilidad",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       5,
+       6,
+       4.5
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 2,
+      "c": [
+       0.88,
+       0.84,
+       0.74
+      ],
+      "c2": [
+       0.3,
+       0.35,
+       0.45
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       5.2,
+       0.3,
+       4.7
+      ],
+      "pos": [
+       0,
+       6.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.3,
+       0.2
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.2,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       2.28
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Sede corporativa",
+    "cost": 9000,
+    "materials": {
+     "madera": 40,
+     "piedra": 200
+    },
+    "build_days": 80,
+    "workers": 10,
+    "business_slots": 40,
+    "upkeep_discount": 0.15,
+    "upkeep": 2.0,
+    "tech": "administracion_moderna",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       6,
+       18,
+       6
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 6,
+      "c": [
+       0.8,
+       0.8,
+       0.82
+      ],
+      "c2": [
+       0.3,
+       0.4,
+       0.55
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       6.2,
+       0.3,
+       6.2
+      ],
+      "pos": [
+       0,
+       18.15,
+       0
+      ],
+      "c": [
+       0.3,
+       0.3,
+       0.3
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.2,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       3.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Torre corporativa",
+    "cost": 50000,
+    "materials": {
+     "madera": 50,
+     "piedra": 700
+    },
+    "build_days": 200,
+    "workers": 25,
+    "business_slots": 999,
+    "upkeep_discount": 0.25,
+    "upkeep": 6.0,
+    "tech": "rascacielos",
+    "model": [
+     {
+      "s": "floors",
+      "size": [
+       8,
+       75,
+       8
+      ],
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "floors": 25,
+      "c": [
+       0.4,
+       0.45,
+       0.5
+      ],
+      "c2": [
+       0.2,
+       0.35,
+       0.55
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       8.2,
+       0.3,
+       8.2
+      ],
+      "pos": [
+       0,
+       75.15,
+       0
+      ],
+      "c": [
+       0.2,
+       0.2,
+       0.22
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.2,
+       2.0,
+       0.1
+      ],
+      "pos": [
+       0,
+       1.0,
+       4.03
+      ],
+      "c": [
+       0.28,
+       0.18,
+       0.1
+      ]
+     }
+    ]
+   }
+  ]
+ }
 }

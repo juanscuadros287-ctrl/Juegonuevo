@@ -15,7 +15,10 @@ var education: int = 0             # índice en education_levels
 var money: float = 0.0
 var debt: float = 0.0
 var happiness: float = 60.0         # 0-100
-var job: String = ""               # "" = sin empleo formal (subsistencia)
+var job_id: int = -1               # id del edificio donde trabaja (-1 = subsistencia)
+var job_kind: String = ""          # "" | "empleo" | "obra" (jornalero de construcción)
+var wage: float = 0.0              # salario diario
+var unpaid_days: int = 0           # días sin pagar alquiler
 var home_id: int = -1
 var spouse_id: int = -1
 var parent_ids: Array = []
@@ -34,6 +37,10 @@ func age_years(today: int) -> int:
 	return maxi(0, (today - birth_day) / 365)
 
 
+func is_employed() -> bool:
+	return job_id >= 0
+
+
 func best_skill() -> String:
 	var best := ""
 	var best_v := -1.0
@@ -49,7 +56,8 @@ func to_dict() -> Dictionary:
 		"id": id, "first_name": first_name, "last_name": last_name, "gender": gender,
 		"birth_day": birth_day, "health": health, "sick": sick, "skills": skills,
 		"experience": experience, "education": education, "money": money, "debt": debt,
-		"happiness": happiness, "job": job, "home_id": home_id, "spouse_id": spouse_id,
+		"happiness": happiness, "job_id": job_id, "job_kind": job_kind,
+		"wage": wage, "unpaid_days": unpaid_days, "home_id": home_id, "spouse_id": spouse_id,
 		"parent_ids": parent_ids, "children_ids": children_ids,
 		"last_birth_day": last_birth_day, "needs_met": needs_met, "visual_seed": visual_seed,
 	}
@@ -70,7 +78,12 @@ static func from_dict(d: Dictionary) -> Citizen:
 	c.money = float(d.get("money", 0.0))
 	c.debt = float(d.get("debt", 0.0))
 	c.happiness = float(d.get("happiness", 60.0))
-	c.job = str(d.get("job", ""))
+	c.job_id = int(d.get("job_id", -1))
+	c.job_kind = str(d.get("job_kind", ""))
+	c.wage = float(d.get("wage", 0.0))
+	c.unpaid_days = int(d.get("unpaid_days", 0))
+	if c.job_id < 0:
+		c.job_kind = ""
 	c.home_id = int(d.get("home_id", -1))
 	c.spouse_id = int(d.get("spouse_id", -1))
 	c.parent_ids = []

@@ -5,17 +5,29 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 
 > El nombre del juego se cambia en `data/game.json` y `project.godot`.
 
-## Estado: Fase 1 de 7
+## Estado: Fase 2 de 7
 
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Mapa 3D, cámara, tiempo y ciudadanos | ✅ |
-| 2 | Construcción y negocios | ⏳ |
+| 2 | Construcción, negocios, tu personaje y vivienda | ✅ |
 | 3 | Economía, precios y banca | ⏳ |
 | 4 | Árbol de investigación y épocas | ⏳ |
 | 5 | Gobierno, impuestos, servicios públicos y proyectos | ⏳ |
 | 6 | Transporte y otros pueblos | ⏳ |
 | 7 | Turismo, publicidad, industria avanzada y herederos | ⏳ |
+
+### Fase 2 incluye
+- **Construcción** (botón *Construir*): viviendas, oficina y negocios. Cuestan dinero + materiales (madera/piedra: de tus negocios o importados), días de obra y trabajadores (jornaleros desempleados o tu constructora). Andamios visibles. *R* rota, *Shift* mantiene el modo.
+- **Negocios** (granja, aguatero, leñador, aserradero, cantera, pescadería, panadería, tienda, taberna, constructora) con niveles, tipo legal (S.A.S. o fundación sin lucro), precio, inventario y finanzas mensuales. Sin oficina: máx. 2 negocios.
+- **Contratación manual**: candidatos con habilidad, experiencia, educación y salario pedido; contratar, despedir, subir/bajar sueldo (renuncian si pagas poco).
+- **Economía que circula**: los ciudadanos compran a tus negocios (calidad/precio); si no hay oferta se autoabastecen o importan más caro.
+- **Mejoras con obra**: subir de nivel cuesta y tarda; **durante la obra el negocio no factura**. Niveles superiores requieren investigación (Fase 4).
+- **Viviendas**: Choza → Adobe → Ladrillo → Apartamentos → Edificio → Rascacielos, cada una en calidad **Normal / Media / Alta** (cambia costo, renta, venta y los objetos del interior). Rentar, vender o vivir en ellas; remodelar calidad.
+- **Vista interior** (estilo Los Sims): objetos cotidianos automáticos según nivel, calidad y época (jergón → cama con dosel → cama moderna; bacinilla → inodoro; vela → bombilla…). Interactúa con quien vive ahí.
+- **Tu personaje** es un ciudadano real: nombre, apellido, sexo y edad al inicio; enferma (médico), envejece y muere. Conoce gente en la calle (conversar, citas, matrimonio), busca hijos con tu pareja, adopta, invita a vivir contigo, elige heredero: **al morir, tu hijo(a) continúa la dinastía**.
+- **Tiempo real** (1 s = 1 s) además de x1/x2/x3/x4.
+- **Expandir terreno**: compra zonas vecinas.
 
 ### Fase 1 incluye
 - **Inicio**: dificultad (Fácil/Normal/Difícil/Extremo) y tipo de mapa (Interior, Costa, Montaña, Río), semilla.
@@ -31,9 +43,11 @@ Eres el único empresario del pueblo: todo el crecimiento depende de tus decisio
 ## Controles
 | Acción | Tecla |
 |---|---|
-| Pausa / velocidades | Espacio, 1, 2, 3 · 4 = salto de años |
+| Pausa / velocidades | Espacio · 1 real · 2 x1 · 3 x2 · 4 x3 · 5 salto de años |
 | Menú (guardar/cargar) | Esc |
-| Seleccionar persona o casa | Clic izquierdo |
+| Seleccionar persona o edificio | Clic izquierdo |
+| Construir: rotar / cancelar | R / clic derecho o Esc |
+| Interior: rotar / zoom / salir | Q-E / rueda / Esc |
 
 ## Ejecutar
 1. Instala **Godot 4.3+** (versión estándar, no .NET).
@@ -53,10 +67,11 @@ scripts/world    Terreno, cámara, agentes 3D, clima visual
 scripts/ui       HUD y menú principal
 tests/           Pruebas headless y diagnóstico de balance
 ```
-Para agregar contenido basta con editar los JSON de `data/` (en próximas fases: `businesses.json`, `technologies.json`, `laws.json`).
+Para agregar contenido basta con editar los JSON de `data/` — `businesses.json` (negocios y niveles), `buildings.json` (viviendas, calidades, oficina), `interiors.json` (muebles por época y calidad), `goods.json`, `legal_types.json`, `technologies.json`. Los modelos 3D de cada nivel también están en JSON.
 
 ## Pruebas
 ```
 godot --headless res://tests/test_runner.tscn   # pruebas de simulación, guardado, mapas y salto x4
 godot --headless res://tests/balance.tscn       # diagnóstico demográfico a 40 años
+godot --headless res://tests/ui_smoke.tscn      # abre todos los paneles de la interfaz
 ```

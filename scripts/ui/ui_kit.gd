@@ -12,7 +12,8 @@ const CATEGORY_COLORS := {
 	"muerte": Color(0.8, 0.55, 0.55), "salud": Color(0.95, 0.7, 0.4),
 	"boda": Color(0.95, 0.65, 0.85), "emigracion": Color(0.95, 0.5, 0.35),
 	"clima": Color(0.6, 0.8, 0.95), "importante": Color(1.0, 0.85, 0.3),
-	"jugador": Color(1.0, 0.4, 0.4),
+	"jugador": Color(1.0, 0.4, 0.4), "negocio": Color(0.6, 0.9, 0.75),
+	"construccion": Color(0.9, 0.8, 0.55), "familia": Color(1.0, 0.7, 0.9),
 }
 
 
@@ -90,3 +91,48 @@ static func clear(node: Node) -> void:
 	for ch in node.get_children():
 		node.remove_child(ch)
 		ch.queue_free()
+
+
+static func spin(min_v: float, max_v: float, step: float, value: float, on_change: Callable, width := 110) -> SpinBox:
+	var s := SpinBox.new()
+	s.min_value = min_v
+	s.max_value = max_v
+	s.step = step
+	s.value = value
+	s.custom_minimum_size.x = width
+	s.value_changed.connect(on_change)
+	return s
+
+
+static func rich(min_size := Vector2(0, 0)) -> RichTextLabel:
+	var r := RichTextLabel.new()
+	r.bbcode_enabled = true
+	r.fit_content = true
+	r.scroll_active = false
+	r.custom_minimum_size = min_size
+	return r
+
+
+static func scroll_box(min_size: Vector2) -> Dictionary:
+	var sc := ScrollContainer.new()
+	sc.custom_minimum_size = min_size
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var v := VBoxContainer.new()
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.add_theme_constant_override("separation", 4)
+	sc.add_child(v)
+	return {"scroll": sc, "box": v}
+
+
+## Panel lateral derecho (bajo la barra superior).
+static func right_panel(width: float) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.anchor_left = 1.0
+	p.anchor_right = 1.0
+	p.anchor_bottom = 1.0
+	p.offset_left = -width - 12
+	p.offset_right = -12
+	p.offset_top = 58
+	p.offset_bottom = -12
+	p.visible = false
+	return p

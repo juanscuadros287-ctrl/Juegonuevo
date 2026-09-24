@@ -1,0 +1,58 @@
+{
+ "comida": {
+  "label": "Comida",
+  "base_price": 0.5,
+  "import_price": 0.75,
+  "storable": true,
+  "need": "comida",
+  "order": 0
+ },
+ "agua": {
+  "label": "Agua",
+  "base_price": 0.1,
+  "import_price": 0.15,
+  "storable": true,
+  "need": "agua",
+  "order": 1
+ },
+ "lena": {
+  "label": "Leña",
+  "base_price": 0.15,
+  "import_price": 0.25,
+  "storable": true,
+  "need": "energia",
+  "order": 2
+ },
+ "ocio": {
+  "label": "Ocio",
+  "base_price": 0.12,
+  "import_price": 0,
+  "storable": false,
+  "need": "ocio",
+  "order": 3
+ },
+ "madera": {
+  "label": "Madera",
+  "base_price": 3.0,
+  "import_price": 5.0,
+  "storable": true,
+  "material": true,
+  "order": 4
+ },
+ "piedra": {
+  "label": "Piedra",
+  "base_price": 4.0,
+  "import_price": 7.0,
+  "storable": true,
+  "material": true,
+  "order": 5
+ },
+ "construccion": {
+  "label": "Trabajo de obra",
+  "base_price": 0,
+  "import_price": 0,
+  "storable": false,
+  "internal": true,
+  "order": 6
+ }
+}

@@ -35,13 +35,15 @@
       "label": "Comida",
       "cost": 0.5,
       "weight": 0.4,
-      "health_penalty": 1.0
+      "health_penalty": 1.0,
+      "good": "comida"
     },
     "agua": {
       "label": "Agua",
       "cost": 0.1,
       "weight": 0.25,
-      "health_penalty": 1.5
+      "health_penalty": 1.5,
+      "good": "agua"
     },
     "vivienda": {
       "label": "Vivienda",
@@ -53,13 +55,15 @@
       "label": "Energía (leña)",
       "cost": 0.15,
       "weight": 0.12,
-      "health_penalty": 0.3
+      "health_penalty": 0.3,
+      "good": "lena"
     },
     "ocio": {
       "label": "Ocio",
       "cost": 0.1,
       "weight": 0.08,
-      "health_penalty": 0.0
+      "health_penalty": 0.0,
+      "good": "ocio"
     }
   },
   "needs_priority": [
@@ -81,9 +85,18 @@
     "rich_bonus": 5,
     "poor_threshold": 5,
     "poor_penalty": -6,
-    "adjust_rate": 0.05
+    "adjust_rate": 0.05,
+    "employed": 3,
+    "home_quality_weight": 5
   },
   "emigration_threshold": 22,
   "emigration_weekly_chance": 0.06,
-  "home_capacity_default": 6
+  "home_capacity_default": 6,
+  "willing_markup": 1.6,
+  "import_markup_employed": 1.4,
+  "self_build_cost": 150,
+  "self_build_monthly_chance": 0.25,
+  "eviction_unpaid_days": 30,
+  "quit_wage_ratio": 0.8,
+  "quit_monthly_chance": 0.3
 }

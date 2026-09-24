@@ -9,12 +9,17 @@ func _ready() -> void:
 		var line := "semilla %d:" % seed_value
 		for y in range(40):
 			var before := GameState.citizens.size()
+			GameState.money = 1000000.0  # Aísla la demografía de la economía del jugador.
 			TimeManager.advance_days(364)
 			for k in GameState.month_counters:
 				if k.begins_with("death_"):
 					causes[k] = int(causes.get(k, 0)) + int(GameState.month_counters[k])
 			GameState.month_counters = {}
 			TimeManager.advance_days(1)
+			if not GameState.running:
+				var last: Array = GameState.notifications_log.filter(func(e): return e["category"] == "jugador" and "murió" in e["text"])
+				line += "\n  FIN %d: %s" % [TimeManager.year(), (last[-1]["text"] if not last.is_empty() else "?")]
+				break
 			if y % 5 == 4:
 				var money := 0.0
 				var adults := 0

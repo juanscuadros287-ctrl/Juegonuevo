@@ -1,0 +1,75 @@
+{
+ "_nota": "Fase 4 definirá costos, épocas y ramas. Por ahora solo nombres para mostrar requisitos.",
+ "ladrillo": {
+  "label": "Ladrillo cocido"
+ },
+ "arquitectura_urbana": {
+  "label": "Arquitectura urbana"
+ },
+ "acero_estructural": {
+  "label": "Acero estructural"
+ },
+ "rascacielos": {
+  "label": "Rascacielos"
+ },
+ "contabilidad": {
+  "label": "Contabilidad"
+ },
+ "administracion_moderna": {
+  "label": "Administración moderna"
+ },
+ "rotacion_cultivos": {
+  "label": "Rotación de cultivos"
+ },
+ "maquinaria_agricola": {
+  "label": "Maquinaria agrícola"
+ },
+ "acueductos": {
+  "label": "Acueductos"
+ },
+ "potabilizacion": {
+  "label": "Potabilización"
+ },
+ "carbon": {
+  "label": "Carbón"
+ },
+ "energia_hidraulica": {
+  "label": "Energía hidráulica"
+ },
+ "polvora": {
+  "label": "Pólvora"
+ },
+ "navegacion": {
+  "label": "Navegación"
+ },
+ "maquina_vapor": {
+  "label": "Máquina de vapor"
+ },
+ "refrigeracion": {
+  "label": "Refrigeración"
+ },
+ "arte_escenico": {
+  "label": "Arte escénico"
+ },
+ "saneamiento": {
+  "label": "Saneamiento"
+ },
+ "plomeria_moderna": {
+  "label": "Plomería moderna"
+ },
+ "gas": {
+  "label": "Alumbrado de gas"
+ },
+ "electricidad": {
+  "label": "Electricidad"
+ },
+ "radio": {
+  "label": "Radio"
+ },
+ "television": {
+  "label": "Televisión"
+ },
+ "tapiceria_industrial": {
+  "label": "Tapicería industrial"
+ }
+}

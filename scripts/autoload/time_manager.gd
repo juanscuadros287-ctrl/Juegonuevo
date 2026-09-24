@@ -1,8 +1,12 @@
 extends Node
-## Reloj del juego. Velocidades: 0 pausa, 1 (1 s = 1 h), 2 (1 s = 1 día), 3 (1 s = 1 semana).
-## La velocidad 4 es un salto de años con simulación resumida (start_jump).
+## Reloj del juego. Velocidades: 0 pausa, 1 tiempo real (1 s = 1 s, como en Los Sims),
+## 2 = x1 (1 s = 1 h), 3 = x2 (1 s = 1 día), 4 = x3 (1 s = 1 semana).
+## x4 es un salto de años con simulación resumida (start_jump).
 
-const HOURS_PER_SECOND := [0.0, 1.0, 24.0, 168.0]
+const SPEED_REALTIME := 1
+const MAX_SPEED := 4
+const SPEED_LABELS := ["II", "Real", "x1", "x2", "x3"]
+const HOURS_PER_SECOND := [0.0, 1.0 / 3600.0, 1.0, 24.0, 168.0]
 const MONTH_DAYS := [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 const MONTH_NAMES := ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
 		"agosto", "septiembre", "octubre", "noviembre", "diciembre"]
@@ -48,9 +52,16 @@ func hour() -> int:
 	return total_hours % 24
 
 
-## Hora con fracción, útil para la iluminación a velocidad x1.
+func hours_per_second() -> float:
+	var h: float = HOURS_PER_SECOND[speed]
+	if speed == SPEED_REALTIME:
+		h *= float(GameData.game.get("realtime_game_seconds_per_second", 1.0))
+	return h
+
+
+## Hora con fracción (iluminación y relojes a velocidades lentas).
 func hour_float() -> float:
-	return float(hour()) + (hour_fraction if speed == 1 else 0.0)
+	return float(hour()) + hour_fraction
 
 
 @warning_ignore("integer_division")
@@ -80,8 +91,10 @@ func date_string(with_hour := true) -> String:
 	var md := month_day()
 	var s := "%d de %s de %d" % [md[1], MONTH_NAMES[md[0] - 1], year()]
 	if with_hour:
-		var minutes := int(hour_fraction * 60.0) if speed == 1 else 0
+		var minutes := int(hour_fraction * 60.0) if speed <= 2 else 0
 		s += "  %02d:%02d" % [hour(), minutes]
+		if speed == SPEED_REALTIME:
+			s += ":%02d" % (int(hour_fraction * 3600.0) % 60)
 	return s
 
 
@@ -101,7 +114,7 @@ static func date_from_day(day: int, base_year: int) -> String:
 func set_speed(s: int) -> void:
 	if jumping:
 		return
-	speed = clampi(s, 0, 3)
+	speed = clampi(s, 0, MAX_SPEED)
 	if speed > 0:
 		last_speed = speed
 	EventBus.speed_changed.emit(speed)
@@ -119,7 +132,7 @@ func _process(delta: float) -> void:
 		return
 	if speed == 0:
 		return
-	hour_fraction += delta * HOURS_PER_SECOND[speed]
+	hour_fraction += delta * hours_per_second()
 	var steps := 0
 	while hour_fraction >= 1.0 and GameState.running:
 		hour_fraction -= 1.0

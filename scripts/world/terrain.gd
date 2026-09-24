@@ -18,6 +18,9 @@ var heights := PackedFloat32Array()
 var material: ShaderMaterial
 var mesh_instance: MeshInstance3D
 var tree_positions: Array = []
+var _tree_mms: Array = []
+var _tree_xforms: Array = []
+var nature_root: Node3D
 
 var _noise := FastNoiseLite.new()
 var _detail := FastNoiseLite.new()
@@ -186,8 +189,11 @@ func set_season(season_id: String) -> void:
 
 ## Árboles y rocas con MultiMesh. Evita agua, pendientes y el pueblo.
 func scatter_nature(p_seed: int) -> Node3D:
+	if nature_root:
+		nature_root.queue_free()
 	var root := Node3D.new()
 	root.name = "Nature"
+	nature_root = root
 	var rng := RandomNumberGenerator.new()
 	rng.seed = p_seed + 99
 	var density := float(cfg.get("forest_density", 0.3))
@@ -229,8 +235,12 @@ func scatter_nature(p_seed: int) -> Node3D:
 	var trunk_colors: Array[Color] = []
 	for tc in tree_colors:
 		trunk_colors.append(Color(0.4, 0.27, 0.15) * (tc.g / 0.42))
-	root.add_child(_multimesh(MeshLib.cylinder(0.14, 0.22, 1.2, 5), trees, trunk_colors, trunk_offset))
-	root.add_child(_multimesh(MeshLib.cylinder(0.0, 1.25, 2.8, 6), trees, tree_colors, crown_offset))
+	var trunk_mm := _multimesh(MeshLib.cylinder(0.14, 0.22, 1.2, 5), trees, trunk_colors, trunk_offset)
+	var crown_mm := _multimesh(MeshLib.cylinder(0.0, 1.25, 2.8, 6), trees, tree_colors, crown_offset)
+	root.add_child(trunk_mm)
+	root.add_child(crown_mm)
+	_tree_mms = [[trunk_mm.multimesh, trunk_offset], [crown_mm.multimesh, crown_offset]]
+	_tree_xforms = trees
 	root.add_child(_multimesh(MeshLib.sphere(0.8, 5, 3), rocks, rock_colors, Transform3D()))
 	add_child(root)
 	return root
@@ -267,3 +277,53 @@ func make_water() -> MeshInstance3D:
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(mi)
 	return mi
+
+
+## Tala los árboles dentro de un radio (al construir).
+func clear_trees(x: float, z: float, radius: float) -> void:
+	var p := Vector2(x, z)
+	var hidden := Transform3D(Basis().scaled(Vector3.ZERO), Vector3.ZERO)
+	for i in range(tree_positions.size()):
+		if tree_positions[i].distance_to(p) < radius:
+			for pair in _tree_mms:
+				pair[0].set_instance_transform(i, hidden)
+
+
+## Posición del suelo bajo el cursor (rayo contra el terreno).
+func ray_ground(origin: Vector3, dir: Vector3) -> Variant:
+	var t := 0.0
+	var step := 2.0
+	var prev := origin
+	while t < 3000.0:
+		var p := origin + dir * t
+		if absf(p.x) > half * 1.5 or absf(p.z) > half * 1.5:
+			if dir.y >= 0.0:
+				return null
+		var gh := maxf(height_at(p.x, p.z), water_level)
+		if p.y <= gh:
+			var lo := prev
+			var hi := p
+			for k in range(12):
+				var mid := (lo + hi) * 0.5
+				if mid.y <= maxf(height_at(mid.x, mid.z), water_level):
+					hi = mid
+				else:
+					lo = mid
+			return hi
+		prev = p
+		t += step
+	return null
+
+
+## Verifica agua y pendiente bajo una huella de construcción.
+func footprint_ok(x: float, z: float, footprint: float) -> String:
+	var r := footprint * 0.5
+	var hs := []
+	for dx in [-r, 0.0, r]:
+		for dz in [-r, 0.0, r]:
+			if not is_land(x + dx, z + dz, 0.4):
+				return "No se puede construir sobre agua"
+			hs.append(height_at(x + dx, z + dz))
+	if hs.max() - hs.min() > 2.2:
+		return "Terreno demasiado inclinado"
+	return ""

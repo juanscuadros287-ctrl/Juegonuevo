@@ -1,13 +1,14 @@
 extends Node
 ## Estado completo y serializable de la partida.
-## La lógica de simulación vive en scripts/sim/ (PopulationSim, WeatherSim).
+## La lógica vive en scripts/sim/ (PopulationSim, WeatherSim, BusinessSim,
+## ConstructionSim, MarketSim, PlayerSim).
 
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 const MAP_SIZE := 400.0
 const ZONE_GRID := 5
 const START_ZONE := [2, 2]
 const TOWN_RADIUS := 24.0
-const MAX_LOG := 200
+const MAX_LOG := 300
 const MAX_HISTORY := 12 * 400
 
 var running := false
@@ -17,11 +18,14 @@ var citizens: Dictionary = {}          # id (int) -> Citizen
 var next_citizen_id: int = 1
 var buildings: Array = []              # Array[Dictionary]
 var next_building_id: int = 1
+var player_id: int = -1
+## Datos propios del jugador: relaciones, planificación familiar, médico, finanzas personales.
 var player: Dictionary = {}
+var techs: Array = []                  # tecnologías investigadas (Fase 4)
 var weather: Dictionary = {}
 var season: String = ""
 var unlocked_zones: Array = []         # Array de [x, y]
-var graveyard: Dictionary = {}         # id -> "Nombre (año)" de ciudadanos fallecidos/emigrados
+var graveyard: Dictionary = {}         # id -> "Nombre (motivo en año)"
 var history: Array = []                # registro mensual para gráficas
 var month_counters: Dictionary = {}
 var notifications_log: Array = []
@@ -30,6 +34,7 @@ var rng := RandomNumberGenerator.new()
 var collecting_report := false
 var suppress_notifications := false
 var _report: Dictionary = {}
+var _building_index: Dictionary = {}   # id -> Dictionary (caché, no se guarda)
 
 
 func diff() -> Dictionary:
@@ -47,6 +52,9 @@ func default_settings() -> Dictionary:
 	return {
 		"town_name": towns[randi() % towns.size()],
 		"player_name": "Sebastián",
+		"player_surname": "Cuadros",
+		"player_gender": "M",
+		"player_age": int(GameData.game.get("player", {}).get("default_age", 25)),
 		"difficulty": "normal",
 		"map_type": "interior",
 		"seed": randi() % 1000000,
@@ -62,17 +70,11 @@ func new_game(opts: Dictionary) -> void:
 	TimeManager.reset()
 	money = float(diff().get("start_money", 8000))
 	unlocked_zones = [START_ZONE.duplicate()]
-	var start_age := int(GameData.game.get("player_start_age", 25))
-	player = {
-		"name": str(settings["player_name"]),
-		"birth_day": today() - start_age * TimeManager.DAYS_PER_YEAR - rng.randi_range(0, 364),
-		"health": 100.0,
-		"alive": true,
-	}
 	WeatherSim.init_weather(self)
 	PopulationSim.generate_initial(self, int(diff().get("start_citizens", 30)))
+	PlayerSim.create_player(self)
 	running = true
-	notify("Bienvenido a %s. Eres el único empresario del pueblo." % settings["town_name"], "info")
+	notify("Bienvenido a %s, %s. Eres el único empresario del pueblo." % [settings["town_name"], player_name()], "info")
 
 
 func _clear() -> void:
@@ -82,8 +84,11 @@ func _clear() -> void:
 	citizens = {}
 	next_citizen_id = 1
 	buildings = []
+	_building_index = {}
 	next_building_id = 1
+	player_id = -1
 	player = {}
+	techs = []
 	weather = {}
 	season = ""
 	unlocked_zones = []
@@ -101,27 +106,17 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	if not running:
 		return
 	WeatherSim.daily(self)
+	BusinessSim.produce(self)
+	ConstructionSim.daily(self)
+	MarketSim.begin_day(self)
 	PopulationSim.daily(self)
-	_player_daily()
-	if new_month:
+	BusinessSim.end_day(self)
+	PlayerSim.daily(self)
+	if new_month and running:
+		MarketSim.monthly_housing(self)
+		BusinessSim.monthly(self)
+		PlayerSim.monthly(self)
 		_record_month()
-
-
-func _player_daily() -> void:
-	if not player.get("alive", false):
-		return
-	var age := player_age()
-	var p := PopulationSim.daily_death_probability(age, float(player.get("health", 100.0)), false)
-	if rng.randf() < p:
-		player["alive"] = false
-		running = false
-		notify("Has muerto a los %d años. Fin de la partida." % age, "jugador")
-		EventBus.player_died.emit()
-
-
-func player_age() -> int:
-	@warning_ignore("integer_division")
-	return (today() - int(player.get("birth_day", 0))) / TimeManager.DAYS_PER_YEAR
 
 
 func _record_month() -> void:
@@ -133,6 +128,8 @@ func _record_month() -> void:
 		"health": avg_health(),
 		"births": int(month_counters.get("births", 0)),
 		"deaths": int(month_counters.get("deaths", 0)),
+		"income": float(month_counters.get("income", 0.0)),
+		"expenses": float(month_counters.get("expenses", 0.0)),
 	})
 	if history.size() > MAX_HISTORY:
 		history.pop_front()
@@ -144,6 +141,36 @@ func count(key: String, n: int = 1) -> void:
 	if collecting_report:
 		var c: Dictionary = _report["counters"]
 		c[key] = int(c.get(key, 0)) + n
+
+
+## Movimiento de dinero del jugador. Positivo = ingreso, negativo = gasto.
+func add_money(amount: float) -> void:
+	money += amount
+	var key := "income" if amount >= 0.0 else "expenses"
+	month_counters[key] = float(month_counters.get(key, 0.0)) + absf(amount)
+	if collecting_report:
+		var c: Dictionary = _report["counters"]
+		c[key] = float(c.get(key, 0.0)) + absf(amount)
+
+
+# --- Jugador --------------------------------------------------------------------
+
+func player_citizen() -> Citizen:
+	return citizens.get(player_id)
+
+
+func is_player(id: int) -> bool:
+	return id == player_id and id >= 0
+
+
+func player_name() -> String:
+	var p := player_citizen()
+	return p.full_name() if p != null else str(settings.get("player_name", ""))
+
+
+func player_age() -> int:
+	var p := player_citizen()
+	return p.age_years(today()) if p != null else 0
 
 
 # --- Estadísticas ------------------------------------------------------------
@@ -166,17 +193,78 @@ func avg_health() -> float:
 	return total / citizens.size()
 
 
+# --- Edificios ------------------------------------------------------------------
+
 func get_building(id: int) -> Dictionary:
+	if _building_index.size() != buildings.size():
+		_reindex()
+	return _building_index.get(id, {})
+
+
+func _reindex() -> void:
+	_building_index = {}
 	for b in buildings:
-		if int(b["id"]) == id:
-			return b
-	return {}
+		_building_index[int(b["id"])] = b
+
+
+func add_building(b: Dictionary) -> void:
+	buildings.append(b)
+	_building_index[int(b["id"])] = b
+
+
+func remove_building(id: int) -> void:
+	for i in range(buildings.size()):
+		if int(buildings[i]["id"]) == id:
+			buildings.remove_at(i)
+			break
+	_building_index.erase(id)
+
+
+func building_def(b: Dictionary) -> Dictionary:
+	return GameData.building_def(str(b.get("type", "")))
+
+
+func level_def(b: Dictionary) -> Dictionary:
+	return GameData.level_def(str(b.get("type", "")), int(b.get("level", 1)))
+
+
+func building_label(b: Dictionary) -> String:
+	var n := str(b.get("name", ""))
+	return n if n != "" else str(level_def(b).get("label", b.get("type", "")))
+
+
+func building_capacity(b: Dictionary) -> int:
+	return int(level_def(b).get("capacity", 0))
+
+
+func is_active(b: Dictionary) -> bool:
+	return str(b.get("status", "activo")) == "activo"
+
+
+func owned_by_player(b: Dictionary) -> bool:
+	return str(b.get("owner", "")) == "jugador"
+
+
+func player_buildings(category := "") -> Array:
+	var out := []
+	for b in buildings:
+		if owned_by_player(b) and (category == "" or str(building_def(b).get("category", "")) == category):
+			out.append(b)
+	return out
 
 
 func residents_of(building_id: int) -> Array:
 	var out := []
 	for c in citizens.values():
 		if c.home_id == building_id:
+			out.append(c)
+	return out
+
+
+func employees_of(building_id: int) -> Array:
+	var out := []
+	for c in citizens.values():
+		if c.job_id == building_id:
 			out.append(c)
 	return out
 
@@ -194,15 +282,20 @@ func is_zone_unlocked(zx: int, zy: int) -> bool:
 	return false
 
 
+func has_tech(id: String) -> bool:
+	return id == "" or techs.has(id)
+
+
 # --- Notificaciones y reportes ----------------------------------------------
 
-## Categorías: info, nacimiento, muerte, salud, boda, emigracion, clima, importante, jugador.
+## Categorías: info, nacimiento, muerte, salud, boda, emigracion, clima,
+## importante, jugador, negocio, construccion, familia.
 func notify(text: String, category := "info") -> void:
 	var entry := {"text": text, "category": category, "date": TimeManager.date_string(false)}
 	notifications_log.append(entry)
 	if notifications_log.size() > MAX_LOG:
 		notifications_log.pop_front()
-	if collecting_report and category in ["importante", "jugador", "emigracion"]:
+	if collecting_report and category in ["importante", "jugador", "emigracion", "familia", "construccion"]:
 		var notes: Array = _report["notes"]
 		if notes.size() < 40:
 			notes.append(entry)
@@ -232,7 +325,7 @@ func end_report() -> Dictionary:
 	r["end_population"] = citizens.size()
 	r["end_money"] = money
 	r["end_happiness"] = avg_happiness()
-	r["player_alive"] = player.get("alive", false)
+	r["player_alive"] = running
 	_report = {}
 	return r
 
@@ -253,7 +346,9 @@ func to_dict() -> Dictionary:
 		"next_citizen_id": next_citizen_id,
 		"buildings": buildings,
 		"next_building_id": next_building_id,
+		"player_id": player_id,
 		"player": player,
+		"techs": techs,
 		"weather": weather,
 		"season": season,
 		"unlocked_zones": unlocked_zones,
@@ -261,6 +356,7 @@ func to_dict() -> Dictionary:
 		"history": history,
 		"month_counters": month_counters,
 		"notifications_log": notifications_log,
+		"running": running,
 		"rng_seed": str(rng.seed),
 		"rng_state": str(rng.state),
 	}
@@ -277,12 +373,12 @@ func load_dict(d: Dictionary) -> void:
 	next_citizen_id = int(d.get("next_citizen_id", 1))
 	buildings = []
 	for b in d.get("buildings", []):
-		var bd: Dictionary = b
-		bd["id"] = int(bd["id"])
-		buildings.append(bd)
+		buildings.append(ConstructionSim.normalize_building(b))
+	_reindex()
 	next_building_id = int(d.get("next_building_id", 1))
 	player = d.get("player", {})
-	player["birth_day"] = int(player.get("birth_day", 0))
+	player_id = int(d.get("player_id", -1))
+	techs = d.get("techs", [])
 	weather = d.get("weather", {})
 	season = str(d.get("season", ""))
 	unlocked_zones = d.get("unlocked_zones", [START_ZONE.duplicate()])
@@ -293,4 +389,7 @@ func load_dict(d: Dictionary) -> void:
 	notifications_log = d.get("notifications_log", [])
 	rng.seed = int(str(d.get("rng_seed", "0")))
 	rng.state = int(str(d.get("rng_state", "0")))
-	running = bool(player.get("alive", true))
+	running = bool(d.get("running", true))
+	if player_id < 0:
+		# Partida de la Fase 1: el jugador aún no era un ciudadano.
+		PlayerSim.migrate_v1_player(self, d.get("player", {}))

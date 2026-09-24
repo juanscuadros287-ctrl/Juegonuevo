@@ -12,6 +12,11 @@ var citizens: Dictionary = {}
 var weather: Dictionary = {}
 var skills: Dictionary = {}
 var buildings: Dictionary = {}
+var businesses: Dictionary = {}
+var goods: Dictionary = {}
+var legal_types: Dictionary = {}
+var technologies: Dictionary = {}
+var interiors: Dictionary = {}
 
 
 func _ready() -> void:
@@ -27,6 +32,11 @@ func load_all() -> void:
 	weather = _load("weather.json")
 	skills = _load("skills.json")
 	buildings = _load("buildings.json")
+	businesses = _load("businesses.json")
+	goods = _load("goods.json")
+	legal_types = _load("legal_types.json")
+	technologies = _load("technologies.json")
+	interiors = _load("interiors.json")
 
 
 func _load(file_name: String) -> Dictionary:
@@ -71,3 +81,38 @@ func education_label(level: int) -> String:
 
 func currency() -> String:
 	return str(game.get("currency_symbol", "$"))
+
+
+# --- Edificios y negocios ----------------------------------------------------------
+
+## Definición de un tipo construible (vivienda, oficina o negocio).
+func building_def(type_id: String) -> Dictionary:
+	if buildings.has(type_id):
+		return buildings[type_id]
+	return businesses.get(type_id, {})
+
+
+func level_def(type_id: String, level: int) -> Dictionary:
+	var levels: Array = building_def(type_id).get("levels", [])
+	if levels.is_empty():
+		return {}
+	return levels[clampi(level - 1, 0, levels.size() - 1)]
+
+
+func max_level(type_id: String) -> int:
+	return building_def(type_id).get("levels", []).size()
+
+
+## Todos los tipos construibles ordenados: viviendas, oficina y luego negocios.
+func buildable_ids() -> Array:
+	var out := sorted_ids(buildings)
+	out.append_array(sorted_ids(businesses))
+	return out
+
+
+func good_label(id: String) -> String:
+	return str(goods.get(id, {}).get("label", id))
+
+
+func tech_label(id: String) -> String:
+	return str(technologies.get(id, {}).get("label", id))

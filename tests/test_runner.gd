@@ -13,12 +13,17 @@ func check(cond: bool, msg: String) -> void:
 
 
 func _ready() -> void:
-	print("== Dinastía: pruebas Fase 1 ==")
+	print("== Dinastía: pruebas ==")
 	_test_new_game()
 	_test_simulation()
 	_test_save_load()
 	_test_terrain()
 	_test_jump()
+	_test_phase2_business()
+	_test_phase2_housing()
+	_test_phase2_player()
+	_test_interiors()
+	_test_time_speeds()
 	print("== %s (%d fallos) ==" % ["TODO OK" if failures == 0 else "CON FALLOS", failures])
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -26,8 +31,8 @@ func _ready() -> void:
 func _test_new_game() -> void:
 	for d in GameData.difficulties:
 		GameState.new_game({"difficulty": d, "seed": 42})
-		var expected := int(GameData.difficulty(d)["start_citizens"])
-		check(GameState.citizens.size() == expected, "%s: %d ciudadanos iniciales" % [d, expected])
+		var expected := int(GameData.difficulty(d)["start_citizens"]) + 1
+		check(GameState.citizens.size() == expected, "%s: %d ciudadanos iniciales (incluye al jugador)" % [d, expected])
 		check(is_equal_approx(GameState.money, float(GameData.difficulty(d)["start_money"])), "%s: dinero inicial" % d)
 	var homeless := 0
 	for c in GameState.citizens.values():
@@ -48,10 +53,14 @@ func _test_simulation() -> void:
 		deaths += int(h["deaths"])
 	print("    30 años: población %d -> %d, nacimientos %d, muertes %d, felicidad %.1f, salud %.1f, año %d" % [
 			start_pop, GameState.citizens.size(), births, deaths, GameState.avg_happiness(), GameState.avg_health(), TimeManager.year()])
-	check(TimeManager.year() >= 1729, "el tiempo avanza 30 años")
+	if GameState.running:
+		check(TimeManager.year() >= 1729, "el tiempo avanza 30 años")
+		check(GameState.history.size() >= 359, "historial mensual registrado")
+	else:
+		print("    (tu personaje murió sin herederos en %d: la partida terminó)" % TimeManager.year())
+		check(GameState.history.size() >= 12, "historial mensual registrado")
 	check(births > 0, "hay nacimientos")
 	check(deaths > 0, "hay muertes")
-	check(GameState.history.size() >= 359, "historial mensual registrado")
 	var bad := 0
 	for c in GameState.citizens.values():
 		if c.health < 0 or c.health > 100 or c.happiness < 0 or c.happiness > 100 or is_nan(c.money):
@@ -123,3 +132,168 @@ func _test_jump() -> void:
 		check(reports[0]["start_date"] != reports[0]["end_date"], "reporte con fechas: %s -> %s" % [reports[0]["start_date"], reports[0]["end_date"]])
 	check(TimeManager.year() >= 1702, "salto de 2 años aplicado")
 	GameState.running = false
+
+
+func _build_now(type_id: String, x: float, z: float, tier := "normal") -> Dictionary:
+	var r := ConstructionSim.start_construction(GameState, type_id, x, z, 0.0, "", "sas", tier)
+	if r.has("error"):
+		print("    error construcción: ", r["error"])
+		return {}
+	var b: Dictionary = r["building"]
+	var guard := 0
+	while b["status"] != "activo" and guard < 400:
+		TimeManager.advance_days(1)
+		guard += 1
+	return b
+
+
+func _test_phase2_business() -> void:
+	GameState.new_game({"seed": 11, "difficulty": "facil"})
+	var money0 := GameState.money
+	check(ConstructionSim.placement_block_reason(GameState, "granja", 0, 0) != "", "no se construye sobre la plaza")
+	check(ConstructionSim.placement_block_reason(GameState, "granja", 150, 150) != "", "no se construye en zona bloqueada")
+	var farm := _build_now("granja", 30, -8)
+	check(not farm.is_empty() and farm["status"] == "activo", "granja construida con jornaleros")
+	check(GameState.money < money0, "la construcción cuesta dinero")
+	var free_workers := 0
+	for c in GameState.citizens.values():
+		if c.job_kind == "obra":
+			free_workers += 1
+	check(free_workers == 0, "jornaleros liberados al terminar la obra")
+	var cands := BusinessSim.candidates(GameState, farm)
+	check(cands.size() > 0, "hay candidatos para contratar")
+	for i in range(4):
+		var c: Citizen = cands[i]
+		BusinessSim.hire(GameState, farm, c, BusinessSim.asked_wage(GameState, c, "granja"))
+	check(GameState.employees_of(int(farm["id"])).size() == 4, "4 empleados contratados")
+	check(BusinessSim.hire(GameState, farm, cands[4], 2.0) != "", "no se contrata sobre la capacidad")
+	TimeManager.advance_days(30)
+	var sales := BusinessSim.period_value(farm, "month", "ventas") + BusinessSim.period_value(farm, "last_month", "ventas")
+	var wages := BusinessSim.period_value(farm, "month", "salarios") + BusinessSim.period_value(farm, "last_month", "salarios")
+	print("    granja 30 días: ventas %.1f salarios %.1f inventario %.1f" % [sales, wages, float(farm["inventory"].get("comida", 0))])
+	check(sales > 0.0, "la granja vende comida a los ciudadanos")
+	check(wages > 0.0, "la granja paga salarios")
+	# Mejora: no factura durante la obra.
+	GameState.techs.append("rotacion_cultivos")
+	check(ConstructionSim.start_upgrade(GameState, farm) == "", "mejora iniciada")
+	var before := BusinessSim.period_value(farm, "month", "ventas")
+	TimeManager.advance_days(5)
+	check(farm["status"] == "mejorando" and is_equal_approx(BusinessSim.period_value(farm, "month", "ventas"), before) or BusinessSim.period_value(farm, "month", "ventas") == 0.0, "sin ventas durante la mejora")
+	var guard := 0
+	while farm["status"] != "activo" and guard < 400:
+		TimeManager.advance_days(1)
+		guard += 1
+	check(int(farm["level"]) == 2, "granja sube a nivel 2")
+	# Límite de negocios sin oficina y con oficina.
+	var slots := BusinessSim.max_businesses(GameState)
+	_build_now("aguatero", -30, 10)
+	check(ConstructionSim.build_block_reason(GameState, "taberna") != "", "límite de %d negocios sin oficina" % slots)
+	_build_now("oficina", 12, 30)
+	check(BusinessSim.max_businesses(GameState) > slots, "la oficina amplía el límite de negocios")
+	check(ConstructionSim.build_block_reason(GameState, "pescaderia") != "", "pescadería bloqueada en mapa interior")
+	check(ConstructionSim.build_block_reason(GameState, "vivienda") == "" and ConstructionSim.level_block_reason(GameState, "vivienda", 3) != "", "casa de ladrillo requiere investigación")
+	# Expansión de zona.
+	check(ConstructionSim.unlock_zone(GameState, 3, 2) == "", "zona vecina comprada")
+	check(ConstructionSim.unlock_zone(GameState, 0, 0) != "", "zona no vecina rechazada")
+
+
+func _test_phase2_housing() -> void:
+	GameState.new_game({"seed": 12, "difficulty": "facil"})
+	var normal := ConstructionSim.cost_for(GameState, "vivienda", 1, false, "normal")
+	var alta := ConstructionSim.cost_for(GameState, "vivienda", 1, false, "alta")
+	check(float(alta["total"]) > float(normal["total"]) * 2.0, "calidad alta cuesta más")
+	var house := _build_now("vivienda", -30, -10, "media")
+	check(house.get("tier", "") == "media" and float(house["rent"]) > 5.0, "vivienda media con renta mayor")
+	# Forzar necesidad de vivienda: una familia sin hogar.
+	var fam := []
+	for c in GameState.citizens.values():
+		if not GameState.is_player(c.id) and c.spouse_id >= 0:
+			fam = [c, GameState.citizens[c.spouse_id]]
+			break
+	for c in fam:
+		c.home_id = -1
+		c.money += 200
+	TimeManager.advance_days(40)
+	var tenants := GameState.residents_of(int(house["id"])).size()
+	check(tenants > 0, "familias alquilan tu vivienda (%d inquilinos)" % tenants)
+	TimeManager.advance_days(30)
+	check(BusinessSim.period_value(house, "last_month", "alquileres") > 0.0, "cobras alquiler")
+	house["for_sale"] = true
+	for c in GameState.residents_of(int(house["id"])):
+		c.money += 5000
+	var sold := false
+	for i in range(8):
+		TimeManager.advance_days(31)
+		if house["owner"] == "ciudadano":
+			sold = true
+			break
+	check(sold, "vivienda vendida a un ciudadano")
+	var rc := ConstructionSim.renovation_cost(GameState, _build_now("vivienda", 34, 14))
+	check(rc.get("tier", "") == "media", "remodelación a calidad media disponible")
+
+
+func _test_phase2_player() -> void:
+	GameState.new_game({"seed": 13, "player_name": "Ana", "player_surname": "Ríos", "player_gender": "F", "player_age": 30})
+	var p := GameState.player_citizen()
+	check(p != null and p.full_name() == "Ana Ríos" and p.gender == "F" and p.age_years(GameState.today()) == 30, "personaje creado con nombre, sexo y edad")
+	check(GameState.owned_by_player(PlayerSim.player_home(GameState)), "el jugador tiene casa propia")
+	var target: Citizen = null
+	for c in GameState.citizens.values():
+		if PlayerSim.can_court(GameState, c) == "":
+			target = c
+			break
+	check(target != null, "hay alguien soltero para conocer")
+	if target == null:
+		return
+	PlayerSim.talk(GameState, target)
+	check(PlayerSim.talk(GameState, target) != "" and PlayerSim.affinity(GameState, target.id) > 0, "conversar sube la relación (una vez por día)")
+	for i in range(40):
+		TimeManager.advance_days(1)
+		if PlayerSim.affinity(GameState, target.id) < 25:
+			PlayerSim.talk(GameState, target)
+		else:
+			PlayerSim.date(GameState, target)
+	var tries := 0
+	while p.spouse_id < 0 and tries < 20:
+		PlayerSim.propose(GameState, target)
+		TimeManager.advance_days(1)
+		PlayerSim.date(GameState, target)
+		tries += 1
+	check(p.spouse_id == target.id and target.home_id == p.home_id, "matrimonio: la pareja vive contigo")
+	check(PlayerSim.try_child(GameState) == "Están buscando un bebé. Más probabilidad durante 30 días.", "buscar un bebé")
+	var kids0 := p.children_ids.size()
+	PlayerSim.adopt_baby(GameState)
+	check(p.children_ids.size() == kids0 + 1, "adopción de bebé")
+	var baby: Citizen = GameState.citizens[p.children_ids[-1]]
+	check(baby.home_id == p.home_id and baby.last_name == p.last_name, "el bebé adoptado vive contigo y lleva tu apellido")
+	# Herencia
+	GameState.player["heir_id"] = baby.id
+	PopulationSim.die(GameState, p, "prueba")
+	check(GameState.running and GameState.player_id == baby.id, "el heredero toma el control")
+
+
+func _test_interiors() -> void:
+	GameState.new_game({"seed": 14})
+	var h := {"type": "vivienda", "level": 1, "tier": "normal"}
+	var items_n := Housing.interior_items(GameState, h)
+	h["tier"] = "alta"
+	var items_a := Housing.interior_items(GameState, h)
+	var labels_n := items_n.map(func(i): return i["item"]["id"])
+	var labels_a := items_a.map(func(i): return i["item"]["id"])
+	check(labels_n.has("jergon") and labels_n.has("bacinilla") and labels_n.has("fogon"), "casa normal 1700: jergón, bacinilla y fogón")
+	check(labels_a.has("cama_dosel") and labels_a.has("banera_hierro"), "casa alta: cama con dosel y bañera")
+	GameState.techs.append_array(["saneamiento", "electricidad"])
+	var labels_e := Housing.interior_items(GameState, {"type": "vivienda", "level": 1, "tier": "normal"}).map(func(i): return i["item"]["id"])
+	check(labels_e.has("inodoro") and labels_e.has("bombilla"), "otra época: inodoro y bombilla")
+
+
+func _test_time_speeds() -> void:
+	GameState.new_game({"seed": 15})
+	TimeManager.set_speed(TimeManager.SPEED_REALTIME)
+	var h0 := TimeManager.total_hours
+	TimeManager._process(10.0)
+	check(TimeManager.total_hours == h0 and TimeManager.hour_fraction > 0.0027 and TimeManager.hour_fraction < 0.0029, "tiempo real: 10 s reales = 10 s de juego")
+	TimeManager.set_speed(2)
+	TimeManager._process(2.0)
+	check(TimeManager.total_hours == h0 + 2, "x1: 2 s = 2 horas")
+	TimeManager.set_speed(0)

@@ -17,3 +17,11 @@ signal jump_finished(report: Dictionary)
 signal citizen_selected(id: int)
 signal building_selected(id: int)
 signal player_died
+signal building_changed(id: int)
+signal building_removed(id: int)
+signal zones_changed
+signal player_changed
+signal build_mode_requested(type_id: String, tier: String)
+signal zone_mode_requested
+signal interior_requested(building_id: int)
+signal interior_closed

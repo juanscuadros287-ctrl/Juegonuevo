@@ -1,14 +1,61 @@
 {
-  "name": "Dinastía",
-  "subtitle": "Simulación económica y de pueblo · desde 1700",
-  "version": "0.1.0 · Fase 1",
-  "currency_symbol": "$",
-  "start_year": 1700,
-  "start_month": 3,
-  "start_day": 1,
-  "start_hour": 6,
-  "player_start_age": 25,
-  "jump_options_years": [2, 5, 10],
-  "autosave_yearly": true,
-  "town_names": ["San Rafael", "Villa del Valle", "Santa Lucía", "Puerto Viejo", "Aldea Nueva", "San Telmo", "Robledal", "Peñaverde", "Los Olivos", "Montecristo"]
+ "name": "Dinastía",
+ "subtitle": "Simulación económica y de pueblo · desde 1700",
+ "version": "0.2.0 · Fase 2",
+ "currency_symbol": "$",
+ "start_year": 1700,
+ "start_month": 3,
+ "start_day": 1,
+ "start_hour": 6,
+ "player_start_age": 25,
+ "jump_options_years": [
+  2,
+  5,
+  10
+ ],
+ "autosave_yearly": true,
+ "town_names": [
+  "San Rafael",
+  "Villa del Valle",
+  "Santa Lucía",
+  "Puerto Viejo",
+  "Aldea Nueva",
+  "San Telmo",
+  "Robledal",
+  "Peñaverde",
+  "Los Olivos",
+  "Montecristo"
+ ],
+ "base_business_slots": 2,
+ "construction_day_wage": 2.2,
+ "upgrade_cost_factor": 0.8,
+ "zone_expansion_cost": 2500,
+ "zone_expansion_growth": 1.5,
+ "player": {
+  "min_age": 18,
+  "max_age": 40,
+  "default_age": 25,
+  "talk_gain": [
+   3,
+   9
+  ],
+  "date_cost": 5,
+  "date_gain": [
+   8,
+   15
+  ],
+  "date_min_affinity": 20,
+  "propose_min_affinity": 75,
+  "affinity_monthly_decay": 1,
+  "adopt_orphan_fee": 100,
+  "adopt_baby_fee": 400,
+  "doctor_fee": 30,
+  "doctor_days": 10,
+  "doctor_recover_bonus": 0.25,
+  "living_cost_factor": 2.0,
+  "invite_min_affinity": 50,
+  "try_child_days": 30,
+  "try_child_mult": 4.0
+ },
+ "realtime_game_seconds_per_second": 1.0
 }

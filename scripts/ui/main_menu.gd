@@ -6,6 +6,9 @@ var new_panel: PanelContainer
 var load_panel: PanelContainer
 var town_edit: LineEdit
 var player_edit: LineEdit
+var surname_edit: LineEdit
+var gender_opt: OptionButton
+var age_spin: SpinBox
 var seed_edit: SpinBox
 var diff_opt: OptionButton
 var map_opt: OptionButton
@@ -62,16 +65,36 @@ func _build_new_panel(parent: Control) -> void:
 	v.add_child(grid)
 	var defaults := GameState.default_settings()
 
+
+	grid.add_child(UIKit.label("TU PERSONAJE", 15, UIKit.ACCENT))
+	grid.add_child(Control.new())
+	grid.add_child(UIKit.label("Nombre"))
+	player_edit = LineEdit.new()
+	player_edit.text = defaults["player_name"]
+	grid.add_child(player_edit)
+	grid.add_child(UIKit.label("Apellido"))
+	surname_edit = LineEdit.new()
+	surname_edit.text = defaults["player_surname"]
+	grid.add_child(surname_edit)
+	grid.add_child(UIKit.label("Sexo"))
+	gender_opt = OptionButton.new()
+	gender_opt.add_item("Hombre")
+	gender_opt.add_item("Mujer")
+	grid.add_child(gender_opt)
+	grid.add_child(UIKit.label("Edad inicial"))
+	var pc: Dictionary = GameData.game.get("player", {})
+	age_spin = SpinBox.new()
+	age_spin.min_value = int(pc.get("min_age", 18))
+	age_spin.max_value = int(pc.get("max_age", 40))
+	age_spin.value = int(defaults["player_age"])
+	grid.add_child(age_spin)
+	grid.add_child(UIKit.label("EL PUEBLO", 15, UIKit.ACCENT))
+	grid.add_child(Control.new())
 	grid.add_child(UIKit.label("Nombre del pueblo"))
 	town_edit = LineEdit.new()
 	town_edit.text = defaults["town_name"]
 	town_edit.custom_minimum_size.x = 300
 	grid.add_child(town_edit)
-
-	grid.add_child(UIKit.label("Tu nombre"))
-	player_edit = LineEdit.new()
-	player_edit.text = defaults["player_name"]
-	grid.add_child(player_edit)
 
 	grid.add_child(UIKit.label("Dificultad"))
 	diff_opt = OptionButton.new()
@@ -169,6 +192,9 @@ func _start() -> void:
 	GameState.new_game({
 		"town_name": town_edit.text.strip_edges() if town_edit.text.strip_edges() != "" else "San Rafael",
 		"player_name": player_edit.text.strip_edges() if player_edit.text.strip_edges() != "" else "Sebastián",
+		"player_surname": surname_edit.text.strip_edges() if surname_edit.text.strip_edges() != "" else "Cuadros",
+		"player_gender": "F" if gender_opt.selected == 1 else "M",
+		"player_age": int(age_spin.value),
 		"difficulty": diff_ids[diff_opt.selected],
 		"map_type": map_ids[map_opt.selected],
 		"seed": int(seed_edit.value),
