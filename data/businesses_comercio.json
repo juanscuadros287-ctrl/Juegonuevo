@@ -1,0 +1,36 @@
+{
+ "_nota": "Fase 7: infraestructura de transporte externo. Son centros de costo (salarios y mantenimiento); habilitan medios de transporte en «Comercio exterior». trade_capacity_mult multiplica la carga por viaje.",
+ "estacion_tren": {
+  "label": "Estación de tren", "category": "negocio", "sector": "Transporte", "order": 30, "product": "servicio",
+  "skill": "comercio", "base_wage": 2.4, "footprint": 6.0, "trade_infra": true,
+  "description": "Habilita el ferrocarril hacia los pueblos con vía férrea. Necesita al menos un empleado; con más personal y niveles mayores cada tren lleva más carga.",
+  "levels": [
+   {"label": "Estación de tren", "cost": 3500, "materials": {"madera": 40, "piedra": 60}, "build_days": 40, "workers": 5, "jobs": 4, "prod_per_worker": 1.0, "quality": 1.0, "upkeep": 1.2, "unit_cost": 0, "tech": "ferrocarril", "trade_capacity_mult": 1.0,
+    "model": [{"s": "box", "size": [6, 2.8, 3.2], "pos": [0, 1.4, 0], "c": [0.72, 0.42, 0.3]}, {"s": "prism", "size": [6.4, 1.4, 3.8], "pos": [0, 3.5, 0], "rot": 90, "c": [0.3, 0.3, 0.33]}, {"s": "box", "size": [6.6, 0.25, 1.6], "pos": [0, 2.7, 2.3], "c": [0.35, 0.3, 0.28]}, {"s": "box", "size": [0.9, 1.6, 0.1], "pos": [0, 0.8, 1.63], "c": [0.28, 0.18, 0.1]}, {"s": "box", "size": [7.0, 0.12, 0.3], "pos": [0, 0.06, 3.6], "c": [0.4, 0.4, 0.42]}, {"s": "box", "size": [7.0, 0.12, 0.3], "pos": [0, 0.06, 4.4], "c": [0.4, 0.4, 0.42]}]},
+   {"label": "Estación central", "cost": 7000, "materials": {"madera": 40, "piedra": 120}, "build_days": 60, "workers": 8, "jobs": 8, "prod_per_worker": 1.0, "quality": 1.2, "upkeep": 2.5, "unit_cost": 0, "tech": "acero_estructural", "trade_capacity_mult": 1.6,
+    "model": [{"s": "box", "size": [7, 4, 3.6], "pos": [0, 2.0, 0], "c": [0.78, 0.5, 0.36]}, {"s": "box", "size": [2, 6, 2], "pos": [0, 3.0, 0], "c": [0.8, 0.55, 0.4]}, {"s": "prism", "size": [7.4, 1.4, 4.2], "pos": [0, 4.7, 0], "rot": 90, "c": [0.28, 0.3, 0.32]}, {"s": "box", "size": [7.6, 0.25, 1.8], "pos": [0, 3.2, 2.5], "c": [0.35, 0.3, 0.28]}, {"s": "box", "size": [8.0, 0.12, 0.3], "pos": [0, 0.06, 3.8], "c": [0.4, 0.4, 0.42]}, {"s": "box", "size": [8.0, 0.12, 0.3], "pos": [0, 0.06, 4.6], "c": [0.4, 0.4, 0.42]}]}
+  ]
+ },
+ "puerto": {
+  "label": "Puerto", "category": "negocio", "sector": "Transporte", "order": 31, "product": "servicio",
+  "skill": "comercio", "base_wage": 2.0, "footprint": 5.5, "trade_infra": true,
+  "description": "Muelle y bodega para comerciar en barco. Solo sirve en mapas de costa o río, hacia pueblos con acceso por agua. Necesita al menos un empleado.",
+  "levels": [
+   {"label": "Muelle", "cost": 1800, "materials": {"madera": 60, "piedra": 20}, "build_days": 30, "workers": 4, "jobs": 3, "prod_per_worker": 1.0, "quality": 1.0, "upkeep": 0.6, "unit_cost": 0, "tech": "navegacion", "trade_capacity_mult": 1.0,
+    "model": [{"s": "box", "size": [5, 0.4, 5], "pos": [0, 0.2, 0], "c": [0.5, 0.36, 0.22]}, {"s": "box", "size": [3, 2.2, 2.6], "pos": [-0.8, 1.5, -0.8], "c": [0.6, 0.45, 0.3]}, {"s": "prism", "size": [3.3, 1.2, 3.0], "pos": [-0.8, 3.2, -0.8], "rot": 90, "c": [0.45, 0.28, 0.18]}, {"s": "cyl", "size": [0.25, 2.5, 0.25], "pos": [2.0, 1.25, 2.0], "c": [0.35, 0.25, 0.15]}, {"s": "box", "size": [0.8, 0.8, 0.8], "pos": [1.4, 0.8, -1.6], "c": [0.55, 0.4, 0.25]}]},
+   {"label": "Puerto comercial", "cost": 5000, "materials": {"madera": 60, "piedra": 100}, "build_days": 50, "workers": 7, "jobs": 7, "prod_per_worker": 1.0, "quality": 1.2, "upkeep": 1.6, "unit_cost": 0, "tech": "maquina_vapor", "trade_capacity_mult": 1.8,
+    "model": [{"s": "box", "size": [5.5, 0.5, 5.5], "pos": [0, 0.25, 0], "c": [0.55, 0.55, 0.55]}, {"s": "box", "size": [4, 3, 3], "pos": [-0.6, 2.0, -1.0], "c": [0.7, 0.5, 0.35]}, {"s": "prism", "size": [4.3, 1.2, 3.4], "pos": [-0.6, 4.1, -1.0], "rot": 90, "c": [0.35, 0.35, 0.38]}, {"s": "cyl", "size": [0.3, 4.5, 0.3], "pos": [2.2, 2.25, 2.2], "c": [0.3, 0.3, 0.32]}, {"s": "box", "size": [2.5, 0.2, 0.2], "pos": [1.2, 4.4, 2.2], "c": [0.3, 0.3, 0.32]}]}
+  ]
+ },
+ "aeropuerto": {
+  "label": "Aeropuerto", "category": "negocio", "sector": "Transporte", "order": 32, "product": "servicio",
+  "skill": "comercio", "base_wage": 3.5, "footprint": 8.0, "trade_infra": true,
+  "description": "Pista y terminal de carga para aviones. Necesita al menos un empleado; más niveles permiten aviones más grandes.",
+  "levels": [
+   {"label": "Aeródromo", "cost": 12000, "materials": {"madera": 20, "piedra": 200}, "build_days": 60, "workers": 8, "jobs": 6, "prod_per_worker": 1.0, "quality": 1.0, "upkeep": 4.0, "unit_cost": 0, "tech": "aviacion", "trade_capacity_mult": 1.0,
+    "model": [{"s": "box", "size": [3, 0.06, 15], "pos": [3, 0.03, 0], "c": [0.25, 0.25, 0.27]}, {"s": "box", "size": [3.5, 3, 4], "pos": [-2.5, 1.5, 0], "c": [0.85, 0.85, 0.8]}, {"s": "box", "size": [1.2, 5, 1.2], "pos": [-2.5, 2.5, 2.8], "c": [0.8, 0.8, 0.78]}, {"s": "box", "size": [1.8, 1.0, 1.8], "pos": [-2.5, 5.3, 2.8], "c": [0.4, 0.6, 0.7]}]},
+   {"label": "Aeropuerto internacional", "cost": 30000, "materials": {"piedra": 400}, "build_days": 90, "workers": 12, "jobs": 12, "prod_per_worker": 1.0, "quality": 1.3, "upkeep": 9.0, "unit_cost": 0, "tech": "aeronautica", "trade_capacity_mult": 2.5,
+    "model": [{"s": "box", "size": [3.5, 0.06, 16], "pos": [3.2, 0.03, 0], "c": [0.22, 0.22, 0.24]}, {"s": "box", "size": [4, 3.5, 7], "pos": [-2.5, 1.75, 0], "c": [0.88, 0.88, 0.85]}, {"s": "box", "size": [1.2, 6, 1.2], "pos": [-2.5, 3.0, 4.2], "c": [0.8, 0.8, 0.78]}, {"s": "box", "size": [2.0, 1.0, 2.0], "pos": [-2.5, 6.4, 4.2], "c": [0.4, 0.6, 0.7]}]}
+  ]
+ }
+}
