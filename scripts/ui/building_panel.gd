@@ -58,7 +58,7 @@ func rebuild() -> void:
 	_add_tab("Resumen", _summary_tab(b, mine))
 	if mine and cat == "negocio":
 		_add_tab("Empleados", _employees_tab(b))
-		if str(def.get("product", "")) not in ["", "construccion", "credito", "servicio", "investigacion", "educacion"]:
+		if str(def.get("product", "")) not in ["", "construccion", "credito", "servicio", "investigacion", "educacion", "transporte"]:
 			_add_tab("Precio", _price_tab(b))
 		if BankSim.is_bank(b):
 			_add_tab("Banco", _bank_tab(b))

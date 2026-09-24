@@ -130,7 +130,7 @@ static func build_block_reason(gs, type_id: String, tier := "normal") -> String:
 	if r != "":
 		return r
 	var def := GameData.building_def(type_id)
-	if str(def.get("category", "")) == "negocio" and not def.has("service") and BusinessSim.business_count(gs) >= BusinessSim.max_businesses(gs):
+	if str(def.get("category", "")) == "negocio" and BusinessSim.counts_for_limit(def) and BusinessSim.business_count(gs) >= BusinessSim.max_businesses(gs):
 		return "Límite de negocios (%d). Construye o mejora tu oficina." % BusinessSim.max_businesses(gs)
 	var cost := cost_for(gs, type_id, 1, false, tier)
 	if gs.money < float(cost["total"]):

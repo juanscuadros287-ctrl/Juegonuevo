@@ -19,9 +19,14 @@ static func is_business(b: Dictionary) -> bool:
 static func business_count(gs) -> int:
 	var n := 0
 	for b in gs.buildings:
-		if gs.owned_by_player(b) and is_business(b) and not gs.building_def(b).has("service"):
+		if gs.owned_by_player(b) and is_business(b) and counts_for_limit(gs.building_def(b)):
 			n += 1
 	return n
+
+
+## Servicios públicos e infraestructura de transporte no cuentan para el límite de la oficina.
+static func counts_for_limit(def: Dictionary) -> bool:
+	return not def.has("service") and not bool(def.get("trade_infra", false)) and str(def.get("product", "")) != "transporte"
 
 
 static func max_businesses(gs) -> int:
