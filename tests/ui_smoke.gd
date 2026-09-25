@@ -127,6 +127,7 @@ func _ready() -> void:
 			hud._open_item(str(it[0]))
 			await get_tree().process_frame
 	hud.close_category()
+	hud.global_econ.close()
 	if hud.goods_catalog.visible:
 		hud.goods_catalog.close()
 	if hud.research_screen.visible:

@@ -54,6 +54,9 @@ func refresh() -> void:
 		g.add_child(k)
 	var chips := UIKit.flow(5, 5)
 	body.add_child(chips)
+	chips.add_child(UIKit.chip("Efectivo %s · Banco %s (ver «Efectivo y riesgo»)" % [Fmt.money(MoneySim.cash(gs)), Fmt.money(MoneySim.bank(gs))], UIKit.ACCENT, "money", 11))
+	chips.add_child(UIKit.chip("%s (%s) pagado %s · causado este mes %s" % [MoneySim.sales_tax_label(gs), Fmt.pct_1(MoneySim.sales_tax_rate(gs) * 100.0),
+		Fmt.money(float(gs.government.get("taxes_last", {}).get("iva", 0.0))), Fmt.money(MoneySim.iva_pending(gs))], UIKit.WARN, "government", 11))
 	chips.add_child(UIKit.chip("Intereses: pagados %s · cobrados %s" % [Fmt.money(float(last.get("interest_paid", 0))), Fmt.money(float(last.get("interest_earned", 0)))], UIKit.TEXT_DIM, "finance", 11))
 	chips.add_child(UIKit.chip("Impuestos %s" % Fmt.money(float(last.get("taxes_paid", 0))), UIKit.WARN, "government", 11))
 	chips.add_child(UIKit.chip("Subsidios %s" % Fmt.money(float(last.get("subsidies", 0))), UIKit.GOOD, "money", 11))

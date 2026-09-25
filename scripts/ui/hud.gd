@@ -20,7 +20,9 @@ const CATEGORIES := [
 	{"id": "empresas", "label": "Empresas", "icon": "companies", "key": "F2", "items": [
 		["companies", "Mis empresas", "companies", "C"], ["realestate", "Bienes raíces", "realestate", "V"], ["contracts", "Contratos", "contracts", "K"]]},
 	{"id": "economia", "label": "Economía", "icon": "economy", "key": "F3", "items": [
-		["finance", "Finanzas", "finance", "F"], ["stats", "Estadísticas", "stats", "Y"], ["catalog", "Catálogo de bienes", "catalog", "O"]]},
+		["finance", "Finanzas", "finance", "F"], ["cash", "Efectivo y riesgo", "money", ""], ["stats", "Estadísticas", "stats", "Y"],
+		["world_econ", "Economía mundial", "globe", ""], ["stocks", "Bolsa de valores", "trend_up", ""], ["insurance", "Seguros", "shield", ""],
+		["catalog", "Catálogo de bienes", "catalog", "O"]]},
 	{"id": "logistica", "label": "Logística y transporte", "icon": "logistics", "key": "F4", "items": [
 		["logistics", "Logística", "logistics", "L"], ["transit", "Transporte público", "transit", "J"],
 		["utilities", "Servicios públicos", "utilities", "U"], ["trade", "Comercio exterior", "trade", "X"]]},
@@ -92,6 +94,9 @@ var tourism_panel: TourismPanel
 var realestate_panel: RealEstatePanel   # Bienes raíces
 var utilities_panel: UtilitiesPanel
 var transit_panel: TransitPanel
+var cash_panel: CashPanel   # Sección E: efectivo y riesgo
+var global_econ: GlobalEconWindow   # Economía global: ciclos, monedas, bolsa y seguros.
+var cycle_indicator: CycleIndicator
 
 # Interior
 var interior_panel: PanelContainer
@@ -152,6 +157,10 @@ func _ready() -> void:
 	goods_catalog = GoodsCatalog.new()
 	root.add_child(goods_catalog)
 	goods_catalog.setup()
+	global_econ = GlobalEconWindow.new()
+	root.add_child(global_econ)
+	global_econ.setup()
+	global_econ.message.connect(toast)
 	_build_hint()
 	_build_flyout()
 	EventBus.notification_posted.connect(_on_notification)
@@ -260,6 +269,10 @@ func _build_top_bar() -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(spacer)
+	cycle_indicator = CycleIndicator.new()   # Economía global: fase del ciclo y señales.
+	cycle_indicator.icon = UIIcons.tex("economy", 16)
+	row.add_child(cycle_indicator)
+	cycle_indicator.pressed.connect(func(): global_econ.open(0))
 	# Clima y fecha
 	var wbox := HBoxContainer.new()
 	wbox.add_theme_constant_override("separation", 4)
@@ -584,6 +597,8 @@ func _item_active(item_id: String) -> bool:
 			return dock.visible and dock_mode == "player"
 		"catalog":
 			return goods_catalog != null and goods_catalog.visible
+		"world_econ", "stocks", "insurance":
+			return global_econ != null and global_econ.visible and global_econ.tabs.current_tab == {"world_econ": 0, "stocks": 1, "insurance": 2}[item_id]
 		"research":
 			return research_screen != null and research_screen.visible
 		"population":
@@ -607,6 +622,15 @@ func _open_item(item_id: String) -> void:
 	match item_id:
 		"catalog":
 			goods_catalog.open()
+		"world_econ":
+			close_dock()
+			global_econ.open(0)
+		"stocks":
+			close_dock()
+			global_econ.open(1)
+		"insurance":
+			close_dock()
+			global_econ.open(2)
 		"research":
 			_open_research()
 		"population":
@@ -826,7 +850,8 @@ func _build_dock() -> void:
 	utilities_panel = UtilitiesPanel.new()
 	contracts_panel = ContractsPanel.new()
 	transit_panel = TransitPanel.new()
-	for panel in [logistics_panel, trade_panel, tourism_panel, realestate_panel, utilities_panel, contracts_panel, transit_panel]:
+	cash_panel = CashPanel.new()
+	for panel in [logistics_panel, trade_panel, tourism_panel, realestate_panel, utilities_panel, contracts_panel, transit_panel, cash_panel]:
 		panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 		stack.add_child(panel)
 		panel.setup(self)
@@ -857,7 +882,10 @@ func _show_dock(mode: String, keep_open := false) -> void:
 	realestate_panel.visible = mode == "realestate"
 	utilities_panel.visible = mode == "utilities"
 	transit_panel.visible = mode == "transit"
+	cash_panel.visible = mode == "cash"
 	match mode:
+		"cash":
+			cash_panel.refresh()
 		"transit":
 			transit_panel.refresh()
 		"realestate":
@@ -1733,6 +1761,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			close_category()
 		elif goods_catalog.visible:
 			goods_catalog.close()
+		elif global_econ.visible:
+			global_econ.close()
 		elif research_screen.visible:
 			research_screen.close()
 		elif pause_modal["root"].visible:

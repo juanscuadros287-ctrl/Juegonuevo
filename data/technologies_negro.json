@@ -1,0 +1,57 @@
+{
+ "_nota": "Sección E — mercado negro (MoneySim). Rama propia 'informal' (fila aparte en el árbol, sin superponerse). Las tecnologías habilitan los negocios ocultos de data/mercado_negro.json (campo 'tech').",
+ "economia_informal": {
+  "label": "Economía informal",
+  "era": 1,
+  "branch": "informal",
+  "cost": 300,
+  "requires": ["contabilidad"],
+  "effects": [],
+  "description": "Redes de confianza, pagos en efectivo y sueldos en negro. Base para los negocios ocultos."
+ },
+ "cultivo_ilicito": {
+  "label": "Cultivo ilícito",
+  "era": 1,
+  "branch": "informal",
+  "cost": 400,
+  "requires": ["economia_informal", "herbolaria"],
+  "effects": [],
+  "description": "Parcelas escondidas: cosecha ilícita que se vende solo en efectivo. Riesgo de inspección."
+ },
+ "destileria_clandestina": {
+  "label": "Destilería clandestina",
+  "era": 1,
+  "branch": "informal",
+  "cost": 500,
+  "requires": ["economia_informal"],
+  "effects": [],
+  "description": "Alambiques sin licencia: aguardiente clandestino sin alcabala."
+ },
+ "rutas_contrabando": {
+  "label": "Rutas de contrabando",
+  "era": 1,
+  "branch": "informal",
+  "cost": 700,
+  "requires": ["economia_informal", "navegacion"],
+  "effects": [],
+  "description": "Caminos que evitan la aduana: mercancía importada sin arancel."
+ },
+ "contabilidad_paralela": {
+  "label": "Contabilidad paralela",
+  "era": 2,
+  "branch": "informal",
+  "cost": 1500,
+  "requires": ["economia_informal", "banca_moderna"],
+  "effects": [],
+  "description": "Libros dobles: permite depositar más efectivo a través de tus negocios legales sin levantar sospechas."
+ },
+ "fabrica_contrabando": {
+  "label": "Fábrica de contrabando",
+  "era": 2,
+  "branch": "informal",
+  "cost": 2000,
+  "requires": ["rutas_contrabando", "fabricas"],
+  "effects": [],
+  "description": "Talleres ocultos de tabaco de contrabando: más producción, más riesgo."
+ }
+}

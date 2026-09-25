@@ -1,0 +1,178 @@
+{
+ "_nota": "Sección E — impuesto a la venta, efectivo/banco, ventas no declaradas, mercado negro, inspecciones y soborno (MoneySim). Montos nominales × dificultad × inflación (price_mult). Ver docs/EFECTIVO_MERCADO_NEGRO.md.",
+ "sales_tax": {
+  "_nota": "Tasa sobre cada venta declarada de tus negocios (y cobros de contratos). Se causa al vender y se paga al tesoro con los demás impuestos del mes. La tasa del gobierno (government.json → sales_tax, si existe) o by_gov; si no, by_era. Se multiplica por era_mult.",
+  "labels": {
+   "1": "Alcabala",
+   "2": "Impuesto a las ventas",
+   "3": "IVA"
+  },
+  "by_era": {
+   "1": 0.02,
+   "2": 0.03,
+   "3": 0.05
+  },
+  "era_mult": {
+   "1": 1.0,
+   "2": 1.0,
+   "3": 1.3
+  },
+  "by_gov": {
+   "virrey_austero": 0.02,
+   "virrey_mercantil": 0.03,
+   "virrey_reformista": 0.025,
+   "liberal": 0.02,
+   "conservador": 0.035,
+   "social": 0.05,
+   "verde": 0.04
+  }
+ },
+ "undeclared": {
+  "_nota": "Ventas sin declarar: en tus negocios, una parte de las ventas al público (la de tus personas de confianza) se cobra en efectivo; en contratos, solo con contrapartes de reputación alta.",
+  "trust_affinity": 55,
+  "share_per_trusted": 0.05,
+  "max_share": 0.5,
+  "contract_min_reputation": 70,
+  "risk_per_1000": 4.0,
+  "black_wage_discount": 0.15,
+  "black_wage_risk_per_1000": 5.0
+ },
+ "deposit": {
+  "_nota": "Depositar efectivo: cada mes hay un margen libre (free_monthly) más lo que se puede 'lavar' por tus negocios legales (launder_share de sus ventas del mes anterior). Lo que exceda suma riesgo.",
+  "free_monthly": 200,
+  "launder_share": 0.25,
+  "launder_share_tech": 0.5,
+  "launder_tech": "contabilidad_paralela",
+  "risk_per_1000_excess": 5.0
+ },
+ "risk": {
+  "max": 100,
+  "monthly_decay": 3.0,
+  "monthly_decay_share": 0.08
+ },
+ "inspection": {
+  "_nota": "Probabilidad mensual = riesgo/100 × (base + police_weight × cobertura policial) × gov_mult (tope max_chance). Si hay inspección, encuentra con find_base + find_risk × riesgo/100 + find_police × cobertura.",
+  "min_risk": 5,
+  "base": 0.35,
+  "police_weight": 0.5,
+  "max_chance": 0.7,
+  "gov_mult": {
+   "virrey_austero": 0.8,
+   "virrey_mercantil": 1.0,
+   "virrey_reformista": 1.1,
+   "liberal": 0.85,
+   "conservador": 1.3,
+   "social": 1.1,
+   "verde": 1.0
+  },
+  "find_base": 0.3,
+  "find_risk": 0.5,
+  "find_police": 0.25,
+  "clean_risk_mult": 0.7
+ },
+ "case": {
+  "_nota": "Hallazgo: multa (al tesoro), decomiso de efectivo no declarado y de la mercancía oculta, cierre de los negocios ocultos, baja de reputación y, si es grave, cárcel del jefe o de un familiar. Hay bribe_days para intentar un soborno.",
+  "bribe_days": 10,
+  "fine_base": 150,
+  "fine_per_risk": 10,
+  "fine_undeclared_share": 0.3,
+  "seize_cash_share": 0.5,
+  "seize_cash_share_grave": 1.0,
+  "reputation_loss": 8,
+  "grave_risk": 70,
+  "grave_repeat": 3,
+  "prison_days": [
+   60,
+   180
+  ],
+  "risk_after": 0.3
+ },
+ "bribe": {
+  "_nota": "Probabilidad = base + per_fine_ratio × (monto / multa) + corruption_weight × corrupción de la familia − police_penalty × cobertura policial, entre min y max. Aceptado: se archiva el caso (el dinero va a un funcionario) y sube la corrupción (PoliticsSim). Rechazado: no se cobra el soborno pero la multa sube (rejected_fine_mult) y el caso se resuelve ya.",
+  "base": 0.2,
+  "per_fine_ratio": 0.45,
+  "corruption_weight": 0.003,
+  "police_penalty": 0.2,
+  "min": 0.05,
+  "max": 0.9,
+  "corruption_add": 15,
+  "corruption_add_rejected": 5,
+  "rejected_fine_mult": 1.5
+ },
+ "hidden_demand": {
+  "_nota": "Demanda propia de los negocios ocultos: cada semana, adultos con ahorros de sobra (buffer_days de necesidades) compran hasta per_adult × demand del tipo, gastando como mucho max_share de su excedente.",
+  "buffer_days": 30,
+  "max_share": 0.08,
+  "buy_chance": 0.5
+ },
+ "hidden_types": {
+  "cultivo_ilicito": {
+   "label": "Cultivo ilícito",
+   "product": "Cosecha ilícita",
+   "tech": "cultivo_ilicito",
+   "order": 1,
+   "setup_cost": 300,
+   "daily_output": 3.0,
+   "unit_cost": 0.3,
+   "cost_to": "citizens",
+   "daily_wages": 2.5,
+   "workers": 3,
+   "price": 6.0,
+   "demand": 0.6,
+   "max_stock": 120,
+   "risk_per_day": 0.08,
+   "description": "Parcela escondida en el monte. Poca inversión, jornaleros pagados en efectivo."
+  },
+  "destileria_clandestina": {
+   "label": "Destilería clandestina",
+   "product": "Aguardiente clandestino",
+   "tech": "destileria_clandestina",
+   "order": 2,
+   "setup_cost": 450,
+   "daily_output": 4.0,
+   "unit_cost": 0.5,
+   "cost_to": "citizens",
+   "daily_wages": 3.0,
+   "workers": 3,
+   "price": 5.0,
+   "demand": 1.0,
+   "max_stock": 150,
+   "risk_per_day": 0.1,
+   "description": "Alambique sin licencia: aguardiente sin alcabala, vendido de puerta en puerta."
+  },
+  "bodega_contrabando": {
+   "label": "Bodega de contrabando",
+   "product": "Mercancía de contrabando",
+   "tech": "rutas_contrabando",
+   "order": 3,
+   "setup_cost": 600,
+   "daily_output": 3.0,
+   "unit_cost": 3.0,
+   "cost_to": "outside",
+   "daily_wages": 3.0,
+   "workers": 2,
+   "price": 11.0,
+   "demand": 0.5,
+   "max_stock": 100,
+   "risk_per_day": 0.12,
+   "description": "Bienes importados que entran sin arancel por caminos de herradura. El pago al proveedor sale del pueblo."
+  },
+  "fabrica_contrabando": {
+   "label": "Fábrica de contrabando",
+   "product": "Tabaco de contrabando",
+   "tech": "fabrica_contrabando",
+   "order": 4,
+   "setup_cost": 2000,
+   "daily_output": 10.0,
+   "unit_cost": 0.8,
+   "cost_to": "citizens",
+   "daily_wages": 8.0,
+   "workers": 6,
+   "price": 7.0,
+   "demand": 1.2,
+   "max_stock": 300,
+   "risk_per_day": 0.2,
+   "description": "Taller oculto que enrolla tabaco sin estanco ni impuestos."
+  }
+ }
+}

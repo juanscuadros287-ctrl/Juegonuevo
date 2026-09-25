@@ -64,7 +64,7 @@ notificaciones y controles.
 - **Barra superior** (46 px): pueblo y época · dinero, población, felicidad, salud con icono, valor
   y tendencia ▲▼ respecto al cierre del mes anterior (tooltips con detalle; clic abre Finanzas,
   Población o Estadísticas) · mini-retrato del jugador y aviso **SIN HEREDERO** · clima con icono y
-  temperatura · fecha · controles de tiempo (pausa, tiempo real, ×1, ×2, ×3, salto) · campana con
+  temperatura · indicador del ciclo económico (`CycleIndicator`, clic → Economía mundial) · fecha · controles de tiempo (pausa, tiempo real, ×1, ×2, ×3, salto) · campana con
   contador de no leídas · menú.
 - **Barra de iconos** (izquierda) agrupada en categorías con **menús desplegables**:
 
@@ -73,7 +73,7 @@ notificaciones y controles.
   | Mi dinastía (F1) | Mi personaje (P), Familia y herederos |
   | Construir (B) | — |
   | Empresas (F2) | Mis empresas (C), Bienes raíces (V), Contratos (K) |
-  | Economía (F3) | Finanzas (F), Estadísticas (Y), Catálogo de bienes (O) |
+  | Economía (F3) | Finanzas (F), Efectivo y riesgo, Estadísticas (Y), Economía mundial, Bolsa de valores, Seguros, Catálogo de bienes (O) |
   | Logística y transporte (F4) | Logística (L), Transporte público (J), Servicios públicos (U), Comercio exterior (X) |
   | Sociedad (F5) | Población (Z), Pueblos vecinos, Gobierno (G), Turismo y publicidad |
   | Ciencia (I) | Investigación |
@@ -118,6 +118,10 @@ Todos usan `UIKit.header()` (icono + título + ↻ + cerrar). Destacados:
 - **Mi personaje**: ficha visual (retrato, barras, patrimonio, talentos, árbol familiar) sobre el
   texto y las acciones de dinastía existentes. `scroll_to_family()`.
 - **Contratos**: pestañas con icono.
+- **Efectivo y riesgo** (`cash_panel.gd`), **Economía mundial** (`global_econ_window.gd`, con
+  pestañas Ciclos y monedas / Bolsa (`stock_panel.gd`) / Seguros (`insurance_panel.gd`)): cabecera
+  estándar, pestañas con icono, ventana flotante con sombra y animación de entrada; accesibles desde
+  la categoría Economía. Finanzas muestra efectivo/banco e impuesto a la venta en chips.
 
 ## 5. Gráficas y datos (todas con `_draw`, sin crear nodos por punto)
 | Clase | Qué hace |

@@ -45,6 +45,15 @@ Los ciudadanos también tienen libre comercio: compran casas, terrenos y bienes.
 - `terrain.gd` pasa a gestionar muchos chunks (`TerrainChunk`) con streaming. Las zonas 5×5 actuales se convierten en parcelas de chunk.
 - Minimapa del país con regiones, pueblos, rutas, lo revelado y lo propio.
 
+## CAMBIO (pedido de Sebastián): mapa mundial con países REALES
+- Se reemplazan los 5 países ficticios por **países reales** en un **mapa mundial** real (continentes, océanos y fronteras reconocibles).
+- Fuente de geografía: datos de dominio público (Natural Earth: fronteras, costas, ríos y lagos; relieve simplificado de un modelo de elevación libre). Se preprocesan a un archivo compacto del juego, sin descargar nada en tiempo de ejecución.
+- Escala: el mundo completo no cabe 1:1. Cada país se genera **a escala reducida pero proporcional** (un país grande tiene más zonas que uno pequeño), manteniendo su forma, sus cordilleras, ríos, costas, desiertos, selvas y climas reales.
+- Cada país real tiene su perfil: recursos reales dominantes (p. ej. Colombia: esmeraldas, café, carbón, petróleo; Chile: cobre; Arabia Saudita: petróleo), idioma, moneda real, época histórica de inicio y ventajas/desventajas.
+- Ciudades y pueblos iniciales con nombres reales o de estilo local.
+- Se elige el país de inicio en el mapa mundial; el resto se desbloquea viajando (Fase 10).
+- Los 5 países ficticios de la Fase 9A quedan solo como respaldo de pruebas.
+
 ## Fase 10 — Mapa mundial y otros países
 
 **Mapa mundial**
