@@ -11,6 +11,7 @@ var health: float = 100.0           # 0-100
 var sick: bool = false
 var skills: Dictionary = {}         # habilidad -> 0-100
 var experience: float = 0.0         # años de experiencia laboral
+var trade_exp: Dictionary = {}      # Trabajo: años de experiencia por oficio (habilidad del sector) → LaborSim
 var education: int = 0             # índice en education_levels
 var money: float = 0.0
 var debt: float = 0.0
@@ -70,6 +71,7 @@ func to_dict() -> Dictionary:
 		"last_birth_day": last_birth_day, "needs_met": needs_met, "visual_seed": visual_seed,
 		"school_id": school_id, "school_years": school_years, "school_level": school_level, "uni_years": uni_years,
 		"profession": profession, "career": career, "prison_until": prison_until, "prison_id": prison_id,
+		"trade_exp": trade_exp,
 	}
 
 
@@ -113,4 +115,8 @@ static func from_dict(d: Dictionary) -> Citizen:
 	c.career = str(d.get("career", ""))
 	c.prison_until = int(d.get("prison_until", -1))
 	c.prison_id = int(d.get("prison_id", -1))
+	c.trade_exp = {}
+	var te: Dictionary = d.get("trade_exp", {})
+	for k in te:
+		c.trade_exp[str(k)] = float(te[k])
 	return c

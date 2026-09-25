@@ -486,6 +486,7 @@ func _citizen_text(c: Citizen) -> String:
 		sk.append("%s %d" % [GameData.skill_label(k), int(c.skills[k])])
 	s += ", ".join(sk) + "\n"
 	s += "[b]Talentos[/b]: %s\n" % HeirsSim.talents_text(GameState, c)   # Sección C.
+	s += "[b]Oficios[/b]: %s\n" % LaborSim.trades_text(c)   # Trabajo: experiencia por oficio.
 	if not me and PlayerSim.can_court(GameState, c) == "":
 		s += MarriageSim.sheet_text(GameState, c) + "Aceptaría casarse contigo: ≈%d%%\n" % int(MarriageSim.proposal_chance(GameState, c) * 100.0)
 	s += "\n[b]Familia[/b]\n"

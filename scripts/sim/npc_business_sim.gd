@@ -161,6 +161,7 @@ static func _output(gs, b: Dictionary, emps: Array) -> float:
 		total *= float(WeatherSim.season_data(gs).get("farming", 1.0)) * float(WeatherSim.weather_data(gs).get("farming", 1.0)) * EventsSim.mult(gs, "farming")
 	total *= float(def.get("resource_bonus", {}).get(str(gs.settings.get("map_type", "")), 1.0))
 	total *= TechSim.mult(gs, "production", str(def.get("product", "")))
+	total *= ClimateSim.output_mult(gs, b)   # Mundo: sequías, heladas, inundaciones…
 	return total
 
 

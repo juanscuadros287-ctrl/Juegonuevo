@@ -131,6 +131,15 @@ func _summary_tab(b: Dictionary, mine: bool) -> Control:
 			closed.emit())
 		del.tooltip_text = "Elimina el edificio sin reembolso."
 		v.add_child(del)
+		if PollutionSim.base_pollution(GameState, b) > 0.0:   # Mundo: filtros y depuradoras.
+			var tier := maxi(1, PollutionSim.best_tier(GameState))
+			var fb := UIKit.button("Instalar %s (%s)" % [str(PollutionSim.filter_def(tier).get("label", "filtros")).to_lower(), Fmt.money(PollutionSim.filter_cost(GameState, b, tier))], func():
+				_msg(PollutionSim.buy_filters(GameState, _b()), "jugador")
+				rebuild())
+			var why := PollutionSim.filter_block_reason(GameState, b)
+			fb.disabled = why != ""
+			fb.tooltip_text = why if why != "" else "Reduce la contaminación un %d %%. Mantenimiento: %s/mes." % [int(round(float(PollutionSim.filter_def(tier).get("reduction", 0.5)) * 100.0)), Fmt.money(float(GameState.level_def(b).get("cost", 0.0)) * float(PollutionSim.filter_def(tier).get("upkeep_ratio", 0.02)) * GameState.price_mult())]
+			v.add_child(fb)
 		if b["status"] == "cerrado":
 			v.add_child(UIKit.button("Reabrir (%s)" % Fmt.money(BusinessSim.reopen_cost(GameState, b)), func():
 				_msg(BusinessSim.reopen(GameState, _b()), "jugador")
@@ -206,6 +215,14 @@ func _summary_text(b: Dictionary) -> String:
 		s += WarehouseTab.summary_line(GameState, b)   # Almacén vinculado (verde) / ninguno (rojo).
 	s += TransitSim.panel_lines(GameState, b)   # Transporte: acceso por carretera, llegada de trabajadores.
 	s += GridSim.panel_lines(GameState, b)   # Redes: "Electricidad: conectado / sin conexión" y "Agua: …".
+	var pol_txt := PollutionSim.panel_text(GameState, b)   # Mundo: "Contaminación: X (−Y % con filtros)".
+	if pol_txt != "":
+		s += "[color=#c9a26b]%s[/color]\n" % pol_txt
+	if ClimateSim.output_mult(GameState, b) < 0.999:
+		s += "[color=#e9b949]Clima: %s · rendimiento ×%.2f[/color]\n" % [ClimateSim.summary(GameState), ClimateSim.output_mult(GameState, b)]
+	var lab_txt := LaborSim.status_text(GameState, b)   # Trabajo: sindicato, huelga y ofertas de la competencia.
+	if lab_txt != "" and GameState.owned_by_player(b):
+		s += "[color=#e66]%s[/color]\n" % lab_txt
 	var site_crew := 0
 	for c in GameState.employees_of(bid):
 		if c.job_kind == "obra":
@@ -265,11 +282,12 @@ func _employees_tab(b: Dictionary) -> Control:
 	req.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	req.custom_minimum_size.x = 380
 	v.add_child(req)
+	_labor_box(v, b)   # Trabajo: sindicato (aceptar / contraoferta / rechazar) y ofertas de la competencia.
 	for c in GameState.employees_of(bid):
 		if c.job_kind != "empleo":
 			continue
 		var row := HBoxContainer.new()
-		var info := UIKit.label("%s · %s %d · exp %.1f · %s/día" % [c.full_name(), GameData.skill_label(skill).substr(0, 4), int(c.skills.get(skill, 0)), c.experience, Fmt.money2(c.wage)], 13)
+		var info := UIKit.label("%s · %s %d · %s · %s/día" % [c.full_name(), GameData.skill_label(skill).substr(0, 4), int(c.skills.get(skill, 0)), LaborSim.exp_text(c, skill), Fmt.money2(c.wage)], 13)
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info.tooltip_text = "Pide %s/día · Felicidad %d%%" % [Fmt.money2(BusinessSim.asked_wage(GameState, c, b["type"])), int(c.happiness)]
 		row.add_child(info)
@@ -282,6 +300,48 @@ func _employees_tab(b: Dictionary) -> Control:
 		v.add_child(row)
 	v.add_child(UIKit.button("Contratar…", _open_hire))
 	return v
+
+
+## Trabajo: pedido del sindicato y ofertas de la competencia NPC a tus empleados.
+func _labor_box(v: VBoxContainer, b: Dictionary) -> void:
+	var gs := GameState
+	var u := LaborSim.union_of(gs, b)
+	if not u.is_empty():
+		var t := UIKit.label(LaborSim.status_text(gs, b).split("\n")[0], 13, Color(1.0, 0.55, 0.45))
+		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		t.custom_minimum_size.x = 380
+		v.add_child(t)
+		if str(u.get("state", "")) == LaborSim.U_DEMAND:
+			var pct := float(u["pct"])
+			var row := HBoxContainer.new()
+			row.add_child(UIKit.button("Aceptar +%d %%" % int(round(pct * 100.0)), func():
+				_msg(LaborSim.accept_demand(GameState, _b()), "jugador")
+				rebuild()
+				tabs.current_tab = 1, 120))
+			row.add_child(UIKit.button("Contraoferta +%d %%" % int(round(pct * 50.0)), func():
+				_msg(LaborSim.counter_offer(GameState, _b(), snappedf(pct * 0.5, 0.01)), "jugador")
+				rebuild()
+				tabs.current_tab = 1, 140))
+			row.add_child(UIKit.button("Rechazar", func():
+				_msg(LaborSim.reject_demand(GameState, _b()), "jugador")
+				rebuild()
+				tabs.current_tab = 1, 90))
+			v.add_child(row)
+	for o in LaborSim.pending_offers(gs, b):
+		var row2 := HBoxContainer.new()
+		var lab := UIKit.label("%s: oferta de %s por %s/día (hoy %s)" % [o["name"], o["npc_label"], Fmt.money2(float(o["wage"])), Fmt.money2(float(o["old_wage"]))], 13, Color(1.0, 0.8, 0.4))
+		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row2.add_child(lab)
+		var oid := int(o["id"])
+		row2.add_child(UIKit.button("Igualar", func():
+			_msg(LaborSim.match_offer(GameState, oid), "jugador")
+			rebuild()
+			tabs.current_tab = 1, 80))
+		row2.add_child(UIKit.button("Dejarlo ir", func():
+			_msg(LaborSim.decline_offer(GameState, oid), "jugador")
+			rebuild()
+			tabs.current_tab = 1, 90))
+		v.add_child(row2)
 
 
 func _change_wage(cid: int, delta: float) -> void:
@@ -308,7 +368,7 @@ func _open_hire() -> void:
 		var status := " · jornalero" if c.job_kind == "obra" else ""
 		if c.profession != "":
 			status += " · " + GameData.profession_label(c.profession).to_upper()
-		var info := UIKit.label("%s, %d años · %s %d · exp %.1f · %s · pide %s%s" % [c.full_name(), c.age_years(today), GameData.skill_label(skill), int(c.skills.get(skill, 0)), c.experience, GameData.education_label(c.education), Fmt.money2(asked), status], 13)
+		var info := UIKit.label("%s, %d años · %s %d · %s · %s · pide %s%s" % [c.full_name(), c.age_years(today), GameData.skill_label(skill), int(c.skills.get(skill, 0)), LaborSim.exp_text(c, skill), GameData.education_label(c.education), Fmt.money2(asked), status], 13)
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info)
 		var cid: int = c.id

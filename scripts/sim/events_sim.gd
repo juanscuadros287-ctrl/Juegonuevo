@@ -97,10 +97,7 @@ static func _update_events(gs) -> void:
 
 
 static func _pollution(gs) -> void:
-	var total := 0.0
-	for b in gs.buildings:
-		if b["status"] == "activo":
-			total += float(gs.level_def(b).get("pollution", 0.0))
+	var total := PollutionSim.total_emission(gs)   # Mundo: según producción y filtros (renovables: 0).
 	var norm := maxf(3.0, gs.citizens.size() * float(cfg().get("pollution", {}).get("normalizer", 0.3)))
 	gs.problems["pollution"] = clampf(total / norm * 25.0, 0.0, 100.0)
 

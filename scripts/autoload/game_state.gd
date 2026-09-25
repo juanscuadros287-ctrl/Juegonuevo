@@ -34,6 +34,8 @@ var economy: Dictionary = {}           # nivel de precios, inflación, oferta/de
 var map: Dictionary = {}               # Fase 9A: país por chunks, revelado y expediciones (MapSim)
 var transit: Dictionary = {}           # Transporte: carreteras por puntos, buses, paraderos, parqueaderos (TransitSim)
 var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, acometidas, tarifas y facturas (GridSim/WaterSim)
+var labor: Dictionary = {}             # Trabajo: sindicatos, huelgas, guerras de precio y ofertas NPC (LaborSim)
+var world_events: Dictionary = {}      # Mundo: clima, contaminación local y guerras (ClimateSim/PollutionSim/WarSim)
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
 var weather: Dictionary = {}
@@ -129,6 +131,8 @@ func _clear() -> void:
 	map = {}
 	economy = {}
 	utilities = {}
+	labor = {}
+	world_events = {}
 	transit = {}
 	loans = []
 	next_loan_id = 1
@@ -153,6 +157,10 @@ func _init_expansions() -> void:
 	RealEstateSim.init_state(self)
 	GridSim.init_state(self)
 	TransitSim.init_state(self)
+	LaborSim.init_state(self)   # Trabajo: experiencia por oficio, sindicatos y competencia NPC.
+	ClimateSim.init_state(self)   # Mundo: clima por zona, contaminación local y guerras.
+	PollutionSim.init_state(self)
+	WarSim.init_state(self)
 
 
 # --- Simulación diaria -----------------------------------------------------
@@ -179,6 +187,9 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	BusinessSim.end_day(self)
 	FreeMarketSim.daily(self)     # Empresas NPC, contratos y planes del gobierno.
 	TechSim.end_day(self)
+	LaborSim.daily(self)   # Trabajo: experiencia, plazos de sindicatos, huelgas, guerras de precio y ofertas.
+	ClimateSim.daily(self)   # Mundo: pronósticos y eventos climáticos.
+	WarSim.daily(self)
 	PlayerSim.daily(self)
 	if new_month and running:
 		RealEstateSim.monthly(self)   # Bienes raíces: unidades, preventas, arriendo y venta.
@@ -189,7 +200,11 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		BusinessSim.monthly(self)
 		GovSim.monthly(self)
 		FreeMarketSim.monthly(self)
+		LaborSim.monthly(self)   # Trabajo: sindicatos, guerras de precio y ofertas a tus empleados.
+		PollutionSim.monthly(self)   # Mundo: contaminación acumulada por zona y filtros.
 		EventsSim.monthly(self)
+		ClimateSim.monthly(self)
+		WarSim.monthly(self)
 		LogisticsSim.monthly(self)
 		TradeSim.monthly(self)
 		TransitSim.monthly(self)
@@ -466,6 +481,8 @@ func to_dict() -> Dictionary:
 		"realestate": realestate,
 		"economy": economy,
 		"utilities": utilities,
+		"labor": labor,
+		"world_events": world_events,
 		"map": map,
 		"transit": transit,
 		"loans": loans,
@@ -539,6 +556,8 @@ func load_dict(d: Dictionary) -> void:
 	market = d.get("market", {})
 	realestate = d.get("realestate", {})
 	utilities = d.get("utilities", {})
+	labor = d.get("labor", {})
+	world_events = d.get("world_events", {})
 	map = d.get("map", {})   # Partida sin mapa (antes de la Fase 9A): MapSim la convierte en país.
 	transit = d.get("transit", {})
 	_init_expansions()

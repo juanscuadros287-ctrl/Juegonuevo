@@ -25,7 +25,8 @@ static func good_state(gs, good: String) -> Dictionary:
 
 ## Multiplicador de oferta/demanda de un bien (1 = normal).
 static func good_factor(gs, good: String) -> float:
-	return float(good_state(gs, good).get("factor", 1.0))
+	# Mundo: escasez por clima (ClimateSim) y demanda de guerra (WarSim).
+	return float(good_state(gs, good).get("factor", 1.0)) * ClimateSim.price_mult(gs, good) * WarSim.price_mult(gs, good)
 
 
 ## Precio de mercado por unidad (referencia para ciudadanos y precios automáticos).
