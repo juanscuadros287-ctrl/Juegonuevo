@@ -31,6 +31,7 @@ var tourism: Dictionary = {}           # Fase 8: turismo y publicidad
 var market: Dictionary = {}            # Libre mercado: empresas NPC, contratos, planes del gobierno
 var realestate: Dictionary = {}        # Bienes raíces: demanda de vivienda y contadores (RealEstateSim)
 var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
+var transit: Dictionary = {}           # Transporte: carreteras por puntos, buses, paraderos, parqueaderos (TransitSim)
 var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, acometidas, tarifas y facturas (GridSim/WaterSim)
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
@@ -126,6 +127,7 @@ func _clear() -> void:
 	realestate = {}
 	economy = {}
 	utilities = {}
+	transit = {}
 	loans = []
 	next_loan_id = 1
 	weather = {}
@@ -147,6 +149,7 @@ func _init_expansions() -> void:
 	FreeMarketSim.init_state(self)
 	RealEstateSim.init_state(self)
 	GridSim.init_state(self)
+	TransitSim.init_state(self)
 
 
 # --- Simulación diaria -----------------------------------------------------
@@ -160,6 +163,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	FreeMarketSim.produce(self)   # Libre mercado: producción de las empresas NPC.
 	LogisticsSim.daily(self)
 	TradeSim.daily(self)
+	TransitSim.daily(self)   # Transporte: trazados a otros pueblos, buses, pasajes y parqueaderos.
 	TourismSim.daily(self)
 	RealEstateSim.daily(self)   # Bienes raíces: pago por etapas / pausa de obras.
 	ConstructionSim.daily(self)
@@ -184,6 +188,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		EventsSim.monthly(self)
 		LogisticsSim.monthly(self)
 		TradeSim.monthly(self)
+		TransitSim.monthly(self)
 		TourismSim.monthly(self)
 		AdvertisingSim.monthly(self)
 		EconomySim.monthly(self)
@@ -457,6 +462,7 @@ func to_dict() -> Dictionary:
 		"realestate": realestate,
 		"economy": economy,
 		"utilities": utilities,
+		"transit": transit,
 		"loans": loans,
 		"next_loan_id": next_loan_id,
 		"weather": weather,
@@ -528,6 +534,7 @@ func load_dict(d: Dictionary) -> void:
 	market = d.get("market", {})
 	realestate = d.get("realestate", {})
 	utilities = d.get("utilities", {})
+	transit = d.get("transit", {})
 	_init_expansions()
 	if not d.has("utilities"):
 		GridSim.migrate(self)   # Partida sin redes: período de gracia si ya había centrales.

@@ -1,0 +1,15 @@
+{
+ "_nota": "Transporte público (docs/TRANSPORTE.md): después del automóvil. El árbol ubica cada tecnología por época y rama sin superponerlas.",
+ "transporte_publico": {
+  "label": "Transporte público",
+  "era": 3,
+  "branch": "transporte",
+  "cost": 13000,
+  "requires": [
+   "automovil"
+  ],
+  "effects": [],
+  "description": "Buses urbanos con rutas y paraderos: los trabajadores que viven lejos llegan descansados y los negocios contratan desde más lejos.",
+  "future": "Empresa de buses, paraderos y rutas de bus"
+ }
+}

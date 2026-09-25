@@ -87,9 +87,9 @@ static func expected_output(gs, b: Dictionary) -> float:
 	var prods := []
 	for c in gs.employees_of(int(b["id"])):
 		if c.job_kind == "empleo" and not c.sick:
-			prods.append(productivity(c, str(def.get("skill", ""))))
+			prods.append(productivity(c, str(def.get("skill", ""))) * TransitSim.commute_mult(gs, c))   # Transporte: trayecto.
 	var total := MineSim.workforce(gs, b, prods)   # Minas: solo trabajan los puestos de los frentes.
-	total *= float(ld.get("prod_per_worker", 1.0))
+	total *= float(ld.get("prod_per_worker", 1.0)) * TransitSim.access_mult(gs, b)
 	if def.get("seasonal", false):
 		total *= float(WeatherSim.season_data(gs).get("farming", 1.0)) * float(WeatherSim.weather_data(gs).get("farming", 1.0)) * EventsSim.mult(gs, "farming")
 	total *= float(def.get("resource_bonus", {}).get(str(gs.settings.get("map_type", "")), 1.0))

@@ -334,7 +334,7 @@ static func _touches_regional(gs, a: Vector2, b: Vector2) -> bool:
 	var n := maxi(1, int(a.distance_to(b) / 3.0))
 	for i in range(n + 1):
 		var p := a.lerp(b, float(i) / n)
-		if p.x <= -8.5 and absf(p.y - trade_path_z(gs, p.x)) <= r:
+		if TransitSim.near_trade_path(gs, p, r):   # Transporte: camino automático o trazado a mano.
 			return true
 	return false
 

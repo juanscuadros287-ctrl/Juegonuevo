@@ -70,6 +70,8 @@ func rebuild() -> void:
 			_add_tab("Servicio", _service_tab(b))
 	if mine and FleetTab.applies(GameState, b):
 		_add_tab("Vehículos", FleetTab.build(GameState, b, hud, rebuild))   # Comprar/vender vehículos.
+	if mine and BusTab.applies(GameState, b):
+		_add_tab("Buses", BusTab.build(GameState, b, hud, rebuild))   # Transporte: comprar buses.
 	if mine and WarehouseTab.applies(GameState, b):
 		_add_tab("Almacén", WarehouseTab.build(GameState, b, hud))   # Almacenes individuales y vínculo.
 	if MineTab.applies(GameState, b):
@@ -202,6 +204,7 @@ func _summary_text(b: Dictionary) -> String:
 			s += "Estado: [color=#6c6]activo[/color]\n"
 	if GameState.owned_by_player(b):
 		s += WarehouseTab.summary_line(GameState, b)   # Almacén vinculado (verde) / ninguno (rojo).
+	s += TransitSim.panel_lines(GameState, b)   # Transporte: acceso por carretera, llegada de trabajadores.
 	s += GridSim.panel_lines(GameState, b)   # Redes: "Electricidad: conectado / sin conexión" y "Agua: …".
 	var site_crew := 0
 	for c in GameState.employees_of(bid):

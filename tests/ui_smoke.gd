@@ -8,7 +8,7 @@ func _ready() -> void:
 	add_child(world)
 	await get_tree().process_frame
 	var hud: Hud = world.hud
-	for mode in ["player", "build", "companies", "finance", "stats", "government", "logistics", "trade", "tourism", "realestate", "utilities"]:
+	for mode in ["player", "build", "companies", "finance", "stats", "government", "logistics", "trade", "tourism", "realestate", "utilities", "transit"]:
 		hud._show_dock(mode)
 		await get_tree().process_frame
 	BankSim.request_player_loan(GameState, 500.0, 12)
@@ -100,6 +100,20 @@ func _ready() -> void:
 	uv.toggle_layer("water")
 	uv.toggle_layer("water")
 	print("REDES: %d tramos · %s" % [GridSim.segments(GameState).size(), GridSim.panel_lines(GameState, farm).strip_edges()])
+	# Transporte: carretera por puntos, paradero, borrar y panel Transporte público.
+	var tv: TransitVisuals = TransitVisuals.instance
+	tv.start_trace("road", "barro")
+	for p in [Vector2(-20, -18), Vector2(0, -26), Vector2(20, -18)]:
+		tv.set_hover(p)
+		tv.add_point()
+	tv.finish()
+	tv.start_trace("erase")
+	tv.set_hover(Vector2(0, -26))
+	tv.cancel_trace()
+	hud._show_dock("transit")
+	await get_tree().process_frame
+	hud.transit_panel._update_live()
+	print("TRANSPORTE: %d trazados · %s" % [TransitSim.polys(GameState).size(), TransitSim.panel_lines(GameState, farm).strip_edges().get_slice("\n", 0)])
 	EventBus.interior_requested.emit(PlayerSim.player_home(GameState)["id"])
 	await get_tree().process_frame
 	hud._open_invite()

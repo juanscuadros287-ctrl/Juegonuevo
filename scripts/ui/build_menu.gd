@@ -70,6 +70,7 @@ func refresh() -> void:
 		b.disabled = reason != ""
 		v.add_child(b)
 		list.add_child(panel)
+	TransitPanel.build_menu_section(list, null)   # Transporte: trazado por puntos.
 	_projects_section(tier)   # Bienes raíces: multifamiliares con su ficha de factibilidad.
 	list.add_child(UIKit.label("Terreno", 16, UIKit.ACCENT))
 	var note := UIKit.label("Las zonas oscuras son terreno del gobierno. Para construir ahí, primero cómpralo (debe ser vecino de un terreno tuyo).", 12, UIKit.TEXT_DIM)
