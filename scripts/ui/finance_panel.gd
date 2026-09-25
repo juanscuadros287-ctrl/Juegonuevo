@@ -36,6 +36,7 @@ func refresh() -> void:
 	var last: Dictionary = gs.history[-1] if not gs.history.is_empty() else {}
 	var s := "[b]Balance[/b]\n"
 	s += "Dinero: %s\n" % _col(gs.money)
+	s += "  Efectivo %s · Banco %s (Sección E: ver «Efectivo y riesgo»)\n" % [Fmt.money(MoneySim.cash(gs)), _col(MoneySim.bank(gs))]
 	s += "Propiedades (valor): %s\n" % Fmt.money(EconomySim.player_assets(gs))
 	s += "Préstamos otorgados (cartera): %s\n" % Fmt.money(EconomySim.loans_granted(gs))
 	s += "Deudas: [color=#e88]%s[/color]\n" % Fmt.money(EconomySim.player_debt(gs))
@@ -44,6 +45,7 @@ func refresh() -> void:
 	s += "Ingresos: %s · Gastos: %s\n" % [Fmt.money(float(last.get("income", 0))), Fmt.money(float(last.get("expenses", 0)))]
 	s += "Intereses pagados: %s · cobrados: %s\n" % [Fmt.money(float(last.get("interest_paid", 0))), Fmt.money(float(last.get("interest_earned", 0)))]
 	s += "Impuestos pagados: %s · Subsidios y pagos del gobierno: %s\n\n" % [Fmt.money(float(last.get("taxes_paid", 0))), Fmt.money(float(last.get("subsidies", 0)))]
+	s = s.trim_suffix("\n") + "%s (%.1f%%) pagado: %s · causado este mes: %s\n\n" % [MoneySim.sales_tax_label(gs), MoneySim.sales_tax_rate(gs) * 100.0, Fmt.money(float(gs.government.get("taxes_last", {}).get("iva", 0.0))), Fmt.money(MoneySim.iva_pending(gs))]
 	s += "[b]Economía del pueblo[/b]\n"
 	s += "Nivel de precios: %.2f · Inflación anual: %s\n" % [gs.price_level(), _pct(EconomySim.annual_inflation(gs))]
 	s += "Desempleo: %s · Dinero en circulación: %s\n" % [Fmt.pct(EconomySim.unemployment(gs) * 100.0), Fmt.money(EconomySim.total_money(gs))]

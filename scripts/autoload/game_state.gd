@@ -14,6 +14,7 @@ const MAX_HISTORY := 12 * 400
 var running := false
 var settings: Dictionary = {}
 var money: float = 0.0
+var cash: float = 0.0                  # Sección E: parte de money en efectivo (banco = money - cash). MoneySim
 var citizens: Dictionary = {}          # id (int) -> Citizen
 var next_citizen_id: int = 1
 var buildings: Array = []              # Array[Dictionary]
@@ -32,6 +33,7 @@ var market: Dictionary = {}            # Libre mercado: empresas NPC, contratos,
 var realestate: Dictionary = {}        # Bienes raíces: demanda de vivienda y contadores (RealEstateSim)
 var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
 var map: Dictionary = {}               # Fase 9A: país por chunks, revelado y expediciones (MapSim)
+var informal: Dictionary = {}          # Sección E: IVA causado, riesgo, caso abierto, negocios ocultos (MoneySim)
 var transit: Dictionary = {}           # Transporte: carreteras por puntos, buses, paraderos, parqueaderos (TransitSim)
 var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, acometidas, tarifas y facturas (GridSim/WaterSim)
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
@@ -110,6 +112,8 @@ func _clear() -> void:
 	running = false
 	settings = {}
 	money = 0.0
+	cash = 0.0
+	informal = {}
 	citizens = {}
 	next_citizen_id = 1
 	buildings = []
@@ -153,6 +157,7 @@ func _init_expansions() -> void:
 	RealEstateSim.init_state(self)
 	GridSim.init_state(self)
 	TransitSim.init_state(self)
+	MoneySim.init_state(self)   # Sección E: efectivo y mercado negro.
 
 
 # --- Simulación diaria -----------------------------------------------------
@@ -180,6 +185,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	FreeMarketSim.daily(self)     # Empresas NPC, contratos y planes del gobierno.
 	TechSim.end_day(self)
 	PlayerSim.daily(self)
+	MoneySim.daily(self)   # Sección E: negocios ocultos, banco en rojo y plazo del caso.
 	if new_month and running:
 		RealEstateSim.monthly(self)   # Bienes raíces: unidades, preventas, arriendo y venta.
 		GridSim.monthly(self)   # Redes: facturas de luz y agua, mantenimiento, inquilinos sin servicios.
@@ -197,6 +203,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		AdvertisingSim.monthly(self)
 		EconomySim.monthly(self)
 		PlayerSim.monthly(self)
+		MoneySim.monthly(self)   # Sección E: inspecciones y cierre del mes.
 		_record_month()
 
 
@@ -449,6 +456,8 @@ func to_dict() -> Dictionary:
 	return {
 		"settings": settings,
 		"money": money,
+		"cash": cash,
+		"informal": informal,
 		"citizens": cit,
 		"next_citizen_id": next_citizen_id,
 		"buildings": buildings,
@@ -488,6 +497,8 @@ func load_dict(d: Dictionary) -> void:
 	settings = d.get("settings", {})
 	settings["seed"] = int(settings.get("seed", 0))
 	money = float(d.get("money", 0.0))
+	cash = float(d.get("cash", 0.0))
+	informal = d.get("informal", {})
 	for cd in d.get("citizens", []):
 		var c := Citizen.from_dict(cd)
 		citizens[c.id] = c

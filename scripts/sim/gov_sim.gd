@@ -106,6 +106,7 @@ static func _collect_taxes(gs) -> void:
 			var fine: float = pol * float(p.get("env_fine", 0.0)) * gs.price_level() * 10.0
 			BusinessSim.pay(gs, b, fine, "multas")
 			totals["multas"] += fine
+	MoneySim.collect_sales_tax(gs, totals)   # Sección E: impuesto a la venta causado en el mes.
 	var total := 0.0
 	for k in totals:
 		total += float(totals[k])
