@@ -1028,6 +1028,7 @@ static func _collect(gs, k: Dictionary, value: float) -> void:
 	if paid > 0.0:
 		gs.add_money(paid)
 		gs.add_counter("contract_sales", paid)
+		MoneySim.on_contract_income(gs, k, paid)   # Sección E: IVA o cobro en efectivo sin declarar.
 	k["paid"] = float(k.get("paid", 0.0)) + paid
 	k["owed"] = float(k.get("owed", 0.0)) + value - paid
 
