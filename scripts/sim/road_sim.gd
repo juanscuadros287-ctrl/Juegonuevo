@@ -47,7 +47,7 @@ static func total_length(gs, kind := "") -> float:
 
 ## Costo de un tramo: {money, stone, stone_stock, stone_import, import_cost, total}.
 static func segment_cost(gs, a: Vector2, b: Vector2, kind: String) -> Dictionary:
-	return _cost_for_length(gs, a.distance_to(b), kind)
+	return _cost_for_length(gs, a.distance_to(b) * MapSim.terrain_cost_mult(a, b, gs), kind)   # Fase 9A: montaña, puente, túnel.
 
 
 static func _cost_for_length(gs, length: float, kind: String) -> Dictionary:

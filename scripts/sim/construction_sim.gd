@@ -143,11 +143,11 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 	var fp := GameData.footprint(type_id, level)
 	if Vector2(x, z).length() < MIN_TOWN_CENTER_DIST + fp * 0.5:
 		return "Demasiado cerca de la plaza"
-	var zs: float = gs.MAP_SIZE / gs.ZONE_GRID
-	var half: float = gs.MAP_SIZE * 0.5
-	var zx := clampi(int((x + half) / zs), 0, gs.ZONE_GRID - 1)
-	var zy := clampi(int((z + half) / zs), 0, gs.ZONE_GRID - 1)
-	if not gs.is_zone_unlocked(zx, zy):
+	# Fase 9A: parcelas en índices globales (el pueblo es 0..4; el país sigue fuera de ese rango).
+	var zc := MapSim.zone_at(gs, x, z)
+	if not MapSim.in_country(gs, x, z):
+		return "Fuera del país"
+	if not gs.is_zone_unlocked(zc.x, zc.y):
 		return "Terreno del gobierno: cómpralo primero (Construir → Comprar terreno)"
 	for b in gs.buildings:
 		if int(b["id"]) == ignore_id:
@@ -402,8 +402,9 @@ static func zone_cost(gs) -> float:
 
 
 static func zone_block_reason(gs, zx: int, zy: int) -> String:
-	if zx < 0 or zy < 0 or zx >= gs.ZONE_GRID or zy >= gs.ZONE_GRID:
-		return "Fuera del mapa"
+	var map_reason := MapSim.zone_map_block_reason(gs, zx, zy)   # Fase 9A: dentro del país y explorado.
+	if map_reason != "":
+		return map_reason
 	if gs.is_zone_unlocked(zx, zy):
 		return "Ya compraste este terreno"
 	var adjacent := false
@@ -426,6 +427,7 @@ static func unlock_zone(gs, zx: int, zy: int) -> String:
 	# El terreno se le compra al gobierno: el dinero va al tesoro público.
 	GovSim.add_treasury(gs, cost)
 	gs.unlocked_zones.append([zx, zy])
+	MapSim.on_zone_bought(gs, zx, zy)   # Fase 9A: queda revelada y unida al terreno del jugador.
 	gs.notify("Compraste un terreno al gobierno por %s. Ya puedes construir en esa zona." % Fmt.money(cost), "construccion")
 	EventBus.zones_changed.emit()
 	return ""

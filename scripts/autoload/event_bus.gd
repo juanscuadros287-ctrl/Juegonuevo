@@ -27,3 +27,4 @@ signal zone_mode_requested
 signal interior_requested(building_id: int)
 signal interior_closed
 signal tech_researched(id: String)
+signal map_changed   # Fase 9A: chunks revelados o expediciones

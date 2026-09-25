@@ -31,6 +31,7 @@ var tourism: Dictionary = {}           # Fase 8: turismo y publicidad
 var market: Dictionary = {}            # Libre mercado: empresas NPC, contratos, planes del gobierno
 var realestate: Dictionary = {}        # Bienes raíces: demanda de vivienda y contadores (RealEstateSim)
 var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
+var map: Dictionary = {}               # Fase 9A: país por chunks, revelado y expediciones (MapSim)
 var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, acometidas, tarifas y facturas (GridSim/WaterSim)
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
@@ -124,6 +125,7 @@ func _clear() -> void:
 	tourism = {}
 	market = {}
 	realestate = {}
+	map = {}
 	economy = {}
 	utilities = {}
 	loans = []
@@ -141,6 +143,7 @@ func _clear() -> void:
 
 ## Inicializa (o completa en partidas antiguas) el estado de las fases 6-8.
 func _init_expansions() -> void:
+	MapSim.init_state(self)   # Fase 9A: país (antes que la región, que usa sus recursos).
 	LogisticsSim.init_state(self)
 	TradeSim.init_state(self)
 	TourismSim.init_state(self)
@@ -156,6 +159,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		return
 	WeatherSim.daily(self)
 	EventsSim.daily(self)
+	MapSim.daily(self)   # Fase 9A: expediciones.
 	BusinessSim.produce(self)
 	FreeMarketSim.produce(self)   # Libre mercado: producción de las empresas NPC.
 	LogisticsSim.daily(self)
@@ -456,6 +460,7 @@ func to_dict() -> Dictionary:
 		"realestate": realestate,
 		"economy": economy,
 		"utilities": utilities,
+		"map": map,
 		"loans": loans,
 		"next_loan_id": next_loan_id,
 		"weather": weather,
@@ -527,6 +532,7 @@ func load_dict(d: Dictionary) -> void:
 	market = d.get("market", {})
 	realestate = d.get("realestate", {})
 	utilities = d.get("utilities", {})
+	map = d.get("map", {})   # Partida sin mapa (antes de la Fase 9A): MapSim la convierte en país.
 	_init_expansions()
 	if not d.has("utilities"):
 		GridSim.migrate(self)   # Partida sin redes: período de gracia si ya había centrales.

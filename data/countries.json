@@ -1,0 +1,256 @@
+{
+  "_nota": "Fase 9A — Países (ficticios, con inspiración real). size = chunks de 400 m por lado (24–40). terrain = perfil de generación: mountain/forest/lakes/rivers/desert/swamp/islands en 0..1, humidity y temperature en -1..1, lat_gradient = cuánto enfría el norte, coast = lados con mar (norte, sur, este, oeste o todos). resources = multiplicadores de abundancia (yacimientos y fortalezas de la región). zones = municipios (Voronoi de chunks); town_ratio = fracción con pueblo (el resto son zonas libres). plateaus = mesetas escalonadas, canyons = cañones en mesetas y montañas. currency, base_inflation y exchange_rate_to_ref: economía por país (para la Fase 10; aún no se usan). terrain_cost: multiplicadores de MapSim.terrain_cost_mult para vías (pendiente, túnel, puente, cañón, altura).",
+  "chunk_size": 400.0,
+  "default_by_map_type": {
+    "interior": "pampaverde",
+    "costa": "islas_coralinas",
+    "montana": "andoria",
+    "rio": "andoria"
+  },
+  "start_reveal_radius": 1,
+  "outside_ring": 2,
+  "expedition": {
+    "base_cost": 1200.0,
+    "cost_growth_per_chunk": 0.22,
+    "base_days": 6,
+    "days_per_chunk": 2,
+    "reveal_radius": 1,
+    "max_active": 2
+  },
+  "countries": {
+    "andoria": {
+      "label": "Andoria",
+      "order": 0,
+      "size": 32,
+      "inspiration": "Andes y Amazonía (Colombia, Perú, Ecuador)",
+      "description": "Cordilleras nevadas al norte y oeste, valles cafeteros, selva húmeda al sur y ríos caudalosos que bajan al mar.",
+      "terrain": {
+        "mountain": 0.66,
+        "peak_height": 175.0,
+        "forest": 0.6,
+        "lakes": 0.25,
+        "rivers": 0.85,
+        "desert": 0.1,
+        "swamp": 0.35,
+        "islands": 0.0,
+        "humidity": 0.25,
+        "temperature": 0.45,
+        "lat_gradient": 0.9,
+        "coast": [
+          "oeste",
+          "norte"
+        ],
+        "plateaus": 0.35,
+        "canyons": 0.45
+      },
+      "zones": 26,
+      "town_ratio": 0.7,
+      "resources": {
+        "oro": 1.6,
+        "plata": 1.3,
+        "carbon": 1.2,
+        "hierro": 1.0,
+        "madera": 1.3,
+        "piedra": 1.25,
+        "tierra_fertil": 1.0,
+        "pastos": 0.9,
+        "pesca": 0.9
+      },
+      "currency": {
+        "name": "Sol andino",
+        "symbol": "S/A"
+      },
+      "base_inflation": 0.035,
+      "exchange_rate_to_ref": 1.0
+    },
+    "pampaverde": {
+      "label": "Pampaverde",
+      "order": 1,
+      "size": 30,
+      "inspiration": "Pampa y litoral (Argentina, Uruguay)",
+      "description": "Llanuras inmensas de pastos y trigo, lagunas, grandes ríos lentos y una sierra baja al oeste. Costa atlántica al este.",
+      "terrain": {
+        "mountain": 0.2,
+        "peak_height": 70.0,
+        "forest": 0.22,
+        "lakes": 0.45,
+        "rivers": 0.7,
+        "desert": 0.15,
+        "swamp": 0.4,
+        "islands": 0.0,
+        "humidity": 0.05,
+        "temperature": 0.15,
+        "lat_gradient": 0.8,
+        "coast": [
+          "este"
+        ],
+        "plateaus": 0.1,
+        "canyons": 0.1
+      },
+      "zones": 22,
+      "town_ratio": 0.65,
+      "resources": {
+        "oro": 0.6,
+        "plata": 0.7,
+        "carbon": 0.8,
+        "hierro": 0.9,
+        "madera": 0.8,
+        "piedra": 0.9,
+        "tierra_fertil": 1.5,
+        "pastos": 1.6,
+        "pesca": 1.1
+      },
+      "currency": {
+        "name": "Peso pampeano",
+        "symbol": "$P"
+      },
+      "base_inflation": 0.08,
+      "exchange_rate_to_ref": 0.8
+    },
+    "islas_coralinas": {
+      "label": "Islas Coralinas",
+      "order": 2,
+      "size": 30,
+      "inspiration": "Caribe y archipiélagos tropicales (Cuba, Filipinas)",
+      "description": "Archipiélago de islas volcánicas con playas, manglares y selva. Mucha costa y pesca; poca tierra plana.",
+      "terrain": {
+        "mountain": 0.4,
+        "peak_height": 110.0,
+        "forest": 0.55,
+        "lakes": 0.1,
+        "rivers": 0.35,
+        "desert": 0.05,
+        "swamp": 0.5,
+        "islands": 0.62,
+        "humidity": 0.45,
+        "temperature": 0.85,
+        "lat_gradient": 0.2,
+        "coast": [
+          "todos"
+        ],
+        "plateaus": 0.0,
+        "canyons": 0.15
+      },
+      "zones": 20,
+      "town_ratio": 0.75,
+      "resources": {
+        "oro": 0.7,
+        "plata": 0.6,
+        "carbon": 0.5,
+        "hierro": 0.7,
+        "madera": 1.2,
+        "piedra": 1.0,
+        "tierra_fertil": 1.1,
+        "pastos": 0.8,
+        "pesca": 1.8
+      },
+      "currency": {
+        "name": "Coral",
+        "symbol": "₡"
+      },
+      "base_inflation": 0.04,
+      "exchange_rate_to_ref": 1.3
+    },
+    "arenalia": {
+      "label": "Arenalia",
+      "order": 3,
+      "size": 34,
+      "inspiration": "Desiertos y oasis (Marruecos, Sonora, Atacama)",
+      "description": "Dunas y mesetas secas con oasis y pocos ríos; sierras ricas en minerales y una costa fresca al oeste.",
+      "terrain": {
+        "mountain": 0.45,
+        "peak_height": 120.0,
+        "forest": 0.08,
+        "lakes": 0.08,
+        "rivers": 0.25,
+        "desert": 0.85,
+        "swamp": 0.05,
+        "islands": 0.0,
+        "humidity": -0.55,
+        "temperature": 0.8,
+        "lat_gradient": 0.4,
+        "coast": [
+          "oeste"
+        ],
+        "plateaus": 0.75,
+        "canyons": 0.85
+      },
+      "zones": 24,
+      "town_ratio": 0.5,
+      "resources": {
+        "oro": 1.3,
+        "plata": 1.5,
+        "carbon": 1.1,
+        "hierro": 1.6,
+        "madera": 0.4,
+        "piedra": 1.4,
+        "tierra_fertil": 0.6,
+        "pastos": 0.7,
+        "pesca": 1.0
+      },
+      "currency": {
+        "name": "Dinar de arena",
+        "symbol": "DA"
+      },
+      "base_inflation": 0.05,
+      "exchange_rate_to_ref": 0.6
+    },
+    "nordhavia": {
+      "label": "Nordhavia",
+      "order": 4,
+      "size": 36,
+      "inspiration": "Fiordos y bosques boreales (Noruega, Patagonia chilena)",
+      "description": "Bosques de coníferas, cientos de lagos, montañas nevadas y fiordos en la costa oeste. Inviernos largos.",
+      "terrain": {
+        "mountain": 0.62,
+        "peak_height": 150.0,
+        "forest": 0.7,
+        "lakes": 0.65,
+        "rivers": 0.6,
+        "desert": 0.0,
+        "swamp": 0.3,
+        "islands": 0.15,
+        "humidity": 0.3,
+        "temperature": -0.28,
+        "lat_gradient": 0.9,
+        "coast": [
+          "oeste",
+          "norte"
+        ],
+        "plateaus": 0.15,
+        "canyons": 0.5
+      },
+      "zones": 28,
+      "town_ratio": 0.55,
+      "resources": {
+        "oro": 0.8,
+        "plata": 1.0,
+        "carbon": 1.2,
+        "hierro": 1.5,
+        "madera": 1.7,
+        "piedra": 1.2,
+        "tierra_fertil": 0.7,
+        "pastos": 1.0,
+        "pesca": 1.5
+      },
+      "currency": {
+        "name": "Corona nórdica",
+        "symbol": "kr"
+      },
+      "base_inflation": 0.02,
+      "exchange_rate_to_ref": 2.1
+    }
+  },
+  "terrain_cost": {
+    "slope_free": 0.08,
+    "slope_mult": 7.0,
+    "max_slope_extra": 4.0,
+    "bridge_mult": 3.0,
+    "tunnel_rise": 22.0,
+    "tunnel_mult": 2.5,
+    "altitude_start": 60.0,
+    "altitude_mult_per_100m": 0.35,
+    "canyon_depth": 18.0,
+    "canyon_mult": 1.5
+  }
+}

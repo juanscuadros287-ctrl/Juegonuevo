@@ -13,6 +13,7 @@ var sun: DirectionalLight3D
 var env: Environment
 var sky_mat: ProceduralSkyMaterial
 var weather_fx: WeatherFX
+var minimap: Minimap
 var agents := {}            # id -> CitizenAgent
 var building_nodes := {}    # id -> Node3D
 var agents_root: Node3D
@@ -50,6 +51,7 @@ func _ready() -> void:
 	terrain.build_mesh()
 	terrain.make_water()
 	terrain.scatter_nature(seed_value)
+	terrain.start_country()   # Fase 9A: país por chunks con streaming, niebla y municipios.
 	terrain.set_season(GameState.season)
 
 	var plaza_y := terrain.height_at(0, 0)
@@ -83,7 +85,7 @@ func _ready() -> void:
 	var ph := PlayerSim.player_home(GameState)
 	if not ph.is_empty():
 		start = Vector3(float(ph["x"]), plaza_y, float(ph["z"])) * 0.5
-	camera_rig.setup(terrain, start)
+	camera_rig.setup(terrain, start, env)
 
 	weather_fx = WeatherFX.new()
 	camera_rig.add_child(weather_fx)
@@ -99,6 +101,10 @@ func _ready() -> void:
 	hud = Hud.new()
 	hud.name = "HUD"
 	add_child(hud)
+	minimap = Minimap.new()   # Fase 9A: minimapa del país en la esquina del HUD.
+	minimap.name = "Minimap"
+	hud.root.add_child(minimap)
+	minimap.setup(self)
 
 	EventBus.citizen_born.connect(_spawn_agent)
 	EventBus.citizen_removed.connect(_on_citizen_removed)
