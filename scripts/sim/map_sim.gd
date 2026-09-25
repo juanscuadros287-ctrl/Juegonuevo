@@ -5,10 +5,14 @@ extends RefCounted
 ##   country_id        país (data/countries.json)
 ##   chunks_revealed   {"cx,cy": true}  chunk (0,0) = pueblo del jugador (plaza en 0,0)
 ##   expeditions       [{cx, cy, days_left, cost}] expediciones pagadas en curso
-##   parcels, regions  reservados para la Fase 9B (dueños privados, regiones con política)
-## API pública (Fase 9B y otros sistemas):
+##   parcels           Fase 9B: dueños de territorios que cambiaron {"cx,cy": {owner, name, citizen_id}} (LandSim)
+##   regions, departments, region_missions   Fase 9B: municipios con política y alcalde (MunicipalSim)
+##   town_assign       Fase 9B: {town_id de TradeSim: id de municipio} (posición real de los pueblos)
+##   land_offers, land_tenders, land_sales, land_index, land_demand   Fase 9B: mercado de tierras
+## API pública:
 ##   chunk_of(x, z) · is_revealed(gs, cx, cy) · reveal_around(gs, pos, radius) · biome_at(x, z)
 ##   owner_of(gs, x, z) · region_at(gs, x, z) · zone_at(gs, x, z) · in_country(gs, x, z)
+##   fog_level(gs, cx, cy) · reveal_zone(gs, zid) · trade_town_pos(gs, town_id) · town_zone(gs, town_id)
 
 const CHUNK := 400.0
 
@@ -82,15 +86,28 @@ static func init_state(gs) -> void:
 		if not m.has(k):
 			m[k] = {}
 	m["expeditions_done"] = int(m.get("expeditions_done", 0))
+	if not (m.get("town_assign") is Dictionary):
+		m["town_assign"] = {}
 	var r := int(cfg().get("start_reveal_radius", 1))
 	for dy in range(-r, r + 1):
 		for dx in range(-r, r + 1):
 			_reveal(gs, dx, dy)
+	# Fase 9B: al inicio se revela TODO el municipio del jugador (también en partidas 9A migradas).
+	for c in gen(gs).zone_chunks(0):
+		_reveal(gs, c.x, c.y)
 	# Zonas compradas: su chunk siempre está revelado.
 	for z in gs.unlocked_zones:
 		var c := chunk_of_zone(int(z[0]), int(z[1]))
 		_reveal(gs, c.x, c.y)
 	gs.map = m
+	MunicipalSim.init_state(gs)   # Fase 9B: municipios, departamentos, alcaldes y política.
+	LandSim.init_state(gs)        # Fase 9B: mercado de tierras.
+
+
+## Fase 9B: se llama al final de la carga/creación (ya existen los pueblos de TradeSim): los ubica en
+## municipios reales del país.
+static func post_init(gs) -> void:
+	assign_towns(gs)
 
 
 static func key(cx: int, cy: int) -> String:
@@ -201,7 +218,7 @@ static func chunk_of_zone(zx: int, zy: int) -> Vector2i:
 	return Vector2i(floori(float(zx) / per), floori(float(zy) / per))
 
 
-## Dueño de un punto: "jugador" (parcela comprada), un dueño privado de la Fase 9B, "estado" (resto
+## Dueño de un punto: "jugador" (parcela comprada), "npc:<nombre>" (particular, Fase 9B), "estado" (resto
 ## del país) o "" fuera del país.
 static func owner_of(gs, x: float, z: float) -> String:
 	if not in_country(gs, x, z):
@@ -209,10 +226,11 @@ static func owner_of(gs, x: float, z: float) -> String:
 	var zc := zone_at(gs, x, z)
 	if gs.is_zone_unlocked(zc.x, zc.y):
 		return "jugador"
-	var parcels: Dictionary = gs.map.get("parcels", {})
-	var pk := key(zc.x, zc.y)
-	if parcels.has(pk):
-		return str(parcels[pk])
+	# Fase 9B: dueño del territorio (Estado o particular NPC) según el mercado de tierras.
+	var c := chunk_of_zone(zc.x, zc.y)
+	var info := LandSim.owner_info(gs, c.x, c.y)
+	if str(info.get("owner", "")) == "npc":
+		return "npc:%s" % str(info.get("name", ""))
 	return "estado"
 
 
@@ -228,12 +246,57 @@ static func municipalities(gs = null) -> Array:
 	return gen(gs).zones
 
 
-## Región (stub de la Fase 9A: una sola región para todo el país; la 9B la divide).
+## Región real (Fase 9B): el municipio del punto con su nombre, política, alcalde y departamento.
+## {} fuera del país. Campos: id ("m<n>"), municipality_id, name, department, department_name, governor,
+## mayor, policy{local_tax, min_wage, regulation, land_price}, town, population, treasury, country_id.
 static func region_at(gs, x: float, z: float) -> Dictionary:
 	if not in_country(gs, x, z):
 		return {}
-	var cdef := country_def(country_id(gs))
-	return {"id": "region_1", "name": "%s" % str(cdef.get("label", "País")), "country_id": country_id(gs)}
+	return MunicipalSim.region_at(gs, x, z)
+
+
+## Nivel de niebla de un chunk: 0 explorado, 1 velo ligero (tu municipio y sus vecinos), 2 sin explorar,
+## 3 fuera del país.
+static func fog_level(gs, cx: int, cy: int) -> int:
+	var g := gen(gs)
+	if not g.in_country_chunk(cx, cy):
+		return 3
+	if is_revealed(gs, cx, cy):
+		return 0
+	var zi := g.zone_index(cx, cy)
+	if zi == 0 or (g.zones[0]["neighbors"] as Array).has(zi):
+		return 1
+	return 2
+
+
+## ¿Tiene el municipio algún chunk explorado?
+static func zone_revealed_any(gs, zid: int) -> bool:
+	var g := gen(gs)
+	if zid < 0 or zid >= g.zones.size():
+		return false
+	var tc: Vector2i = g.zones[zid]["town_chunk"]
+	if is_revealed(gs, tc.x, tc.y):
+		return true
+	for c in g.zone_chunks(zid):
+		if is_revealed(gs, c.x, c.y):
+			return true
+	return false
+
+
+## Revela todo un municipio (sin emitir la señal). Devuelve cuántos chunks eran nuevos.
+static func reveal_zone_quiet(gs, zid: int) -> int:
+	var n := 0
+	for c in gen(gs).zone_chunks(zid):
+		if _reveal(gs, c.x, c.y):
+			n += 1
+	return n
+
+
+static func reveal_zone(gs, zid: int) -> int:
+	var n := reveal_zone_quiet(gs, zid)
+	if n > 0:
+		EventBus.map_changed.emit()
+	return n
 
 
 # --- Compra de parcelas (se une al instante al terreno del jugador) ---------------------------
@@ -245,7 +308,25 @@ static func zone_map_block_reason(gs, zx: int, zy: int) -> String:
 		return "Fuera del país"
 	if not is_revealed(gs, c.x, c.y):
 		return "Territorio sin explorar: envía una expedición (minimapa → Ampliar)"
+	# Fase 9B: la tierra de un particular se compra con una oferta, no al gobierno.
+	if not gs.is_zone_unlocked(zx, zy):
+		var info := LandSim.owner_info(gs, c.x, c.y)
+		if str(info.get("owner", "")) == "npc":
+			return "Terreno privado de %s: hazle una oferta (minimapa → Ampliar)" % str(info.get("name", ""))
 	return ""
+
+
+## Fase 9B: ¿se puede trazar una vía pública (carretera, línea) por este punto sin ser dueño? Sí en tierra
+## del Estado explorada fuera del chunk del pueblo; no por tierra de particulares ni en la niebla.
+static func public_way_ok(gs, x: float, z: float) -> bool:
+	if absf(x) <= gs.MAP_SIZE * 0.5 and absf(z) <= gs.MAP_SIZE * 0.5:
+		return false
+	if not in_country(gs, x, z):
+		return false
+	var c := chunk_of(x, z)
+	if not is_revealed(gs, c.x, c.y):
+		return false
+	return str(LandSim.owner_info(gs, c.x, c.y).get("owner", "")) in ["estado", "jugador"]
 
 
 ## Se llama al comprar una parcela: su chunk queda revelado y es del jugador.
@@ -313,26 +394,92 @@ static func start_expedition(gs, cx: int, cy: int) -> String:
 	return ""
 
 
-## Posición en el país de un pueblo de comercio exterior (Fase 7). Stub de la 9A hasta que la 9B
-## ubique los pueblos: el i-ésimo pueblo comercial (ordenados por distancia) es el i-ésimo pueblo de
-## municipio más cercano a la plaza. Vector2.INF si no hay dónde ponerlo.
-static func trade_town_pos(gs, town_id: String) -> Vector2:
+## Fase 9B: ubica los pueblos de comercio (TradeSim / TownEconomySim) en municipios reales con pueblo.
+## El i-ésimo pueblo (ordenados por distancia) va a un municipio repartido entre la mitad más cercana del
+## país. Su distancia (km) se ajusta con la real, con límites (×0,85–×1,15) para no romper el balance.
+static func assign_towns(gs) -> void:
 	var towns: Array = gs.trade.get("towns", [])
-	var idx := -1
-	for i in range(towns.size()):
-		if str(towns[i].get("id", "")) == town_id:
-			idx = i
-	if idx < 0:
-		return Vector2.INF
+	if not (gs.map.get("town_assign") is Dictionary):
+		gs.map["town_assign"] = {}
+	var asg: Dictionary = gs.map["town_assign"]
+	if towns.is_empty():
+		return
+	var all_done := true
+	for t in towns:
+		if not asg.has(str(t.get("id", ""))) or not t.has("distance_base"):
+			all_done = false
+	if all_done:
+		return
+	var used := {}
+	for k in asg:
+		used[int(asg[k])] = true
 	var spots := []
 	for z in municipalities(gs):
-		if bool(z["town"]) and not bool(z["player"]):
-			spots.append(z["town_pos"])
-	spots.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.length() < b.length())
-	return spots[idx] if idx < spots.size() else Vector2.INF
+		if bool(z["town"]) and not bool(z["player"]) and not used.has(int(z["id"])):
+			spots.append(z)
+	spots.sort_custom(func(a, b) -> bool: return (a["town_pos"] as Vector2).length() < (b["town_pos"] as Vector2).length())
+	var pending := []
+	for t in towns:
+		if not asg.has(str(t.get("id", ""))):
+			pending.append(t)
+	var n := pending.size()
+	var span := maxi(n, int(spots.size() * 0.5))
+	var taken := {}
+	for i in range(n):
+		var idx := mini(int(float(i) * span / maxi(1, n)), spots.size() - 1)
+		while idx < spots.size() and taken.has(idx):
+			idx += 1
+		if idx < 0 or idx >= spots.size():
+			break
+		taken[idx] = true
+		var z: Dictionary = spots[idx]
+		var t: Dictionary = pending[i]
+		asg[str(t["id"])] = int(z["id"])
+	# Nombres, población y distancia real.
+	var reals := []
+	for t in towns:
+		var zid := int(asg.get(str(t.get("id", "")), -1))
+		if zid >= 0:
+			reals.append((municipalities(gs)[zid]["town_pos"] as Vector2).length() / 1000.0)
+	reals.sort()
+	var ref: float = float(reals[reals.size() / 2]) if not reals.is_empty() else 1.0
+	for t in towns:
+		var zid := int(asg.get(str(t.get("id", "")), -1))
+		if zid < 0:
+			continue
+		var reg := MunicipalSim.region(gs, zid)
+		if not reg.is_empty() and str(reg.get("trade_town_id", "")) != str(t["id"]):
+			var nm := str(t.get("name", reg.get("name", "")))
+			for k in gs.map.get("regions", {}):
+				var other: Dictionary = gs.map["regions"][k]
+				if int(other["id"]) != zid and str(other.get("name", "")) == nm:
+					other["name"] = "%s del %s" % [nm, "Norte" if int(other["id"]) % 2 == 0 else "Sur"]
+			reg["name"] = nm
+			reg["trade_town_id"] = str(t["id"])
+			reg["population"] = int(t.get("population", reg.get("population", 500)))
+		if not t.has("distance_base"):
+			var real := (municipalities(gs)[zid]["town_pos"] as Vector2).length() / 1000.0
+			t["distance_base"] = float(t.get("distance", 50.0))
+			t["distance"] = roundf(float(t["distance_base"]) * clampf(real / maxf(0.1, ref), 0.85, 1.15))
+			t["real_km"] = snappedf(real, 0.1)
 
 
-## Rutas comerciales abiertas: revelan el pueblo destino y el corredor del camino (una sola vez).
+## Municipio de un pueblo de comercio (-1 si no tiene).
+static func town_zone(gs, town_id: String) -> int:
+	if not gs.map.get("town_assign", {}).has(town_id):
+		assign_towns(gs)
+	return int(gs.map.get("town_assign", {}).get(town_id, -1))
+
+
+## Posición real en el país de un pueblo de comercio exterior (Fase 7 → 9B). Vector2.INF si no tiene.
+static func trade_town_pos(gs, town_id: String) -> Vector2:
+	var zid := town_zone(gs, town_id)
+	if zid < 0 or zid >= municipalities(gs).size():
+		return Vector2.INF
+	return municipalities(gs)[zid]["town_pos"]
+
+
+## Rutas comerciales abiertas: revelan el municipio del pueblo destino y el corredor del camino (una vez).
 static func _reveal_trade_routes(gs) -> void:
 	var done: Dictionary = gs.map.get("routes_revealed", {})
 	var n := 0
@@ -349,6 +496,10 @@ static func _reveal_trade_routes(gs) -> void:
 			var q := p * (float(i) / steps)
 			n += reveal_around_quiet(gs, q, 150.0)
 		n += reveal_around_quiet(gs, p, 500.0)
+		var zid := town_zone(gs, tid)
+		if zid >= 0:
+			n += reveal_zone_quiet(gs, zid)
+			gs.notify("La ruta comercial reveló el municipio de %s." % MunicipalSim.name_of(gs, zid), "info")
 	gs.map["routes_revealed"] = done
 	if n > 0:
 		EventBus.map_changed.emit()
@@ -370,6 +521,7 @@ static func reveal_around_quiet(gs, p: Vector2, radius: float) -> int:
 static func daily(gs) -> void:
 	if gs.trade.get("connections", []).size() != gs.map.get("routes_revealed", {}).size():
 		_reveal_trade_routes(gs)
+	LandSim.daily(gs)   # Fase 9B: respuestas a ofertas y licitaciones de tierra.
 	var exps: Array = gs.map.get("expeditions", [])
 	if exps.is_empty():
 		return
@@ -393,6 +545,12 @@ static func daily(gs) -> void:
 	gs.map["expeditions"] = keep
 	if done:
 		EventBus.map_changed.emit()
+
+
+## Fase 9B: mercado de tierras (precios, comercio NPC) y municipios (alcaldes, misiones regionales).
+static func monthly(gs) -> void:
+	LandSim.monthly(gs)
+	MunicipalSim.monthly(gs)
 
 
 # --- País y recursos ------------------------------------------------------------------------------

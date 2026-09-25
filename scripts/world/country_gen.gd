@@ -52,6 +52,8 @@ var x_max := 0.0
 var center := Vector2.ZERO
 var half_ext := 6000.0
 var coast_sides: Array = []
+var scale := 1.0               # escala de los rasgos grandes (país / 32 chunks)
+var coast_w := 1300.0
 
 # Parámetros del perfil (cacheados para los hilos)
 var _mountain := 0.5
@@ -99,7 +101,7 @@ func init(p_type: String, p_seed: int, p_country: String) -> CountryGen:
 	water_level = float(cfg.get("water_level", 0.0))
 	profile = country_def(p_country)
 	terrain_p = profile.get("terrain", {})
-	size = clampi(int(profile.get("size", 30)), 8, 64)
+	size = clampi(int(profile.get("size", 64)), 8, 96)
 	c0 = -(size / 2)
 	c1 = c0 + size - 1
 	x_min = c0 * CHUNK - HALF_CHUNK
@@ -125,17 +127,22 @@ func init(p_type: String, p_seed: int, p_country: String) -> CountryGen:
 	_setup(_ridge, p_seed + 23, 0.009, 3)
 	_setup(_forest, p_seed + 37, 0.012, 2)
 	var cs := p_seed * 7 + p_country.hash() % 100000
-	_setup(_cont, cs + 101, 1.0 / 3200.0, 4)
+	# Fase 9B: los rasgos grandes (continente, cordilleras, clima, islas) crecen con el país para que
+	# un país de 25 km tenga regiones amplias y no un mosaico repetido.
+	scale = clampf(size / 32.0, 1.0, 2.6)
+	var sq := sqrt(scale)
+	coast_w = 1300.0 * sq
+	_setup(_cont, cs + 101, 1.0 / (3200.0 * scale), 4)
 	_setup(_hill, cs + 102, 1.0 / 380.0, 3)
-	_setup(_mount, cs + 103, 1.0 / 2600.0, 3)
-	_setup(_mridge, cs + 104, 1.0 / 1150.0, 4)
-	_setup(_river, cs + 105, 1.0 / 2300.0, 2)
+	_setup(_mount, cs + 103, 1.0 / (2600.0 * scale), 3)
+	_setup(_mridge, cs + 104, 1.0 / (1150.0 * sq), 4)
+	_setup(_river, cs + 105, 1.0 / (2300.0 * sq), 2)
 	_setup(_warp, cs + 106, 1.0 / 900.0, 2)
-	_setup(_lake, cs + 107, 1.0 / 700.0, 2)
-	_setup(_hum, cs + 108, 1.0 / 2400.0, 3)
-	_setup(_temp, cs + 109, 1.0 / 3000.0, 2)
-	_setup(_island, cs + 110, 1.0 / 1500.0, 3)
-	_setup(_plat, cs + 111, 1.0 / 1700.0, 3)
+	_setup(_lake, cs + 107, 1.0 / (700.0 * sq), 2)
+	_setup(_hum, cs + 108, 1.0 / (2400.0 * scale), 3)
+	_setup(_temp, cs + 109, 1.0 / (3000.0 * scale), 2)
+	_setup(_island, cs + 110, 1.0 / (1500.0 * sq), 3)
+	_setup(_plat, cs + 111, 1.0 / (1700.0 * sq), 3)
 	_build_zones()
 	return self
 
@@ -205,8 +212,7 @@ func _country(x: float, z: float) -> Vector2:
 	# Costas del país (lados con mar) e islas: se calculan primero para los deltas.
 	var land := 1.0
 	var near_sea := 0.0
-	var coast_w := 1300.0
-	var jag := _island.get_noise_2d(x, z) * 520.0
+	var jag := _island.get_noise_2d(x, z) * 520.0 * sqrt(scale)
 	var all_sides := coast_sides.has("todos")
 	var dmin := 1e9
 	if all_sides or coast_sides.has("oeste"):
@@ -225,7 +231,7 @@ func _country(x: float, z: float) -> Vector2:
 		land = minf(land, smoothstep(-0.04, 0.1, il))
 		near_sea = maxf(near_sea, 1.0 - smoothstep(0.1, 0.4, il))
 	# El entorno del pueblo siempre es tierra firme.
-	var town_guard := 1.0 - smoothstep(900.0, 1700.0, Vector2(x, z).length())
+	var town_guard := 1.0 - smoothstep(1100.0, 2200.0, Vector2(x, z).length())
 	land = maxf(land, town_guard)
 	# Relieve base y colinas.
 	var e := 5.5 + cont * 6.0 + _hill.get_noise_2d(x, z) * (3.0 + 5.0 * (1.0 - _mountain * 0.5))
@@ -434,50 +440,90 @@ func _build_zones() -> void:
 	zones = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value * 53 + country_id.hash() % 10000 + 17
-	var n := clampi(int(profile.get("zones", size * size / 36)), 4, 80)
+	# Fase 9B: municipios grandes (de 6×6 a 10×10 chunks, unos 30–60 por país).
+	var n := clampi(int(profile.get("zones", size * size / 70)), 4, 90)
 	var ratio := float(profile.get("town_ratio", 0.6))
-	var seeds: Array[Vector2i] = [Vector2i.ZERO]
-	var min_gap := float(size) / sqrt(float(n)) * 0.7
+	var seeds: Array[Vector2] = [Vector2.ZERO]
+	var min_gap := float(size) / sqrt(float(n)) * 0.72
 	var tries := 0
-	while seeds.size() < n and tries < n * 60:
+	while seeds.size() < n and tries < n * 80:
 		tries += 1
-		var p := Vector2i(rng.randi_range(c0 + 1, c1 - 1), rng.randi_range(c0 + 1, c1 - 1))
+		var p := Vector2(rng.randi_range(c0 + 2, c1 - 2), rng.randi_range(c0 + 2, c1 - 2))
 		var ok := true
 		for s in seeds:
-			if Vector2(p - s).length() < min_gap:
+			if (p - s).length() < min_gap:
 				ok = false
 				break
 		if ok:
 			seeds.append(p)
+	# Relajación de Lloyd (2 pasadas): tamaños más parejos. El municipio 0 (jugador) queda en la plaza.
+	var total := size * size
+	_zone_of_chunk.resize(total)
+	for it in range(2):
+		var sums: Array[Vector2] = []
+		var counts := PackedInt32Array()
+		sums.resize(seeds.size())
+		counts.resize(seeds.size())
+		for i in range(seeds.size()):
+			sums[i] = Vector2.ZERO
+		for cy in range(c0, c1 + 1):
+			for cx in range(c0, c1 + 1):
+				var best := _nearest_seed(seeds, Vector2(cx, cy))
+				sums[best] += Vector2(cx, cy)
+				counts[best] += 1
+		for i in range(1, seeds.size()):
+			if counts[i] > 0:
+				seeds[i] = sums[i] / counts[i]
 	for i in range(seeds.size()):
-		zones.append({"id": i, "seed": seeds[i], "town": false, "player": i == 0, "town_chunk": seeds[i], "town_pos": Vector2(seeds[i]) * CHUNK, "chunks": 0, "land": 0})
-	_zone_of_chunk.resize(size * size)
+		var sc := Vector2i(roundi(seeds[i].x), roundi(seeds[i].y))
+		zones.append({"id": i, "seed": sc, "town": false, "player": i == 0, "town_chunk": sc, "town_pos": Vector2(sc) * CHUNK,
+				"chunks": 0, "land": 0, "centroid": Vector2.ZERO, "neighbors": [], "bbox": Rect2i()})
+	# Asignación final con bordes irregulares (ruido suave + un poco de ruido por chunk).
+	var sums2: Array[Vector2] = []
+	sums2.resize(seeds.size())
+	for i in range(seeds.size()):
+		sums2[i] = Vector2.ZERO
 	for cy in range(c0, c1 + 1):
 		for cx in range(c0, c1 + 1):
-			var best := 0
-			var bd := 1e9
-			var jitter := Vector2(_warp.get_noise_2d(cx * 97.0, cy * 97.0), _warp.get_noise_2d(cy * 97.0 + 500.0, cx * 97.0)) * 1.6
-			for i in range(seeds.size()):
-				var dd := (Vector2(cx, cy) + jitter).distance_squared_to(Vector2(seeds[i]))
-				if dd < bd:
-					bd = dd
-					best = i
+			var jitter := Vector2(_warp.get_noise_2d(cx * 240.0, cy * 240.0), _warp.get_noise_2d(cy * 240.0 + 5000.0, cx * 240.0)) * 2.6
+			jitter += Vector2(_warp.get_noise_2d(cx * 97.0, cy * 97.0), _warp.get_noise_2d(cy * 97.0 + 500.0, cx * 97.0)) * 0.7
+			var best := _nearest_seed(seeds, Vector2(cx, cy) + jitter)
+			if maxi(absi(cx), absi(cy)) <= 1:
+				best = 0   # el pueblo del jugador y sus vecinos siempre son de su municipio
 			_zone_of_chunk[(cy - c0) * size + (cx - c0)] = best
-			zones[best]["chunks"] = int(zones[best]["chunks"]) + 1
+			var z: Dictionary = zones[best]
+			z["chunks"] = int(z["chunks"]) + 1
+			sums2[best] += Vector2(cx, cy)
 			if height(cx * CHUNK, cy * CHUNK) > water_level + 1.0:
-				zones[best]["land"] = int(zones[best]["land"]) + 1
-	# Pueblos: el del jugador siempre; los demás según town_ratio, en un chunk de tierra cerca de la semilla.
+				z["land"] = int(z["land"]) + 1
+			var bb: Rect2i = z["bbox"]
+			z["bbox"] = Rect2i(cx, cy, 1, 1) if bb.size == Vector2i.ZERO else bb.merge(Rect2i(cx, cy, 1, 1))
+	for z in zones:
+		if int(z["chunks"]) > 0:
+			z["centroid"] = sums2[int(z["id"])] / int(z["chunks"]) * CHUNK
+	# Vecindad entre municipios.
+	for cy in range(c0, c1 + 1):
+		for cx in range(c0, c1 + 1):
+			var zi := zone_index(cx, cy)
+			for d in [Vector2i(1, 0), Vector2i(0, 1)]:
+				var zj := zone_index(cx + d.x, cy + d.y)
+				if zj >= 0 and zj != zi:
+					var ni: Array = zones[zi]["neighbors"]
+					if not ni.has(zj):
+						ni.append(zj)
+						(zones[zj]["neighbors"] as Array).append(zi)
+	# Pueblos: el del jugador siempre; los demás según town_ratio, en un chunk de tierra cerca del centro.
 	for z in zones:
 		if bool(z["player"]):
 			z["town"] = true
 			z["town_chunk"] = Vector2i.ZERO
 			z["town_pos"] = Vector2.ZERO
 			continue
-		if int(z["land"]) < 2 or rng.randf() > ratio:
+		if int(z["land"]) < 6 or rng.randf() > ratio:
 			continue
-		var s: Vector2i = z["seed"]
+		var s := Vector2i(roundi(float(z["centroid"].x) / CHUNK), roundi(float(z["centroid"].y) / CHUNK))
 		var found := false
-		for r in range(0, 4):
+		for r in range(0, 6):
 			for dy in range(-r, r + 1):
 				for dx in range(-r, r + 1):
 					if found or maxi(absi(dx), absi(dy)) != r:
@@ -487,11 +533,35 @@ func _build_zones() -> void:
 						continue
 					var p := Vector2(c) * CHUNK + Vector2(rng.randf_range(-120, 120), rng.randf_range(-120, 120))
 					var h := height(p.x, p.y)
-					if h > water_level + 1.5 and h < 60.0:
+					if h > water_level + 1.5 and h < 60.0 and height(p.x + 40.0, p.y) > water_level + 1.0 and height(p.x, p.y + 40.0) > water_level + 1.0:
 						z["town"] = true
 						z["town_chunk"] = c
 						z["town_pos"] = p
 						found = true
+
+
+func _nearest_seed(seeds: Array[Vector2], p: Vector2) -> int:
+	var best := 0
+	var bd := 1e18
+	for i in range(seeds.size()):
+		var dd := p.distance_squared_to(seeds[i])
+		if dd < bd:
+			bd = dd
+			best = i
+	return best
+
+
+## Chunks de un municipio (Vector2i).
+func zone_chunks(zid: int) -> Array:
+	var out := []
+	if zid < 0 or zid >= zones.size():
+		return out
+	var bb: Rect2i = zones[zid]["bbox"]
+	for cy in range(bb.position.y, bb.end.y):
+		for cx in range(bb.position.x, bb.end.x):
+			if zone_index(cx, cy) == zid:
+				out.append(Vector2i(cx, cy))
+	return out
 
 
 ## Municipio de un chunk (-1 fuera del país).

@@ -4,10 +4,13 @@ extends Node3D
 ## - El chunk del pueblo (400 m, centrado en la plaza) se genera igual que antes: rejilla de 2,5 m
 ##   (`heights`, RES 160), mismas alturas, río y costa según map_type y semilla. Las zonas sin comprar
 ##   se ven oscurecidas.
-## - El resto del país (CountryGen: chunks de 400 m, 24–40 por lado) se construye por streaming con
-##   LOD: alta resolución cerca de la cámara, media más lejos y una capa lejana para todo el país.
+## - El resto del país (CountryGen: chunks de 400 m, 56–80 por lado) se construye por streaming con
+##   LOD: alta resolución cerca de la cámara, media más lejos y una capa lejana de teselas de 4×4 chunks
+##   (80 m por celda) para todo el país. Normales suaves y colores interpolados por vértice lejos;
+##   facetas low-poly solo de cerca (el shader mezcla según la distancia).
 ##   Las mallas se calculan en hilos (WorkerThreadPool) y se suben a la escena con un presupuesto
-##   de milisegundos por frame. Lo no revelado se ve como bruma con el relieve tenue.
+##   de milisegundos por frame. Lo no explorado se ve bajo un velo translúcido (relieve y biomas
+##   atenuados) y las fronteras de municipio se dibujan en el shader (Fase 9B).
 ## API pública estable: generate, height_at, is_land, zone_of, is_unlocked, build_mesh, set_season,
 ## scatter_nature, make_water, clear_trees, ray_ground, footprint_ok (+ heights/half/cell/RES/water_level).
 
@@ -20,16 +23,19 @@ const LOD_NONE := -1
 const LOD_HIGH := 0
 const LOD_MID := 1
 const LOD_FAR := 2
-const LOD_RES := [80, 20, 8]
+const LOD_RES := [80, 20, 20]     # alta (5 m), media (20 m), lejana: tesela de 4×4 chunks (80 m)
+const TILE := 4                   # chunks por lado de una tesela lejana
+const MAP_PX := 5                 # píxeles del minimapa por chunk (80 m por píxel)
 const HIGH_DIST := 700.0
 const MID_DIST := 2800.0
 const MAX_HIGH := 9
 const MAX_MID := 48
-const FAR_BATCH := 24
+const FAR_BATCH := 2
 const FRAME_BUDGET_MS := 5.0
 const DIM_LOCKED := 0.32
-const FOG_AMOUNT := 0.62
-const OUTSIDE_FOG := 0.9
+const FOG_LIGHT := 0.3            # velo ligero: tu municipio sin explorar y los vecinos
+const FOG_AMOUNT := 0.6           # velo de lo no explorado (translúcido: se ve el relieve)
+const OUTSIDE_FOG := 0.92
 
 var size: float = 400.0
 var half: float = 200.0
@@ -50,13 +56,22 @@ var gen: CountryGen
 var streaming := false
 var ring := 2
 var chunks := {}                 # Vector2i -> {lod, far, detail, detail_lod, trees, tree_pos, sig, busy, h}
+var tiles := {}                  # Vector2i -> {mi, busy, sig, dist}: capa lejana (TILE×TILE chunks)
 var chunks_root: Node3D
 var chunk_material: ShaderMaterial
-var fog_material: ShaderMaterial
+var far_material: ShaderMaterial
+var fog_material: ShaderMaterial        # (compatibilidad 9A: es el mismo material lejano)
 var outside_material: ShaderMaterial
+var fog_image: Image
+var zone_image: Image
+var detail_image: Image
+var fog_tex: ImageTexture
+var zone_tex: ImageTexture
+var detail_tex: ImageTexture
+var _detail_dirty := false
 var overlay: CountryOverlay
 var water: MeshInstance3D
-var map_image: Image             # 8 px por chunk (50 m por píxel), incluye el anillo exterior
+var map_image: Image             # MAP_PX px por chunk (80 m por píxel), incluye el anillo exterior
 var map_texture: ImageTexture
 var stats := {"jobs": 0, "uploads": 0, "upload_ms": 0.0, "job_ms": 0.0, "high": 0, "mid": 0, "far": 0}
 var _jobs: Array = []            # [{task, req}]
@@ -154,15 +169,7 @@ func is_unlocked(x: float, z: float) -> bool:
 func build_mesh() -> void:
 	_refresh_owned()
 	_build_town_mesh()
-	for c in chunks.keys():
-		var d: Dictionary = chunks[c]
-		var sig := _owned_sig(c)
-		if sig == str(d.get("sig", "")):
-			continue
-		if int(d.get("detail_lod", LOD_NONE)) != LOD_NONE:
-			_apply_result(_chunk_arrays(c, int(d["detail_lod"]), _owned.duplicate(), _cleared_near(c)))
-		if d.get("far") != null:
-			_apply_result(_chunk_arrays(c, LOD_FAR, _owned.duplicate(), []))
+	_rebuild_owned_changes()
 
 
 func _build_town_mesh() -> void:
@@ -227,7 +234,7 @@ func _color_for(p: Vector3, ny: float, locked: bool) -> Color:
 
 func set_season(season_id: String) -> void:
 	var s: Dictionary = GameData.weather.get("seasons", {}).get(season_id, {})
-	for m in [material, chunk_material, fog_material, outside_material]:
+	for m in [material, chunk_material, far_material]:
 		if m != null:
 			m.set_shader_parameter("season_tint", MeshLib.arr_color(s.get("tint"), Color.WHITE))
 			m.set_shader_parameter("snow_amount", float(s.get("snow", 0.0)))
@@ -417,11 +424,9 @@ func start_country() -> void:
 	chunks_root = Node3D.new()
 	chunks_root.name = "CountryChunks"
 	add_child(chunks_root)
-	chunk_material = _make_chunk_mat(0.0)
-	fog_material = _make_chunk_mat(FOG_AMOUNT)
-	outside_material = _make_chunk_mat(OUTSIDE_FOG)
+	_ensure_materials()
 	set_season(GameState.season)
-	var w := (gen.size + ring * 2) * 8
+	var w := (gen.size + ring * 2) * MAP_PX
 	map_image = Image.create(w, w, false, Image.FORMAT_RGB8)
 	map_image.fill(Color(0.72, 0.76, 0.8))
 	map_texture = ImageTexture.create_from_image(map_image)
@@ -431,6 +436,10 @@ func start_country() -> void:
 			var c := Vector2i(cx, cy)
 			chunks[c] = {"lod": LOD_NONE, "far": null, "detail": null, "detail_lod": LOD_NONE, "trees": null,
 					"tree_pos": PackedVector2Array(), "sig": "", "busy": false, "h": maxf(gen.height(cx * CHUNK, cy * CHUNK), water_level)}
+	var nt := tiles_per_side()
+	for ty in range(nt):
+		for tx in range(nt):
+			tiles[Vector2i(tx, ty)] = {"mi": null, "busy": false, "sig": "", "dist": 0.0}
 	overlay = CountryOverlay.new()
 	overlay.name = "CountryOverlay"
 	add_child(overlay)
@@ -440,13 +449,73 @@ func start_country() -> void:
 	_lod_timer = 0.0
 
 
-func _make_chunk_mat(fog: float) -> ShaderMaterial:
+## Texturas del país que usa el shader: niebla (suave), municipios (bordes) y chunks con malla detallada
+## (la capa lejana se recorta ahí). Una celda por chunk, incluido el anillo exterior.
+func _ensure_materials() -> void:
+	if chunk_material != null:
+		return
+	var w := gen.size + ring * 2
+	fog_image = Image.create(w, w, false, Image.FORMAT_R8)
+	zone_image = Image.create(w, w, false, Image.FORMAT_RG8)
+	detail_image = Image.create(w, w, false, Image.FORMAT_R8)
+	detail_image.fill(Color(0, 0, 0))
+	_fill_zone_image()
+	_fill_fog_image()
+	fog_tex = ImageTexture.create_from_image(fog_image)
+	zone_tex = ImageTexture.create_from_image(zone_image)
+	detail_tex = ImageTexture.create_from_image(detail_image)
+	chunk_material = _make_chunk_mat(false)
+	far_material = _make_chunk_mat(true)
+	fog_material = far_material
+	outside_material = far_material
+
+
+func _make_chunk_mat(is_far: bool) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
 	m.shader = load("res://shaders/terrain_chunk.gdshader")
-	m.set_shader_parameter("fog", fog)
-	if fog >= OUTSIDE_FOG:
-		m.set_shader_parameter("fog_color", Vector3(0.6, 0.64, 0.7))
+	var w := gen.size + ring * 2
+	m.set_shader_parameter("fog_tex", fog_tex)
+	m.set_shader_parameter("zone_tex", zone_tex)
+	m.set_shader_parameter("detail_tex", detail_tex)
+	m.set_shader_parameter("map_origin", Vector2((gen.c0 - ring) * CHUNK - CHUNK * 0.5, (gen.c0 - ring) * CHUNK - CHUNK * 0.5))
+	m.set_shader_parameter("map_texels", float(w))
+	m.set_shader_parameter("chunk_size", CHUNK)
+	m.set_shader_parameter("is_far", is_far)
 	return m
+
+
+## Niveles de niebla por chunk: 0 explorado, velo ligero en tu municipio y los vecinos, velo en lo sin
+## explorar y bruma más densa fuera del país. El shader lo interpola: bordes suaves, nunca un corte.
+func _fill_fog_image() -> void:
+	var w := gen.size + ring * 2
+	var vals := [0.0, FOG_LIGHT, FOG_AMOUNT, OUTSIDE_FOG]
+	for j in range(w):
+		for i in range(w):
+			var lvl := MapSim.fog_level(GameState, gen.c0 - ring + i, gen.c0 - ring + j)
+			fog_image.set_pixel(i, j, Color(float(vals[lvl]), 0, 0))
+
+
+## Municipio de cada chunk (R = id, 255 fuera) y G = 1 en el municipio del jugador.
+func _fill_zone_image() -> void:
+	var w := gen.size + ring * 2
+	for j in range(w):
+		for i in range(w):
+			var zi := gen.zone_index(gen.c0 - ring + i, gen.c0 - ring + j)
+			zone_image.set_pixel(i, j, Color((zi % 255) / 255.0 if zi >= 0 else 1.0, 1.0 if zi == 0 else 0.0, 0))
+
+
+func tiles_per_side() -> int:
+	return ceili(float(gen.size + ring * 2) / TILE)
+
+
+## Tesela lejana que contiene un chunk.
+func tile_of(c: Vector2i) -> Vector2i:
+	return Vector2i(floori(float(c.x - gen.c0 + ring) / TILE), floori(float(c.y - gen.c0 + ring) / TILE))
+
+
+## Primer chunk (esquina) de una tesela.
+func tile_origin_chunk(t: Vector2i) -> Vector2i:
+	return Vector2i(gen.c0 - ring + t.x * TILE, gen.c0 - ring + t.y * TILE)
 
 
 func _exit_tree() -> void:
@@ -465,11 +534,30 @@ func _process(delta: float) -> void:
 		_lod_timer = 0.12
 		_update_lods()
 	_upload_results()
+	if _detail_dirty:
+		_detail_dirty = false
+		detail_tex.update(detail_image)
+	_update_borders()
 	_map_timer -= delta
 	if _map_dirty and _map_timer <= 0.0:
 		_map_timer = 0.5
 		_map_dirty = false
 		map_texture.update(map_image)
+
+
+## Fronteras de municipio en el shader: tenues, solo con la cámara alta; su ancho crece con la distancia
+## para seguir viéndose (unos 2 px) desde el zoom máximo.
+func _update_borders() -> void:
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	if cam == null or chunk_material == null:
+		return
+	var cp := cam.global_position
+	var alt := cp.y - maxf(height_at(cp.x, cp.z), water_level)
+	var k := smoothstep(500.0, 1800.0, alt)
+	var width := clampf(alt * 0.0021, 6.0, 70.0)
+	for m in [chunk_material, far_material]:
+		m.set_shader_parameter("border_alpha", 0.42 * k)
+		m.set_shader_parameter("border_width", width)
 
 
 func _refresh_owned() -> void:
@@ -480,35 +568,24 @@ func _refresh_owned() -> void:
 
 ## Firma de las parcelas propias que tocan un chunk (para rehacerlo al comprar).
 func _owned_sig(c: Vector2i) -> String:
-	var parts := []
-	for zy in range(c.y * 5, c.y * 5 + 6):
-		for zx in range(c.x * 5, c.x * 5 + 6):
-			if _owned.has("%d,%d" % [zx, zy]):
-				parts.append("%d,%d" % [zx, zy])
-	return ";".join(parts)
+	return _sig_from(c, _owned)
 
 
 func is_revealed_chunk(c: Vector2i) -> bool:
 	return MapSim.is_revealed(GameState, c.x, c.y)
 
 
-func _chunk_material_for(c: Vector2i) -> ShaderMaterial:
-	if not gen.in_country_chunk(c.x, c.y):
-		return outside_material
-	return chunk_material if is_revealed_chunk(c) else fog_material
-
-
 func _on_map_changed() -> void:
-	for c in chunks:
-		var d: Dictionary = chunks[c]
-		if d.get("far") != null:
-			(d["far"] as MeshInstance3D).material_override = _chunk_material_for(c)
+	if fog_image != null:
+		_fill_fog_image()
+		fog_tex.update(fog_image)
 	_lod_timer = 0.0
 	if overlay:
 		overlay.refresh()
 
 
-## Elige el LOD de cada chunk según la distancia a la cámara y encola las mallas que faltan.
+## Elige el LOD de cada chunk explorado según la distancia a la cámara y encola las mallas que faltan.
+## La capa lejana son teselas de 4×4 chunks (80 m por celda) que cubren todo el país.
 func _update_lods() -> void:
 	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
 	if cam == null:
@@ -516,16 +593,19 @@ func _update_lods() -> void:
 	var cp := cam.global_position
 	var want_high := []
 	var want_mid := []
-	var need_far := []
+	var rev: Dictionary = GameState.map.get("chunks_revealed", {})
+	var active := []
 	for c in chunks:
 		var d: Dictionary = chunks[c]
+		var revealed := rev.has("%d,%d" % [c.x, c.y])
+		if not revealed and d.get("detail") == null and int(d["lod"]) != LOD_HIGH:
+			continue
+		active.append(c)
 		var r := CountryGen.chunk_rect(c.x, c.y)
 		var q := Vector2(clampf(cp.x, r.position.x, r.end.x), clampf(cp.z, r.position.y, r.end.y))
 		var dist := Vector3(q.x - cp.x, float(d["h"]) - cp.y, q.y - cp.z).length()
 		d["dist"] = dist
-		if d.get("far") == null and not bool(d["busy"]):
-			need_far.append(c)
-		if gen.in_country_chunk(c.x, c.y) and is_revealed_chunk(c):
+		if revealed and gen.in_country_chunk(c.x, c.y):
 			if dist < HIGH_DIST:
 				want_high.append(c)
 			elif dist < MID_DIST:
@@ -543,13 +623,11 @@ func _update_lods() -> void:
 	var queue := []
 	var high_n := 0
 	var mid_n := 0
-	for c in chunks:
+	for c in active:
 		var d: Dictionary = chunks[c]
 		var want := int(wants.get(c, LOD_FAR))
 		d["want"] = want
-		if c == Vector2i.ZERO and want == LOD_HIGH:
-			_town_want = LOD_HIGH
-		elif c == Vector2i.ZERO:
+		if c == Vector2i.ZERO:
 			_town_want = want
 		if want == LOD_FAR and d.get("detail") != null:
 			_free_detail(d)
@@ -564,7 +642,6 @@ func _update_lods() -> void:
 	stats["high"] = high_n
 	stats["mid"] = mid_n
 	queue.sort_custom(func(a, b): return int(a[1]) < int(b[1]) or (int(a[1]) == int(b[1]) and float(chunks[a[0]]["dist"]) < float(chunks[b[0]]["dist"])))
-	need_far.sort_custom(by_dist)
 	var owned := _owned.duplicate()
 	for item in queue:
 		if _jobs.size() >= _max_jobs:
@@ -572,22 +649,32 @@ func _update_lods() -> void:
 		var c: Vector2i = item[0]
 		chunks[c]["busy"] = true
 		_start_job([c], int(item[1]), owned)
-	_far_queue = need_far
+	# Teselas lejanas que faltan, las más cercanas primero.
+	var need := []
+	for t in tiles:
+		var td: Dictionary = tiles[t]
+		if td["mi"] == null and not bool(td["busy"]):
+			var o := tile_origin_chunk(t)
+			var center := (Vector2(o) + Vector2(TILE, TILE) * 0.5 - Vector2(0.5, 0.5)) * CHUNK
+			td["dist"] = Vector2(cp.x, cp.z).distance_to(center)
+			need.append(t)
+	need.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return float(tiles[a]["dist"]) < float(tiles[b]["dist"]))
+	_far_queue = need
 	_feed_far_jobs()
 
 
-## La capa lejana se reparte en tandas: se llenan los hilos libres en cada frame.
+## La capa lejana se reparte en tandas de teselas: se llenan los hilos libres en cada frame.
 func _feed_far_jobs() -> void:
 	while _jobs.size() < _max_jobs and not _far_queue.is_empty():
 		var batch: Array = []
 		while batch.size() < FAR_BATCH and not _far_queue.is_empty():
-			var c: Vector2i = _far_queue.pop_front()
-			if chunks[c].get("far") == null and not bool(chunks[c]["busy"]):
-				batch.append(c)
+			var t: Vector2i = _far_queue.pop_front()
+			if tiles[t]["mi"] == null and not bool(tiles[t]["busy"]):
+				batch.append(t)
 		if batch.is_empty():
 			break
-		for c in batch:
-			chunks[c]["busy"] = true
+		for t in batch:
+			tiles[t]["busy"] = true
 		_start_job(batch, LOD_FAR, _owned.duplicate())
 
 
@@ -606,12 +693,24 @@ func _show(c: Vector2i, d: Dictionary, want: int) -> void:
 	var trees: Node3D = d.get("trees")
 	if trees != null:
 		trees.visible = det != null and det.visible
-	var far: MeshInstance3D = d.get("far")
-	if far != null:
-		far.visible = shown == LOD_NONE
-		if shown == LOD_NONE:
-			shown = LOD_FAR
+	if shown == LOD_NONE and d.get("far") != null:
+		shown = LOD_FAR
 	d["lod"] = shown
+	_set_detail_mask(c, shown == LOD_HIGH or shown == LOD_MID)
+
+
+## Marca los chunks con malla detallada visible: ahí el shader recorta la tesela lejana.
+func _set_detail_mask(c: Vector2i, on: bool) -> void:
+	if detail_image == null:
+		return
+	var i := c.x - gen.c0 + ring
+	var j := c.y - gen.c0 + ring
+	if i < 0 or j < 0 or i >= detail_image.get_width() or j >= detail_image.get_height():
+		return
+	var v := 1.0 if on else 0.0
+	if detail_image.get_pixel(i, j).r != v:
+		detail_image.set_pixel(i, j, Color(v, 0, 0))
+		_detail_dirty = true
 
 
 func _free_detail(d: Dictionary) -> void:
@@ -649,7 +748,10 @@ func _job(req: Dictionary) -> void:
 	var t0 := Time.get_ticks_usec()
 	var out: Array = req["out"]
 	for c in req["cs"]:
-		out.append(_chunk_arrays(c, int(req["lod"]), req["owned"], req["cleared"]))
+		if int(req["lod"]) == LOD_FAR:
+			out.append(_tile_arrays(c, req["owned"]))
+		else:
+			out.append(_chunk_arrays(c, int(req["lod"]), req["owned"], req["cleared"]))
 	req["ms"] = (Time.get_ticks_usec() - t0) / 1000.0
 
 
@@ -671,73 +773,102 @@ func _upload_results() -> void:
 	var t0 := Time.get_ticks_usec()
 	while not _ready_results.is_empty():
 		var r: Dictionary = _ready_results.pop_front()
-		var c: Vector2i = r["c"]
-		if chunks.has(c):
-			chunks[c]["busy"] = false
-			# El pedido pudo quedar viejo (la cámara se alejó): no se sube una malla detallada inútil.
-			if int(r["lod"]) == LOD_FAR or float(chunks[c].get("dist", 0.0)) < MID_DIST * 1.2:
-				_apply_result(r)
+		if r.has("tile"):
+			var t: Vector2i = r["tile"]
+			if tiles.has(t):
+				tiles[t]["busy"] = false
+			_apply_result(r)
+		else:
+			var c: Vector2i = r["c"]
+			if chunks.has(c):
+				chunks[c]["busy"] = false
+				# El pedido pudo quedar viejo (la cámara se alejó): no se sube una malla detallada inútil.
+				if float(chunks[c].get("dist", 0.0)) < MID_DIST * 1.2:
+					_apply_result(r)
 		if (Time.get_ticks_usec() - t0) / 1000.0 > FRAME_BUDGET_MS:
 			break
 	stats["upload_ms"] = float(stats["upload_ms"]) + (Time.get_ticks_usec() - t0) / 1000.0
 
 
-## Construye un chunk ya mismo en el hilo principal (pruebas y compras de terreno).
+## Construye un chunk (o la tesela lejana que lo contiene) ya mismo en el hilo principal (pruebas y
+## compras de terreno).
 func build_chunk_now(c: Vector2i, lod: int) -> float:
 	var t0 := Time.get_ticks_usec()
 	if not chunks.has(c):
 		chunks[c] = {"lod": LOD_NONE, "far": null, "detail": null, "detail_lod": LOD_NONE, "trees": null,
 				"tree_pos": PackedVector2Array(), "sig": "", "busy": false, "h": gen.height(c.x * CHUNK, c.y * CHUNK)}
-	_apply_result(_chunk_arrays(c, lod, _owned.duplicate(), _cleared_near(c)))
+	if lod == LOD_FAR:
+		var t := tile_of(c)
+		if not tiles.has(t):
+			tiles[t] = {"mi": null, "busy": false, "sig": "", "dist": 0.0}
+		_apply_result(_tile_arrays(t, _owned.duplicate()))
+	else:
+		_apply_result(_chunk_arrays(c, lod, _owned.duplicate(), _cleared_near(c)))
 	return (Time.get_ticks_usec() - t0) / 1000.0
 
 
-func _apply_result(r: Dictionary) -> void:
-	var c: Vector2i = r["c"]
-	var lod := int(r["lod"])
-	var d: Dictionary = chunks[c]
+func _mesh_from(r: Dictionary, res: int) -> ArrayMesh:
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = r["verts"]
+	arrays[Mesh.ARRAY_NORMAL] = r["normals"]
 	arrays[Mesh.ARRAY_COLOR] = r["cols"]
-	arrays[Mesh.ARRAY_INDEX] = _indices_for(int(LOD_RES[lod]))
+	arrays[Mesh.ARRAY_INDEX] = _indices_for(res)
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	var mi := MeshInstance3D.new()
-	mi.mesh = mesh
-	mi.name = "C%d_%d_L%d" % [c.x, c.y, lod]
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if lod == LOD_HIGH else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return mesh
+
+
+func _apply_result(r: Dictionary) -> void:
+	var lod := int(r["lod"])
 	if chunks_root == null:
 		chunks_root = Node3D.new()
 		chunks_root.name = "CountryChunks"
 		add_child(chunks_root)
-	if chunk_material == null:
-		chunk_material = _make_chunk_mat(0.0)
-		fog_material = _make_chunk_mat(FOG_AMOUNT)
-		outside_material = _make_chunk_mat(OUTSIDE_FOG)
+	_ensure_materials()
+	var mi := MeshInstance3D.new()
+	mi.mesh = _mesh_from(r, int(LOD_RES[lod]))
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if lod == LOD_HIGH else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	chunks_root.add_child(mi)
-	d["sig"] = str(r["sig"])
-	if lod == LOD_FAR:
-		mi.material_override = _chunk_material_for(c)
-		if d.get("far") != null:
-			(d["far"] as Node).queue_free()
-		d["far"] = mi
-		if map_image != null and r.has("map"):
-			var px := (c.x - gen.c0 + ring) * 8
-			var py := (c.y - gen.c0 + ring) * 8
-			var img := Image.create_from_data(8, 8, false, Image.FORMAT_RGB8, r["map"])
-			map_image.blit_rect(img, Rect2i(0, 0, 8, 8), Vector2i(px, py))
-			_map_dirty = true
-	else:
-		mi.material_override = chunk_material
-		_free_detail(d)
-		d["detail"] = mi
-		d["detail_lod"] = lod
-		if int(r.get("tree_n", 0)) > 0:
-			d["trees"] = _tree_node(r, lod)
-			d["tree_pos"] = r["tree_pos"]
-			chunks_root.add_child(d["trees"])
 	stats["uploads"] = int(stats["uploads"]) + 1
+	if r.has("tile"):
+		var t: Vector2i = r["tile"]
+		mi.name = "T%d_%d" % [t.x, t.y]
+		mi.material_override = far_material
+		var td: Dictionary = tiles.get(t, {})
+		if td.get("mi") != null:
+			(td["mi"] as Node).queue_free()
+		td["mi"] = mi
+		td["sig"] = str(r["sig"])
+		tiles[t] = td
+		var o := tile_origin_chunk(t)
+		for dy in range(TILE):
+			for dx in range(TILE):
+				var c := o + Vector2i(dx, dy)
+				if chunks.has(c):
+					chunks[c]["far"] = mi
+					if int(chunks[c]["lod"]) == LOD_NONE:
+						chunks[c]["lod"] = LOD_FAR
+		if map_image != null and r.has("map"):
+			var px := (o.x - gen.c0 + ring) * MAP_PX
+			var py := (o.y - gen.c0 + ring) * MAP_PX
+			var n := TILE * MAP_PX
+			var img := Image.create_from_data(n, n, false, Image.FORMAT_RGB8, r["map"])
+			map_image.blit_rect(img, Rect2i(0, 0, n, n), Vector2i(px, py))
+			_map_dirty = true
+		return
+	var c: Vector2i = r["c"]
+	var d: Dictionary = chunks[c]
+	mi.name = "C%d_%d_L%d" % [c.x, c.y, lod]
+	mi.material_override = chunk_material
+	d["sig"] = str(r["sig"])
+	_free_detail(d)
+	d["detail"] = mi
+	d["detail_lod"] = lod
+	if int(r.get("tree_n", 0)) > 0:
+		d["trees"] = _tree_node(r, lod)
+		d["tree_pos"] = r["tree_pos"]
+		chunks_root.add_child(d["trees"])
 	_show(c, d, int(d.get("want", lod)) if streaming else lod)
 
 
@@ -807,62 +938,91 @@ static func _edge_vertex(e: int, t: int, n: int) -> int:
 	return t * n + n - 1              # borde este
 
 
-## Arreglos de un chunk (hilo-seguro): vértices, colores, faldones, árboles y píxeles del minimapa.
-func _chunk_arrays(c: Vector2i, lod: int, owned: Dictionary, cleared: Array) -> Dictionary:
-	var res: int = LOD_RES[lod]
-	var n := res + 1
-	var step := CHUNK / res
-	var x0 := c.x * CHUNK - CHUNK * 0.5
-	var z0 := c.y * CHUNK - CHUNK * 0.5
+## Color del suelo en un punto (paleta del pueblo mezclada con la de biomas) con la marca de propiedad.
+func _vertex_color(x: float, z: float, h: float, ny: float, biome: int, owned: Dictionary) -> Color:
+	var col: Color
+	var s := gen.blend_at(x, z)
+	if s <= 0.0:
+		col = gen.old_color(x, z, h, ny)
+	else:
+		col = gen.ground_color(x, z, h, 1.0 - ny, biome)
+		if s < 1.0:
+			col = gen.old_color(x, z, h, ny).lerp(col, s)
+	# Propiedad: lo ajeno cerca del pueblo se oscurece (como siempre); lo propio lejos se entibia.
+	var cheb := maxf(absf(x), absf(z))
+	var zs := CHUNK / 5.0
+	var a := col.a
+	if owned.has("%d,%d" % [floori((x + 200.0) / zs), floori((z + 200.0) / zs)]):
+		if cheb > 200.0:
+			col = col.lerp(Color(0.95, 0.82, 0.5), 0.14)
+	else:
+		var dim := DIM_LOCKED * (1.0 - smoothstep(200.0, 600.0, cheb))
+		if dim > 0.0:
+			col = col.darkened(dim)
+	col.a = a
+	return col
+
+
+## Muestra una rejilla (n+2)² (con un borde de una celda para normales y suavizado) de alturas y biomas.
+func _sample(x0: float, z0: float, step: float, n: int) -> Array:
+	var m := n + 2
 	var hs := PackedFloat32Array()
 	var bs := PackedByteArray()
-	hs.resize(n * n)
-	bs.resize(n * n)
-	for j in range(n):
-		var z := z0 + j * step
-		for i in range(n):
-			var x := x0 + i * step
+	hs.resize(m * m)
+	bs.resize(m * m)
+	for j in range(m):
+		var z := z0 + (j - 1) * step
+		for i in range(m):
+			var x := x0 + (i - 1) * step
 			var h := gen.height(x, z)
-			hs[j * n + i] = h
-			bs[j * n + i] = gen.biome_id(x, z, h)
+			hs[j * m + i] = h
+			bs[j * m + i] = gen.biome_id(x, z, h)
+	return [hs, bs]
+
+
+## Vértices, normales suaves (interpoladas por vértice) y colores de una rejilla muestreada con borde.
+## blur = true suaviza los colores (3×3) para que la capa lejana no se vea en bloques.
+func _grid_mesh(x0: float, z0: float, step: float, n: int, hs: PackedFloat32Array, bs: PackedByteArray, owned: Dictionary, blur: bool) -> Dictionary:
+	var m := n + 2
 	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
 	var cols := PackedColorArray()
 	verts.resize(n * n + 4 * n)
+	normals.resize(n * n + 4 * n)
 	cols.resize(n * n + 4 * n)
-	var zs := CHUNK / 5.0
+	var full := PackedColorArray()
+	full.resize(m * m)
+	var nys := PackedFloat32Array()
+	nys.resize(m * m)
+	for j in range(m):
+		for i in range(m):
+			if not blur and (i == 0 or j == 0 or i == m - 1 or j == m - 1):
+				continue   # el borde solo hace falta para suavizar colores
+			var ii := clampi(i, 1, m - 2)
+			var jj := clampi(j, 1, m - 2)
+			var dx := (hs[jj * m + ii + 1] - hs[jj * m + ii - 1]) / (2.0 * step)
+			var dz := (hs[(jj + 1) * m + ii] - hs[(jj - 1) * m + ii]) / (2.0 * step)
+			var ny := 1.0 / sqrt(1.0 + dx * dx + dz * dz)
+			nys[j * m + i] = ny
+			full[j * m + i] = _vertex_color(x0 + (i - 1) * step, z0 + (j - 1) * step, hs[j * m + i], ny, bs[j * m + i], owned)
 	for j in range(n):
 		var z := z0 + j * step
 		for i in range(n):
 			var x := x0 + i * step
-			var h := hs[j * n + i]
-			var hx0 := hs[j * n + maxi(i - 1, 0)]
-			var hx1 := hs[j * n + mini(i + 1, res)]
-			var hz0 := hs[maxi(j - 1, 0) * n + i]
-			var hz1 := hs[mini(j + 1, res) * n + i]
-			var dx := (hx1 - hx0) / (step * float(mini(i + 1, res) - maxi(i - 1, 0)))
-			var dz := (hz1 - hz0) / (step * float(mini(j + 1, res) - maxi(j - 1, 0)))
-			var ny := 1.0 / sqrt(1.0 + dx * dx + dz * dz)
-			var col: Color
-			var s := gen.blend_at(x, z)
-			if s <= 0.0:
-				col = gen.old_color(x, z, h, ny)
-			else:
-				col = gen.ground_color(x, z, h, 1.0 - ny, bs[j * n + i])
-				if s < 1.0:
-					col = gen.old_color(x, z, h, ny).lerp(col, s)
-			# Propiedad: lo ajeno cerca del pueblo se oscurece (como siempre); lo propio lejos se entibia.
-			var cheb := maxf(absf(x), absf(z))
-			var zk := "%d,%d" % [floori((x + 200.0) / zs), floori((z + 200.0) / zs)]
-			var a := col.a
-			if owned.has(zk):
-				if cheb > 200.0:
-					col = col.lerp(Color(0.95, 0.82, 0.5), 0.14)
-			else:
-				var dim := DIM_LOCKED * (1.0 - smoothstep(200.0, 600.0, cheb))
-				if dim > 0.0:
-					col = col.darkened(dim)
-			col.a = a
+			var k := (j + 1) * m + (i + 1)
+			var h := hs[k]
+			var dx := (hs[k + 1] - hs[k - 1]) / (2.0 * step)
+			var dz := (hs[k + m] - hs[k - m]) / (2.0 * step)
 			verts[j * n + i] = Vector3(x, h, z)
+			normals[j * n + i] = Vector3(-dx, 1.0, -dz).normalized()
+			var col := full[k]
+			if blur:
+				var acc := Color(0, 0, 0, 0)
+				for oj in [-m, 0, m]:
+					for oi in [-1, 0, 1]:
+						acc += full[k + oj + oi]
+				acc = acc / 9.0
+				col = col.lerp(acc, 0.7)
 			cols[j * n + i] = col
 	# Faldones: copia de cada borde hundida (tapa grietas con chunks de otra resolución).
 	var drop := 2.0 + step * 0.6
@@ -871,12 +1031,63 @@ func _chunk_arrays(c: Vector2i, lod: int, owned: Dictionary, cleared: Array) -> 
 		for t in range(n):
 			var g := _edge_vertex(e, t, n)
 			verts[base + e * n + t] = verts[g] - Vector3(0, drop, 0)
+			normals[base + e * n + t] = normals[g]
 			cols[base + e * n + t] = cols[g].darkened(0.1)
-	var out := {"c": c, "lod": lod, "verts": verts, "cols": cols, "sig": _sig_from(c, owned), "tree_n": 0}
+	return {"verts": verts, "normals": normals, "cols": cols}
+
+
+## Arreglos de un chunk detallado (hilo-seguro): vértices, normales, colores, faldones y árboles.
+## Con LOD_FAR devuelve la tesela lejana que contiene el chunk (compatibilidad).
+func _chunk_arrays(c: Vector2i, lod: int, owned: Dictionary, cleared: Array) -> Dictionary:
 	if lod == LOD_FAR:
-		out["map"] = _map_pixels(hs, bs, n, step)
-	elif not (c == Vector2i.ZERO):
+		return _tile_arrays(tile_of(c), owned)
+	var res: int = LOD_RES[lod]
+	var n := res + 1
+	var step := CHUNK / res
+	var x0 := c.x * CHUNK - CHUNK * 0.5
+	var z0 := c.y * CHUNK - CHUNK * 0.5
+	var smp := _sample(x0, z0, step, n)
+	var hsb: PackedFloat32Array = smp[0]
+	var bsb: PackedByteArray = smp[1]
+	var out := _grid_mesh(x0, z0, step, n, hsb, bsb, owned, false)
+	out["c"] = c
+	out["lod"] = lod
+	out["sig"] = _sig_from(c, owned)
+	out["tree_n"] = 0
+	if not (c == Vector2i.ZERO):
+		# Árboles: rejilla sin borde (n×n) para los índices de siempre.
+		var hs := PackedFloat32Array()
+		var bs := PackedByteArray()
+		hs.resize(n * n)
+		bs.resize(n * n)
+		var m := n + 2
+		for j in range(n):
+			for i in range(n):
+				hs[j * n + i] = hsb[(j + 1) * m + i + 1]
+				bs[j * n + i] = bsb[(j + 1) * m + i + 1]
 		_chunk_trees(c, lod, hs, bs, n, step, cleared, out)
+	return out
+
+
+## Tesela lejana de TILE×TILE chunks con celdas de CHUNK·TILE/FAR_RES m (80 m): normales suaves, colores
+## suavizados y los píxeles del minimapa (MAP_PX por chunk).
+func _tile_arrays(t: Vector2i, owned: Dictionary) -> Dictionary:
+	var o := tile_origin_chunk(t)
+	var res: int = LOD_RES[LOD_FAR]
+	var n := res + 1
+	var span := CHUNK * TILE
+	var step := span / res
+	var x0 := o.x * CHUNK - CHUNK * 0.5
+	var z0 := o.y * CHUNK - CHUNK * 0.5
+	var smp := _sample(x0, z0, step, n)
+	var hs: PackedFloat32Array = smp[0]
+	var bs: PackedByteArray = smp[1]
+	var out := _grid_mesh(x0, z0, step, n, hs, bs, owned, true)
+	out["tile"] = t
+	out["lod"] = LOD_FAR
+	out["sig"] = _tile_sig(t, owned)
+	out["tree_n"] = 0
+	out["map"] = _map_pixels(hs, bs, n + 2, step, res)
 	return out
 
 
@@ -889,25 +1100,58 @@ func _sig_from(c: Vector2i, owned: Dictionary) -> String:
 	return ";".join(parts)
 
 
-## 8×8 píxeles RGB del minimapa: color del bioma con sombreado del relieve.
-func _map_pixels(hs: PackedFloat32Array, bs: PackedByteArray, n: int, step: float) -> PackedByteArray:
+func _tile_sig(t: Vector2i, owned: Dictionary) -> String:
+	var o := tile_origin_chunk(t)
+	var parts := []
+	for k in owned:
+		var p: PackedStringArray = str(k).split(",")
+		var c := MapSim.chunk_of_zone(int(p[0]), int(p[1]))
+		if c.x >= o.x and c.x < o.x + TILE and c.y >= o.y and c.y < o.y + TILE:
+			parts.append(str(k))
+	parts.sort()
+	return ";".join(parts)
+
+
+## Píxeles RGB del minimapa de una tesela (MAP_PX por chunk): color del bioma con sombreado del relieve.
+## hs/bs son la rejilla con borde (lado m = res + 3).
+func _map_pixels(hs: PackedFloat32Array, bs: PackedByteArray, m: int, step: float, res: int) -> PackedByteArray:
 	var px := PackedByteArray()
-	px.resize(8 * 8 * 3)
+	var np := TILE * MAP_PX
+	px.resize(np * np * 3)
 	var k := 0
-	for j in range(8):
-		for i in range(8):
-			var h := hs[j * n + i]
-			var sh := clampf(1.0 + ((hs[j * n + i + 1] - h) * -0.6 + (hs[(j + 1) * n + i] - h) * -0.6) / step * 3.0, 0.7, 1.25)
-			var col: Color = CountryGen.BIOME_MAP_COLORS[bs[j * n + i]]
-			if bs[j * n + i] > CountryGen.B_RIO:
+	for j in range(np):
+		for i in range(np):
+			var gi := clampi(int((i + 0.5) * res / np), 0, res - 1) + 1
+			var gj := clampi(int((j + 0.5) * res / np), 0, res - 1) + 1
+			var q := gj * m + gi
+			var h := hs[q]
+			var sh := clampf(1.0 + ((hs[q + 1] - h) * -0.6 + (hs[q + m] - h) * -0.6) / step * 3.0, 0.7, 1.25)
+			var col: Color = CountryGen.BIOME_MAP_COLORS[bs[q]]
+			if bs[q] > CountryGen.B_RIO:
 				col = col * sh
-			elif bs[j * n + i] == CountryGen.B_MAR:
+			elif bs[q] == CountryGen.B_MAR:
 				col = col.darkened(clampf(-h / 30.0, 0.0, 0.35))
 			px[k] = int(clampf(col.r, 0.0, 1.0) * 255.0)
 			px[k + 1] = int(clampf(col.g, 0.0, 1.0) * 255.0)
 			px[k + 2] = int(clampf(col.b, 0.0, 1.0) * 255.0)
 			k += 3
 	return px
+
+
+## Rehace ya mismo las mallas (detalladas y teselas lejanas) cuya propiedad cambió.
+func _rebuild_owned_changes() -> void:
+	for c in chunks.keys():
+		var d: Dictionary = chunks[c]
+		if int(d.get("detail_lod", LOD_NONE)) == LOD_NONE:
+			continue
+		if _owned_sig(c) != str(d.get("sig", "")):
+			_apply_result(_chunk_arrays(c, int(d["detail_lod"]), _owned.duplicate(), _cleared_near(c)))
+	for t in tiles.keys():
+		var td: Dictionary = tiles[t]
+		if td.get("mi") == null:
+			continue
+		if _tile_sig(t, _owned) != str(td.get("sig", "")):
+			_apply_result(_tile_arrays(t, _owned.duplicate()))
 
 
 ## Árboles de un chunk según su bioma: completos (tronco + copa) cerca, solo copas en el LOD medio.

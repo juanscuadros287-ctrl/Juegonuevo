@@ -210,6 +210,8 @@ static func _heights_for(gs) -> void:
 ## Altura del terreno (misma interpolación que Terrain.height_at).
 static func height_at(gs, x: float, z: float) -> float:
 	_heights_for(gs)
+	if absf(x) > _half or absf(z) > _half:
+		return MapSim.height_at(x, z, gs)   # Fase 9B: fuera del pueblo, el relieve del país.
 	var res := Terrain.RES
 	var fx := clampf((x + _half) / _cell, 0.0, res - 0.001)
 	var fz := clampf((z + _half) / _cell, 0.0, res - 0.001)
@@ -236,7 +238,7 @@ static func fresh_water_near(gs, x: float, z: float, radius := -1.0) -> bool:
 			var a := TAU * i / n
 			var px := x + cos(a) * r
 			var pz := z + sin(a) * r
-			if absf(px) < gs.MAP_SIZE * 0.5 and absf(pz) < gs.MAP_SIZE * 0.5 and height_at(gs, px, pz) < _water_level:
+			if MapSim.in_country(gs, px, pz) and height_at(gs, px, pz) < _water_level:
 				return true
 		r += step
 	return false

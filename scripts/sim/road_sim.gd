@@ -68,7 +68,8 @@ static func _zone_unlocked(gs, p: Vector2) -> bool:
 	var half: float = gs.MAP_SIZE * 0.5
 	if absf(p.x) > half or absf(p.y) > half:   # Fase 9A: parcelas compradas fuera del pueblo (índices globales).
 		var zc := MapSim.zone_at(gs, p.x, p.y)
-		return gs.is_zone_unlocked(zc.x, zc.y)
+		# Fase 9B: fuera del pueblo también se traza por tierra del Estado ya explorada (servidumbre pública).
+		return gs.is_zone_unlocked(zc.x, zc.y) or MapSim.public_way_ok(gs, p.x, p.y)
 	return gs.is_zone_unlocked(clampi(int((p.x + half) / zs), 0, gs.ZONE_GRID - 1), clampi(int((p.y + half) / zs), 0, gs.ZONE_GRID - 1))
 
 

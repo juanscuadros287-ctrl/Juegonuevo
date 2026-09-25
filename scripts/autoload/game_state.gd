@@ -153,6 +153,7 @@ func _init_expansions() -> void:
 	RealEstateSim.init_state(self)
 	GridSim.init_state(self)
 	TransitSim.init_state(self)
+	MapSim.post_init(self)   # Fase 9B: pueblos de comercio con posición real en municipios.
 
 
 # --- Simulación diaria -----------------------------------------------------
@@ -188,6 +189,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		EducationSim.monthly(self)
 		BusinessSim.monthly(self)
 		GovSim.monthly(self)
+		MapSim.monthly(self)   # Fase 9B: precios de la tierra, comercio NPC de tierras, alcaldes y misiones regionales.
 		FreeMarketSim.monthly(self)
 		EventsSim.monthly(self)
 		LogisticsSim.monthly(self)

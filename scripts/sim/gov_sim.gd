@@ -82,6 +82,7 @@ static func _pay_debts(gs) -> void:
 static func _collect_taxes(gs) -> void:
 	var p := policy(gs)
 	var totals := {"renta": 0.0, "propiedad": 0.0, "nomina": 0.0, "multas": 0.0}
+	var local_total := 0.0
 	for b in gs.buildings:
 		if not gs.owned_by_player(b):
 			continue
@@ -92,6 +93,7 @@ static func _collect_taxes(gs) -> void:
 				var t := profit * float(p.get("profit_tax", 0.0)) * PoliticsSim.profit_tax_mult(gs, b)   # Sección C: talento, cargos y lobby.
 				BusinessSim.pay(gs, b, t, "impuestos")
 				totals["renta"] += t
+			local_total += MunicipalSim.collect_local_tax(gs, b, profit)   # Fase 9B: impuesto (±) del municipio (va a su tesoro).
 		if not nonprofit:
 			var pt := EconomySim.property_value(gs, b) * float(p.get("property_tax", 0.0)) / 12.0
 			if pt > 0.0:
@@ -112,6 +114,9 @@ static func _collect_taxes(gs) -> void:
 	add_treasury(gs, total)
 	gs.add_counter("taxes_paid", total)
 	gs.government["taxes_last"] = totals
+	gs.government["local_taxes_last"] = local_total
+	if local_total > 0.0:
+		gs.add_counter("taxes_paid", local_total)
 
 
 static func _pay_subsidies(gs) -> void:
@@ -163,14 +168,36 @@ static func _poor_relief(gs) -> void:
 static func _enforce_min_wage(gs) -> void:
 	var mw := min_wage(gs)
 	if mw <= 0.0:
+		var local := _enforce_local_min_wage(gs)
+		if local > 0:
+			gs.notify("Salario mínimo municipal: subiste el sueldo a %d empleados." % local, "negocio")
 		return
 	var raised := 0
 	for c in gs.citizens.values():
 		if c.job_kind == "empleo" and c.wage < mw:
 			c.wage = mw
 			raised += 1
+	raised += _enforce_local_min_wage(gs)
 	if raised > 0:
 		gs.notify("Ley de salario mínimo (%s/día): subiste el sueldo a %d empleados." % [Fmt.money2(mw), raised], "negocio")
+
+
+## Fase 9B: salario mínimo del municipio donde está cada negocio (si es mayor que el nacional).
+static func _enforce_local_min_wage(gs) -> int:
+	var by_building := {}
+	for b in gs.buildings:
+		if gs.owned_by_player(b):
+			var lw := MunicipalSim.min_wage_for(gs, b)
+			if lw > 0.0:
+				by_building[int(b["id"])] = lw
+	if by_building.is_empty():
+		return 0
+	var raised := 0
+	for c in gs.citizens.values():
+		if c.job_kind == "empleo" and by_building.has(c.job_id) and c.wage < float(by_building[c.job_id]):
+			c.wage = float(by_building[c.job_id])
+			raised += 1
+	return raised
 
 
 # --- Régimen, gobiernos y elecciones --------------------------------------------------------------

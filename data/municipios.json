@@ -1,0 +1,76 @@
+{
+  "_nota": "Fase 9B — Municipios, departamentos, alcaldes, políticas locales, misiones regionales y mercado de tierras. local_tax: fracción extra (+) o rebaja (−) sobre la ganancia mensual de los negocios del municipio. min_wage: salario mínimo diario local (0 = el nacional). regulation: baja / media / alta (alta: el Estado solo vende por licitación; afecta el costo de obra). land_price: precio base de una parcela de 80 m (el territorio de 400 m tiene 25). El municipio del jugador empieza con política neutra (sin impuesto local, salario nacional, regulación media).",
+  "names": [
+    "San Isidro", "Santa Rosa", "La Esperanza", "El Carmen", "San Pedro", "Las Palmas", "Buenavista", "El Rosario",
+    "San Miguel", "La Candelaria", "Piedras Blancas", "Los Alisos", "Santa Bárbara", "El Retiro", "Guayabal", "San Lorenzo",
+    "Villanueva", "San Jacinto", "Santa Lucía", "Los Robles", "El Tambo", "Caracolí", "San Vicente", "La Unión",
+    "Aguas Claras", "El Peñol", "Santa Inés", "San Bernardo", "La Merced", "El Pedregal", "Los Naranjos", "San Antonio",
+    "Tres Cruces", "La Florida", "Montenegro", "San Cayetano", "El Guamo", "Santa Ana", "Palmira", "Valdivia",
+    "San Juan", "Las Mercedes", "Monteverde", "El Calvario", "Santa Fe", "Cañaveral", "La Soledad", "San Agustín",
+    "Los Cedros", "Ventaquemada", "El Porvenir", "San Benito", "Santa Clara", "Mirasol", "El Cerrito", "Los Andes",
+    "San Nicolás", "La Plata", "Villa Rica", "San Roque", "Santo Tomás", "El Olivo", "Las Lajas", "San Joaquín",
+    "Altamira", "La Victoria", "San Gabriel", "Puente Nacional", "Santa Marta", "El Salitre", "San Martín", "La Aurora",
+    "Guadalupe", "San Marcos", "Rionegro", "Los Laureles", "Santa Teresa", "El Encanto", "San Sebastián", "Las Brisas"
+  ],
+  "prefix_by_biome": {
+    "montana": ["Alto de", "Cerro", "Peñas de"],
+    "nevado": ["Alto de", "Cumbres de"],
+    "costa": ["Puerto", "Playa"],
+    "rio": ["Puerto", "Paso de"],
+    "desierto": ["Oasis de", "Médanos de"],
+    "pantano": ["Ciénaga de", "Esteros de"],
+    "selva": ["Selva de", "Monte"],
+    "bosque": ["Bosques de", "Monte"],
+    "llanura": ["Llano de", "Campo"]
+  },
+  "prefix_chance": 0.35,
+  "departments": {
+    "count": 5,
+    "names": ["Norte", "Sur", "Oriente", "Occidente", "Centro", "Altiplano", "Litoral", "Valle", "Serranía", "Llanos"]
+  },
+  "policy": {
+    "local_tax": [-0.05, 0.09],
+    "min_wage": [0.0, 3.2],
+    "min_wage_chance": 0.45,
+    "regulation": ["baja", "media", "alta"],
+    "regulation_build_mult": {"baja": 0.96, "media": 1.0, "alta": 1.08},
+    "land_price": [380, 1100]
+  },
+  "stances": {
+    "promercado": {"label": "Promercado", "tax_bias": -0.02, "wage_bias": -0.4, "reg_bias": -1},
+    "social": {"label": "Social", "tax_bias": 0.02, "wage_bias": 0.6, "reg_bias": 1},
+    "conservador": {"label": "Conservador", "tax_bias": 0.0, "wage_bias": 0.0, "reg_bias": 0},
+    "desarrollista": {"label": "Desarrollista", "tax_bias": -0.01, "wage_bias": 0.2, "reg_bias": 0}
+  },
+  "term_months": 48,
+  "missions": [
+    {"id": "invertir", "type": "buildings_in", "label": "Abre {n} negocio(s) en {m}", "reward_money": 1800, "reward_tax_months": 12, "months": 24},
+    {"id": "tierra", "type": "land_in", "label": "Compra {n} parcelas en {m}", "reward_money": 1200, "reward_tax_months": 6, "months": 18},
+    {"id": "ruta", "type": "route_to", "label": "Abre una ruta comercial con {m}", "reward_money": 1500, "reward_tax_months": 6, "months": 24},
+    {"id": "empleo_local", "type": "jobs_in", "label": "Da empleo a {n} personas en {m}", "reward_money": 2200, "reward_tax_months": 12, "months": 30},
+    {"id": "camino", "type": "road_in", "label": "Construye {n} m de camino en {m}", "reward_money": 1400, "reward_tax_months": 6, "months": 24}
+  ],
+  "missions_every_months": 4,
+  "missions_max": 3,
+  "land": {
+    "biome_factor": {"mar": 0.05, "costa": 1.25, "rio": 0.4, "pantano": 0.55, "llanura": 1.2, "bosque": 1.0, "selva": 0.8, "desierto": 0.5, "montana": 0.6, "nevado": 0.3},
+    "town_bonus": 1.6,
+    "town_reach_m": 1400.0,
+    "road_bonus": 0.3,
+    "road_reach_m": 500.0,
+    "deposit_bonus": 0.45,
+    "private_share": 0.45,
+    "private_near_town": 0.3,
+    "state_radius_chunks": 2,
+    "fluct_monthly": 0.06,
+    "index_range": [0.7, 1.5],
+    "demand_per_sale": 0.03,
+    "offer_days": [2, 5],
+    "tender_days": 10,
+    "tender_rival": [0.85, 1.2],
+    "npc_trades_per_month": [1, 4],
+    "min_accept_ratio": 0.85,
+    "sure_accept_ratio": 1.15,
+    "history_max": 40
+  }
+}
