@@ -17,6 +17,8 @@ var load_list: ItemList
 var diff_ids: Array = []
 var map_ids: Array = []
 var region_opt: OptionButton          # Fase 6: dónde fundar el pueblo
+var country_opt: OptionButton         # Fase 9A: país (perfil de biomas y recursos)
+var country_ids: Array = []
 var region_list: Array = []
 var region_preview: RegionPreview
 
@@ -122,8 +124,17 @@ func _build_new_panel(parent: Control) -> void:
 	map_ids = GameData.sorted_ids(GameData.map_types)
 	for id in map_ids:
 		map_opt.add_item(str(GameData.map_types[id].get("label", id)))
-	map_opt.item_selected.connect(func(_i): _refresh_regions())
+	map_opt.item_selected.connect(func(_i): _on_map_changed())
 	grid.add_child(map_opt)
+
+	grid.add_child(UIKit.label("País"))
+	country_opt = OptionButton.new()
+	country_ids = MapSim.country_ids()
+	for id in country_ids:
+		var cd := MapSim.country_def(str(id))
+		country_opt.add_item("%s (%d×%d km)" % [str(cd.get("label", id)), int(round(int(cd.get("size", 30)) * 0.4)), int(round(int(cd.get("size", 30)) * 0.4))])
+	country_opt.item_selected.connect(func(_i): _refresh_regions())
+	grid.add_child(country_opt)
 
 	grid.add_child(UIKit.label("Semilla"))
 	seed_edit = SpinBox.new()
@@ -146,13 +157,23 @@ func _build_new_panel(parent: Control) -> void:
 	v.add_child(row)
 	row.add_child(UIKit.button("Comenzar", _start, 160))
 	row.add_child(UIKit.button("Volver", _show_main, 120))
+	_on_map_changed()
+
+
+## Fase 9A: al cambiar el tipo de mapa se propone el país que mejor le va.
+func _on_map_changed() -> void:
+	country_opt.select(maxi(0, country_ids.find(MapSim.default_country(str(map_ids[map_opt.selected])))))
 	_refresh_regions()
+
+
+func _country() -> String:
+	return str(country_ids[country_opt.selected]) if not country_ids.is_empty() and country_opt.selected >= 0 else ""
 
 
 ## Lugares candidatos para fundar según tipo de mapa y semilla (Fase 6).
 func _refresh_regions() -> void:
 	var prev := region_opt.selected
-	region_list = RegionSim.candidates(str(map_ids[map_opt.selected]), int(seed_edit.value))
+	region_list = RegionSim.candidates(str(map_ids[map_opt.selected]), int(seed_edit.value), _country())
 	region_opt.clear()
 	for r in region_list:
 		region_opt.add_item(str(r.get("name", r.get("label", ""))))
@@ -170,6 +191,8 @@ func _update_desc() -> void:
 	if not region_list.is_empty() and region_opt.selected >= 0:
 		var r: Dictionary = region_list[region_opt.selected]
 		desc_lbl.text += "\n\n%s: %s\nRecursos: %s" % [r.get("name", ""), r.get("description", ""), RegionSim.strengths_text(r)]
+		var cd := MapSim.country_def(_country())
+		desc_lbl.text += "\n\nPaís %s (%s): %s" % [cd.get("label", ""), cd.get("inspiration", ""), cd.get("description", "")]
 		region_preview.show_region(str(map_ids[map_opt.selected]), int(seed_edit.value), r)
 
 
@@ -231,6 +254,7 @@ func _start() -> void:
 		"difficulty": diff_ids[diff_opt.selected],
 		"map_type": map_ids[map_opt.selected],
 		"seed": int(seed_edit.value),
+		"country_id": _country(),
 		"region": str(region_list[region_opt.selected].get("id", "")) if not region_list.is_empty() else "",
 	})
 	get_tree().change_scene_to_file("res://scenes/main.tscn")

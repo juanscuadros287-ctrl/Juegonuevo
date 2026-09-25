@@ -280,7 +280,8 @@ static func road_plan(gs, ctrl: PackedVector2Array, kind: String, check_money :=
 	if float(wp["longest"]) > float(tc.get("bridge_max", 36.0)):
 		out["reason"] = "El agua es muy ancha: un puente cubre como máximo %d m" % int(tc.get("bridge_max", 36.0))
 		return out
-	var cost := RoadSim._cost_for_length(gs, length, kind)
+	out["terrain_mult"] = MapSim.terrain_cost_mult_path(pts, gs, false)   # Fase 9A: pendiente, túnel, cañón, altura (el puente va aparte).
+	var cost := RoadSim._cost_for_length(gs, length * float(out["terrain_mult"]), kind)
 	var bridge_extra: float = float(wp["wet"]) * float(kd.get("cost_per_unit", 1.0)) * (float(tc.get("bridge_cost_mult", 5.0)) - 1.0) * gs.price_mult()
 	cost["bridge"] = bridge_extra
 	cost["total"] = float(cost["total"]) + bridge_extra

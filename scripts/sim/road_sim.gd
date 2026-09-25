@@ -47,7 +47,7 @@ static func total_length(gs, kind := "") -> float:
 
 ## Costo de un tramo: {money, stone, stone_stock, stone_import, import_cost, total}.
 static func segment_cost(gs, a: Vector2, b: Vector2, kind: String) -> Dictionary:
-	return _cost_for_length(gs, a.distance_to(b), kind)
+	return _cost_for_length(gs, a.distance_to(b) * MapSim.terrain_cost_mult(a, b, gs), kind)   # Fase 9A: montaña, puente, túnel.
 
 
 static func _cost_for_length(gs, length: float, kind: String) -> Dictionary:
@@ -66,6 +66,9 @@ static func _cost_for_length(gs, length: float, kind: String) -> Dictionary:
 static func _zone_unlocked(gs, p: Vector2) -> bool:
 	var zs: float = gs.MAP_SIZE / gs.ZONE_GRID
 	var half: float = gs.MAP_SIZE * 0.5
+	if absf(p.x) > half or absf(p.y) > half:   # Fase 9A: parcelas compradas fuera del pueblo (índices globales).
+		var zc := MapSim.zone_at(gs, p.x, p.y)
+		return gs.is_zone_unlocked(zc.x, zc.y)
 	return gs.is_zone_unlocked(clampi(int((p.x + half) / zs), 0, gs.ZONE_GRID - 1), clampi(int((p.y + half) / zs), 0, gs.ZONE_GRID - 1))
 
 

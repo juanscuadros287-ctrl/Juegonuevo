@@ -40,7 +40,9 @@ static func deposit_types() -> Array:
 # --- Lugares para fundar el pueblo ---------------------------------------------------------
 
 ## Candidatos deterministas según tipo de mapa y semilla (3-4 lugares).
-static func candidates(map_type: String, seed_value: int) -> Array:
+static func candidates(map_type: String, seed_value: int, country_id := "") -> Array:
+	if country_id == "":
+		country_id = str(GameState.settings.get("country_id", MapSim.default_country(map_type)))
 	var regions: Dictionary = cfg().get("regions", {})
 	var pool: Array = regions.get(map_type, regions.get("interior", []))
 	var rng := RandomNumberGenerator.new()
@@ -54,6 +56,7 @@ static func candidates(map_type: String, seed_value: int) -> Array:
 		var t: Dictionary = pool[idx[i]].duplicate(true)
 		t["place"] = str(names[i % names.size()])
 		t["name"] = "%s de %s" % [str(t.get("label", "")), t["place"]]
+		MapSim.apply_country_resources(t, country_id)   # Fase 9A: abundancia de recursos del país.
 		out.append(t)
 	return out
 
