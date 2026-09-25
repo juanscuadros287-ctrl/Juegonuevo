@@ -15,7 +15,7 @@ Estado: `GameState.market` (se guarda; las partidas viejas lo crean al cargar, `
 | `scripts/sim/free_market_sim.gd` | Orquesta los sistemas (ganchos en `GameState.simulate_day`), estado, RNG propio y `money_snapshot` |
 | `scripts/sim/npc_business_sim.gd` | Empresas NPC del pueblo del jugador |
 | `scripts/sim/town_economy_sim.gd` | Crecimiento y comercio de los pueblos vecinos |
-| `scripts/sim/contract_sim.gd` | Contratos de compraventa |
+| `scripts/sim/contract_sim.gd` | Contratos de compra y venta, únicos o recurrentes a precio fijo |
 | `scripts/sim/gov_plans_sim.gd` | Plan de gobierno (obras propias o licitadas) |
 | `scripts/ui/contracts_panel.gd` | Botón **Contratos** del HUD |
 
@@ -85,7 +85,34 @@ Cada mes:
 - **Comercia con los otros pueblos** de forma resumida: quien produce le vende a quien lo pide. Su
   dinero cambia de manos (suma cero) y parte de esa demanda queda cubierta, así que tu precio allá baja un poco.
 
-## Contratos de compraventa (botón «Contratos»)
+## Contratos de compra y venta (botón «Contratos»)
+
+Pedido de Sebastián: "que me puedan pedir, o yo pedir, contrato recurrente: comprar automáticamente X
+cantidad por X tiempo, cada X tiempo, y lo mismo para venta, algo 100 % fijo".
+
+### Modelo general
+
+Cada contrato (`gs.market["contracts"]`) tiene:
+
+| Campo | Qué es |
+|---|---|
+| `dir` | `"venta"` (el jugador vende) o `"compra"` (el jugador compra) |
+| `client` | contraparte: `town:<id>` (pueblo con ruta), `npc:<id>` (empresa NPC), `gov` (gobierno) o `import` (importación externa, solo compra) |
+| `good`, `qty`, `unit_price` | bien, cantidad por entrega y precio unitario **fijo** (no cambia aunque cambie el mercado) |
+| `period` | frecuencia en días: 7, 15, 30, 60, 90 o personalizada |
+| `installments` | número de entregas (o se calcula desde una fecha de fin con `installments_until`) |
+| `start_day`, `end_day`, `next_due` | primera entrega, última entrega y próxima entrega |
+| `penalty` / `cp_penalty` | penalidad del jugador / de la contraparte por incumplir una entrega (20 % del valor de la entrega) |
+| `auto` | entrega automática sí o no |
+| `wid` | almacén destino de una compra (bodega de la plaza por defecto) |
+| `done`, `failed`, `cp_failed` | entregas hechas, incumplidas por el jugador y por la contraparte |
+| `paid`, `owed`, `debt` | lo pagado, lo que te debe el comprador y lo que tú debes al proveedor |
+
+**Migración:** al cargar (`FreeMarketSim.init_state` → `ContractSim.migrate`), los contratos, solicitudes
+y ofertas sin `dir` pasan a venta con frecuencia 30 (las antiguas cuotas mensuales), con fechas de inicio y fin
+calculadas, `cp_penalty` = penalidad y almacén = bodega de la plaza. Es idempotente (`"v": 2`).
+
+### Ventas (el jugador vende)
 
 - **Solicitudes entrantes:**
   - Llegan **solo para bienes que produce alguno de tus negocios**.
@@ -93,27 +120,65 @@ Cada mes:
     - Pueblos con ruta comercial: piden lo que usan y no producen, y prefieren lo que demandan.
     - Empresas NPC: insumos o mercancía según `input_wants`.
     - El gobierno: materiales de sus obras.
-  - Cada solicitud trae bien, cantidad, precio por unidad, plazo o entrega mensual por N meses, y una penalidad (20 % del valor de cada entrega).
-  - Llega una notificación y queda en la bandeja con **Aceptar/Rechazar**. Vence a los 15 días.
+  - Las recurrentes vienen con frecuencia de 15, 30 o 60 días (`request_periods`), con la misma duración total aproximada que antes.
+  - Llega una notificación y queda en la **Bandeja** con **Aceptar / Rechazar / Contraofertar**. Vence a los 15 días.
   - Rechazar baja un poco la reputación. El cliente compra a otro proveedor: otro pueblo, importación u otro NPC.
-- **Ofertas salientes:**
-  - Eliges cliente (pueblo con ruta, empresa NPC o gobierno), bien, cantidad y precio. El panel sugiere el precio de referencia y muestra el flete.
-  - El cliente responde en 2 a 5 días. Decide según:
-    - su necesidad (demanda, abastecimiento, si lo usa);
-    - el precio de mercado;
-    - la distancia (lejos paga un poco menos);
-    - la reputación;
-    - si tiene con qué pagar.
 - **Entrega:**
   - Sale de la bodega de la plaza (la salida del pueblo), luego de los otros almacenes y luego del inventario de tus negocios.
-  - A un pueblo viaja por la ruta comercial: pagas el flete de `TradeSim`, con jornales a cargadores del pueblo, y el pueblo paga **desde su caja al llegar**.
+  - A un pueblo viaja por la ruta comercial: pagas el flete de `TradeSim` y el pueblo paga **desde su caja al llegar**.
   - En el pueblo, el pago es inmediato desde la caja de la empresa NPC o del tesoro.
-  - Si el comprador no tiene fondos, queda debiendo y paga cada mes.
-- **Entrega automática:**
-  - Viene activada en los contratos recurrentes y se cambia con la casilla del panel.
-  - Entrega desde 3 días antes del vencimiento si hay existencias.
+  - Si el comprador no tiene fondos, queda debiendo y paga cada mes (ese es su incumplimiento).
+  - Automática: entrega desde 3 días antes de la fecha si hay existencias. Manual: botón **Entregar ahora**
+    desde media frecuencia antes (máximo 15 días).
 - **Incumplimiento:** pagas la penalidad al cliente y tu reputación baja 12 puntos. Un contrato
   único queda incumplido; uno recurrente se cancela a la segunda falla.
+
+### Compras (el jugador compra) — nuevo
+
+- **Proveedores** (`supplier_keys`):
+  - empresas NPC que producen ese bien, con su **stock real** (`inventory`);
+  - pueblos vecinos con ruta que lo producen (`TradeSim.sells_good`); su stock es `supply − scar`;
+  - la **importación externa** como último recurso: siempre tiene, pero cuesta el precio de mercado × 1,4 × arancel y tarda 7 días.
+- **Cada entrega** (automática el día acordado; manual con **Recibir ahora**, a más tardar 3 días después):
+  - la empresa NPC descuenta su stock y el bien entra al almacén elegido con `WarehouseSim.add_to` (respeta la capacidad);
+  - desde otro pueblo llega tras los días de viaje de la ruta; el flete lo pagas al despachar;
+  - **se paga al recibir**: a la caja de la empresa NPC (como venta suya), a la caja del pueblo o afuera (importación; el arancel queda en el tesoro).
+    Si al llegar no te alcanza, queda como deuda y se paga cada mes.
+- **Proveedor sin stock:** incumple. Te paga su penalidad (de su caja; el dueño pone si falta) y baja su **fiabilidad** (0–100, empieza en 80).
+  A la segunda falla el contrato termina por culpa del proveedor.
+- **Jugador sin dinero o sin espacio** (el espacio cuenta lo que ya viene en camino): el incumplidor eres tú. Pagas la penalidad al proveedor
+  y baja tu reputación, igual que en una venta.
+
+### Quién propone
+
+- **El jugador propone** (pestaña **Proponer**): dirección, contraparte, bien, cantidad, precio (con la referencia de mercado),
+  frecuencia, número de entregas, primera entrega, automática y, si es compra, el almacén destino. Muestra el estimado del total.
+  La contraparte responde en 2–5 días (`evaluate_offer`) según:
+  - su necesidad (venta) o su capacidad de producir esa cantidad por período (compra);
+  - el precio frente a la referencia del mercado;
+  - la duración: por un compromiso largo pide un descuento de 1 % por entrega extra (máximo 10 %);
+  - tu reputación con ella;
+  - su caja (si puede pagar dos entregas) o la tuya (si puedes pagar una); un proveedor NPC con la caja apretada vende 5 % más barato.
+
+  Si el precio no le sirve pero está a menos de 15 % de su límite, responde con una **contraoferta** de precio: la aceptas o la rechazas
+  en la Bandeja (vence a los 15 días).
+- **Los NPC proponen:**
+  - de venta, solo de bienes que produces (arriba);
+  - de compra: una vez al mes, un proveedor (empresa NPC o pueblo con ruta) te ofrece venderte algo que tus negocios consumen
+    (insumos de recetas o la mercadería de tus comercios) cuando tus existencias no alcanzan para un mes (`player_needs`).
+  - Todas llegan a la Bandeja con **Aceptar / Rechazar / Contraofertar**. Contraofertar la convierte en una propuesta tuya con
+    otro precio que la contraparte responde en unos días.
+- **Cancelar** un contrato activo: pagas una penalidad a la contraparte y baja un poco tu reputación.
+
+### Interfaz (`contracts_panel.gd`)
+
+Pestañas **Bandeja** (solicitudes, ofertas de proveedores y contraofertas), **Proponer** (formulario), **Activos** (próxima
+entrega, entregas hechas/total, cumplimiento, deuda, **Entregar/Recibir ahora**, **Automática** y **Cancelar** con la penalidad)
+e **Historial** (contratos cerrados y quién incumplió, propuestas, reputación por cliente y fiabilidad de proveedores).
+
+Configuración en `data/mercado.json → contracts` (`request_periods`, `duration_discount`, `counter_ratio`, `npc_supply_wholesale`,
+`import_premium`, `import_days`, `reliability_*`, `supply_*`, `shop_need_month`).
+
 - **Reputación por cliente (0–100):** sube 4 puntos al cumplir. Cambia el precio que te ofrecen
   (×0,9 a ×1,1) y cada cuánto te piden (×0,2 a ×2).
 
@@ -143,7 +208,7 @@ Cada mes:
 ## Economía cerrada
 
 - Ningún sistema crea dinero. Todo pago tiene origen y destino: caja NPC, ciudadano, jugador, tesoro o caja de pueblo.
-- Lo único que sale del pueblo son las compras afuera: los materiales de las obras, la electricidad de la red regional y el flete.
+- Lo único que sale del pueblo son las compras afuera: los materiales de las obras, la electricidad de la red regional, el flete y las compras por contrato a la importación externa (menos el arancel, que va al tesoro). Las compras a empresas NPC y a pueblos vecinos van a sus cajas.
 - Las exportaciones a pueblos vecinos traen dinero de sus cajas, que se alimentan de su propia economía.
 - `FreeMarketSim.money_snapshot(gs)` suma todo. La prueba lo verifica en:
   - aperturas;
@@ -169,3 +234,13 @@ Cada mes:
 - guardar y cargar (incluida una partida vieja);
 - 8 años de simulación;
 - la interfaz.
+
+`godot --headless tests/test_contratos.tscn` cubre los contratos recurrentes:
+- compra cada 15 días × 4 entregas: llega el bien, se paga, precio fijo aunque cambie el mercado y el dinero se conserva;
+- venta recurrente quincenal (solicitud) y semanal (propuesta);
+- proveedor sin stock (penalidad, fiabilidad y fin del contrato);
+- jugador sin dinero o sin espacio;
+- contraofertas (del proveedor, del cliente y a una solicitud de la bandeja);
+- compra a un pueblo (flete y demora) y a la importación;
+- ofertas de proveedores NPC y cancelar con penalidad;
+- migración de un contrato viejo, guardar y cargar, y la interfaz.
