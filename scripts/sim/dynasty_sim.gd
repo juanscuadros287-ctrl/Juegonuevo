@@ -121,6 +121,8 @@ static func monthly(gs) -> void:
 	ensure(gs)
 	_pay_installment(gs)
 	_old_age_warning(gs)
+	HeirsSim.monthly(gs)      # Sección C: educación y talentos de herederos.
+	PoliticsSim.monthly(gs)   # Sección C: cargos, campañas, lobby y escándalos.
 
 
 static func _pay_installment(gs) -> void:
@@ -159,7 +161,7 @@ static func _old_age_warning(gs) -> void:
 
 
 static func has_heir(gs) -> bool:
-	return not PlayerSim.heir_candidates(gs).is_empty()
+	return not PlayerSim.heir_candidates(gs).is_empty() or HeirsSim.has_listed_heir(gs)
 
 
 static func years_of(gs, h: Dictionary) -> int:

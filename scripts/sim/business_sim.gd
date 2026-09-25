@@ -160,7 +160,7 @@ static func pay(gs, b: Dictionary, amount: float, key: String) -> void:
 static func produce(gs) -> void:
 	var points := 0.0
 	var pm: float = gs.price_mult()
-	var discount := office_discount(gs)
+	var discount := minf(0.9, office_discount(gs) + HeirsSim.upkeep_discount(gs))   # Sección C: talento de negocios/oficio del jefe.
 	for b in gs.buildings:
 		if not gs.owned_by_player(b) or b["status"] == "construccion" or b["status"] == "cerrado":
 			continue
