@@ -1,0 +1,3745 @@
+diff --git a/data/countries.json b/data/countries.json
+index 23cca2c..36f1e1f 100644
+--- a/data/countries.json
++++ b/data/countries.json
+@@ -1,5 +1,5 @@
+ {
+-  "_nota": "Fase 9A — Países (ficticios, con inspiración real). size = chunks de 400 m por lado (24–40). terrain = perfil de generación: mountain/forest/lakes/rivers/desert/swamp/islands en 0..1, humidity y temperature en -1..1, lat_gradient = cuánto enfría el norte, coast = lados con mar (norte, sur, este, oeste o todos). resources = multiplicadores de abundancia (yacimientos y fortalezas de la región). zones = municipios (Voronoi de chunks); town_ratio = fracción con pueblo (el resto son zonas libres). plateaus = mesetas escalonadas, canyons = cañones en mesetas y montañas. currency, base_inflation y exchange_rate_to_ref: economía por país (para la Fase 10; aún no se usan). terrain_cost: multiplicadores de MapSim.terrain_cost_mult para vías (pendiente, túnel, puente, cañón, altura).",
++  "_nota": "Fase 9A — Países (ficticios, con inspiración real). size = chunks de 400 m por lado (56–80; Fase 9B). terrain = perfil de generación: mountain/forest/lakes/rivers/desert/swamp/islands en 0..1, humidity y temperature en -1..1, lat_gradient = cuánto enfría el norte, coast = lados con mar (norte, sur, este, oeste o todos). resources = multiplicadores de abundancia (yacimientos y fortalezas de la región). zones = municipios (Voronoi de chunks; 30–60, de 6×6 a 10×10 chunks); town_ratio = fracción con pueblo (el resto son zonas libres). plateaus = mesetas escalonadas, canyons = cañones en mesetas y montañas. currency, base_inflation y exchange_rate_to_ref: economía por país (para la Fase 10; aún no se usan). terrain_cost: multiplicadores de MapSim.terrain_cost_mult para vías (pendiente, túnel, puente, cañón, altura).",
+   "chunk_size": 400.0,
+   "default_by_map_type": {
+     "interior": "pampaverde",
+@@ -11,17 +11,17 @@
+   "outside_ring": 2,
+   "expedition": {
+     "base_cost": 1200.0,
+-    "cost_growth_per_chunk": 0.22,
++    "cost_growth_per_chunk": 0.1,
+     "base_days": 6,
+-    "days_per_chunk": 2,
+-    "reveal_radius": 1,
++    "days_per_chunk": 1,
++    "reveal_radius": 2,
+     "max_active": 2
+   },
+   "countries": {
+     "andoria": {
+       "label": "Andoria",
+       "order": 0,
+-      "size": 32,
++      "size": 68,
+       "inspiration": "Andes y Amazonía (Colombia, Perú, Ecuador)",
+       "description": "Cordilleras nevadas al norte y oeste, valles cafeteros, selva húmeda al sur y ríos caudalosos que bajan al mar.",
+       "terrain": {
+@@ -43,7 +43,7 @@
+         "plateaus": 0.35,
+         "canyons": 0.45
+       },
+-      "zones": 26,
++      "zones": 58,
+       "town_ratio": 0.7,
+       "resources": {
+         "oro": 1.6,
+@@ -66,7 +66,7 @@
+     "pampaverde": {
+       "label": "Pampaverde",
+       "order": 1,
+-      "size": 30,
++      "size": 64,
+       "inspiration": "Pampa y litoral (Argentina, Uruguay)",
+       "description": "Llanuras inmensas de pastos y trigo, lagunas, grandes ríos lentos y una sierra baja al oeste. Costa atlántica al este.",
+       "terrain": {
+@@ -87,7 +87,7 @@
+         "plateaus": 0.1,
+         "canyons": 0.1
+       },
+-      "zones": 22,
++      "zones": 54,
+       "town_ratio": 0.65,
+       "resources": {
+         "oro": 0.6,
+@@ -110,7 +110,7 @@
+     "islas_coralinas": {
+       "label": "Islas Coralinas",
+       "order": 2,
+-      "size": 30,
++      "size": 60,
+       "inspiration": "Caribe y archipiélagos tropicales (Cuba, Filipinas)",
+       "description": "Archipiélago de islas volcánicas con playas, manglares y selva. Mucha costa y pesca; poca tierra plana.",
+       "terrain": {
+@@ -131,7 +131,7 @@
+         "plateaus": 0.0,
+         "canyons": 0.15
+       },
+-      "zones": 20,
++      "zones": 44,
+       "town_ratio": 0.75,
+       "resources": {
+         "oro": 0.7,
+@@ -154,7 +154,7 @@
+     "arenalia": {
+       "label": "Arenalia",
+       "order": 3,
+-      "size": 34,
++      "size": 72,
+       "inspiration": "Desiertos y oasis (Marruecos, Sonora, Atacama)",
+       "description": "Dunas y mesetas secas con oasis y pocos ríos; sierras ricas en minerales y una costa fresca al oeste.",
+       "terrain": {
+@@ -175,7 +175,7 @@
+         "plateaus": 0.75,
+         "canyons": 0.85
+       },
+-      "zones": 24,
++      "zones": 60,
+       "town_ratio": 0.5,
+       "resources": {
+         "oro": 1.3,
+@@ -198,7 +198,7 @@
+     "nordhavia": {
+       "label": "Nordhavia",
+       "order": 4,
+-      "size": 36,
++      "size": 76,
+       "inspiration": "Fiordos y bosques boreales (Noruega, Patagonia chilena)",
+       "description": "Bosques de coníferas, cientos de lagos, montañas nevadas y fiordos en la costa oeste. Inviernos largos.",
+       "terrain": {
+@@ -220,7 +220,7 @@
+         "plateaus": 0.15,
+         "canyons": 0.5
+       },
+-      "zones": 28,
++      "zones": 60,
+       "town_ratio": 0.55,
+       "resources": {
+         "oro": 0.8,
+diff --git a/data/municipios.json b/data/municipios.json
+new file mode 100644
+index 0000000..9742839
+--- /dev/null
++++ b/data/municipios.json
+@@ -0,0 +1,76 @@
++{
++  "_nota": "Fase 9B — Municipios, departamentos, alcaldes, políticas locales, misiones regionales y mercado de tierras. local_tax: fracción extra (+) o rebaja (−) sobre la ganancia mensual de los negocios del municipio. min_wage: salario mínimo diario local (0 = el nacional). regulation: baja / media / alta (alta: el Estado solo vende por licitación; afecta el costo de obra). land_price: precio base de una parcela de 80 m (el territorio de 400 m tiene 25). El municipio del jugador empieza con política neutra (sin impuesto local, salario nacional, regulación media).",
++  "names": [
++    "San Isidro", "Santa Rosa", "La Esperanza", "El Carmen", "San Pedro", "Las Palmas", "Buenavista", "El Rosario",
++    "San Miguel", "La Candelaria", "Piedras Blancas", "Los Alisos", "Santa Bárbara", "El Retiro", "Guayabal", "San Lorenzo",
++    "Villanueva", "San Jacinto", "Santa Lucía", "Los Robles", "El Tambo", "Caracolí", "San Vicente", "La Unión",
++    "Aguas Claras", "El Peñol", "Santa Inés", "San Bernardo", "La Merced", "El Pedregal", "Los Naranjos", "San Antonio",
++    "Tres Cruces", "La Florida", "Montenegro", "San Cayetano", "El Guamo", "Santa Ana", "Palmira", "Valdivia",
++    "San Juan", "Las Mercedes", "Monteverde", "El Calvario", "Santa Fe", "Cañaveral", "La Soledad", "San Agustín",
++    "Los Cedros", "Ventaquemada", "El Porvenir", "San Benito", "Santa Clara", "Mirasol", "El Cerrito", "Los Andes",
++    "San Nicolás", "La Plata", "Villa Rica", "San Roque", "Santo Tomás", "El Olivo", "Las Lajas", "San Joaquín",
++    "Altamira", "La Victoria", "San Gabriel", "Puente Nacional", "Santa Marta", "El Salitre", "San Martín", "La Aurora",
++    "Guadalupe", "San Marcos", "Rionegro", "Los Laureles", "Santa Teresa", "El Encanto", "San Sebastián", "Las Brisas"
++  ],
++  "prefix_by_biome": {
++    "montana": ["Alto de", "Cerro", "Peñas de"],
++    "nevado": ["Alto de", "Cumbres de"],
++    "costa": ["Puerto", "Playa"],
++    "rio": ["Puerto", "Paso de"],
++    "desierto": ["Oasis de", "Médanos de"],
++    "pantano": ["Ciénaga de", "Esteros de"],
++    "selva": ["Selva de", "Monte"],
++    "bosque": ["Bosques de", "Monte"],
++    "llanura": ["Llano de", "Campo"]
++  },
++  "prefix_chance": 0.35,
++  "departments": {
++    "count": 5,
++    "names": ["Norte", "Sur", "Oriente", "Occidente", "Centro", "Altiplano", "Litoral", "Valle", "Serranía", "Llanos"]
++  },
++  "policy": {
++    "local_tax": [-0.05, 0.09],
++    "min_wage": [0.0, 3.2],
++    "min_wage_chance": 0.45,
++    "regulation": ["baja", "media", "alta"],
++    "regulation_build_mult": {"baja": 0.96, "media": 1.0, "alta": 1.08},
++    "land_price": [380, 1100]
++  },
++  "stances": {
++    "promercado": {"label": "Promercado", "tax_bias": -0.02, "wage_bias": -0.4, "reg_bias": -1},
++    "social": {"label": "Social", "tax_bias": 0.02, "wage_bias": 0.6, "reg_bias": 1},
++    "conservador": {"label": "Conservador", "tax_bias": 0.0, "wage_bias": 0.0, "reg_bias": 0},
++    "desarrollista": {"label": "Desarrollista", "tax_bias": -0.01, "wage_bias": 0.2, "reg_bias": 0}
++  },
++  "term_months": 48,
++  "missions": [
++    {"id": "invertir", "type": "buildings_in", "label": "Abre {n} negocio(s) en {m}", "reward_money": 1800, "reward_tax_months": 12, "months": 24},
++    {"id": "tierra", "type": "land_in", "label": "Compra {n} parcelas en {m}", "reward_money": 1200, "reward_tax_months": 6, "months": 18},
++    {"id": "ruta", "type": "route_to", "label": "Abre una ruta comercial con {m}", "reward_money": 1500, "reward_tax_months": 6, "months": 24},
++    {"id": "empleo_local", "type": "jobs_in", "label": "Da empleo a {n} personas en {m}", "reward_money": 2200, "reward_tax_months": 12, "months": 30},
++    {"id": "camino", "type": "road_in", "label": "Construye {n} m de camino en {m}", "reward_money": 1400, "reward_tax_months": 6, "months": 24}
++  ],
++  "missions_every_months": 4,
++  "missions_max": 3,
++  "land": {
++    "biome_factor": {"mar": 0.05, "costa": 1.25, "rio": 0.4, "pantano": 0.55, "llanura": 1.2, "bosque": 1.0, "selva": 0.8, "desierto": 0.5, "montana": 0.6, "nevado": 0.3},
++    "town_bonus": 1.6,
++    "town_reach_m": 1400.0,
++    "road_bonus": 0.3,
++    "road_reach_m": 500.0,
++    "deposit_bonus": 0.45,
++    "private_share": 0.45,
++    "private_near_town": 0.3,
++    "state_radius_chunks": 2,
++    "fluct_monthly": 0.06,
++    "index_range": [0.7, 1.5],
++    "demand_per_sale": 0.03,
++    "offer_days": [2, 5],
++    "tender_days": 10,
++    "tender_rival": [0.85, 1.2],
++    "npc_trades_per_month": [1, 4],
++    "min_accept_ratio": 0.85,
++    "sure_accept_ratio": 1.15,
++    "history_max": 40
++  }
++}
+diff --git a/scripts/autoload/game_state.gd b/scripts/autoload/game_state.gd
+index ea6d575..1a9dc03 100644
+--- a/scripts/autoload/game_state.gd
++++ b/scripts/autoload/game_state.gd
+@@ -153,6 +153,7 @@ func _init_expansions() -> void:
+ 	RealEstateSim.init_state(self)
+ 	GridSim.init_state(self)
+ 	TransitSim.init_state(self)
++	MapSim.post_init(self)   # Fase 9B: pueblos de comercio con posición real en municipios.
+ 
+ 
+ # --- Simulación diaria -----------------------------------------------------
+@@ -188,6 +189,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
+ 		EducationSim.monthly(self)
+ 		BusinessSim.monthly(self)
+ 		GovSim.monthly(self)
++		MapSim.monthly(self)   # Fase 9B: precios de la tierra, comercio NPC de tierras, alcaldes y misiones regionales.
+ 		FreeMarketSim.monthly(self)
+ 		EventsSim.monthly(self)
+ 		LogisticsSim.monthly(self)
+diff --git a/scripts/sim/construction_sim.gd b/scripts/sim/construction_sim.gd
+index 4b05379..6207a9b 100644
+--- a/scripts/sim/construction_sim.gd
++++ b/scripts/sim/construction_sim.gd
+@@ -173,6 +173,13 @@ static func start_construction(gs, type_id: String, x: float, z: float, rot: flo
+ 	if reason != "":
+ 		return {"error": reason}
+ 	var cost := cost_for(gs, type_id, 1, false, tier)
++	var bm := MunicipalSim.build_mult(gs, x, z)   # Fase 9B: permisos según la regulación del municipio.
++	if bm > 1.0001 or bm < 0.9999:
++		var extra := float(cost["money"]) * (bm - 1.0)
++		cost["money"] = float(cost["money"]) + extra
++		cost["total"] = float(cost["total"]) + extra
++		if extra > 0.0 and gs.money < float(cost["total"]):
++			return {"error": "Dinero insuficiente con los permisos del municipio (%s)" % Fmt.money(float(cost["total"]))}
+ 	_pay_cost(gs, cost)
+ 	var b := make_building(gs, type_id, 1, x, z, rot, "jugador")
+ 	MineSim.on_new_building(gs, b)   # Minas: el centro nuevo empieza sin frentes.
+@@ -400,9 +407,15 @@ static func _complete(gs, b: Dictionary, crew: Array) -> void:
+ 
+ # --- Expansión de terreno -------------------------------------------------------------
+ 
+-static func zone_cost(gs) -> float:
++## Precio de una parcela de 80 m al gobierno. En el chunk del pueblo sigue la fórmula de siempre (suelo
++## urbano que se encarece con cada compra); fuera, el precio del mercado de tierras (Fase 9B: municipio,
++## bioma, cercanía a pueblos y carreteras, demanda y fluctuación mensual). Sin coordenadas: la de siempre.
++static func zone_cost(gs, zx := 0, zy := 0) -> float:
+ 	var n: int = gs.unlocked_zones.size() - 1
+-	return float(GameData.game.get("zone_expansion_cost", 2500)) * pow(float(GameData.game.get("zone_expansion_growth", 1.5)), n) * gs.price_mult()
++	var town: float = float(GameData.game.get("zone_expansion_cost", 2500)) * pow(float(GameData.game.get("zone_expansion_growth", 1.5)), n) * gs.price_mult()
++	if zx >= 0 and zx < gs.ZONE_GRID and zy >= 0 and zy < gs.ZONE_GRID:
++		return town
++	return LandSim.parcel_price(gs, zx, zy)
+ 
+ 
+ static func zone_block_reason(gs, zx: int, zy: int) -> String:
+@@ -417,8 +430,8 @@ static func zone_block_reason(gs, zx: int, zy: int) -> String:
+ 			adjacent = true
+ 	if not adjacent:
+ 		return "Debe ser vecina de una zona desbloqueada"
+-	if gs.money < zone_cost(gs):
+-		return "Dinero insuficiente (%s)" % Fmt.money(zone_cost(gs))
++	if gs.money < zone_cost(gs, zx, zy):
++		return "Dinero insuficiente (%s)" % Fmt.money(zone_cost(gs, zx, zy))
+ 	return ""
+ 
+ 
+@@ -426,7 +439,7 @@ static func unlock_zone(gs, zx: int, zy: int) -> String:
+ 	var reason := zone_block_reason(gs, zx, zy)
+ 	if reason != "":
+ 		return reason
+-	var cost := zone_cost(gs)
++	var cost := zone_cost(gs, zx, zy)
+ 	gs.add_money(-cost)
+ 	# El terreno se le compra al gobierno: el dinero va al tesoro público.
+ 	GovSim.add_treasury(gs, cost)
+diff --git a/scripts/sim/gov_sim.gd b/scripts/sim/gov_sim.gd
+index a0eb4df..e66cdfe 100644
+--- a/scripts/sim/gov_sim.gd
++++ b/scripts/sim/gov_sim.gd
+@@ -82,6 +82,7 @@ static func _pay_debts(gs) -> void:
+ static func _collect_taxes(gs) -> void:
+ 	var p := policy(gs)
+ 	var totals := {"renta": 0.0, "propiedad": 0.0, "nomina": 0.0, "multas": 0.0}
++	var local_total := 0.0
+ 	for b in gs.buildings:
+ 		if not gs.owned_by_player(b):
+ 			continue
+@@ -92,6 +93,7 @@ static func _collect_taxes(gs) -> void:
+ 				var t := profit * float(p.get("profit_tax", 0.0)) * PoliticsSim.profit_tax_mult(gs, b)   # Sección C: talento, cargos y lobby.
+ 				BusinessSim.pay(gs, b, t, "impuestos")
+ 				totals["renta"] += t
++			local_total += MunicipalSim.collect_local_tax(gs, b, profit)   # Fase 9B: impuesto (±) del municipio (va a su tesoro).
+ 		if not nonprofit:
+ 			var pt := EconomySim.property_value(gs, b) * float(p.get("property_tax", 0.0)) / 12.0
+ 			if pt > 0.0:
+@@ -112,6 +114,9 @@ static func _collect_taxes(gs) -> void:
+ 	add_treasury(gs, total)
+ 	gs.add_counter("taxes_paid", total)
+ 	gs.government["taxes_last"] = totals
++	gs.government["local_taxes_last"] = local_total
++	if local_total > 0.0:
++		gs.add_counter("taxes_paid", local_total)
+ 
+ 
+ static func _pay_subsidies(gs) -> void:
+@@ -163,16 +168,38 @@ static func _poor_relief(gs) -> void:
+ static func _enforce_min_wage(gs) -> void:
+ 	var mw := min_wage(gs)
+ 	if mw <= 0.0:
++		var local := _enforce_local_min_wage(gs)
++		if local > 0:
++			gs.notify("Salario mínimo municipal: subiste el sueldo a %d empleados." % local, "negocio")
+ 		return
+ 	var raised := 0
+ 	for c in gs.citizens.values():
+ 		if c.job_kind == "empleo" and c.wage < mw:
+ 			c.wage = mw
+ 			raised += 1
++	raised += _enforce_local_min_wage(gs)
+ 	if raised > 0:
+ 		gs.notify("Ley de salario mínimo (%s/día): subiste el sueldo a %d empleados." % [Fmt.money2(mw), raised], "negocio")
+ 
+ 
++## Fase 9B: salario mínimo del municipio donde está cada negocio (si es mayor que el nacional).
++static func _enforce_local_min_wage(gs) -> int:
++	var by_building := {}
++	for b in gs.buildings:
++		if gs.owned_by_player(b):
++			var lw := MunicipalSim.min_wage_for(gs, b)
++			if lw > 0.0:
++				by_building[int(b["id"])] = lw
++	if by_building.is_empty():
++		return 0
++	var raised := 0
++	for c in gs.citizens.values():
++		if c.job_kind == "empleo" and by_building.has(c.job_id) and c.wage < float(by_building[c.job_id]):
++			c.wage = float(by_building[c.job_id])
++			raised += 1
++	return raised
++
++
+ # --- Régimen, gobiernos y elecciones --------------------------------------------------------------
+ 
+ static func _random_gov(gs, era: int, exclude: String) -> String:
+diff --git a/scripts/sim/land_sim.gd b/scripts/sim/land_sim.gd
+new file mode 100644
+index 0000000..5dc8e09
+--- /dev/null
++++ b/scripts/sim/land_sim.gd
+@@ -0,0 +1,521 @@
++class_name LandSim
++extends RefCounted
++## Fase 9B — Mercado de tierras. Cada territorio (chunk de 400 m = 25 parcelas de 80 m) tiene dueño:
++## el Estado, un particular NPC o el jugador (que es dueño parcela a parcela: GameState.unlocked_zones).
++## - Dueño por defecto determinista (semilla): cerca de tu pueblo, en los cascos urbanos y en el agua es del
++##   Estado; el resto se reparte entre Estado y particulares. Los cambios se guardan en GameState.map.parcels
++##   {"cx,cy": {owner: "estado"|"npc"|"jugador", name, citizen_id}}.
++## - Precio: suelo base del municipio × bioma × yacimientos × cercanía a pueblos y carreteras × demanda ×
++##   índice mensual del municipio (fluctúa) × nivel de precios.
++## - Comprar al Estado: precio fijo (salvo regulación alta) o licitación contra otros postores.
++## - Comprar a un particular: oferta que acepta o rechaza en unos días (el dinero queda en garantía).
++## - Libre comercio: cada mes los NPC (y ciudadanos con ahorros) compran y venden territorios.
++## - Una compra se une al instante al mapa del jugador (parcelas propias, revelado y malla rehecha).
++
++const PARCELS := 25
++
++static var _static := {}
++static var _quick := {}
++static var _static_key := ""
++
++
++static func cfg() -> Dictionary:
++	return MunicipalSim.cfg().get("land", {})
++
++
++static func init_state(gs) -> void:
++	var m: Dictionary = gs.map
++	if not (m.get("parcels") is Dictionary):
++		m["parcels"] = {}
++	for k in ["land_offers", "land_tenders", "land_sales"]:
++		if not (m.get(k) is Array):
++			m[k] = []
++	for k in ["land_index", "land_demand"]:
++		if not (m.get(k) is Dictionary):
++			m[k] = {}
++	# Partidas 9A: map.parcels guardaba dueños por parcela (vacío en la práctica); se descarta lo inválido.
++	for k in m["parcels"].keys():
++		if not (m["parcels"][k] is Dictionary):
++			m["parcels"].erase(k)
++
++
++static func key(cx: int, cy: int) -> String:
++	return "%d,%d" % [cx, cy]
++
++
++static func _hash01(gs, cx: int, cy: int, salt: int) -> float:
++	var h := hash("%d|%d|%d|%d" % [int(gs.settings.get("seed", 1)), cx, cy, salt])
++	return float(absi(h) % 100000) / 100000.0
++
++
++# --- Datos fijos por territorio (caché) ---------------------------------------------------------------
++
++## {f: factor de bioma y yacimientos, land: fracción de tierra, biome: bioma dominante, town_d: m al pueblo más cercano}
++static func static_info(gs, cx: int, cy: int) -> Dictionary:
++	var g := MapSim.gen(gs)
++	_check_cache(g)
++	var c := Vector2i(cx, cy)
++	if _static.has(c):
++		return _static[c]
++	var bf: Dictionary = cfg().get("biome_factor", {})
++	var sum := 0.0
++	var land := 0
++	var hist := {}
++	var r := MapSim.chunk_rect(cx, cy)
++	for j in range(5):
++		for i in range(5):
++			var x := r.position.x + (i + 0.5) * 80.0
++			var z := r.position.y + (j + 0.5) * 80.0
++			var h := g.height(x, z)
++			var b: String = CountryGen.BIOMES[g.biome_id(x, z, h)]
++			sum += float(bf.get(b, 1.0))
++			if h > g.water_level + 0.3:
++				land += 1
++			hist[b] = int(hist.get(b, 0)) + 1
++	var dom := "llanura"
++	var best := -1
++	for b in hist:
++		if int(hist[b]) > best:
++			best = int(hist[b])
++			dom = str(b)
++	var f := sum / PARCELS
++	# Yacimientos: la sierra y el desierto de un país minero valen más.
++	var res: Dictionary = MapSim.country_def(MapSim.country_id(gs)).get("resources", {})
++	var mineral := maxf(float(res.get("oro", 1.0)), maxf(float(res.get("hierro", 1.0)), float(res.get("plata", 1.0))))
++	if dom in ["montana", "desierto"] and mineral > 1.0:
++		f *= 1.0 + float(cfg().get("deposit_bonus", 0.45)) * (mineral - 1.0) * 1.5
++	var info := {"f": f, "land": float(land) / PARCELS, "biome": dom, "town_d": float(quick_info(gs, cx, cy)["town_d"])}
++	_static[c] = info
++	return info
++
++
++static func _check_cache(g: CountryGen) -> void:
++	var gk := "%s|%d" % [MapSim._gen_key, g.get_instance_id()]
++	if gk != _static_key:
++		_static = {}
++		_quick = {}
++		_static_key = gk
++
++
++## Datos rápidos (5 muestras): {land: fracción de tierra, town_d: m al pueblo más cercano}.
++static func quick_info(gs, cx: int, cy: int) -> Dictionary:
++	var g := MapSim.gen(gs)
++	_check_cache(g)
++	var c := Vector2i(cx, cy)
++	if _quick.has(c):
++		return _quick[c]
++	var center := Vector2(cx, cy) * CountryGen.CHUNK
++	var land := 0
++	for o in [Vector2.ZERO, Vector2(-120, -120), Vector2(120, -120), Vector2(-120, 120), Vector2(120, 120)]:
++		if g.height(center.x + o.x, center.y + o.y) > g.water_level + 0.3:
++			land += 1
++	var td := 1e9
++	for z in g.zones:
++		if bool(z["town"]):
++			td = minf(td, center.distance_to(z["town_pos"]))
++	var info := {"land": land / 5.0, "town_d": td}
++	_quick[c] = info
++	return info
++
++
++# --- Dueños -------------------------------------------------------------------------------------------
++
++## Dueño por defecto (sin compras): "estado" o "npc" con su nombre.
++static func default_owner(gs, cx: int, cy: int) -> Dictionary:
++	var g := MapSim.gen(gs)
++	if not g.in_country_chunk(cx, cy):
++		return {"owner": "", "name": ""}
++	if maxi(absi(cx), absi(cy)) <= int(cfg().get("state_radius_chunks", 2)):
++		return {"owner": "estado", "name": "Estado"}
++	var zi := g.zone_index(cx, cy)
++	if zi >= 0 and bool(g.zones[zi]["town"]) and g.zones[zi]["town_chunk"] == Vector2i(cx, cy):
++		return {"owner": "estado", "name": "Estado (casco urbano)"}
++	var si := quick_info(gs, cx, cy)
++	if float(si["land"]) < 0.4:
++		return {"owner": "estado", "name": "Estado"}
++	var p := float(cfg().get("private_share", 0.45)) + float(cfg().get("private_near_town", 0.3)) * (1.0 - smoothstep(800.0, 4000.0, float(si["town_d"])))
++	if _hash01(gs, cx, cy, 1) < p:
++		return {"owner": "npc", "name": _npc_name(gs, cx, cy, 0)}
++	return {"owner": "estado", "name": "Estado"}
++
++
++static func _npc_name(gs, cx: int, cy: int, salt: int) -> String:
++	var nd: Dictionary = GameData.extra("names")
++	var male := _hash01(gs, cx, cy, 11 + salt) < 0.6
++	var firsts: Array = nd.get("male" if male else "female", ["Juan"])
++	var sur: Array = nd.get("surnames", ["Pérez"])
++	var a := int(_hash01(gs, cx, cy, 12 + salt) * firsts.size()) % firsts.size()
++	var b := int(_hash01(gs, cx, cy, 13 + salt) * sur.size()) % sur.size()
++	var fam := ["Familia", "Hacienda", "Sucesión"]
++	if _hash01(gs, cx, cy, 14 + salt) < 0.25:
++		return "%s %s" % [fam[int(_hash01(gs, cx, cy, 15 + salt) * 3) % 3], str(sur[b])]
++	return "%s %s" % [str(firsts[a]), str(sur[b])]
++
++
++## Parcelas del jugador dentro de un territorio.
++static func player_parcels(gs, cx: int, cy: int) -> int:
++	var n := 0
++	for z in gs.unlocked_zones:
++		if floori(float(z[0]) / 5.0) == cx and floori(float(z[1]) / 5.0) == cy:
++			n += 1
++	return n
++
++
++static func player_parcels_in(gs, zid: int) -> int:
++	var g := MapSim.gen(gs)
++	var n := 0
++	for z in gs.unlocked_zones:
++		if g.zone_index(floori(float(z[0]) / 5.0), floori(float(z[1]) / 5.0)) == zid:
++			n += 1
++	return n
++
++
++## Dueño del territorio: {owner: "estado"|"npc"|"jugador", name, citizen_id, player_parcels}.
++## "jugador" solo si tiene las 25 parcelas; si tiene algunas, el resto sigue siendo del dueño anterior.
++static func owner_info(gs, cx: int, cy: int) -> Dictionary:
++	var pp := player_parcels(gs, cx, cy)
++	var out: Dictionary
++	var ov: Dictionary = gs.map.get("parcels", {}).get(key(cx, cy), {})
++	if not ov.is_empty() and str(ov.get("owner", "")) != "jugador":
++		out = ov.duplicate()
++	else:
++		out = default_owner(gs, cx, cy)
++	if pp >= PARCELS or str(ov.get("owner", "")) == "jugador" and pp > 0:
++		out = {"owner": "jugador", "name": "Tú"}
++	out["player_parcels"] = pp
++	return out
++
++
++## Rejilla de dueños del país para la capa de propiedad: un byte por chunk (fila por fila, desde c0):
++## 0 Estado, 1 particular, 2 jugador (entero), 3 jugador en parte, 4 agua/Estado sin valor.
++static func owner_grid(gs) -> PackedByteArray:
++	var g := MapSim.gen(gs)
++	var counts := {}
++	for z in gs.unlocked_zones:
++		var c := Vector2i(floori(float(z[0]) / 5.0), floori(float(z[1]) / 5.0))
++		counts[c] = int(counts.get(c, 0)) + 1
++	var parcels: Dictionary = gs.map.get("parcels", {})
++	var out := PackedByteArray()
++	out.resize(g.size * g.size)
++	var k := 0
++	for cy in range(g.c0, g.c1 + 1):
++		for cx in range(g.c0, g.c1 + 1):
++			var v := 0
++			var pp := int(counts.get(Vector2i(cx, cy), 0))
++			var ov: Dictionary = parcels.get(key(cx, cy), {})
++			if pp >= PARCELS or (str(ov.get("owner", "")) == "jugador" and pp > 0):
++				v = 2
++			elif pp > 0:
++				v = 3
++			else:
++				var own := str(ov.get("owner", "")) if not ov.is_empty() else str(default_owner(gs, cx, cy)["owner"])
++				if own == "npc":
++					v = 1
++				elif float(quick_info(gs, cx, cy)["land"]) < 0.4:
++					v = 4
++			out[k] = v
++			k += 1
++	return out
++
++
++static func owner_label(info: Dictionary) -> String:
++	match str(info.get("owner", "")):
++		"jugador":
++			return "Tú"
++		"npc":
++			return "Particular: %s" % str(info.get("name", ""))
++		"estado":
++			return str(info.get("name", "Estado"))
++	return "—"
++
++
++# --- Precio ----------------------------------------------------------------------------------------------
++
++static func _road_near(gs, center: Vector2) -> bool:
++	var reach := float(cfg().get("road_reach_m", 500.0))
++	for r in RoadSim.roads(gs):
++		if RoadSim.dist_point_segment(center, RoadSim.seg_a(r), RoadSim.seg_b(r)) < reach:
++			return true
++	for c in gs.trade.get("connections", []):
++		var tp := MapSim.trade_town_pos(gs, str(c.get("town_id", "")))
++		if tp != Vector2.INF and RoadSim.dist_point_segment(center, Vector2.ZERO, tp) < reach:
++			return true
++	return false
++
++
++static func index_of(gs, zid: int) -> float:
++	return float(gs.map.get("land_index", {}).get(str(zid), 1.0))
++
++
++static func demand_of(gs, zid: int) -> float:
++	return float(gs.map.get("land_demand", {}).get(str(zid), 1.0))
++
++
++## Precio de mercado de un territorio completo (25 parcelas). 0 fuera del país.
++static func chunk_price(gs, cx: int, cy: int) -> float:
++	var g := MapSim.gen(gs)
++	if not g.in_country_chunk(cx, cy):
++		return 0.0
++	var zid := g.zone_index(cx, cy)
++	var si := static_info(gs, cx, cy)
++	var base := float(MunicipalSim.policy_of(gs, zid).get("land_price", 800.0))
++	var f := maxf(0.08, float(si["f"]))
++	f *= 1.0 + float(cfg().get("town_bonus", 1.6)) * exp(-float(si["town_d"]) / float(cfg().get("town_reach_m", 1400.0)))
++	if _road_near(gs, Vector2(cx, cy) * CountryGen.CHUNK):
++		f *= 1.0 + float(cfg().get("road_bonus", 0.3))
++	f *= index_of(gs, zid) * demand_of(gs, zid)
++	return snappedf(maxf(base * PARCELS * f * gs.price_mult(), 30.0 * PARCELS), 10.0)
++
++
++## Precio de una parcela de 80 m del Estado en ese territorio.
++static func parcel_price(gs, zx: int, zy: int) -> float:
++	var c := MapSim.chunk_of_zone(zx, zy)
++	return snappedf(chunk_price(gs, c.x, c.y) / PARCELS, 1.0)
++
++
++## Precio por comprar lo que falta de un territorio (las parcelas que aún no son tuyas).
++static func remaining_price(gs, cx: int, cy: int) -> float:
++	var left := PARCELS - player_parcels(gs, cx, cy)
++	return snappedf(chunk_price(gs, cx, cy) * left / PARCELS, 10.0)
++
++
++# --- Compra ---------------------------------------------------------------------------------------------
++
++static func _pending(gs, cx: int, cy: int) -> String:
++	for o in gs.map.get("land_offers", []):
++		if int(o["cx"]) == cx and int(o["cy"]) == cy:
++			return "Ya hiciste una oferta: espera la respuesta"
++	for t in gs.map.get("land_tenders", []):
++		if int(t["cx"]) == cx and int(t["cy"]) == cy:
++			return "Licitación en curso"
++	return ""
++
++
++## Motivo por el que no se puede comprar ("" si se puede). mode: "fijo" | "licitacion" | "oferta".
++static func buy_block_reason(gs, cx: int, cy: int, mode: String, amount := -1.0) -> String:
++	if not MapSim.in_country_chunk(gs, cx, cy):
++		return "Fuera del país"
++	if not MapSim.is_revealed(gs, cx, cy):
++		return "Territorio sin explorar"
++	var info := owner_info(gs, cx, cy)
++	if str(info["owner"]) == "jugador":
++		return "Ya es tuyo"
++	var pend := _pending(gs, cx, cy)
++	if pend != "":
++		return pend
++	var price := remaining_price(gs, cx, cy)
++	var regulation := str(MunicipalSim.policy_of(gs, MapSim.gen(gs).zone_index(cx, cy)).get("regulation", "media"))
++	match mode:
++		"fijo":
++			if str(info["owner"]) != "estado":
++				return "Es de un particular: hazle una oferta"
++			if regulation == "alta":
++				return "Regulación alta: el municipio solo vende por licitación"
++			if gs.money < price:
++				return "Dinero insuficiente (%s)" % Fmt.money(price)
++		"licitacion":
++			if str(info["owner"]) != "estado":
++				return "Es de un particular: hazle una oferta"
++			if amount < price * 0.8:
++				return "La puja mínima es %s" % Fmt.money(price * 0.8)
++			if gs.money < amount:
++				return "Dinero insuficiente (%s)" % Fmt.money(amount)
++		"oferta":
++			if str(info["owner"]) != "npc":
++				return "Es del Estado: cómpralo a precio fijo o por licitación"
++			if amount <= 0.0:
++				return "Indica una oferta"
++			if gs.money < amount:
++				return "Dinero insuficiente (%s)" % Fmt.money(amount)
++		_:
++			return "Modo de compra desconocido"
++	return ""
++
++
++## Compra al Estado a precio fijo.
++static func buy_from_state(gs, cx: int, cy: int) -> String:
++	var reason := buy_block_reason(gs, cx, cy, "fijo")
++	if reason != "":
++		return reason
++	var price := remaining_price(gs, cx, cy)
++	gs.add_money(-price)
++	GovSim.add_treasury(gs, price)
++	_transfer_to_player(gs, cx, cy, price, "Estado")
++	return ""
++
++
++## Licitación: el dinero queda en garantía; a los `tender_days` gana la mejor puja (o se devuelve).
++static func start_tender(gs, cx: int, cy: int, bid: float) -> String:
++	var reason := buy_block_reason(gs, cx, cy, "licitacion", bid)
++	if reason != "":
++		return reason
++	gs.add_money(-bid)
++	var days := int(cfg().get("tender_days", 10))
++	gs.map["land_tenders"].append({"cx": cx, "cy": cy, "bid": bid, "price": remaining_price(gs, cx, cy), "close_day": gs.today() + days})
++	gs.notify("Te presentaste a la licitación del territorio (%d, %d) con %s. Se adjudica en %d días." % [cx, cy, Fmt.money(bid), days], "jugador")
++	EventBus.map_changed.emit()
++	return ""
++
++
++## Oferta a un particular: responde en unos días. El dinero queda en garantía.
++static func make_offer(gs, cx: int, cy: int, amount: float) -> String:
++	var reason := buy_block_reason(gs, cx, cy, "oferta", amount)
++	if reason != "":
++		return reason
++	var r: Array = cfg().get("offer_days", [2, 5])
++	var days := int(r[0]) + int(_hash01(gs, cx, cy, gs.today()) * (int(r[1]) - int(r[0]) + 1))
++	gs.add_money(-amount)
++	var info := owner_info(gs, cx, cy)
++	gs.map["land_offers"].append({"cx": cx, "cy": cy, "amount": amount, "price": remaining_price(gs, cx, cy), "reply_day": gs.today() + days,
++			"seller": str(info.get("name", "")), "citizen_id": int(info.get("citizen_id", -1))})
++	gs.notify("Ofreciste %s a %s por su territorio. Responderá en %d días." % [Fmt.money(amount), info.get("name", ""), days], "jugador")
++	EventBus.map_changed.emit()
++	return ""
++
++
++## Probabilidad de que un particular acepte según oferta / precio de mercado.
++static func accept_chance(ratio: float) -> float:
++	var lo := float(cfg().get("min_accept_ratio", 0.85))
++	var hi := float(cfg().get("sure_accept_ratio", 1.15))
++	if ratio >= hi:
++		return 1.0
++	if ratio < lo:
++		return 0.0
++	return (ratio - lo) / (hi - lo)
++
++
++static func _transfer_to_player(gs, cx: int, cy: int, price: float, seller: String) -> void:
++	for zy in range(cy * 5, cy * 5 + 5):
++		for zx in range(cx * 5, cx * 5 + 5):
++			if not gs.is_zone_unlocked(zx, zy):
++				gs.unlocked_zones.append([zx, zy])
++	gs.map["parcels"][key(cx, cy)] = {"owner": "jugador", "name": "Tú"}
++	_record_sale(gs, cx, cy, price, seller, "Tú")
++	MapSim.reveal(gs, cx, cy)
++	gs.notify("Compraste el territorio (%d, %d) en %s a %s por %s: 25 parcelas unidas a tu terreno." % [cx, cy,
++			MunicipalSim.name_of(gs, MapSim.gen(gs).zone_index(cx, cy)), seller, Fmt.money(price)], "construccion")
++	EventBus.zones_changed.emit()
++	EventBus.map_changed.emit()
++
++
++static func _record_sale(gs, cx: int, cy: int, price: float, seller: String, buyer: String) -> void:
++	var sales: Array = gs.map.get("land_sales", [])
++	sales.append({"day": gs.today(), "cx": cx, "cy": cy, "price": snappedf(price, 1.0), "seller": seller, "buyer": buyer})
++	while sales.size() > int(cfg().get("history_max", 40)):
++		sales.pop_front()
++	gs.map["land_sales"] = sales
++	var zid := MapSim.gen(gs).zone_index(cx, cy)
++	var dm: Dictionary = gs.map["land_demand"]
++	var rg: Array = cfg().get("index_range", [0.7, 1.5])
++	dm[str(zid)] = clampf(demand_of(gs, zid) + float(cfg().get("demand_per_sale", 0.03)), float(rg[0]), float(rg[1]))
++
++
++# --- Diario y mensual ----------------------------------------------------------------------------------------
++
++static func daily(gs) -> void:
++	var offers: Array = gs.map.get("land_offers", [])
++	var tenders: Array = gs.map.get("land_tenders", [])
++	if offers.is_empty() and tenders.is_empty():
++		return
++	for o in offers.duplicate():
++		if gs.today() < int(o["reply_day"]):
++			continue
++		offers.erase(o)
++		var ratio := float(o["amount"]) / maxf(1.0, float(o["price"]))
++		var ok: bool = gs.rng.randf() < accept_chance(ratio) or ratio >= float(cfg().get("sure_accept_ratio", 1.15))
++		var cx := int(o["cx"])
++		var cy := int(o["cy"])
++		if ok and str(owner_info(gs, cx, cy)["owner"]) == "npc":
++			var cid := int(o.get("citizen_id", -1))
++			if cid >= 0 and gs.citizens.has(cid):
++				gs.citizens[cid].money += float(o["amount"])
++			_transfer_to_player(gs, cx, cy, float(o["amount"]), str(o["seller"]))
++		else:
++			gs.add_money(float(o["amount"]))
++			gs.notify("%s rechazó tu oferta de %s por su territorio (%d, %d). Te devolvieron el dinero." % [o["seller"], Fmt.money(float(o["amount"])), cx, cy], "jugador")
++	for t in tenders.duplicate():
++		if gs.today() < int(t["close_day"]):
++			continue
++		tenders.erase(t)
++		var cx := int(t["cx"])
++		var cy := int(t["cy"])
++		var rr: Array = cfg().get("tender_rival", [0.85, 1.2])
++		var rival := float(t["price"]) * lerpf(float(rr[0]), float(rr[1]), _hash01(gs, cx, cy, int(t["close_day"])))
++		if float(t["bid"]) >= rival and str(owner_info(gs, cx, cy)["owner"]) == "estado":
++			GovSim.add_treasury(gs, float(t["bid"]))
++			_transfer_to_player(gs, cx, cy, float(t["bid"]), "Estado (licitación)")
++		else:
++			gs.add_money(float(t["bid"]))
++			var buyer := _npc_name(gs, cx, cy, gs.today())
++			if str(owner_info(gs, cx, cy)["owner"]) == "estado":
++				gs.map["parcels"][key(cx, cy)] = {"owner": "npc", "name": buyer, "citizen_id": -1}
++				_record_sale(gs, cx, cy, rival, "Estado (licitación)", buyer)
++			gs.notify("Perdiste la licitación del territorio (%d, %d): %s pujó %s. Te devolvieron %s." % [cx, cy, buyer, Fmt.money(rival), Fmt.money(float(t["bid"]))], "jugador")
++			EventBus.map_changed.emit()
++
++
++static func monthly(gs) -> void:
++	_fluctuate(gs)
++	_npc_trades(gs)
++
++
++## Índice de precio de cada municipio: paseo aleatorio con regreso a 1; la demanda se relaja.
++static func _fluctuate(gs) -> void:
++	var r := RandomNumberGenerator.new()
++	r.seed = int(gs.settings.get("seed", 1)) * 31 + gs.today()
++	var amp := float(cfg().get("fluct_monthly", 0.06))
++	var rg: Array = cfg().get("index_range", [0.7, 1.5])
++	var idx: Dictionary = gs.map["land_index"]
++	var dm: Dictionary = gs.map["land_demand"]
++	for z in MapSim.gen(gs).zones:
++		var k := str(int(z["id"]))
++		var v := float(idx.get(k, 1.0))
++		v = v + (1.0 - v) * 0.08 + r.randf_range(-amp, amp)
++		idx[k] = snappedf(clampf(v, float(rg[0]), float(rg[1])), 0.001)
++		if dm.has(k):
++			dm[k] = snappedf(lerpf(float(dm[k]), 1.0, 0.1), 0.001)
++
++
++## Libre comercio de tierras entre NPC: el Estado vende a particulares (o a ciudadanos con ahorros) y los
++## particulares se venden entre ellos. No toca lo del jugador ni el entorno de su pueblo.
++static func _npc_trades(gs) -> void:
++	var g := MapSim.gen(gs)
++	var r := RandomNumberGenerator.new()
++	r.seed = int(gs.settings.get("seed", 1)) * 131 + gs.today()
++	var rr: Array = cfg().get("npc_trades_per_month", [1, 4])
++	var n := r.randi_range(int(rr[0]), int(rr[1]))
++	var guard := int(cfg().get("state_radius_chunks", 2)) + 1
++	var done := 0
++	var tries := 0
++	while done < n and tries < n * 12:
++		tries += 1
++		var cx := r.randi_range(g.c0, g.c1)
++		var cy := r.randi_range(g.c0, g.c1)
++		if maxi(absi(cx), absi(cy)) <= guard or player_parcels(gs, cx, cy) > 0 or _pending(gs, cx, cy) != "":
++			continue
++		if float(quick_info(gs, cx, cy)["land"]) < 0.4:
++			continue
++		var info := owner_info(gs, cx, cy)
++		var price := chunk_price(gs, cx, cy) * r.randf_range(0.9, 1.12)
++		var buyer := _npc_name(gs, cx, cy, gs.today() + tries)
++		var cid := -1
++		# Un ciudadano con ahorros suficientes también compra tierra.
++		if str(info.get("name", "")).contains("casco"):
++			continue
++		for c in gs.citizens.values():
++			if c.money >= price * 3.0 and c.id != gs.player_id:
++				buyer = c.full_name()
++				cid = c.id
++				c.money -= price
++				break
++		# El dinero va al vendedor: al tesoro si vende el Estado a un ciudadano, o al ciudadano que vende.
++		if str(info["owner"]) == "estado" and cid >= 0:
++			GovSim.add_treasury(gs, price)
++		var seller_id := int(info.get("citizen_id", -1))
++		if seller_id >= 0 and gs.citizens.has(seller_id):
++			gs.citizens[seller_id].money += price
++		gs.map["parcels"][key(cx, cy)] = {"owner": "npc", "name": buyer, "citizen_id": cid}
++		_record_sale(gs, cx, cy, price, str(info.get("name", "")), buyer)
++		done += 1
++	if done > 0:
++		EventBus.map_changed.emit()
+diff --git a/scripts/sim/map_sim.gd b/scripts/sim/map_sim.gd
+index ea5aa7b..ce8c6ee 100644
+--- a/scripts/sim/map_sim.gd
++++ b/scripts/sim/map_sim.gd
+@@ -5,10 +5,14 @@ extends RefCounted
+ ##   country_id        país (data/countries.json)
+ ##   chunks_revealed   {"cx,cy": true}  chunk (0,0) = pueblo del jugador (plaza en 0,0)
+ ##   expeditions       [{cx, cy, days_left, cost}] expediciones pagadas en curso
+-##   parcels, regions  reservados para la Fase 9B (dueños privados, regiones con política)
+-## API pública (Fase 9B y otros sistemas):
++##   parcels           Fase 9B: dueños de territorios que cambiaron {"cx,cy": {owner, name, citizen_id}} (LandSim)
++##   regions, departments, region_missions   Fase 9B: municipios con política y alcalde (MunicipalSim)
++##   town_assign       Fase 9B: {town_id de TradeSim: id de municipio} (posición real de los pueblos)
++##   land_offers, land_tenders, land_sales, land_index, land_demand   Fase 9B: mercado de tierras
++## API pública:
+ ##   chunk_of(x, z) · is_revealed(gs, cx, cy) · reveal_around(gs, pos, radius) · biome_at(x, z)
+ ##   owner_of(gs, x, z) · region_at(gs, x, z) · zone_at(gs, x, z) · in_country(gs, x, z)
++##   fog_level(gs, cx, cy) · reveal_zone(gs, zid) · trade_town_pos(gs, town_id) · town_zone(gs, town_id)
+ 
+ const CHUNK := 400.0
+ 
+@@ -82,15 +86,28 @@ static func init_state(gs) -> void:
+ 		if not m.has(k):
+ 			m[k] = {}
+ 	m["expeditions_done"] = int(m.get("expeditions_done", 0))
++	if not (m.get("town_assign") is Dictionary):
++		m["town_assign"] = {}
+ 	var r := int(cfg().get("start_reveal_radius", 1))
+ 	for dy in range(-r, r + 1):
+ 		for dx in range(-r, r + 1):
+ 			_reveal(gs, dx, dy)
++	# Fase 9B: al inicio se revela TODO el municipio del jugador (también en partidas 9A migradas).
++	for c in gen(gs).zone_chunks(0):
++		_reveal(gs, c.x, c.y)
+ 	# Zonas compradas: su chunk siempre está revelado.
+ 	for z in gs.unlocked_zones:
+ 		var c := chunk_of_zone(int(z[0]), int(z[1]))
+ 		_reveal(gs, c.x, c.y)
+ 	gs.map = m
++	MunicipalSim.init_state(gs)   # Fase 9B: municipios, departamentos, alcaldes y política.
++	LandSim.init_state(gs)        # Fase 9B: mercado de tierras.
++
++
++## Fase 9B: se llama al final de la carga/creación (ya existen los pueblos de TradeSim): los ubica en
++## municipios reales del país.
++static func post_init(gs) -> void:
++	assign_towns(gs)
+ 
+ 
+ static func key(cx: int, cy: int) -> String:
+@@ -201,7 +218,7 @@ static func chunk_of_zone(zx: int, zy: int) -> Vector2i:
+ 	return Vector2i(floori(float(zx) / per), floori(float(zy) / per))
+ 
+ 
+-## Dueño de un punto: "jugador" (parcela comprada), un dueño privado de la Fase 9B, "estado" (resto
++## Dueño de un punto: "jugador" (parcela comprada), "npc:<nombre>" (particular, Fase 9B), "estado" (resto
+ ## del país) o "" fuera del país.
+ static func owner_of(gs, x: float, z: float) -> String:
+ 	if not in_country(gs, x, z):
+@@ -209,10 +226,11 @@ static func owner_of(gs, x: float, z: float) -> String:
+ 	var zc := zone_at(gs, x, z)
+ 	if gs.is_zone_unlocked(zc.x, zc.y):
+ 		return "jugador"
+-	var parcels: Dictionary = gs.map.get("parcels", {})
+-	var pk := key(zc.x, zc.y)
+-	if parcels.has(pk):
+-		return str(parcels[pk])
++	# Fase 9B: dueño del territorio (Estado o particular NPC) según el mercado de tierras.
++	var c := chunk_of_zone(zc.x, zc.y)
++	var info := LandSim.owner_info(gs, c.x, c.y)
++	if str(info.get("owner", "")) == "npc":
++		return "npc:%s" % str(info.get("name", ""))
+ 	return "estado"
+ 
+ 
+@@ -228,12 +246,57 @@ static func municipalities(gs = null) -> Array:
+ 	return gen(gs).zones
+ 
+ 
+-## Región (stub de la Fase 9A: una sola región para todo el país; la 9B la divide).
++## Región real (Fase 9B): el municipio del punto con su nombre, política, alcalde y departamento.
++## {} fuera del país. Campos: id ("m<n>"), municipality_id, name, department, department_name, governor,
++## mayor, policy{local_tax, min_wage, regulation, land_price}, town, population, treasury, country_id.
+ static func region_at(gs, x: float, z: float) -> Dictionary:
+ 	if not in_country(gs, x, z):
+ 		return {}
+-	var cdef := country_def(country_id(gs))
+-	return {"id": "region_1", "name": "%s" % str(cdef.get("label", "País")), "country_id": country_id(gs)}
++	return MunicipalSim.region_at(gs, x, z)
++
++
++## Nivel de niebla de un chunk: 0 explorado, 1 velo ligero (tu municipio y sus vecinos), 2 sin explorar,
++## 3 fuera del país.
++static func fog_level(gs, cx: int, cy: int) -> int:
++	var g := gen(gs)
++	if not g.in_country_chunk(cx, cy):
++		return 3
++	if is_revealed(gs, cx, cy):
++		return 0
++	var zi := g.zone_index(cx, cy)
++	if zi == 0 or (g.zones[0]["neighbors"] as Array).has(zi):
++		return 1
++	return 2
++
++
++## ¿Tiene el municipio algún chunk explorado?
++static func zone_revealed_any(gs, zid: int) -> bool:
++	var g := gen(gs)
++	if zid < 0 or zid >= g.zones.size():
++		return false
++	var tc: Vector2i = g.zones[zid]["town_chunk"]
++	if is_revealed(gs, tc.x, tc.y):
++		return true
++	for c in g.zone_chunks(zid):
++		if is_revealed(gs, c.x, c.y):
++			return true
++	return false
++
++
++## Revela todo un municipio (sin emitir la señal). Devuelve cuántos chunks eran nuevos.
++static func reveal_zone_quiet(gs, zid: int) -> int:
++	var n := 0
++	for c in gen(gs).zone_chunks(zid):
++		if _reveal(gs, c.x, c.y):
++			n += 1
++	return n
++
++
++static func reveal_zone(gs, zid: int) -> int:
++	var n := reveal_zone_quiet(gs, zid)
++	if n > 0:
++		EventBus.map_changed.emit()
++	return n
+ 
+ 
+ # --- Compra de parcelas (se une al instante al terreno del jugador) ---------------------------
+@@ -245,9 +308,27 @@ static func zone_map_block_reason(gs, zx: int, zy: int) -> String:
+ 		return "Fuera del país"
+ 	if not is_revealed(gs, c.x, c.y):
+ 		return "Territorio sin explorar: envía una expedición (minimapa → Ampliar)"
++	# Fase 9B: la tierra de un particular se compra con una oferta, no al gobierno.
++	if not gs.is_zone_unlocked(zx, zy):
++		var info := LandSim.owner_info(gs, c.x, c.y)
++		if str(info.get("owner", "")) == "npc":
++			return "Terreno privado de %s: hazle una oferta (minimapa → Ampliar)" % str(info.get("name", ""))
+ 	return ""
+ 
+ 
++## Fase 9B: ¿se puede trazar una vía pública (carretera, línea) por este punto sin ser dueño? Sí en tierra
++## del Estado explorada fuera del chunk del pueblo; no por tierra de particulares ni en la niebla.
++static func public_way_ok(gs, x: float, z: float) -> bool:
++	if absf(x) <= gs.MAP_SIZE * 0.5 and absf(z) <= gs.MAP_SIZE * 0.5:
++		return false
++	if not in_country(gs, x, z):
++		return false
++	var c := chunk_of(x, z)
++	if not is_revealed(gs, c.x, c.y):
++		return false
++	return str(LandSim.owner_info(gs, c.x, c.y).get("owner", "")) in ["estado", "jugador"]
++
++
+ ## Se llama al comprar una parcela: su chunk queda revelado y es del jugador.
+ static func on_zone_bought(gs, zx: int, zy: int) -> void:
+ 	var c := chunk_of_zone(zx, zy)
+@@ -313,26 +394,92 @@ static func start_expedition(gs, cx: int, cy: int) -> String:
+ 	return ""
+ 
+ 
+-## Posición en el país de un pueblo de comercio exterior (Fase 7). Stub de la 9A hasta que la 9B
+-## ubique los pueblos: el i-ésimo pueblo comercial (ordenados por distancia) es el i-ésimo pueblo de
+-## municipio más cercano a la plaza. Vector2.INF si no hay dónde ponerlo.
+-static func trade_town_pos(gs, town_id: String) -> Vector2:
++## Fase 9B: ubica los pueblos de comercio (TradeSim / TownEconomySim) en municipios reales con pueblo.
++## El i-ésimo pueblo (ordenados por distancia) va a un municipio repartido entre la mitad más cercana del
++## país. Su distancia (km) se ajusta con la real, con límites (×0,85–×1,15) para no romper el balance.
++static func assign_towns(gs) -> void:
+ 	var towns: Array = gs.trade.get("towns", [])
+-	var idx := -1
+-	for i in range(towns.size()):
+-		if str(towns[i].get("id", "")) == town_id:
+-			idx = i
+-	if idx < 0:
+-		return Vector2.INF
++	if not (gs.map.get("town_assign") is Dictionary):
++		gs.map["town_assign"] = {}
++	var asg: Dictionary = gs.map["town_assign"]
++	if towns.is_empty():
++		return
++	var all_done := true
++	for t in towns:
++		if not asg.has(str(t.get("id", ""))) or not t.has("distance_base"):
++			all_done = false
++	if all_done:
++		return
++	var used := {}
++	for k in asg:
++		used[int(asg[k])] = true
+ 	var spots := []
+ 	for z in municipalities(gs):
+-		if bool(z["town"]) and not bool(z["player"]):
+-			spots.append(z["town_pos"])
+-	spots.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.length() < b.length())
+-	return spots[idx] if idx < spots.size() else Vector2.INF
++		if bool(z["town"]) and not bool(z["player"]) and not used.has(int(z["id"])):
++			spots.append(z)
++	spots.sort_custom(func(a, b) -> bool: return (a["town_pos"] as Vector2).length() < (b["town_pos"] as Vector2).length())
++	var pending := []
++	for t in towns:
++		if not asg.has(str(t.get("id", ""))):
++			pending.append(t)
++	var n := pending.size()
++	var span := maxi(n, int(spots.size() * 0.5))
++	var taken := {}
++	for i in range(n):
++		var idx := mini(int(float(i) * span / maxi(1, n)), spots.size() - 1)
++		while idx < spots.size() and taken.has(idx):
++			idx += 1
++		if idx < 0 or idx >= spots.size():
++			break
++		taken[idx] = true
++		var z: Dictionary = spots[idx]
++		var t: Dictionary = pending[i]
++		asg[str(t["id"])] = int(z["id"])
++	# Nombres, población y distancia real.
++	var reals := []
++	for t in towns:
++		var zid := int(asg.get(str(t.get("id", "")), -1))
++		if zid >= 0:
++			reals.append((municipalities(gs)[zid]["town_pos"] as Vector2).length() / 1000.0)
++	reals.sort()
++	var ref: float = float(reals[reals.size() / 2]) if not reals.is_empty() else 1.0
++	for t in towns:
++		var zid := int(asg.get(str(t.get("id", "")), -1))
++		if zid < 0:
++			continue
++		var reg := MunicipalSim.region(gs, zid)
++		if not reg.is_empty() and str(reg.get("trade_town_id", "")) != str(t["id"]):
++			var nm := str(t.get("name", reg.get("name", "")))
++			for k in gs.map.get("regions", {}):
++				var other: Dictionary = gs.map["regions"][k]
++				if int(other["id"]) != zid and str(other.get("name", "")) == nm:
++					other["name"] = "%s del %s" % [nm, "Norte" if int(other["id"]) % 2 == 0 else "Sur"]
++			reg["name"] = nm
++			reg["trade_town_id"] = str(t["id"])
++			reg["population"] = int(t.get("population", reg.get("population", 500)))
++		if not t.has("distance_base"):
++			var real := (municipalities(gs)[zid]["town_pos"] as Vector2).length() / 1000.0
++			t["distance_base"] = float(t.get("distance", 50.0))
++			t["distance"] = roundf(float(t["distance_base"]) * clampf(real / maxf(0.1, ref), 0.85, 1.15))
++			t["real_km"] = snappedf(real, 0.1)
++
++
++## Municipio de un pueblo de comercio (-1 si no tiene).
++static func town_zone(gs, town_id: String) -> int:
++	if not gs.map.get("town_assign", {}).has(town_id):
++		assign_towns(gs)
++	return int(gs.map.get("town_assign", {}).get(town_id, -1))
++
++
++## Posición real en el país de un pueblo de comercio exterior (Fase 7 → 9B). Vector2.INF si no tiene.
++static func trade_town_pos(gs, town_id: String) -> Vector2:
++	var zid := town_zone(gs, town_id)
++	if zid < 0 or zid >= municipalities(gs).size():
++		return Vector2.INF
++	return municipalities(gs)[zid]["town_pos"]
+ 
+ 
+-## Rutas comerciales abiertas: revelan el pueblo destino y el corredor del camino (una sola vez).
++## Rutas comerciales abiertas: revelan el municipio del pueblo destino y el corredor del camino (una vez).
+ static func _reveal_trade_routes(gs) -> void:
+ 	var done: Dictionary = gs.map.get("routes_revealed", {})
+ 	var n := 0
+@@ -349,6 +496,10 @@ static func _reveal_trade_routes(gs) -> void:
+ 			var q := p * (float(i) / steps)
+ 			n += reveal_around_quiet(gs, q, 150.0)
+ 		n += reveal_around_quiet(gs, p, 500.0)
++		var zid := town_zone(gs, tid)
++		if zid >= 0:
++			n += reveal_zone_quiet(gs, zid)
++			gs.notify("La ruta comercial reveló el municipio de %s." % MunicipalSim.name_of(gs, zid), "info")
+ 	gs.map["routes_revealed"] = done
+ 	if n > 0:
+ 		EventBus.map_changed.emit()
+@@ -370,6 +521,7 @@ static func reveal_around_quiet(gs, p: Vector2, radius: float) -> int:
+ static func daily(gs) -> void:
+ 	if gs.trade.get("connections", []).size() != gs.map.get("routes_revealed", {}).size():
+ 		_reveal_trade_routes(gs)
++	LandSim.daily(gs)   # Fase 9B: respuestas a ofertas y licitaciones de tierra.
+ 	var exps: Array = gs.map.get("expeditions", [])
+ 	if exps.is_empty():
+ 		return
+@@ -395,6 +547,12 @@ static func daily(gs) -> void:
+ 		EventBus.map_changed.emit()
+ 
+ 
++## Fase 9B: mercado de tierras (precios, comercio NPC) y municipios (alcaldes, misiones regionales).
++static func monthly(gs) -> void:
++	LandSim.monthly(gs)
++	MunicipalSim.monthly(gs)
++
++
+ # --- País y recursos ------------------------------------------------------------------------------
+ 
+ ## Aplica la abundancia de recursos del país a una región candidata (yacimientos y fortalezas).
+diff --git a/scripts/sim/municipal_sim.gd b/scripts/sim/municipal_sim.gd
+new file mode 100644
+index 0000000..500c21e
+--- /dev/null
++++ b/scripts/sim/municipal_sim.gd
+@@ -0,0 +1,435 @@
++class_name MunicipalSim
++extends RefCounted
++## Fase 9B — Municipios y departamentos del país con nombre, alcalde/gobernador NPC y política local.
++## Estado en GameState.map:
++##   regions       {"<id municipio>": {id, name, department, town, player, population, policy{local_tax, min_wage,
++##                  regulation, land_price}, mayor{name, stance, since_day, term_end_day}, treasury, tax_exempt_until,
++##                  trade_town_id}}
++##   departments   {"d<k>": {id, name, governor{name, stance}, municipalities[]}}
++##   region_missions {available[], active[], done, failed, next_day}
++## Reglas aplicadas a lo que construyes en un municipio (GovSim): impuesto local (±) sobre la ganancia
++## del negocio y salario mínimo local. La regulación alta encarece la obra y obliga a licitar la tierra.
++
++
++static func cfg() -> Dictionary:
++	return GameData.extra("municipios")
++
++
++static func key(zid: int) -> String:
++	return str(zid)
++
++
++# --- Creación y migración -----------------------------------------------------------------------------
++
++## Crea (o completa en partidas 9A) los municipios, departamentos y misiones regionales.
++static func init_state(gs) -> void:
++	var m: Dictionary = gs.map
++	var g := MapSim.gen(gs)
++	var regs: Dictionary = m.get("regions", {})
++	if regs.size() != g.zones.size() or not regs.has("0") or not (regs["0"] is Dictionary) or not regs["0"].has("policy"):
++		regs = _generate(gs, g)
++	m["regions"] = regs
++	if not m.has("departments") or not (m["departments"] is Dictionary) or m["departments"].is_empty():
++		m["departments"] = _departments(gs, g, regs)
++	if not m.has("region_missions") or not (m["region_missions"] is Dictionary):
++		m["region_missions"] = {"available": [], "active": [], "done": 0, "failed": 0, "next_day": gs.today() + 60}
++	# El nombre del municipio del jugador sigue al de su pueblo.
++	regs["0"]["name"] = str(gs.settings.get("town_name", regs["0"].get("name", "Tu pueblo")))
++
++
++static func _rng(gs, salt: int) -> RandomNumberGenerator:
++	var r := RandomNumberGenerator.new()
++	r.seed = int(gs.settings.get("seed", 1)) * 7919 + MapSim.country_id(gs).hash() % 100000 + salt
++	return r
++
++
++static func _generate(gs, g: CountryGen) -> Dictionary:
++	var c := cfg()
++	var r := _rng(gs, 31)
++	var names: Array = c.get("names", []).duplicate()
++	names.erase(str(gs.settings.get("town_name", "")))
++	for t in gs.trade.get("towns", []):
++		names.erase(str(t.get("name", "")))
++	var pre: Dictionary = c.get("prefix_by_biome", {})
++	var pol: Dictionary = c.get("policy", {})
++	var stances: Array = c.get("stances", {}).keys()
++	var regs := {}
++	var used := {}
++	for z in g.zones:
++		var zid := int(z["id"])
++		var player := bool(z["player"])
++		var nm := str(gs.settings.get("town_name", "Tu pueblo"))
++		if not player:
++			nm = _unique_name(r, names, used, zid)
++			var cp: Vector2 = z["town_pos"] if bool(z["town"]) else z["centroid"]
++			var biome := g.biome_at(cp.x, cp.y)
++			var opts: Array = pre.get(biome, [])
++			if not opts.is_empty() and r.randf() < float(c.get("prefix_chance", 0.35)):
++				nm = "%s %s" % [str(opts[r.randi() % opts.size()]), nm]
++		used[nm] = true
++		var stance := str(stances[r.randi() % stances.size()]) if not stances.is_empty() else "conservador"
++		var policy := {"local_tax": 0.0, "min_wage": 0.0, "regulation": "media", "land_price": 800.0}
++		if not player:
++			policy = _random_policy(r, pol, stance)
++		var pop := int(r.randf_range(300, 3200)) if bool(z["town"]) else int(r.randf_range(20, 220))
++		regs[key(zid)] = {"id": zid, "name": nm, "department": "", "town": bool(z["town"]), "player": player,
++				"population": pop, "policy": policy, "mayor": _new_mayor(gs, r, stance), "treasury": 0.0,
++				"tax_exempt_until": -1, "trade_town_id": ""}
++	return regs
++
++
++static func _unique_name(r: RandomNumberGenerator, names: Array, used: Dictionary, zid: int) -> String:
++	for i in range(8):
++		if names.is_empty():
++			break
++		var idx := r.randi() % names.size()
++		var nm := str(names[idx])
++		names.remove_at(idx)
++		if not used.has(nm):
++			return nm
++	return "Municipio %d" % zid
++
++
++static func _random_policy(r: RandomNumberGenerator, pol: Dictionary, stance: String) -> Dictionary:
++	var sd: Dictionary = cfg().get("stances", {}).get(stance, {})
++	var lt: Array = pol.get("local_tax", [-0.05, 0.09])
++	var tax := clampf(r.randf_range(float(lt[0]), float(lt[1])) + float(sd.get("tax_bias", 0.0)), float(lt[0]), float(lt[1]))
++	var mwr: Array = pol.get("min_wage", [0.0, 3.2])
++	var mw := 0.0
++	if r.randf() < float(pol.get("min_wage_chance", 0.45)) + float(sd.get("wage_bias", 0.0)) * 0.3:
++		mw = clampf(r.randf_range(float(mwr[0]) + 1.0, float(mwr[1])) + float(sd.get("wage_bias", 0.0)), 0.0, float(mwr[1]))
++	var regs: Array = pol.get("regulation", ["baja", "media", "alta"])
++	var ri := clampi(r.randi_range(0, regs.size() - 1) + int(sd.get("reg_bias", 0)), 0, regs.size() - 1)
++	var lp: Array = pol.get("land_price", [380, 1100])
++	return {"local_tax": snappedf(tax, 0.005), "min_wage": snappedf(mw, 0.1), "regulation": str(regs[ri]),
++			"land_price": snappedf(r.randf_range(float(lp[0]), float(lp[1])), 10.0)}
++
++
++static func _new_mayor(gs, r: RandomNumberGenerator, stance: String) -> Dictionary:
++	var nd: Dictionary = GameData.extra("names")
++	var male := r.randf() < 0.6
++	var firsts: Array = nd.get("male" if male else "female", ["Juan"])
++	var sur: Array = nd.get("surnames", ["Pérez"])
++	var nm := "%s %s %s" % [str(firsts[r.randi() % firsts.size()]), str(sur[r.randi() % sur.size()]), str(sur[r.randi() % sur.size()])]
++	var term := int(cfg().get("term_months", 48)) * 30
++	var start: int = gs.today() - r.randi_range(0, term - 30)
++	return {"name": nm, "title": "Alcalde" if male else "Alcaldesa", "stance": stance, "since_day": start, "term_end_day": start + term}
++
++
++## Departamentos: agrupación de municipios cercanos, cada uno con su gobernador.
++static func _departments(gs, g: CountryGen, regs: Dictionary) -> Dictionary:
++	var dc: Dictionary = cfg().get("departments", {})
++	var k := clampi(int(dc.get("count", 5)), 1, g.zones.size())
++	var r := _rng(gs, 97)
++	var centers: Array[Vector2] = [g.zones[0]["centroid"]]
++	while centers.size() < k:
++		# El centro más lejano de los ya elegidos (reparto parejo).
++		var best := Vector2.ZERO
++		var bd := -1.0
++		for z in g.zones:
++			var p: Vector2 = z["centroid"]
++			var dmin := 1e18
++			for c in centers:
++				dmin = minf(dmin, p.distance_squared_to(c))
++			if dmin > bd:
++				bd = dmin
++				best = p
++		centers.append(best)
++	var names: Array = dc.get("names", []).duplicate()
++	var deps := {}
++	var stances: Array = cfg().get("stances", {}).keys()
++	for i in range(k):
++		var nm := str(names[i]) if i < names.size() else "Departamento %d" % (i + 1)
++		var gov := _new_mayor(gs, r, str(stances[r.randi() % stances.size()]) if not stances.is_empty() else "conservador")
++		gov["title"] = "Gobernador" if str(gov["title"]) == "Alcalde" else "Gobernadora"
++		deps["d%d" % i] = {"id": "d%d" % i, "name": nm, "governor": gov, "municipalities": []}
++	for z in g.zones:
++		var p: Vector2 = z["centroid"]
++		var bi := 0
++		var bd2 := 1e18
++		for i in range(centers.size()):
++			var dd := p.distance_squared_to(centers[i])
++			if dd < bd2:
++				bd2 = dd
++				bi = i
++		var dk := "d%d" % bi
++		(deps[dk]["municipalities"] as Array).append(int(z["id"]))
++		regs[key(int(z["id"]))]["department"] = dk
++	return deps
++
++
++# --- Consultas ------------------------------------------------------------------------------------------
++
++static func region(gs, zid: int) -> Dictionary:
++	return gs.map.get("regions", {}).get(key(zid), {})
++
++
++static func zone_id_at(gs, x: float, z: float) -> int:
++	var g := MapSim.gen(gs)
++	var c := MapSim.chunk_of(x, z)
++	return g.zone_index(c.x, c.y)
++
++
++## Región real en un punto: municipio con su política, alcalde y departamento. {} fuera del país.
++static func region_at(gs, x: float, z: float) -> Dictionary:
++	var zid := zone_id_at(gs, x, z)
++	if zid < 0:
++		return {}
++	var reg := region(gs, zid)
++	if reg.is_empty():
++		return {}
++	var dep: Dictionary = gs.map.get("departments", {}).get(str(reg.get("department", "")), {})
++	var out: Dictionary = reg.duplicate(true)
++	out["id"] = "m%d" % zid
++	out["municipality_id"] = zid
++	out["department_name"] = str(dep.get("name", ""))
++	out["governor"] = dep.get("governor", {})
++	out["country_id"] = MapSim.country_id(gs)
++	return out
++
++
++static func name_of(gs, zid: int) -> String:
++	return str(region(gs, zid).get("name", "Municipio %d" % zid))
++
++
++static func policy_of(gs, zid: int) -> Dictionary:
++	return region(gs, zid).get("policy", {})
++
++
++static func stance_label(stance: String) -> String:
++	return str(cfg().get("stances", {}).get(stance, {}).get("label", stance.capitalize()))
++
++
++static func regulation_label(r: String) -> String:
++	return {"baja": "baja", "media": "media", "alta": "alta (solo licitación)"}.get(r, r)
++
++
++## Municipio de un edificio (-1 fuera del país).
++static func zone_of_building(gs, b: Dictionary) -> int:
++	return zone_id_at(gs, float(b.get("x", 0.0)), float(b.get("z", 0.0)))
++
++
++## Tasa del impuesto local para un edificio (0 si está exento por una misión).
++static func local_tax_rate(gs, b: Dictionary) -> float:
++	var zid := zone_of_building(gs, b)
++	if zid < 0:
++		return 0.0
++	var reg := region(gs, zid)
++	if int(reg.get("tax_exempt_until", -1)) >= gs.today() and float(reg.get("policy", {}).get("local_tax", 0.0)) > 0.0:
++		return 0.0
++	return float(reg.get("policy", {}).get("local_tax", 0.0))
++
++
++## Salario mínimo local diario (0 = solo el nacional) de un edificio.
++static func min_wage_for(gs, b: Dictionary) -> float:
++	var zid := zone_of_building(gs, b)
++	if zid < 0:
++		return 0.0
++	return float(policy_of(gs, zid).get("min_wage", 0.0)) * gs.price_level()
++
++
++## Multiplicador del costo de obra por la regulación del municipio.
++static func build_mult(gs, x: float, z: float) -> float:
++	var zid := zone_id_at(gs, x, z)
++	if zid < 0:
++		return 1.0
++	var r := str(policy_of(gs, zid).get("regulation", "media"))
++	return float(cfg().get("policy", {}).get("regulation_build_mult", {}).get(r, 1.0))
++
++
++## Impuesto local de un negocio (lo llama GovSim al cobrar impuestos). Positivo: se paga al municipio;
++## negativo: rebaja (el municipio devuelve parte de la ganancia). Devuelve lo cobrado (neto).
++static func collect_local_tax(gs, b: Dictionary, profit: float) -> float:
++	if profit <= 0.0:
++		return 0.0
++	var rate := local_tax_rate(gs, b)
++	if absf(rate) < 0.0001:
++		return 0.0
++	var t := profit * rate
++	var reg := region(gs, zone_of_building(gs, b))
++	if t > 0.0:
++		BusinessSim.pay(gs, b, t, "impuestos")
++		reg["treasury"] = float(reg.get("treasury", 0.0)) + t
++	else:
++		BusinessSim.earn(gs, b, -t, "subsidios")
++		reg["treasury"] = float(reg.get("treasury", 0.0)) + t
++	return t
++
++
++# --- Mensual: alcaldes, misiones ------------------------------------------------------------------------
++
++static func monthly(gs) -> void:
++	_elections(gs)
++	_check_missions(gs)
++	var rm: Dictionary = gs.map.get("region_missions", {})
++	if gs.today() >= int(rm.get("next_day", 0)):
++		_offer_missions(gs)
++		rm["next_day"] = gs.today() + int(cfg().get("missions_every_months", 4)) * 30
++
++
++## Fin del mandato: nuevo alcalde y la política se mueve un poco según su postura.
++static func _elections(gs) -> void:
++	var r := _rng(gs, gs.today())
++	var stances: Array = cfg().get("stances", {}).keys()
++	for k in gs.map.get("regions", {}):
++		var reg: Dictionary = gs.map["regions"][k]
++		var mayor: Dictionary = reg.get("mayor", {})
++		if gs.today() < int(mayor.get("term_end_day", 1 << 30)):
++			continue
++		var stance := str(stances[r.randi() % stances.size()])
++		reg["mayor"] = _new_mayor(gs, r, stance)
++		reg["mayor"]["since_day"] = gs.today()
++		reg["mayor"]["term_end_day"] = gs.today() + int(cfg().get("term_months", 48)) * 30
++		if bool(reg.get("player", false)):
++			continue   # el municipio del jugador conserva la política neutra (la nacional manda)
++		var np := _random_policy(r, cfg().get("policy", {}), stance)
++		var p: Dictionary = reg["policy"]
++		p["local_tax"] = snappedf(lerpf(float(p["local_tax"]), float(np["local_tax"]), 0.5), 0.005)
++		p["min_wage"] = snappedf(lerpf(float(p["min_wage"]), float(np["min_wage"]), 0.5), 0.1)
++		p["regulation"] = np["regulation"]
++		if MapSim.zone_revealed_any(gs, int(reg["id"])):
++			gs.notify("%s tiene nuevo %s: %s (%s). Impuesto local %+.1f%%." % [reg["name"], str(reg["mayor"]["title"]).to_lower(), reg["mayor"]["name"], stance_label(stance), float(p["local_tax"]) * 100.0], "info")
++
++
++static func _mission_value(gs, m: Dictionary) -> float:
++	var zid := int(m.get("zone", -1))
++	match str(m.get("type", "")):
++		"buildings_in":
++			var n := 0
++			for b in gs.buildings:
++				if gs.owned_by_player(b) and BusinessSim.is_business(b) and str(b.get("status", "")) == "activo" and zone_of_building(gs, b) == zid:
++					n += 1
++			return float(n)
++		"land_in":
++			return float(LandSim.player_parcels_in(gs, zid))
++		"route_to":
++			var tid := str(region(gs, zid).get("trade_town_id", ""))
++			return 1.0 if tid != "" and not TradeSim.connection(gs, tid).is_empty() else 0.0
++		"jobs_in":
++			var ids := {}
++			for b in gs.buildings:
++				if gs.owned_by_player(b) and zone_of_building(gs, b) == zid:
++					ids[int(b["id"])] = true
++			var n2 := 0
++			for c in gs.citizens.values():
++				if c.job_kind == "empleo" and ids.has(c.job_id):
++					n2 += 1
++			return float(n2)
++		"road_in":
++			var total := 0.0
++			for rd in RoadSim.roads(gs):
++				var a := RoadSim.seg_a(rd)
++				var b2 := RoadSim.seg_b(rd)
++				var mid := (a + b2) * 0.5
++				if zone_id_at(gs, mid.x, mid.y) == zid:
++					total += a.distance_to(b2)
++			return total
++	return 0.0
++
++
++static func mission_done(gs, m: Dictionary) -> bool:
++	return _mission_value(gs, m) >= float(m.get("target", 1.0))
++
++
++static func mission_progress(gs, m: Dictionary) -> String:
++	return "%d / meta %d" % [int(_mission_value(gs, m)), int(m.get("target", 1.0))]
++
++
++## Los alcaldes de municipios explorados (no el tuyo) proponen misiones con recompensa.
++static func _offer_missions(gs) -> void:
++	var rm: Dictionary = gs.map["region_missions"]
++	var avail: Array = rm.get("available", [])
++	var active: Array = rm.get("active", [])
++	var maxn := int(cfg().get("missions_max", 3))
++	if avail.size() + active.size() >= maxn:
++		return
++	var r := _rng(gs, gs.today() * 3 + 1)
++	var busy := {}
++	for m in avail + active:
++		busy[int(m["zone"])] = true
++	var zones := []
++	for k in gs.map.get("regions", {}):
++		var reg: Dictionary = gs.map["regions"][k]
++		if bool(reg.get("player", false)) or busy.has(int(reg["id"])):
++			continue
++		if MapSim.zone_revealed_any(gs, int(reg["id"])):
++			zones.append(int(reg["id"]))
++	zones.sort()
++	var templates: Array = cfg().get("missions", [])
++	while not zones.is_empty() and avail.size() + active.size() < maxn and not templates.is_empty():
++		var zid: int = zones[r.randi() % zones.size()]
++		zones.erase(zid)
++		var reg := region(gs, zid)
++		var opts := []
++		for t in templates:
++			if str(t["type"]) == "route_to" and (str(reg.get("trade_town_id", "")) == "" or not TradeSim.connection(gs, str(reg["trade_town_id"])).is_empty()):
++				continue
++			opts.append(t)
++		if opts.is_empty():
++			continue
++		var m: Dictionary = (opts[r.randi() % opts.size()] as Dictionary).duplicate(true)
++		m["zone"] = zid
++		match str(m["type"]):
++			"buildings_in":
++				m["target"] = _mission_value(gs, m) + 1.0
++			"land_in":
++				m["target"] = _mission_value(gs, m) + 10.0
++			"route_to":
++				m["target"] = 1.0
++			"jobs_in":
++				m["target"] = _mission_value(gs, m) + 5.0
++			"road_in":
++				m["target"] = floorf(_mission_value(gs, m)) + 300.0
++		m["label"] = str(m["label"]).replace("{n}", str(int(m["target"]) if str(m["type"]) != "land_in" else 10)).replace("{m}", str(reg.get("name", "")))
++		m["reward_money"] = float(m.get("reward_money", 0.0)) * gs.price_level()
++		m["mayor"] = str(reg.get("mayor", {}).get("name", ""))
++		avail.append(m)
++		gs.notify("%s %s (%s) propone: %s." % [str(reg.get("mayor", {}).get("title", "Alcalde")), m["mayor"], reg.get("name", ""), m["label"]], "importante")
++	rm["available"] = avail
++
++
++static func accept_mission(gs, idx: int) -> String:
++	var rm: Dictionary = gs.map["region_missions"]
++	var avail: Array = rm.get("available", [])
++	if idx < 0 or idx >= avail.size():
++		return "Misión no encontrada"
++	var m: Dictionary = avail[idx]
++	avail.remove_at(idx)
++	m["deadline"] = gs.today() + int(m.get("months", 24)) * 30
++	(rm["active"] as Array).append(m)
++	return ""
++
++
++static func _check_missions(gs) -> void:
++	var rm: Dictionary = gs.map.get("region_missions", {})
++	var active: Array = rm.get("active", [])
++	for m in active.duplicate():
++		var reg := region(gs, int(m["zone"]))
++		if mission_done(gs, m):
++			var paid := float(m.get("reward_money", 0.0))
++			gs.add_money(paid)
++			gs.add_counter("subsidies", paid)
++			reg["treasury"] = float(reg.get("treasury", 0.0)) - paid
++			var months := int(m.get("reward_tax_months", 0))
++			if months > 0:
++				reg["tax_exempt_until"] = maxi(int(reg.get("tax_exempt_until", -1)), gs.today()) + months * 30
++			rm["done"] = int(rm.get("done", 0)) + 1
++			active.erase(m)
++			gs.notify("¡Misión regional cumplida en %s: %s! Recompensa: %s%s." % [reg.get("name", ""), m["label"], Fmt.money(paid),
++					" y %d meses sin impuesto local" % months if months > 0 else ""], "importante")
++		elif gs.today() > int(m.get("deadline", 0)):
++			active.erase(m)
++			rm["failed"] = int(rm.get("failed", 0)) + 1
++			gs.notify("Misión regional fallida por tiempo: %s." % m["label"], "jugador")
++
++
++## Texto de la política de un municipio (para la interfaz).
++static func policy_text(gs, zid: int) -> String:
++	var p := policy_of(gs, zid)
++	var tax := float(p.get("local_tax", 0.0))
++	var mw := float(p.get("min_wage", 0.0))
++	return "Impuesto local %s · Salario mínimo %s · Regulación %s · Suelo base %s/parcela" % [
++		"ninguno" if absf(tax) < 0.001 else ("%+.1f%% de la ganancia" % (tax * 100.0)),
++		"el nacional" if mw <= 0.0 else "%s/día" % Fmt.money2(mw * gs.price_level()),
++		regulation_label(str(p.get("regulation", "media"))),
++		Fmt.money(float(p.get("land_price", 800.0)) * gs.price_mult())]
+diff --git a/scripts/sim/road_sim.gd b/scripts/sim/road_sim.gd
+index d4dcd0e..753efc0 100644
+--- a/scripts/sim/road_sim.gd
++++ b/scripts/sim/road_sim.gd
+@@ -68,7 +68,8 @@ static func _zone_unlocked(gs, p: Vector2) -> bool:
+ 	var half: float = gs.MAP_SIZE * 0.5
+ 	if absf(p.x) > half or absf(p.y) > half:   # Fase 9A: parcelas compradas fuera del pueblo (índices globales).
+ 		var zc := MapSim.zone_at(gs, p.x, p.y)
+-		return gs.is_zone_unlocked(zc.x, zc.y)
++		# Fase 9B: fuera del pueblo también se traza por tierra del Estado ya explorada (servidumbre pública).
++		return gs.is_zone_unlocked(zc.x, zc.y) or MapSim.public_way_ok(gs, p.x, p.y)
+ 	return gs.is_zone_unlocked(clampi(int((p.x + half) / zs), 0, gs.ZONE_GRID - 1), clampi(int((p.y + half) / zs), 0, gs.ZONE_GRID - 1))
+ 
+ 
+diff --git a/scripts/sim/transit_sim.gd b/scripts/sim/transit_sim.gd
+index 155793c..2bec71d 100644
+--- a/scripts/sim/transit_sim.gd
++++ b/scripts/sim/transit_sim.gd
+@@ -176,9 +176,10 @@ static func is_water(gs, p: Vector2) -> bool:
+ 	return h < WaterSim._water_level + 0.2
+ 
+ 
++## Fase 9B: dentro del país (antes: dentro de los 400 m del pueblo).
+ static func _inside_map(gs, p: Vector2, margin := 0.5) -> bool:
+-	var half: float = gs.MAP_SIZE * 0.5 - margin
+-	return absf(p.x) <= half and absf(p.y) <= half
++	var b := MapSim.country_bounds_m(gs).grow(-margin)
++	return b.has_point(p)
+ 
+ 
+ ## Tramos de agua a lo largo de la polilínea: {wet (m), longest (m), wet_segments: [bool]}.
+diff --git a/scripts/sim/water_sim.gd b/scripts/sim/water_sim.gd
+index 22aa6ea..12a3672 100644
+--- a/scripts/sim/water_sim.gd
++++ b/scripts/sim/water_sim.gd
+@@ -210,6 +210,8 @@ static func _heights_for(gs) -> void:
+ ## Altura del terreno (misma interpolación que Terrain.height_at).
+ static func height_at(gs, x: float, z: float) -> float:
+ 	_heights_for(gs)
++	if absf(x) > _half or absf(z) > _half:
++		return MapSim.height_at(x, z, gs)   # Fase 9B: fuera del pueblo, el relieve del país.
+ 	var res := Terrain.RES
+ 	var fx := clampf((x + _half) / _cell, 0.0, res - 0.001)
+ 	var fz := clampf((z + _half) / _cell, 0.0, res - 0.001)
+@@ -236,7 +238,7 @@ static func fresh_water_near(gs, x: float, z: float, radius := -1.0) -> bool:
+ 			var a := TAU * i / n
+ 			var px := x + cos(a) * r
+ 			var pz := z + sin(a) * r
+-			if absf(px) < gs.MAP_SIZE * 0.5 and absf(pz) < gs.MAP_SIZE * 0.5 and height_at(gs, px, pz) < _water_level:
++			if MapSim.in_country(gs, px, pz) and height_at(gs, px, pz) < _water_level:
+ 				return true
+ 		r += step
+ 	return false
+diff --git a/scripts/ui/logistics_panel.gd b/scripts/ui/logistics_panel.gd
+index a105399..c99b772 100644
+--- a/scripts/ui/logistics_panel.gd
++++ b/scripts/ui/logistics_panel.gd
+@@ -128,9 +128,8 @@ func _build_region() -> void:
+ 		var row := HBoxContainer.new()
+ 		var dx := float(d["x"])
+ 		var dz := float(d["z"])
+-		var zs: float = gs.MAP_SIZE / gs.ZONE_GRID
+-		var half: float = gs.MAP_SIZE * 0.5
+-		var owned: bool = gs.is_zone_unlocked(clampi(int((dx + half) / zs), 0, 4), clampi(int((dz + half) / zs), 0, 4))
++		var zc := MapSim.zone_at(gs, dx, dz)   # Fase 9B: parcelas en índices globales (también fuera del pueblo).
++		var owned: bool = gs.is_zone_unlocked(zc.x, zc.y)
+ 		var pct := float(d["amount"]) / maxf(1.0, float(d.get("initial", d["amount"])))
+ 		var l := UIKit.label("%s · %s u. (%d%%)%s" % [RegionSim.resource_label(str(d["type"])), Fmt.thousands(float(d["amount"])), int(pct * 100.0),
+ 				"" if owned else " · terreno del gobierno"], 13, RegionSim.resource_color(str(d["type"])).lightened(0.3))
+diff --git a/scripts/ui/minimap.gd b/scripts/ui/minimap.gd
+index 5bf569c..6d38fee 100644
+--- a/scripts/ui/minimap.gd
++++ b/scripts/ui/minimap.gd
+@@ -1,10 +1,11 @@
+ class_name Minimap
+ extends Control
+-## Fase 9A — Minimapa del país (esquina inferior izquierda del HUD).
+-## Capas: biomas con relieve, niebla de lo no explorado, fronteras tenues entre municipios, tu terreno,
+-## pueblos (el tuyo en dorado), yacimientos, carreteras y rutas comerciales, y el encuadre de la cámara.
+-## Clic o arrastre: mueve la cámara. "Ampliar" abre el mapa grande con información del territorio y
+-## expediciones pagadas para explorar (revelar ≠ comprar: comprar sigue en Construir → Comprar terreno).
++## Fase 9A/9B — Minimapa del país (esquina inferior izquierda del HUD).
++## Capas: biomas con relieve, velo de lo no explorado, fronteras de municipios, tu terreno, pueblos (el tuyo
++## en dorado), yacimientos, carreteras y rutas comerciales, y el encuadre de la cámara.
++## Clic o arrastre: mueve la cámara. "Ampliar" abre el mapa grande: al seleccionar un territorio se ve su
++## municipio (alcalde, política, misiones regionales), su dueño y su precio, con Comprar / Licitar / Ofertar,
++## y una capa de propiedad (Estado, particulares, tuyo). También expediciones pagadas para explorar.
+ 
+ const SMALL := 210.0
+ const BIG := 620.0
+@@ -18,8 +19,17 @@ var big_map: MapView
+ var info: RichTextLabel
+ var exp_btn: Button
+ var view_btn: Button
++var layer_btn: Button
++var buy_btn: Button
++var tender_btn: Button
++var offer_btn: Button
++var amount_spin: SpinBox
++var mission_btn: Button
+ var selected := Vector2i(999999, 999999)
++var show_owner := false
+ var _redraw_t := 0.0
++var fog_texture: ImageTexture
++var owner_texture: ImageTexture
+ 
+ 
+ func setup(p_world: Node) -> void:
+@@ -47,7 +57,7 @@ func setup(p_world: Node) -> void:
+ 	view_btn.tooltip_text = "Aleja la cámara hasta ver el país completo, o vuelve al pueblo"
+ 	row.add_child(view_btn)
+ 	var big_btn := UIKit.button("Ampliar", func(): set_expanded(true), 96)
+-	big_btn.tooltip_text = "Mapa grande del país: territorios, municipios y expediciones"
++	big_btn.tooltip_text = "Mapa grande del país: municipios, tierras en venta, misiones y expediciones"
+ 	row.add_child(big_btn)
+ 	small_map = MapView.new()
+ 	small_map.custom_minimum_size = Vector2(SMALL, SMALL)
+@@ -60,8 +70,8 @@ func setup(p_world: Node) -> void:
+ 	big_panel.anchor_right = 0.5
+ 	big_panel.anchor_top = 0.5
+ 	big_panel.anchor_bottom = 0.5
+-	big_panel.offset_left = -(BIG + 330) * 0.5
+-	big_panel.offset_right = (BIG + 330) * 0.5
++	big_panel.offset_left = -(BIG + 370) * 0.5
++	big_panel.offset_right = (BIG + 370) * 0.5
+ 	big_panel.offset_top = -(BIG + 20) * 0.5
+ 	big_panel.offset_bottom = (BIG + 20) * 0.5
+ 	big_panel.visible = false
+@@ -75,22 +85,47 @@ func setup(p_world: Node) -> void:
+ 	big_map.big = true
+ 	h.add_child(big_map)
+ 	var side := VBoxContainer.new()
+-	side.custom_minimum_size.x = 300
+-	side.add_theme_constant_override("separation", 8)
++	side.custom_minimum_size.x = 340
++	side.add_theme_constant_override("separation", 6)
+ 	h.add_child(side)
+ 	var cd := MapSim.country_def(MapSim.country_id(GameState))
+ 	side.add_child(UIKit.label("País: %s" % str(cd.get("label", "")), 18, UIKit.ACCENT))
+-	var desc := UIKit.label("%s\n%d×%d chunks de 400 m (%.1f km por lado)" % [str(cd.get("description", "")), terrain.gen.size, terrain.gen.size, terrain.gen.size * 0.4], 12, UIKit.TEXT_DIM)
++	var desc := UIKit.label("%d×%d territorios de 400 m (%.1f km por lado) · %d municipios" % [terrain.gen.size, terrain.gen.size, terrain.gen.size * 0.4, terrain.gen.zones.size()], 12, UIKit.TEXT_DIM)
+ 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	side.add_child(desc)
++	var lrow := HBoxContainer.new()
++	side.add_child(lrow)
++	layer_btn = UIKit.button("Capa: biomas", _toggle_layer, 160)
++	layer_btn.tooltip_text = "Alterna la capa de propiedad: Estado, particulares y lo tuyo"
++	lrow.add_child(layer_btn)
+ 	info = UIKit.rich()
+-	info.custom_minimum_size = Vector2(300, 300)
++	info.custom_minimum_size = Vector2(340, 300)
+ 	info.fit_content = false
+ 	info.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	side.add_child(info)
+-	exp_btn = UIKit.button("Enviar expedición", _send_expedition, 300)
++	var arow := HBoxContainer.new()
++	arow.add_theme_constant_override("separation", 4)
++	side.add_child(arow)
++	arow.add_child(UIKit.label("Monto:", 13))
++	amount_spin = UIKit.spin(0, 1e9, 10, 0, func(_v): pass, 130)
++	arow.add_child(amount_spin)
++	var brow1 := HBoxContainer.new()
++	brow1.add_theme_constant_override("separation", 4)
++	side.add_child(brow1)
++	buy_btn = UIKit.button("Comprar", _buy_fixed, 110)
++	buy_btn.tooltip_text = "Comprar al Estado a precio fijo"
++	brow1.add_child(buy_btn)
++	tender_btn = UIKit.button("Licitar", _tender, 105)
++	tender_btn.tooltip_text = "Licitación del Estado: puja con el monto indicado; gana la mejor oferta"
++	brow1.add_child(tender_btn)
++	offer_btn = UIKit.button("Ofertar", _offer, 105)
++	offer_btn.tooltip_text = "Oferta al dueño particular: acepta o rechaza en unos días"
++	brow1.add_child(offer_btn)
++	mission_btn = UIKit.button("Aceptar misión del municipio", _accept_mission, 330)
++	side.add_child(mission_btn)
++	exp_btn = UIKit.button("Enviar expedición", _send_expedition, 330)
+ 	side.add_child(exp_btn)
+-	var legend := UIKit.label("Clic: seleccionar y mover la cámara · Revelar el mapa (expediciones, rutas comerciales) no te hace dueño: el terreno se compra en Construir → Comprar terreno.", 11, UIKit.TEXT_DIM)
++	var legend := UIKit.label("Clic: seleccionar y mover la cámara · Explorar no te hace dueño: compra al Estado (precio fijo o licitación) o haz una oferta al particular.", 11, UIKit.TEXT_DIM)
+ 	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	side.add_child(legend)
+ 	var brow := HBoxContainer.new()
+@@ -100,6 +135,7 @@ func setup(p_world: Node) -> void:
+ 	brow.add_child(UIKit.button("Cerrar", func(): set_expanded(false), 70))
+ 	EventBus.map_changed.connect(_on_map_changed)
+ 	EventBus.zones_changed.connect(_on_map_changed)
++	_rebuild_layers()
+ 	_select(Vector2i.ZERO)
+ 
+ 
+@@ -113,6 +149,17 @@ func is_expanded() -> bool:
+ 	return big_panel.visible
+ 
+ 
++func set_owner_layer(on: bool) -> void:
++	show_owner = on
++	layer_btn.text = "Capa: propiedad" if on else "Capa: biomas"
++	_rebuild_layers()
++	big_map.queue_redraw()
++
++
++func _toggle_layer() -> void:
++	set_owner_layer(not show_owner)
++
++
+ func _toggle_country() -> void:
+ 	var cr: CameraRig = world.camera_rig
+ 	if cr.is_country_view():
+@@ -122,11 +169,40 @@ func _toggle_country() -> void:
+ 
+ 
+ func _on_map_changed() -> void:
++	_rebuild_layers()
+ 	small_map.invalidate()
+ 	big_map.invalidate()
+ 	_update_info()
+ 
+ 
++## Texturas de velo (niebla) y de propiedad: una celda por territorio, filtradas al dibujar.
++func _rebuild_layers() -> void:
++	var g := terrain.gen
++	var gs = GameState
++	var img := Image.create(g.size, g.size, false, Image.FORMAT_RGBA8)
++	for cy in range(g.c0, g.c1 + 1):
++		for cx in range(g.c0, g.c1 + 1):
++			var lvl := MapSim.fog_level(gs, cx, cy)
++			var a: float = [0.0, 0.22, 0.5, 0.8][lvl]
++			img.set_pixel(cx - g.c0, cy - g.c0, Color(0.86, 0.88, 0.92, a))
++	if fog_texture == null:
++		fog_texture = ImageTexture.create_from_image(img)
++	else:
++		fog_texture.update(img)
++	if not show_owner:
++		return
++	var grid := LandSim.owner_grid(gs)
++	var oi := Image.create(g.size, g.size, false, Image.FORMAT_RGBA8)
++	var cols := [Color(0.35, 0.62, 0.95, 0.35), Color(0.78, 0.3, 0.72, 0.55), Color(1.0, 0.78, 0.2, 0.85), Color(1.0, 0.86, 0.45, 0.6), Color(0, 0, 0, 0)]
++	for j in range(g.size):
++		for i in range(g.size):
++			oi.set_pixel(i, j, cols[grid[j * g.size + i]])
++	if owner_texture == null:
++		owner_texture = ImageTexture.create_from_image(oi)
++	else:
++		owner_texture.update(oi)
++
++
+ func _process(delta: float) -> void:
+ 	_redraw_t -= delta
+ 	if _redraw_t <= 0.0:
+@@ -143,7 +219,7 @@ func _unhandled_input(event: InputEvent) -> void:
+ 		get_viewport().set_input_as_handled()
+ 
+ 
+-## Clic en el mapa: mueve la cámara (y en el grande selecciona el chunk).
++## Clic en el mapa: mueve la cámara (y en el grande selecciona el territorio).
+ func clicked(world_pos: Vector2, big: bool) -> void:
+ 	var cr: CameraRig = world.camera_rig
+ 	cr.focus(Vector3(world_pos.x, 0, world_pos.y), -1.0)
+@@ -152,7 +228,10 @@ func clicked(world_pos: Vector2, big: bool) -> void:
+ 
+ 
+ func _select(c: Vector2i) -> void:
++	var changed := c != selected
+ 	selected = c
++	if changed and amount_spin != null and MapSim.in_country_chunk(GameState, c.x, c.y):
++		amount_spin.value = LandSim.remaining_price(GameState, c.x, c.y)
+ 	_update_info()
+ 
+ 
+@@ -165,46 +244,109 @@ func _update_info() -> void:
+ 	var lines := []
+ 	var inside := MapSim.in_country_chunk(gs, c.x, c.y)
+ 	lines.append("[b]Territorio (%d, %d)[/b] · a %.1f km de la plaza" % [c.x, c.y, center.length() / 1000.0])
++	for b in [buy_btn, tender_btn, offer_btn, mission_btn, exp_btn]:
++		b.disabled = true
+ 	if not inside:
+ 		lines.append("Fuera del país.")
+-		exp_btn.disabled = true
+ 		info.text = "\n".join(lines)
+ 		return
+ 	var rev := MapSim.is_revealed(gs, c.x, c.y)
+-	var mun := MapSim.municipality_at(gs, center.x, center.y)
+-	lines.append("Municipio: %s" % ("con pueblo (%s)" % str(mun.get("placeholder_name", GameState.settings.get("town_name", ""))) if bool(mun.get("town", false)) else "zona libre, sin pueblo"))
++	# Municipio: alcalde, departamento y política.
++	var reg := MapSim.region_at(gs, center.x, center.y)
++	var zid := int(reg.get("municipality_id", -1))
++	var mayor: Dictionary = reg.get("mayor", {})
++	lines.append("[b][color=#f2c65a]%s[/color][/b] · dpto. %s · %s" % [reg.get("name", ""), reg.get("department_name", ""), "con pueblo (%s hab.)" % Fmt.thousands(float(reg.get("population", 0))) if bool(reg.get("town", false)) else "zona rural"])
++	lines.append("%s: %s (%s)" % [mayor.get("title", "Alcalde"), mayor.get("name", ""), MunicipalSim.stance_label(str(mayor.get("stance", "")))])
++	lines.append("[color=#bbc]%s[/color]" % MunicipalSim.policy_text(gs, zid))
+ 	if rev:
+ 		var cl := MapSim.climate_at(center.x, center.y, gs)
+ 		lines.append("Bioma: %s · altura %d m · %+.1f °C respecto al pueblo" % [MapSim.biome_label(str(cl["biome"])), int(cl["altitude"]), float(cl["temp_offset_c"])])
+-		var owned := 0
+-		for zy in range(c.y * 5, c.y * 5 + 5):
+-			for zx in range(c.x * 5, c.x * 5 + 5):
+-				if gs.is_zone_unlocked(zx, zy):
+-					owned += 1
+-		lines.append("Tu terreno aquí: %d de 25 parcelas" % owned if owned > 0 else "Dueño: Estado (se compra por parcelas de 80 m)")
++		var own := LandSim.owner_info(gs, c.x, c.y)
++		var price := LandSim.remaining_price(gs, c.x, c.y)
++		lines.append("")
++		lines.append("[b]Dueño:[/b] %s%s" % [LandSim.owner_label(own), " (tuyas %d de 25 parcelas)" % int(own["player_parcels"]) if int(own["player_parcels"]) > 0 and str(own["owner"]) != "jugador" else ""])
++		if str(own["owner"]) != "jugador":
++			lines.append("[b]Precio de mercado:[/b] %s (%s por parcela) · índice del municipio ×%.2f" % [Fmt.money(price), Fmt.money(price / maxf(1.0, 25.0 - float(own["player_parcels"]))), LandSim.index_of(gs, zid) * LandSim.demand_of(gs, zid)])
++		var amt := float(amount_spin.value)
++		buy_btn.text = "Comprar %s" % Fmt.money(price)
++		buy_btn.disabled = LandSim.buy_block_reason(gs, c.x, c.y, "fijo") != ""
++		buy_btn.tooltip_text = LandSim.buy_block_reason(gs, c.x, c.y, "fijo") if buy_btn.disabled else "Comprar al Estado a precio fijo"
++		tender_btn.disabled = LandSim.buy_block_reason(gs, c.x, c.y, "licitacion", amt) != ""
++		tender_btn.tooltip_text = LandSim.buy_block_reason(gs, c.x, c.y, "licitacion", amt) if tender_btn.disabled else "Pujar %s en la licitación" % Fmt.money(amt)
++		offer_btn.disabled = LandSim.buy_block_reason(gs, c.x, c.y, "oferta", amt) != ""
++		offer_btn.tooltip_text = LandSim.buy_block_reason(gs, c.x, c.y, "oferta", amt) if offer_btn.disabled else "Ofrecer %s al dueño" % Fmt.money(amt)
+ 		exp_btn.text = "Explorado"
+-		exp_btn.disabled = true
+ 	else:
+-		lines.append("[color=#aab]Sin explorar: se ve en la niebla.[/color]")
++		lines.append("[color=#aab]Sin explorar: se ve bajo el velo.[/color]")
+ 		var reason := MapSim.expedition_block_reason(gs, c.x, c.y)
+ 		lines.append("Expedición: %s · %d días%s" % [Fmt.money(MapSim.expedition_cost(gs, c.x, c.y)), MapSim.expedition_days(gs, c.x, c.y), "" if reason == "" else "\n[color=#e88]%s[/color]" % reason])
+ 		exp_btn.text = "Enviar expedición (%s)" % Fmt.money(MapSim.expedition_cost(gs, c.x, c.y))
+ 		exp_btn.disabled = reason != ""
++	# Misiones regionales del municipio.
++	var rm: Dictionary = gs.map.get("region_missions", {})
++	var any := false
++	for m in rm.get("available", []):
++		if int(m["zone"]) == zid:
++			if not any:
++				lines.append("")
++				lines.append("[b]Misión propuesta por %s[/b]" % str(m.get("mayor", "")))
++			any = true
++			lines.append("· %s — recompensa %s%s" % [m["label"], Fmt.money(float(m.get("reward_money", 0.0))), " y %d meses sin impuesto local" % int(m.get("reward_tax_months", 0)) if int(m.get("reward_tax_months", 0)) > 0 else ""])
++			mission_btn.disabled = false
++	for m in rm.get("active", []):
++		if int(m["zone"]) == zid:
++			lines.append("· En curso: %s (%s)" % [m["label"], MunicipalSim.mission_progress(gs, m)])
++	# Ofertas y licitaciones pendientes.
++	var pend := []
++	for o in gs.map.get("land_offers", []):
++		pend.append("· Oferta a %s por (%d, %d): %s, responde en %d días" % [o["seller"], int(o["cx"]), int(o["cy"]), Fmt.money(float(o["amount"])), maxi(0, int(o["reply_day"]) - gs.today())])
++	for t in gs.map.get("land_tenders", []):
++		pend.append("· Licitación (%d, %d): pujaste %s, se adjudica en %d días" % [int(t["cx"]), int(t["cy"]), Fmt.money(float(t["bid"])), maxi(0, int(t["close_day"]) - gs.today())])
+ 	var active: Array = gs.map.get("expeditions", [])
+-	if not active.is_empty():
++	for ex in active:
++		pend.append("· Expedición a (%d, %d): faltan %d días" % [int(ex["cx"]), int(ex["cy"]), int(ex["days_left"])])
++	if not pend.is_empty():
+ 		lines.append("")
+-		lines.append("[b]Expediciones en camino[/b]")
+-		for ex in active:
+-			lines.append("· (%d, %d): faltan %d días" % [int(ex["cx"]), int(ex["cy"]), int(ex["days_left"])])
++		lines.append("[b]En trámite[/b]")
++		lines.append_array(pend)
+ 	lines.append("")
+ 	lines.append("Explorado: %d de %d territorios" % [MapSim.revealed_count(gs), terrain.gen.size * terrain.gen.size])
+ 	info.text = "\n".join(lines)
+ 
+ 
+-func _send_expedition() -> void:
+-	var err := MapSim.start_expedition(GameState, selected.x, selected.y)
++func _toast(err: String) -> void:
+ 	if err != "" and world.hud:
+ 		world.hud.toast(err, "jugador")
++
++
++func _send_expedition() -> void:
++	_toast(MapSim.start_expedition(GameState, selected.x, selected.y))
++	_update_info()
++
++
++func _buy_fixed() -> void:
++	_toast(LandSim.buy_from_state(GameState, selected.x, selected.y))
++	_update_info()
++
++
++func _tender() -> void:
++	_toast(LandSim.start_tender(GameState, selected.x, selected.y, float(amount_spin.value)))
++	_update_info()
++
++
++func _offer() -> void:
++	_toast(LandSim.make_offer(GameState, selected.x, selected.y, float(amount_spin.value)))
++	_update_info()
++
++
++func _accept_mission() -> void:
++	var gs = GameState
++	var reg := MapSim.region_at(gs, selected.x * CountryGen.CHUNK, selected.y * CountryGen.CHUNK)
++	var avail: Array = gs.map.get("region_missions", {}).get("available", [])
++	for i in range(avail.size()):
++		if int(avail[i]["zone"]) == int(reg.get("municipality_id", -1)):
++			_toast(MunicipalSim.accept_mission(gs, i))
++			break
+ 	_update_info()
+ 
+ 
+@@ -222,6 +364,7 @@ class MapView:
+ 	func _ready() -> void:
+ 		mouse_filter = Control.MOUSE_FILTER_STOP
+ 		clip_contents = true
++		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+ 
+ 	func invalidate() -> void:
+ 		queue_redraw()
+@@ -268,24 +411,26 @@ class MapView:
+ 			return
+ 		var g := t.gen
+ 		var gs = GameState
+-		draw_rect(Rect2(Vector2.ZERO, size), Color(0.74, 0.77, 0.82))
++		var full := Rect2(Vector2.ZERO, size)
++		draw_rect(full, Color(0.74, 0.77, 0.82))
+ 		# Biomas (textura que llena el terreno al construir la capa lejana).
+ 		if t.map_texture != null:
+-			var src := Rect2(t.ring * 8, t.ring * 8, g.size * 8, g.size * 8)
+-			draw_texture_rect_region(t.map_texture, Rect2(Vector2.ZERO, size), src)
+-		var cpx := size.x / g.size
+-		# Niebla de lo no explorado.
+-		for cy in range(g.c0, g.c1 + 1):
+-			for cx in range(g.c0, g.c1 + 1):
+-				if not MapSim.is_revealed(gs, cx, cy):
+-					var x0 := roundf((cx - g.c0) * cpx)
+-					var y0 := roundf((cy - g.c0) * cpx)
+-					draw_rect(Rect2(x0, y0, roundf((cx - g.c0 + 1) * cpx) - x0, roundf((cy - g.c0 + 1) * cpx) - y0), Color(0.8, 0.83, 0.88, 0.62))
+-		# Fronteras tenues entre municipios.
++			var src := Rect2(t.ring * Terrain.MAP_PX, t.ring * Terrain.MAP_PX, g.size * Terrain.MAP_PX, g.size * Terrain.MAP_PX)
++			draw_texture_rect_region(t.map_texture, full, src)
++		# Velo de lo no explorado (translúcido) y capa de propiedad.
++		if owner_map.fog_texture != null:
++			draw_texture_rect(owner_map.fog_texture, full, false)
++		if big and owner_map.show_owner and owner_map.owner_texture != null:
++			draw_texture_rect(owner_map.owner_texture, full, false)
++		# Fronteras entre municipios.
+ 		if _borders.is_empty():
+ 			_build_borders()
+-		for i in range(0, _borders.size(), 2):
+-			draw_line(to_px(_borders[i]), to_px(_borders[i + 1]), Color(1, 1, 1, 0.38), 1.0)
++		var pts := PackedVector2Array()
++		pts.resize(_borders.size())
++		for i in range(_borders.size()):
++			pts[i] = to_px(_borders[i])
++		if not pts.is_empty():
++			draw_multiline(pts, Color(1, 1, 1, 0.4), 1.0)
+ 		# Tu terreno (parcelas de 80 m).
+ 		var zs: float = gs.MAP_SIZE / gs.ZONE_GRID
+ 		for z in gs.unlocked_zones:
+@@ -304,34 +449,44 @@ class MapView:
+ 			var dp := to_px(Vector2(float(d.get("x", 0.0)), float(d.get("z", 0.0))))
+ 			draw_circle(dp, 3.0 if big else 2.0, Color(0, 0, 0, 0.7))
+ 			draw_circle(dp, 2.2 if big else 1.4, RegionSim.resource_color(str(d.get("type", ""))))
+-		# Pueblos (también los que siguen en la niebla).
++		# Pueblos (también los que siguen en la niebla) y nombres de los municipios.
+ 		var font := get_theme_default_font()
+ 		for z in g.zones:
+-			if not bool(z["town"]):
+-				continue
+-			var tpx := to_px(z["town_pos"])
+-			var ch: Vector2i = z["town_chunk"]
+-			var rev := MapSim.is_revealed(gs, ch.x, ch.y)
+-			if bool(z["player"]):
+-				draw_circle(tpx, 5.5 if big else 4.0, Color(0, 0, 0, 0.8))
+-				draw_circle(tpx, 4.2 if big else 3.0, Color(1.0, 0.8, 0.2))
+-			else:
+-				draw_circle(tpx, 3.6 if big else 2.6, Color(0, 0, 0, 0.6))
+-				draw_circle(tpx, 2.6 if big else 1.8, Color(1, 1, 1) if rev else Color(0.6, 0.64, 0.7))
++			var zid := int(z["id"])
++			var rev := MapSim.zone_revealed_any(gs, zid)
++			var player := bool(z["player"])
++			var anchor: Vector2 = to_px(z["centroid"])
++			if bool(z["town"]):
++				var tpx := to_px(z["town_pos"])
++				anchor = tpx
++				if player:
++					draw_circle(tpx, 5.5 if big else 4.0, Color(0, 0, 0, 0.8))
++					draw_circle(tpx, 4.2 if big else 3.0, Color(1.0, 0.8, 0.2))
++				else:
++					draw_circle(tpx, 3.6 if big else 2.6, Color(0, 0, 0, 0.6))
++					draw_circle(tpx, 2.6 if big else 1.8, Color(1, 1, 1) if rev else Color(0.6, 0.64, 0.7))
+ 			if big:
+-				var nm := str(z.get("placeholder_name", ""))
+-				if bool(z["player"]):
+-					nm = str(gs.settings.get("town_name", nm))
+-				draw_string_outline(font, tpx + Vector2(6, 4), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, 3, Color(0, 0, 0, 0.8))
+-				draw_string(font, tpx + Vector2(6, 4), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1, 0.9, 0.5) if bool(z["player"]) else (Color.WHITE if rev else Color(0.85, 0.88, 0.92)))
++				var nm := str(gs.settings.get("town_name", "")) if player else MunicipalSim.name_of(gs, zid)
++				var fs := 13 if player else 11
++				var off := Vector2(6, 4) if bool(z["town"]) else Vector2(-font.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x * 0.5, 4)
++				draw_string_outline(font, anchor + off, nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 3, Color(0, 0, 0, 0.8))
++				draw_string(font, anchor + off, nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 0.9, 0.5) if player else (Color.WHITE if rev else Color(0.85, 0.88, 0.92, 0.85)))
+ 		# Selección (mapa grande).
+ 		if big and MapSim.in_country_chunk(gs, owner_map.selected.x, owner_map.selected.y):
+ 			var sr := CountryGen.chunk_rect(owner_map.selected.x, owner_map.selected.y)
+ 			draw_rect(Rect2(to_px(sr.position), to_px(sr.end) - to_px(sr.position)), Color(1, 1, 1, 0.95), false, 2.0)
++		# Leyenda de la capa de propiedad.
++		if big and owner_map.show_owner:
++			var y := size.y - 70.0
++			draw_rect(Rect2(6, y - 6, 150, 66), Color(0, 0, 0, 0.55))
++			var items := [["Estado", Color(0.35, 0.62, 0.95)], ["Particulares", Color(0.78, 0.3, 0.72)], ["Tuyo", Color(1.0, 0.78, 0.2)]]
++			for i in range(items.size()):
++				draw_rect(Rect2(12, y + i * 18, 12, 12), items[i][1])
++				draw_string(font, Vector2(30, y + i * 18 + 11), str(items[i][0]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+ 		# Encuadre de la cámara.
+ 		var cr: CameraRig = owner_map.world.camera_rig
+ 		if cr:
+ 			var cp := to_px(Vector2(cr.position.x, cr.position.z))
+ 			var half_w: float = maxf(4.0, cr.distance * 0.75 / _bounds().size.x * size.x)
+ 			draw_rect(Rect2(cp - Vector2(half_w, half_w * 0.62), Vector2(half_w * 2.0, half_w * 1.24)), Color(1, 1, 1, 0.9), false, 1.5)
+-		draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, 0.35), false, 1.0)
++		draw_rect(full, Color(1, 1, 1, 0.35), false, 1.0)
+diff --git a/scripts/world/country_gen.gd b/scripts/world/country_gen.gd
+index be0e66b..41c2deb 100644
+--- a/scripts/world/country_gen.gd
++++ b/scripts/world/country_gen.gd
+@@ -52,6 +52,8 @@ var x_max := 0.0
+ var center := Vector2.ZERO
+ var half_ext := 6000.0
+ var coast_sides: Array = []
++var scale := 1.0               # escala de los rasgos grandes (país / 32 chunks)
++var coast_w := 1300.0
+ 
+ # Parámetros del perfil (cacheados para los hilos)
+ var _mountain := 0.5
+@@ -99,7 +101,7 @@ func init(p_type: String, p_seed: int, p_country: String) -> CountryGen:
+ 	water_level = float(cfg.get("water_level", 0.0))
+ 	profile = country_def(p_country)
+ 	terrain_p = profile.get("terrain", {})
+-	size = clampi(int(profile.get("size", 30)), 8, 64)
++	size = clampi(int(profile.get("size", 64)), 8, 96)
+ 	c0 = -(size / 2)
+ 	c1 = c0 + size - 1
+ 	x_min = c0 * CHUNK - HALF_CHUNK
+@@ -125,17 +127,22 @@ func init(p_type: String, p_seed: int, p_country: String) -> CountryGen:
+ 	_setup(_ridge, p_seed + 23, 0.009, 3)
+ 	_setup(_forest, p_seed + 37, 0.012, 2)
+ 	var cs := p_seed * 7 + p_country.hash() % 100000
+-	_setup(_cont, cs + 101, 1.0 / 3200.0, 4)
++	# Fase 9B: los rasgos grandes (continente, cordilleras, clima, islas) crecen con el país para que
++	# un país de 25 km tenga regiones amplias y no un mosaico repetido.
++	scale = clampf(size / 32.0, 1.0, 2.6)
++	var sq := sqrt(scale)
++	coast_w = 1300.0 * sq
++	_setup(_cont, cs + 101, 1.0 / (3200.0 * scale), 4)
+ 	_setup(_hill, cs + 102, 1.0 / 380.0, 3)
+-	_setup(_mount, cs + 103, 1.0 / 2600.0, 3)
+-	_setup(_mridge, cs + 104, 1.0 / 1150.0, 4)
+-	_setup(_river, cs + 105, 1.0 / 2300.0, 2)
++	_setup(_mount, cs + 103, 1.0 / (2600.0 * scale), 3)
++	_setup(_mridge, cs + 104, 1.0 / (1150.0 * sq), 4)
++	_setup(_river, cs + 105, 1.0 / (2300.0 * sq), 2)
+ 	_setup(_warp, cs + 106, 1.0 / 900.0, 2)
+-	_setup(_lake, cs + 107, 1.0 / 700.0, 2)
+-	_setup(_hum, cs + 108, 1.0 / 2400.0, 3)
+-	_setup(_temp, cs + 109, 1.0 / 3000.0, 2)
+-	_setup(_island, cs + 110, 1.0 / 1500.0, 3)
+-	_setup(_plat, cs + 111, 1.0 / 1700.0, 3)
++	_setup(_lake, cs + 107, 1.0 / (700.0 * sq), 2)
++	_setup(_hum, cs + 108, 1.0 / (2400.0 * scale), 3)
++	_setup(_temp, cs + 109, 1.0 / (3000.0 * scale), 2)
++	_setup(_island, cs + 110, 1.0 / (1500.0 * sq), 3)
++	_setup(_plat, cs + 111, 1.0 / (1700.0 * sq), 3)
+ 	_build_zones()
+ 	return self
+ 
+@@ -205,8 +212,7 @@ func _country(x: float, z: float) -> Vector2:
+ 	# Costas del país (lados con mar) e islas: se calculan primero para los deltas.
+ 	var land := 1.0
+ 	var near_sea := 0.0
+-	var coast_w := 1300.0
+-	var jag := _island.get_noise_2d(x, z) * 520.0
++	var jag := _island.get_noise_2d(x, z) * 520.0 * sqrt(scale)
+ 	var all_sides := coast_sides.has("todos")
+ 	var dmin := 1e9
+ 	if all_sides or coast_sides.has("oeste"):
+@@ -225,7 +231,7 @@ func _country(x: float, z: float) -> Vector2:
+ 		land = minf(land, smoothstep(-0.04, 0.1, il))
+ 		near_sea = maxf(near_sea, 1.0 - smoothstep(0.1, 0.4, il))
+ 	# El entorno del pueblo siempre es tierra firme.
+-	var town_guard := 1.0 - smoothstep(900.0, 1700.0, Vector2(x, z).length())
++	var town_guard := 1.0 - smoothstep(1100.0, 2200.0, Vector2(x, z).length())
+ 	land = maxf(land, town_guard)
+ 	# Relieve base y colinas.
+ 	var e := 5.5 + cont * 6.0 + _hill.get_noise_2d(x, z) * (3.0 + 5.0 * (1.0 - _mountain * 0.5))
+@@ -434,50 +440,90 @@ func _build_zones() -> void:
+ 	zones = []
+ 	var rng := RandomNumberGenerator.new()
+ 	rng.seed = seed_value * 53 + country_id.hash() % 10000 + 17
+-	var n := clampi(int(profile.get("zones", size * size / 36)), 4, 80)
++	# Fase 9B: municipios grandes (de 6×6 a 10×10 chunks, unos 30–60 por país).
++	var n := clampi(int(profile.get("zones", size * size / 70)), 4, 90)
+ 	var ratio := float(profile.get("town_ratio", 0.6))
+-	var seeds: Array[Vector2i] = [Vector2i.ZERO]
+-	var min_gap := float(size) / sqrt(float(n)) * 0.7
++	var seeds: Array[Vector2] = [Vector2.ZERO]
++	var min_gap := float(size) / sqrt(float(n)) * 0.72
+ 	var tries := 0
+-	while seeds.size() < n and tries < n * 60:
++	while seeds.size() < n and tries < n * 80:
+ 		tries += 1
+-		var p := Vector2i(rng.randi_range(c0 + 1, c1 - 1), rng.randi_range(c0 + 1, c1 - 1))
++		var p := Vector2(rng.randi_range(c0 + 2, c1 - 2), rng.randi_range(c0 + 2, c1 - 2))
+ 		var ok := true
+ 		for s in seeds:
+-			if Vector2(p - s).length() < min_gap:
++			if (p - s).length() < min_gap:
+ 				ok = false
+ 				break
+ 		if ok:
+ 			seeds.append(p)
++	# Relajación de Lloyd (2 pasadas): tamaños más parejos. El municipio 0 (jugador) queda en la plaza.
++	var total := size * size
++	_zone_of_chunk.resize(total)
++	for it in range(2):
++		var sums: Array[Vector2] = []
++		var counts := PackedInt32Array()
++		sums.resize(seeds.size())
++		counts.resize(seeds.size())
++		for i in range(seeds.size()):
++			sums[i] = Vector2.ZERO
++		for cy in range(c0, c1 + 1):
++			for cx in range(c0, c1 + 1):
++				var best := _nearest_seed(seeds, Vector2(cx, cy))
++				sums[best] += Vector2(cx, cy)
++				counts[best] += 1
++		for i in range(1, seeds.size()):
++			if counts[i] > 0:
++				seeds[i] = sums[i] / counts[i]
+ 	for i in range(seeds.size()):
+-		zones.append({"id": i, "seed": seeds[i], "town": false, "player": i == 0, "town_chunk": seeds[i], "town_pos": Vector2(seeds[i]) * CHUNK, "chunks": 0, "land": 0})
+-	_zone_of_chunk.resize(size * size)
++		var sc := Vector2i(roundi(seeds[i].x), roundi(seeds[i].y))
++		zones.append({"id": i, "seed": sc, "town": false, "player": i == 0, "town_chunk": sc, "town_pos": Vector2(sc) * CHUNK,
++				"chunks": 0, "land": 0, "centroid": Vector2.ZERO, "neighbors": [], "bbox": Rect2i()})
++	# Asignación final con bordes irregulares (ruido suave + un poco de ruido por chunk).
++	var sums2: Array[Vector2] = []
++	sums2.resize(seeds.size())
++	for i in range(seeds.size()):
++		sums2[i] = Vector2.ZERO
+ 	for cy in range(c0, c1 + 1):
+ 		for cx in range(c0, c1 + 1):
+-			var best := 0
+-			var bd := 1e9
+-			var jitter := Vector2(_warp.get_noise_2d(cx * 97.0, cy * 97.0), _warp.get_noise_2d(cy * 97.0 + 500.0, cx * 97.0)) * 1.6
+-			for i in range(seeds.size()):
+-				var dd := (Vector2(cx, cy) + jitter).distance_squared_to(Vector2(seeds[i]))
+-				if dd < bd:
+-					bd = dd
+-					best = i
++			var jitter := Vector2(_warp.get_noise_2d(cx * 240.0, cy * 240.0), _warp.get_noise_2d(cy * 240.0 + 5000.0, cx * 240.0)) * 2.6
++			jitter += Vector2(_warp.get_noise_2d(cx * 97.0, cy * 97.0), _warp.get_noise_2d(cy * 97.0 + 500.0, cx * 97.0)) * 0.7
++			var best := _nearest_seed(seeds, Vector2(cx, cy) + jitter)
++			if maxi(absi(cx), absi(cy)) <= 1:
++				best = 0   # el pueblo del jugador y sus vecinos siempre son de su municipio
+ 			_zone_of_chunk[(cy - c0) * size + (cx - c0)] = best
+-			zones[best]["chunks"] = int(zones[best]["chunks"]) + 1
++			var z: Dictionary = zones[best]
++			z["chunks"] = int(z["chunks"]) + 1
++			sums2[best] += Vector2(cx, cy)
+ 			if height(cx * CHUNK, cy * CHUNK) > water_level + 1.0:
+-				zones[best]["land"] = int(zones[best]["land"]) + 1
+-	# Pueblos: el del jugador siempre; los demás según town_ratio, en un chunk de tierra cerca de la semilla.
++				z["land"] = int(z["land"]) + 1
++			var bb: Rect2i = z["bbox"]
++			z["bbox"] = Rect2i(cx, cy, 1, 1) if bb.size == Vector2i.ZERO else bb.merge(Rect2i(cx, cy, 1, 1))
++	for z in zones:
++		if int(z["chunks"]) > 0:
++			z["centroid"] = sums2[int(z["id"])] / int(z["chunks"]) * CHUNK
++	# Vecindad entre municipios.
++	for cy in range(c0, c1 + 1):
++		for cx in range(c0, c1 + 1):
++			var zi := zone_index(cx, cy)
++			for d in [Vector2i(1, 0), Vector2i(0, 1)]:
++				var zj := zone_index(cx + d.x, cy + d.y)
++				if zj >= 0 and zj != zi:
++					var ni: Array = zones[zi]["neighbors"]
++					if not ni.has(zj):
++						ni.append(zj)
++						(zones[zj]["neighbors"] as Array).append(zi)
++	# Pueblos: el del jugador siempre; los demás según town_ratio, en un chunk de tierra cerca del centro.
+ 	for z in zones:
+ 		if bool(z["player"]):
+ 			z["town"] = true
+ 			z["town_chunk"] = Vector2i.ZERO
+ 			z["town_pos"] = Vector2.ZERO
+ 			continue
+-		if int(z["land"]) < 2 or rng.randf() > ratio:
++		if int(z["land"]) < 6 or rng.randf() > ratio:
+ 			continue
+-		var s: Vector2i = z["seed"]
++		var s := Vector2i(roundi(float(z["centroid"].x) / CHUNK), roundi(float(z["centroid"].y) / CHUNK))
+ 		var found := false
+-		for r in range(0, 4):
++		for r in range(0, 6):
+ 			for dy in range(-r, r + 1):
+ 				for dx in range(-r, r + 1):
+ 					if found or maxi(absi(dx), absi(dy)) != r:
+@@ -487,13 +533,37 @@ func _build_zones() -> void:
+ 						continue
+ 					var p := Vector2(c) * CHUNK + Vector2(rng.randf_range(-120, 120), rng.randf_range(-120, 120))
+ 					var h := height(p.x, p.y)
+-					if h > water_level + 1.5 and h < 60.0:
++					if h > water_level + 1.5 and h < 60.0 and height(p.x + 40.0, p.y) > water_level + 1.0 and height(p.x, p.y + 40.0) > water_level + 1.0:
+ 						z["town"] = true
+ 						z["town_chunk"] = c
+ 						z["town_pos"] = p
+ 						found = true
+ 
+ 
++func _nearest_seed(seeds: Array[Vector2], p: Vector2) -> int:
++	var best := 0
++	var bd := 1e18
++	for i in range(seeds.size()):
++		var dd := p.distance_squared_to(seeds[i])
++		if dd < bd:
++			bd = dd
++			best = i
++	return best
++
++
++## Chunks de un municipio (Vector2i).
++func zone_chunks(zid: int) -> Array:
++	var out := []
++	if zid < 0 or zid >= zones.size():
++		return out
++	var bb: Rect2i = zones[zid]["bbox"]
++	for cy in range(bb.position.y, bb.end.y):
++		for cx in range(bb.position.x, bb.end.x):
++			if zone_index(cx, cy) == zid:
++				out.append(Vector2i(cx, cy))
++	return out
++
++
+ ## Municipio de un chunk (-1 fuera del país).
+ func zone_index(cx: int, cy: int) -> int:
+ 	if not in_country_chunk(cx, cy):
+diff --git a/scripts/world/country_overlay.gd b/scripts/world/country_overlay.gd
+index 7574f21..548df37 100644
+--- a/scripts/world/country_overlay.gd
++++ b/scripts/world/country_overlay.gd
+@@ -1,17 +1,19 @@
+ class_name CountryOverlay
+ extends Node3D
+-## Fase 9A — Capa del país vista desde lejos: líneas tenues entre municipios (Voronoi de chunks) y
+-## marcadores de los pueblos (también los que siguen en la niebla). Se desvanece al acercarse.
++## Fase 9A/9B — Capa del país vista desde lejos:
++## - Nombres grandes de los municipios (legibles a gran altura; el tuyo en dorado).
++## - Pueblos NPC: punto y casco urbano low-poly proporcional a su población (dos MultiMesh para todo el
++##   país: paredes y techos, instancias baratas).
++## Las fronteras entre municipios se dibujan en el shader del terreno (terrain_chunk.gdshader).
+ 
+-const LINE_WIDTH := 22.0
+-const LINE_STEP := 50.0
+-const SHOW_FROM := 700.0      # altura de cámara desde la que se ven líneas y etiquetas
+-const FULL_AT := 2200.0
++const SHOW_FROM := 600.0      # altura de cámara desde la que se ven las etiquetas
++const FULL_AT := 1800.0
+ 
+ var terrain: Terrain
+-var lines: MeshInstance3D
+-var line_mat: StandardMaterial3D
+ var markers: Array = []        # [{node, dot, label, zone}]
++var labels: Array = []         # [{label, zone}] nombres de municipios sin pueblo
++var houses_walls: MultiMeshInstance3D
++var houses_roofs: MultiMeshInstance3D
+ var dot_mat_player: StandardMaterial3D
+ var dot_mat_town: StandardMaterial3D
+ var dot_mat_fog: StandardMaterial3D
+@@ -19,16 +21,11 @@ var dot_mat_fog: StandardMaterial3D
+ 
+ func setup(t: Terrain) -> void:
+ 	terrain = t
+-	line_mat = StandardMaterial3D.new()
+-	line_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+-	line_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+-	line_mat.albedo_color = Color(1, 1, 1, 0.0)
+-	line_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+ 	dot_mat_player = _dot_mat(Color(1.0, 0.8, 0.2))
+-	dot_mat_town = _dot_mat(Color(0.95, 0.95, 0.95))
+-	dot_mat_fog = _dot_mat(Color(0.62, 0.66, 0.72))
+-	_build_lines()
++	dot_mat_town = _dot_mat(Color(0.97, 0.95, 0.9))
++	dot_mat_fog = _dot_mat(Color(0.72, 0.74, 0.78))
+ 	_build_markers()
++	_build_houses()
+ 	refresh()
+ 
+ 
+@@ -39,78 +36,52 @@ func _dot_mat(c: Color) -> StandardMaterial3D:
+ 	return m
+ 
+ 
+-func _h(x: float, z: float) -> float:
+-	return maxf(terrain.gen.height(x, z), terrain.water_level) + 4.0
+-
+-
+-## Cintas horizontales sobre los bordes de chunk donde cambia el municipio (solo sobre tierra).
+-func _build_lines() -> void:
+-	var g := terrain.gen
+-	var verts := PackedVector3Array()
+-	for cy in range(g.c0, g.c1 + 1):
+-		for cx in range(g.c0, g.c1 + 1):
+-			var zi := g.zone_index(cx, cy)
+-			# Borde este (con cx + 1) y sur (con cy + 1).
+-			if cx < g.c1 and g.zone_index(cx + 1, cy) != zi:
+-				var x := cx * CountryGen.CHUNK + CountryGen.HALF_CHUNK
+-				_ribbon(verts, Vector2(x, cy * CountryGen.CHUNK - CountryGen.HALF_CHUNK), Vector2(x, cy * CountryGen.CHUNK + CountryGen.HALF_CHUNK))
+-			if cy < g.c1 and g.zone_index(cx, cy + 1) != zi:
+-				var z := cy * CountryGen.CHUNK + CountryGen.HALF_CHUNK
+-				_ribbon(verts, Vector2(cx * CountryGen.CHUNK - CountryGen.HALF_CHUNK, z), Vector2(cx * CountryGen.CHUNK + CountryGen.HALF_CHUNK, z))
+-	if lines:
+-		lines.queue_free()
+-	var arrays := []
+-	arrays.resize(Mesh.ARRAY_MAX)
+-	arrays[Mesh.ARRAY_VERTEX] = verts
+-	var mesh := ArrayMesh.new()
+-	if verts.size() > 0:
+-		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+-	lines = MeshInstance3D.new()
+-	lines.name = "ZoneLines"
+-	lines.mesh = mesh
+-	lines.material_override = line_mat
+-	lines.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+-	add_child(lines)
+-
+-
+-func _ribbon(verts: PackedVector3Array, a: Vector2, b: Vector2) -> void:
+-	var n := maxi(1, int(a.distance_to(b) / LINE_STEP))
+-	var dir := (b - a).normalized()
+-	var side := Vector2(-dir.y, dir.x) * LINE_WIDTH * 0.5
+-	for k in range(n):
+-		var p0 := a.lerp(b, float(k) / n)
+-		var p1 := a.lerp(b, float(k + 1) / n)
+-		var q0 := p0 - side
+-		var q1 := p0 + side
+-		var q2 := p1 + side
+-		var q3 := p1 - side
+-		# Solo sobre tierra: las fronteras no cruzan el mar abierto.
+-		if terrain.gen.height(p0.x, p0.y) < terrain.water_level - 3.0 and terrain.gen.height(p1.x, p1.y) < terrain.water_level - 3.0:
+-			continue
+-		var v0 := Vector3(q0.x, _h(q0.x, q0.y), q0.y)
+-		var v1 := Vector3(q1.x, _h(q1.x, q1.y), q1.y)
+-		var v2 := Vector3(q2.x, _h(q2.x, q2.y), q2.y)
+-		var v3 := Vector3(q3.x, _h(q3.x, q3.y), q3.y)
+-		verts.append_array(PackedVector3Array([v0, v1, v2, v0, v2, v3]))
++func _ground(p: Vector2) -> float:
++	return maxf(terrain.gen.height(p.x, p.y), terrain.water_level)
++
++
++func _name_of(z: Dictionary) -> String:
++	if bool(z["player"]):
++		return str(GameState.settings.get("town_name", "Tu pueblo"))
++	return MunicipalSim.name_of(GameState, int(z["id"]))
++
++
++func _make_label(text: String, size: int) -> Label3D:
++	var label := Label3D.new()
++	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
++	label.fixed_size = true
++	label.pixel_size = 0.0006
++	label.font_size = size
++	label.outline_size = maxi(8, size / 4)
++	label.no_depth_test = true
++	label.render_priority = 2
++	label.outline_modulate = Color(0.05, 0.06, 0.08, 0.9)
++	label.text = text
++	return label
+ 
+ 
+ func _build_markers() -> void:
+ 	for m in markers:
+ 		(m["node"] as Node).queue_free()
++	for l in labels:
++		(l["label"] as Node).queue_free()
+ 	markers = []
+-	var names: Array = GameData.extra("resources").get("place_names", []).duplicate()
+-	var town_name := str(GameState.settings.get("town_name", "Tu pueblo"))
+-	names.erase(town_name)
++	labels = []
+ 	for z in terrain.gen.zones:
++		var nm := _name_of(z)
++		z["placeholder_name"] = nm
+ 		if not bool(z["town"]):
++			# Municipio sin pueblo: solo su nombre en el centro (más pequeño).
++			var c: Vector2 = z["centroid"]
++			var lb := _make_label(nm, 30)
++			lb.position = Vector3(c.x, _ground(c) + 30.0, c.y)
++			add_child(lb)
++			labels.append({"label": lb, "zone": z})
+ 			continue
+ 		var p: Vector2 = z["town_pos"]
+ 		var node := Node3D.new()
+-		node.position = Vector3(p.x, maxf(terrain.gen.height(p.x, p.y), terrain.water_level), p.y)
++		node.position = Vector3(p.x, _ground(p), p.y)
+ 		add_child(node)
+-		var player := bool(z["player"])
+-		if not player:
+-			node.add_child(_houses(int(z["id"])))
+ 		var dot := MeshInstance3D.new()
+ 		var sm := SphereMesh.new()
+ 		sm.radius = 1.0
+@@ -120,58 +91,93 @@ func _build_markers() -> void:
+ 		dot.mesh = sm
+ 		dot.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ 		node.add_child(dot)
+-		var label := Label3D.new()
+-		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+-		label.fixed_size = true
+-		label.pixel_size = 0.0005
+-		label.font_size = 30
+-		label.outline_size = 10
+-		label.no_depth_test = true
+-		label.render_priority = 2
+-		label.outline_modulate = Color(0, 0, 0, 0.85)
+-		label.offset = Vector2(0, 34)
+-		var nm := town_name
+-		if not player:
+-			var k := markers.size()
+-			nm = ("%s%s" % [str(names[k % names.size()]), "" if k < names.size() else " del Norte" if k < names.size() * 2 else " %d" % k]) if not names.is_empty() else "Pueblo %d" % int(z["id"])
+-		z["placeholder_name"] = nm
+-		label.text = nm
++		var player := bool(z["player"])
++		var label := _make_label(nm, 44 if player else 38)
++		label.offset = Vector2(0, 40)
+ 		node.add_child(label)
+ 		markers.append({"node": node, "dot": dot, "label": label, "zone": z})
+ 
+ 
+-## Casco urbano low-poly de un pueblo vecino (unas casas alrededor de la plaza).
+-func _houses(zid: int) -> Node3D:
+-	var root := Node3D.new()
+-	var rng := RandomNumberGenerator.new()
+-	rng.seed = zid * 7717 + 3
+-	var wall := MeshLib.mat(Color(0.86, 0.8, 0.68))
+-	var roof := MeshLib.mat(Color(0.62, 0.3, 0.2))
+-	for i in range(14):
+-		var a := rng.randf() * TAU
+-		var r := rng.randf_range(10.0, 42.0)
+-		var p := Vector3(cos(a) * r, 0, sin(a) * r)
+-		var w := rng.randf_range(4.0, 7.0)
+-		var h := rng.randf_range(3.0, 5.0)
+-		var body := MeshLib.mesh_node(MeshLib.box(Vector3(w, h, w * 0.8)), wall, p + Vector3(0, h * 0.5, 0))
+-		body.rotation.y = rng.randf() * TAU
+-		var top := MeshLib.mesh_node(MeshLib.box(Vector3(w * 1.1, 1.2, w * 0.9)), roof, Vector3(0, h * 0.5 + 0.6, 0))
+-		body.add_child(top)
+-		root.add_child(body)
+-	return root
+-
+-
+-## Actualiza colores según lo revelado (una ruta o expedición hace visible un pueblo).
++## Cascos urbanos de los pueblos NPC: casas low-poly alrededor de la plaza, más casas cuanto más población.
++func _build_houses() -> void:
++	var walls: Array[Transform3D] = []
++	var roofs: Array[Transform3D] = []
++	var wall_cols: Array[Color] = []
++	var roof_cols: Array[Color] = []
++	for z in terrain.gen.zones:
++		if not bool(z["town"]) or bool(z["player"]):
++			continue
++		var pop := int(MunicipalSim.region(GameState, int(z["id"])).get("population", 600))
++		var n := clampi(pop / 12, 10, 240)
++		var rng := RandomNumberGenerator.new()
++		rng.seed = int(z["id"]) * 7717 + 3
++		var center: Vector2 = z["town_pos"]
++		var radius := 14.0 + sqrt(float(n)) * 9.0
++		var placed := 0
++		var tries := 0
++		while placed < n and tries < n * 4:
++			tries += 1
++			# Calles en cuadrícula girada, más densas cerca de la plaza.
++			var a := rng.randf() * TAU
++			var r := radius * sqrt(rng.randf()) + 12.0
++			var p := center + Vector2(cos(a), sin(a)) * r
++			p = p.snapped(Vector2(11.0, 11.0))
++			var h := terrain.gen.height(p.x, p.y)
++			if h < terrain.water_level + 0.6:
++				continue
++			var w := rng.randf_range(5.0, 8.0) * (1.25 if r < radius * 0.4 else 1.0)
++			var hh := rng.randf_range(3.5, 6.0) * (1.6 if r < radius * 0.3 and rng.randf() < 0.4 else 1.0)
++			var rot := Basis(Vector3.UP, float(int(z["id"]) % 4) * 0.4 + (PI * 0.5 if rng.randf() < 0.5 else 0.0))
++			walls.append(Transform3D(rot.scaled(Vector3(w, hh, w * 0.8)), Vector3(p.x, h + hh * 0.5 - 0.3, p.y)))
++			roofs.append(Transform3D(rot.scaled(Vector3(w * 1.12, 1.4, w * 0.92)), Vector3(p.x, h + hh + 0.4, p.y)))
++			var g := rng.randf_range(0.85, 1.0)
++			wall_cols.append(Color(0.88 * g, 0.82 * g, 0.7 * g))
++			roof_cols.append(Color(0.62, 0.3, 0.2) * rng.randf_range(0.85, 1.1) if rng.randf() < 0.8 else Color(0.45, 0.42, 0.4))
++			placed += 1
++	houses_walls = _multimesh(MeshLib.box(Vector3.ONE), walls, wall_cols)
++	houses_roofs = _multimesh(MeshLib.box(Vector3.ONE), roofs, roof_cols)
++	add_child(houses_walls)
++	add_child(houses_roofs)
++
++
++func _multimesh(mesh: Mesh, xf: Array[Transform3D], cols: Array[Color]) -> MultiMeshInstance3D:
++	var mm := MultiMesh.new()
++	mm.transform_format = MultiMesh.TRANSFORM_3D
++	mm.use_colors = true
++	mm.mesh = mesh
++	mm.instance_count = xf.size()
++	for i in range(xf.size()):
++		mm.set_instance_transform(i, xf[i])
++		mm.set_instance_color(i, cols[i])
++	var mmi := MultiMeshInstance3D.new()
++	mmi.multimesh = mm
++	mmi.material_override = MeshLib.vertex_color_mat()
++	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++	return mmi
++
++
++## Número de casas de los cascos urbanos (pruebas).
++func house_count() -> int:
++	return houses_walls.multimesh.instance_count if houses_walls != null else 0
++
++
++## Actualiza colores y nombres según lo explorado (una ruta o expedición hace visible un pueblo).
+ func refresh() -> void:
+ 	for m in markers:
+ 		var z: Dictionary = m["zone"]
+-		var c: Vector2i = z["town_chunk"]
+-		var rev := MapSim.is_revealed(GameState, c.x, c.y)
++		var zid := int(z["id"])
++		var rev := MapSim.zone_revealed_any(GameState, zid)
+ 		var player := bool(z["player"])
+ 		(m["dot"] as MeshInstance3D).material_override = dot_mat_player if player else (dot_mat_town if rev else dot_mat_fog)
+ 		var label: Label3D = m["label"]
+-		label.modulate = Color(1.0, 0.85, 0.3) if player else (Color(1, 1, 1) if rev else Color(0.8, 0.84, 0.9, 0.85))
+-		label.text = str(z.get("placeholder_name", "")) + ("" if rev or player else " (sin explorar)")
++		label.text = _name_of(z)
++		label.modulate = Color(1.0, 0.86, 0.35) if player else (Color(1, 1, 1) if rev else Color(0.86, 0.88, 0.92, 0.88))
++	for l in labels:
++		var z: Dictionary = l["zone"]
++		var rev := MapSim.zone_revealed_any(GameState, int(z["id"]))
++		var lb: Label3D = l["label"]
++		lb.text = _name_of(z)
++		lb.modulate = Color(0.95, 0.96, 0.9, 0.95) if rev else Color(0.84, 0.86, 0.9, 0.8)
+ 
+ 
+ func _process(_delta: float) -> void:
+@@ -181,14 +187,14 @@ func _process(_delta: float) -> void:
+ 	var cp := cam.global_position
+ 	var alt := cp.y - maxf(terrain.height_at(cp.x, cp.z), terrain.water_level)
+ 	var k := smoothstep(SHOW_FROM, FULL_AT, alt)
+-	line_mat.albedo_color = Color(1, 1, 1, 0.55 * k)
+-	lines.visible = k > 0.01
+ 	for m in markers:
+ 		var node: Node3D = m["node"]
+ 		var d := cp.distance_to(node.global_position)
+ 		var dot: MeshInstance3D = m["dot"]
+-		dot.scale = Vector3.ONE * clampf(d * 0.0045, 0.5, 90.0)
++		dot.scale = Vector3.ONE * clampf(d * 0.0042, 0.5, 110.0)
+ 		dot.position.y = dot.scale.y
+ 		var label: Label3D = m["label"]
+ 		label.visible = k > 0.05 or (bool(m["zone"]["player"]) and alt > 250.0)
+ 		dot.visible = alt > 250.0
++	for l in labels:
++		(l["label"] as Label3D).visible = k > 0.3
+diff --git a/scripts/world/terrain.gd b/scripts/world/terrain.gd
+index e4a80bc..1ff0f79 100644
+--- a/scripts/world/terrain.gd
++++ b/scripts/world/terrain.gd
+@@ -4,10 +4,13 @@ extends Node3D
+ ## - El chunk del pueblo (400 m, centrado en la plaza) se genera igual que antes: rejilla de 2,5 m
+ ##   (`heights`, RES 160), mismas alturas, río y costa según map_type y semilla. Las zonas sin comprar
+ ##   se ven oscurecidas.
+-## - El resto del país (CountryGen: chunks de 400 m, 24–40 por lado) se construye por streaming con
+-##   LOD: alta resolución cerca de la cámara, media más lejos y una capa lejana para todo el país.
++## - El resto del país (CountryGen: chunks de 400 m, 56–80 por lado) se construye por streaming con
++##   LOD: alta resolución cerca de la cámara, media más lejos y una capa lejana de teselas de 4×4 chunks
++##   (80 m por celda) para todo el país. Normales suaves y colores interpolados por vértice lejos;
++##   facetas low-poly solo de cerca (el shader mezcla según la distancia).
+ ##   Las mallas se calculan en hilos (WorkerThreadPool) y se suben a la escena con un presupuesto
+-##   de milisegundos por frame. Lo no revelado se ve como bruma con el relieve tenue.
++##   de milisegundos por frame. Lo no explorado se ve bajo un velo translúcido (relieve y biomas
++##   atenuados) y las fronteras de municipio se dibujan en el shader (Fase 9B).
+ ## API pública estable: generate, height_at, is_land, zone_of, is_unlocked, build_mesh, set_season,
+ ## scatter_nature, make_water, clear_trees, ray_ground, footprint_ok (+ heights/half/cell/RES/water_level).
+ 
+@@ -20,16 +23,19 @@ const LOD_NONE := -1
+ const LOD_HIGH := 0
+ const LOD_MID := 1
+ const LOD_FAR := 2
+-const LOD_RES := [80, 20, 8]
++const LOD_RES := [80, 20, 20]     # alta (5 m), media (20 m), lejana: tesela de 4×4 chunks (80 m)
++const TILE := 4                   # chunks por lado de una tesela lejana
++const MAP_PX := 5                 # píxeles del minimapa por chunk (80 m por píxel)
+ const HIGH_DIST := 700.0
+ const MID_DIST := 2800.0
+ const MAX_HIGH := 9
+ const MAX_MID := 48
+-const FAR_BATCH := 24
++const FAR_BATCH := 2
+ const FRAME_BUDGET_MS := 5.0
+ const DIM_LOCKED := 0.32
+-const FOG_AMOUNT := 0.62
+-const OUTSIDE_FOG := 0.9
++const FOG_LIGHT := 0.3            # velo ligero: tu municipio sin explorar y los vecinos
++const FOG_AMOUNT := 0.6           # velo de lo no explorado (translúcido: se ve el relieve)
++const OUTSIDE_FOG := 0.92
+ 
+ var size: float = 400.0
+ var half: float = 200.0
+@@ -50,13 +56,22 @@ var gen: CountryGen
+ var streaming := false
+ var ring := 2
+ var chunks := {}                 # Vector2i -> {lod, far, detail, detail_lod, trees, tree_pos, sig, busy, h}
++var tiles := {}                  # Vector2i -> {mi, busy, sig, dist}: capa lejana (TILE×TILE chunks)
+ var chunks_root: Node3D
+ var chunk_material: ShaderMaterial
+-var fog_material: ShaderMaterial
++var far_material: ShaderMaterial
++var fog_material: ShaderMaterial        # (compatibilidad 9A: es el mismo material lejano)
+ var outside_material: ShaderMaterial
++var fog_image: Image
++var zone_image: Image
++var detail_image: Image
++var fog_tex: ImageTexture
++var zone_tex: ImageTexture
++var detail_tex: ImageTexture
++var _detail_dirty := false
+ var overlay: CountryOverlay
+ var water: MeshInstance3D
+-var map_image: Image             # 8 px por chunk (50 m por píxel), incluye el anillo exterior
++var map_image: Image             # MAP_PX px por chunk (80 m por píxel), incluye el anillo exterior
+ var map_texture: ImageTexture
+ var stats := {"jobs": 0, "uploads": 0, "upload_ms": 0.0, "job_ms": 0.0, "high": 0, "mid": 0, "far": 0}
+ var _jobs: Array = []            # [{task, req}]
+@@ -154,15 +169,7 @@ func is_unlocked(x: float, z: float) -> bool:
+ func build_mesh() -> void:
+ 	_refresh_owned()
+ 	_build_town_mesh()
+-	for c in chunks.keys():
+-		var d: Dictionary = chunks[c]
+-		var sig := _owned_sig(c)
+-		if sig == str(d.get("sig", "")):
+-			continue
+-		if int(d.get("detail_lod", LOD_NONE)) != LOD_NONE:
+-			_apply_result(_chunk_arrays(c, int(d["detail_lod"]), _owned.duplicate(), _cleared_near(c)))
+-		if d.get("far") != null:
+-			_apply_result(_chunk_arrays(c, LOD_FAR, _owned.duplicate(), []))
++	_rebuild_owned_changes()
+ 
+ 
+ func _build_town_mesh() -> void:
+@@ -227,7 +234,7 @@ func _color_for(p: Vector3, ny: float, locked: bool) -> Color:
+ 
+ func set_season(season_id: String) -> void:
+ 	var s: Dictionary = GameData.weather.get("seasons", {}).get(season_id, {})
+-	for m in [material, chunk_material, fog_material, outside_material]:
++	for m in [material, chunk_material, far_material]:
+ 		if m != null:
+ 			m.set_shader_parameter("season_tint", MeshLib.arr_color(s.get("tint"), Color.WHITE))
+ 			m.set_shader_parameter("snow_amount", float(s.get("snow", 0.0)))
+@@ -417,11 +424,9 @@ func start_country() -> void:
+ 	chunks_root = Node3D.new()
+ 	chunks_root.name = "CountryChunks"
+ 	add_child(chunks_root)
+-	chunk_material = _make_chunk_mat(0.0)
+-	fog_material = _make_chunk_mat(FOG_AMOUNT)
+-	outside_material = _make_chunk_mat(OUTSIDE_FOG)
++	_ensure_materials()
+ 	set_season(GameState.season)
+-	var w := (gen.size + ring * 2) * 8
++	var w := (gen.size + ring * 2) * MAP_PX
+ 	map_image = Image.create(w, w, false, Image.FORMAT_RGB8)
+ 	map_image.fill(Color(0.72, 0.76, 0.8))
+ 	map_texture = ImageTexture.create_from_image(map_image)
+@@ -431,6 +436,10 @@ func start_country() -> void:
+ 			var c := Vector2i(cx, cy)
+ 			chunks[c] = {"lod": LOD_NONE, "far": null, "detail": null, "detail_lod": LOD_NONE, "trees": null,
+ 					"tree_pos": PackedVector2Array(), "sig": "", "busy": false, "h": maxf(gen.height(cx * CHUNK, cy * CHUNK), water_level)}
++	var nt := tiles_per_side()
++	for ty in range(nt):
++		for tx in range(nt):
++			tiles[Vector2i(tx, ty)] = {"mi": null, "busy": false, "sig": "", "dist": 0.0}
+ 	overlay = CountryOverlay.new()
+ 	overlay.name = "CountryOverlay"
+ 	add_child(overlay)
+@@ -440,15 +449,75 @@ func start_country() -> void:
+ 	_lod_timer = 0.0
+ 
+ 
+-func _make_chunk_mat(fog: float) -> ShaderMaterial:
++## Texturas del país que usa el shader: niebla (suave), municipios (bordes) y chunks con malla detallada
++## (la capa lejana se recorta ahí). Una celda por chunk, incluido el anillo exterior.
++func _ensure_materials() -> void:
++	if chunk_material != null:
++		return
++	var w := gen.size + ring * 2
++	fog_image = Image.create(w, w, false, Image.FORMAT_R8)
++	zone_image = Image.create(w, w, false, Image.FORMAT_RG8)
++	detail_image = Image.create(w, w, false, Image.FORMAT_R8)
++	detail_image.fill(Color(0, 0, 0))
++	_fill_zone_image()
++	_fill_fog_image()
++	fog_tex = ImageTexture.create_from_image(fog_image)
++	zone_tex = ImageTexture.create_from_image(zone_image)
++	detail_tex = ImageTexture.create_from_image(detail_image)
++	chunk_material = _make_chunk_mat(false)
++	far_material = _make_chunk_mat(true)
++	fog_material = far_material
++	outside_material = far_material
++
++
++func _make_chunk_mat(is_far: bool) -> ShaderMaterial:
+ 	var m := ShaderMaterial.new()
+ 	m.shader = load("res://shaders/terrain_chunk.gdshader")
+-	m.set_shader_parameter("fog", fog)
+-	if fog >= OUTSIDE_FOG:
+-		m.set_shader_parameter("fog_color", Vector3(0.6, 0.64, 0.7))
++	var w := gen.size + ring * 2
++	m.set_shader_parameter("fog_tex", fog_tex)
++	m.set_shader_parameter("zone_tex", zone_tex)
++	m.set_shader_parameter("detail_tex", detail_tex)
++	m.set_shader_parameter("map_origin", Vector2((gen.c0 - ring) * CHUNK - CHUNK * 0.5, (gen.c0 - ring) * CHUNK - CHUNK * 0.5))
++	m.set_shader_parameter("map_texels", float(w))
++	m.set_shader_parameter("chunk_size", CHUNK)
++	m.set_shader_parameter("is_far", is_far)
+ 	return m
+ 
+ 
++## Niveles de niebla por chunk: 0 explorado, velo ligero en tu municipio y los vecinos, velo en lo sin
++## explorar y bruma más densa fuera del país. El shader lo interpola: bordes suaves, nunca un corte.
++func _fill_fog_image() -> void:
++	var w := gen.size + ring * 2
++	var vals := [0.0, FOG_LIGHT, FOG_AMOUNT, OUTSIDE_FOG]
++	for j in range(w):
++		for i in range(w):
++			var lvl := MapSim.fog_level(GameState, gen.c0 - ring + i, gen.c0 - ring + j)
++			fog_image.set_pixel(i, j, Color(float(vals[lvl]), 0, 0))
++
++
++## Municipio de cada chunk (R = id, 255 fuera) y G = 1 en el municipio del jugador.
++func _fill_zone_image() -> void:
++	var w := gen.size + ring * 2
++	for j in range(w):
++		for i in range(w):
++			var zi := gen.zone_index(gen.c0 - ring + i, gen.c0 - ring + j)
++			zone_image.set_pixel(i, j, Color((zi % 255) / 255.0 if zi >= 0 else 1.0, 1.0 if zi == 0 else 0.0, 0))
++
++
++func tiles_per_side() -> int:
++	return ceili(float(gen.size + ring * 2) / TILE)
++
++
++## Tesela lejana que contiene un chunk.
++func tile_of(c: Vector2i) -> Vector2i:
++	return Vector2i(floori(float(c.x - gen.c0 + ring) / TILE), floori(float(c.y - gen.c0 + ring) / TILE))
++
++
++## Primer chunk (esquina) de una tesela.
++func tile_origin_chunk(t: Vector2i) -> Vector2i:
++	return Vector2i(gen.c0 - ring + t.x * TILE, gen.c0 - ring + t.y * TILE)
++
++
+ func _exit_tree() -> void:
+ 	for j in _jobs:
+ 		WorkerThreadPool.wait_for_task_completion(int(j["task"]))
+@@ -465,6 +534,10 @@ func _process(delta: float) -> void:
+ 		_lod_timer = 0.12
+ 		_update_lods()
+ 	_upload_results()
++	if _detail_dirty:
++		_detail_dirty = false
++		detail_tex.update(detail_image)
++	_update_borders()
+ 	_map_timer -= delta
+ 	if _map_dirty and _map_timer <= 0.0:
+ 		_map_timer = 0.5
+@@ -472,6 +545,21 @@ func _process(delta: float) -> void:
+ 		map_texture.update(map_image)
+ 
+ 
++## Fronteras de municipio en el shader: tenues, solo con la cámara alta; su ancho crece con la distancia
++## para seguir viéndose (unos 2 px) desde el zoom máximo.
++func _update_borders() -> void:
++	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
++	if cam == null or chunk_material == null:
++		return
++	var cp := cam.global_position
++	var alt := cp.y - maxf(height_at(cp.x, cp.z), water_level)
++	var k := smoothstep(500.0, 1800.0, alt)
++	var width := clampf(alt * 0.0021, 6.0, 70.0)
++	for m in [chunk_material, far_material]:
++		m.set_shader_parameter("border_alpha", 0.42 * k)
++		m.set_shader_parameter("border_width", width)
++
++
+ func _refresh_owned() -> void:
+ 	_owned = {}
+ 	for z in GameState.unlocked_zones:
+@@ -480,35 +568,24 @@ func _refresh_owned() -> void:
+ 
+ ## Firma de las parcelas propias que tocan un chunk (para rehacerlo al comprar).
+ func _owned_sig(c: Vector2i) -> String:
+-	var parts := []
+-	for zy in range(c.y * 5, c.y * 5 + 6):
+-		for zx in range(c.x * 5, c.x * 5 + 6):
+-			if _owned.has("%d,%d" % [zx, zy]):
+-				parts.append("%d,%d" % [zx, zy])
+-	return ";".join(parts)
++	return _sig_from(c, _owned)
+ 
+ 
+ func is_revealed_chunk(c: Vector2i) -> bool:
+ 	return MapSim.is_revealed(GameState, c.x, c.y)
+ 
+ 
+-func _chunk_material_for(c: Vector2i) -> ShaderMaterial:
+-	if not gen.in_country_chunk(c.x, c.y):
+-		return outside_material
+-	return chunk_material if is_revealed_chunk(c) else fog_material
+-
+-
+ func _on_map_changed() -> void:
+-	for c in chunks:
+-		var d: Dictionary = chunks[c]
+-		if d.get("far") != null:
+-			(d["far"] as MeshInstance3D).material_override = _chunk_material_for(c)
++	if fog_image != null:
++		_fill_fog_image()
++		fog_tex.update(fog_image)
+ 	_lod_timer = 0.0
+ 	if overlay:
+ 		overlay.refresh()
+ 
+ 
+-## Elige el LOD de cada chunk según la distancia a la cámara y encola las mallas que faltan.
++## Elige el LOD de cada chunk explorado según la distancia a la cámara y encola las mallas que faltan.
++## La capa lejana son teselas de 4×4 chunks (80 m por celda) que cubren todo el país.
+ func _update_lods() -> void:
+ 	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+ 	if cam == null:
+@@ -516,16 +593,19 @@ func _update_lods() -> void:
+ 	var cp := cam.global_position
+ 	var want_high := []
+ 	var want_mid := []
+-	var need_far := []
++	var rev: Dictionary = GameState.map.get("chunks_revealed", {})
++	var active := []
+ 	for c in chunks:
+ 		var d: Dictionary = chunks[c]
++		var revealed := rev.has("%d,%d" % [c.x, c.y])
++		if not revealed and d.get("detail") == null and int(d["lod"]) != LOD_HIGH:
++			continue
++		active.append(c)
+ 		var r := CountryGen.chunk_rect(c.x, c.y)
+ 		var q := Vector2(clampf(cp.x, r.position.x, r.end.x), clampf(cp.z, r.position.y, r.end.y))
+ 		var dist := Vector3(q.x - cp.x, float(d["h"]) - cp.y, q.y - cp.z).length()
+ 		d["dist"] = dist
+-		if d.get("far") == null and not bool(d["busy"]):
+-			need_far.append(c)
+-		if gen.in_country_chunk(c.x, c.y) and is_revealed_chunk(c):
++		if revealed and gen.in_country_chunk(c.x, c.y):
+ 			if dist < HIGH_DIST:
+ 				want_high.append(c)
+ 			elif dist < MID_DIST:
+@@ -543,13 +623,11 @@ func _update_lods() -> void:
+ 	var queue := []
+ 	var high_n := 0
+ 	var mid_n := 0
+-	for c in chunks:
++	for c in active:
+ 		var d: Dictionary = chunks[c]
+ 		var want := int(wants.get(c, LOD_FAR))
+ 		d["want"] = want
+-		if c == Vector2i.ZERO and want == LOD_HIGH:
+-			_town_want = LOD_HIGH
+-		elif c == Vector2i.ZERO:
++		if c == Vector2i.ZERO:
+ 			_town_want = want
+ 		if want == LOD_FAR and d.get("detail") != null:
+ 			_free_detail(d)
+@@ -564,7 +642,6 @@ func _update_lods() -> void:
+ 	stats["high"] = high_n
+ 	stats["mid"] = mid_n
+ 	queue.sort_custom(func(a, b): return int(a[1]) < int(b[1]) or (int(a[1]) == int(b[1]) and float(chunks[a[0]]["dist"]) < float(chunks[b[0]]["dist"])))
+-	need_far.sort_custom(by_dist)
+ 	var owned := _owned.duplicate()
+ 	for item in queue:
+ 		if _jobs.size() >= _max_jobs:
+@@ -572,22 +649,32 @@ func _update_lods() -> void:
+ 		var c: Vector2i = item[0]
+ 		chunks[c]["busy"] = true
+ 		_start_job([c], int(item[1]), owned)
+-	_far_queue = need_far
++	# Teselas lejanas que faltan, las más cercanas primero.
++	var need := []
++	for t in tiles:
++		var td: Dictionary = tiles[t]
++		if td["mi"] == null and not bool(td["busy"]):
++			var o := tile_origin_chunk(t)
++			var center := (Vector2(o) + Vector2(TILE, TILE) * 0.5 - Vector2(0.5, 0.5)) * CHUNK
++			td["dist"] = Vector2(cp.x, cp.z).distance_to(center)
++			need.append(t)
++	need.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return float(tiles[a]["dist"]) < float(tiles[b]["dist"]))
++	_far_queue = need
+ 	_feed_far_jobs()
+ 
+ 
+-## La capa lejana se reparte en tandas: se llenan los hilos libres en cada frame.
++## La capa lejana se reparte en tandas de teselas: se llenan los hilos libres en cada frame.
+ func _feed_far_jobs() -> void:
+ 	while _jobs.size() < _max_jobs and not _far_queue.is_empty():
+ 		var batch: Array = []
+ 		while batch.size() < FAR_BATCH and not _far_queue.is_empty():
+-			var c: Vector2i = _far_queue.pop_front()
+-			if chunks[c].get("far") == null and not bool(chunks[c]["busy"]):
+-				batch.append(c)
++			var t: Vector2i = _far_queue.pop_front()
++			if tiles[t]["mi"] == null and not bool(tiles[t]["busy"]):
++				batch.append(t)
+ 		if batch.is_empty():
+ 			break
+-		for c in batch:
+-			chunks[c]["busy"] = true
++		for t in batch:
++			tiles[t]["busy"] = true
+ 		_start_job(batch, LOD_FAR, _owned.duplicate())
+ 
+ 
+@@ -606,12 +693,24 @@ func _show(c: Vector2i, d: Dictionary, want: int) -> void:
+ 	var trees: Node3D = d.get("trees")
+ 	if trees != null:
+ 		trees.visible = det != null and det.visible
+-	var far: MeshInstance3D = d.get("far")
+-	if far != null:
+-		far.visible = shown == LOD_NONE
+-		if shown == LOD_NONE:
+-			shown = LOD_FAR
++	if shown == LOD_NONE and d.get("far") != null:
++		shown = LOD_FAR
+ 	d["lod"] = shown
++	_set_detail_mask(c, shown == LOD_HIGH or shown == LOD_MID)
++
++
++## Marca los chunks con malla detallada visible: ahí el shader recorta la tesela lejana.
++func _set_detail_mask(c: Vector2i, on: bool) -> void:
++	if detail_image == null:
++		return
++	var i := c.x - gen.c0 + ring
++	var j := c.y - gen.c0 + ring
++	if i < 0 or j < 0 or i >= detail_image.get_width() or j >= detail_image.get_height():
++		return
++	var v := 1.0 if on else 0.0
++	if detail_image.get_pixel(i, j).r != v:
++		detail_image.set_pixel(i, j, Color(v, 0, 0))
++		_detail_dirty = true
+ 
+ 
+ func _free_detail(d: Dictionary) -> void:
+@@ -649,7 +748,10 @@ func _job(req: Dictionary) -> void:
+ 	var t0 := Time.get_ticks_usec()
+ 	var out: Array = req["out"]
+ 	for c in req["cs"]:
+-		out.append(_chunk_arrays(c, int(req["lod"]), req["owned"], req["cleared"]))
++		if int(req["lod"]) == LOD_FAR:
++			out.append(_tile_arrays(c, req["owned"]))
++		else:
++			out.append(_chunk_arrays(c, int(req["lod"]), req["owned"], req["cleared"]))
+ 	req["ms"] = (Time.get_ticks_usec() - t0) / 1000.0
+ 
+ 
+@@ -671,73 +773,102 @@ func _upload_results() -> void:
+ 	var t0 := Time.get_ticks_usec()
+ 	while not _ready_results.is_empty():
+ 		var r: Dictionary = _ready_results.pop_front()
+-		var c: Vector2i = r["c"]
+-		if chunks.has(c):
+-			chunks[c]["busy"] = false
+-			# El pedido pudo quedar viejo (la cámara se alejó): no se sube una malla detallada inútil.
+-			if int(r["lod"]) == LOD_FAR or float(chunks[c].get("dist", 0.0)) < MID_DIST * 1.2:
+-				_apply_result(r)
++		if r.has("tile"):
++			var t: Vector2i = r["tile"]
++			if tiles.has(t):
++				tiles[t]["busy"] = false
++			_apply_result(r)
++		else:
++			var c: Vector2i = r["c"]
++			if chunks.has(c):
++				chunks[c]["busy"] = false
++				# El pedido pudo quedar viejo (la cámara se alejó): no se sube una malla detallada inútil.
++				if float(chunks[c].get("dist", 0.0)) < MID_DIST * 1.2:
++					_apply_result(r)
+ 		if (Time.get_ticks_usec() - t0) / 1000.0 > FRAME_BUDGET_MS:
+ 			break
+ 	stats["upload_ms"] = float(stats["upload_ms"]) + (Time.get_ticks_usec() - t0) / 1000.0
+ 
+ 
+-## Construye un chunk ya mismo en el hilo principal (pruebas y compras de terreno).
++## Construye un chunk (o la tesela lejana que lo contiene) ya mismo en el hilo principal (pruebas y
++## compras de terreno).
+ func build_chunk_now(c: Vector2i, lod: int) -> float:
+ 	var t0 := Time.get_ticks_usec()
+ 	if not chunks.has(c):
+ 		chunks[c] = {"lod": LOD_NONE, "far": null, "detail": null, "detail_lod": LOD_NONE, "trees": null,
+ 				"tree_pos": PackedVector2Array(), "sig": "", "busy": false, "h": gen.height(c.x * CHUNK, c.y * CHUNK)}
+-	_apply_result(_chunk_arrays(c, lod, _owned.duplicate(), _cleared_near(c)))
++	if lod == LOD_FAR:
++		var t := tile_of(c)
++		if not tiles.has(t):
++			tiles[t] = {"mi": null, "busy": false, "sig": "", "dist": 0.0}
++		_apply_result(_tile_arrays(t, _owned.duplicate()))
++	else:
++		_apply_result(_chunk_arrays(c, lod, _owned.duplicate(), _cleared_near(c)))
+ 	return (Time.get_ticks_usec() - t0) / 1000.0
+ 
+ 
+-func _apply_result(r: Dictionary) -> void:
+-	var c: Vector2i = r["c"]
+-	var lod := int(r["lod"])
+-	var d: Dictionary = chunks[c]
++func _mesh_from(r: Dictionary, res: int) -> ArrayMesh:
+ 	var arrays := []
+ 	arrays.resize(Mesh.ARRAY_MAX)
+ 	arrays[Mesh.ARRAY_VERTEX] = r["verts"]
++	arrays[Mesh.ARRAY_NORMAL] = r["normals"]
+ 	arrays[Mesh.ARRAY_COLOR] = r["cols"]
+-	arrays[Mesh.ARRAY_INDEX] = _indices_for(int(LOD_RES[lod]))
++	arrays[Mesh.ARRAY_INDEX] = _indices_for(res)
+ 	var mesh := ArrayMesh.new()
+ 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+-	var mi := MeshInstance3D.new()
+-	mi.mesh = mesh
+-	mi.name = "C%d_%d_L%d" % [c.x, c.y, lod]
+-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if lod == LOD_HIGH else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++	return mesh
++
++
++func _apply_result(r: Dictionary) -> void:
++	var lod := int(r["lod"])
+ 	if chunks_root == null:
+ 		chunks_root = Node3D.new()
+ 		chunks_root.name = "CountryChunks"
+ 		add_child(chunks_root)
+-	if chunk_material == null:
+-		chunk_material = _make_chunk_mat(0.0)
+-		fog_material = _make_chunk_mat(FOG_AMOUNT)
+-		outside_material = _make_chunk_mat(OUTSIDE_FOG)
++	_ensure_materials()
++	var mi := MeshInstance3D.new()
++	mi.mesh = _mesh_from(r, int(LOD_RES[lod]))
++	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if lod == LOD_HIGH else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ 	chunks_root.add_child(mi)
+-	d["sig"] = str(r["sig"])
+-	if lod == LOD_FAR:
+-		mi.material_override = _chunk_material_for(c)
+-		if d.get("far") != null:
+-			(d["far"] as Node).queue_free()
+-		d["far"] = mi
++	stats["uploads"] = int(stats["uploads"]) + 1
++	if r.has("tile"):
++		var t: Vector2i = r["tile"]
++		mi.name = "T%d_%d" % [t.x, t.y]
++		mi.material_override = far_material
++		var td: Dictionary = tiles.get(t, {})
++		if td.get("mi") != null:
++			(td["mi"] as Node).queue_free()
++		td["mi"] = mi
++		td["sig"] = str(r["sig"])
++		tiles[t] = td
++		var o := tile_origin_chunk(t)
++		for dy in range(TILE):
++			for dx in range(TILE):
++				var c := o + Vector2i(dx, dy)
++				if chunks.has(c):
++					chunks[c]["far"] = mi
++					if int(chunks[c]["lod"]) == LOD_NONE:
++						chunks[c]["lod"] = LOD_FAR
+ 		if map_image != null and r.has("map"):
+-			var px := (c.x - gen.c0 + ring) * 8
+-			var py := (c.y - gen.c0 + ring) * 8
+-			var img := Image.create_from_data(8, 8, false, Image.FORMAT_RGB8, r["map"])
+-			map_image.blit_rect(img, Rect2i(0, 0, 8, 8), Vector2i(px, py))
++			var px := (o.x - gen.c0 + ring) * MAP_PX
++			var py := (o.y - gen.c0 + ring) * MAP_PX
++			var n := TILE * MAP_PX
++			var img := Image.create_from_data(n, n, false, Image.FORMAT_RGB8, r["map"])
++			map_image.blit_rect(img, Rect2i(0, 0, n, n), Vector2i(px, py))
+ 			_map_dirty = true
+-	else:
+-		mi.material_override = chunk_material
+-		_free_detail(d)
+-		d["detail"] = mi
+-		d["detail_lod"] = lod
+-		if int(r.get("tree_n", 0)) > 0:
+-			d["trees"] = _tree_node(r, lod)
+-			d["tree_pos"] = r["tree_pos"]
+-			chunks_root.add_child(d["trees"])
+-	stats["uploads"] = int(stats["uploads"]) + 1
++		return
++	var c: Vector2i = r["c"]
++	var d: Dictionary = chunks[c]
++	mi.name = "C%d_%d_L%d" % [c.x, c.y, lod]
++	mi.material_override = chunk_material
++	d["sig"] = str(r["sig"])
++	_free_detail(d)
++	d["detail"] = mi
++	d["detail_lod"] = lod
++	if int(r.get("tree_n", 0)) > 0:
++		d["trees"] = _tree_node(r, lod)
++		d["tree_pos"] = r["tree_pos"]
++		chunks_root.add_child(d["trees"])
+ 	_show(c, d, int(d.get("want", lod)) if streaming else lod)
+ 
+ 
+@@ -807,62 +938,91 @@ static func _edge_vertex(e: int, t: int, n: int) -> int:
+ 	return t * n + n - 1              # borde este
+ 
+ 
+-## Arreglos de un chunk (hilo-seguro): vértices, colores, faldones, árboles y píxeles del minimapa.
+-func _chunk_arrays(c: Vector2i, lod: int, owned: Dictionary, cleared: Array) -> Dictionary:
+-	var res: int = LOD_RES[lod]
+-	var n := res + 1
+-	var step := CHUNK / res
+-	var x0 := c.x * CHUNK - CHUNK * 0.5
+-	var z0 := c.y * CHUNK - CHUNK * 0.5
++## Color del suelo en un punto (paleta del pueblo mezclada con la de biomas) con la marca de propiedad.
++func _vertex_color(x: float, z: float, h: float, ny: float, biome: int, owned: Dictionary) -> Color:
++	var col: Color
++	var s := gen.blend_at(x, z)
++	if s <= 0.0:
++		col = gen.old_color(x, z, h, ny)
++	else:
++		col = gen.ground_color(x, z, h, 1.0 - ny, biome)
++		if s < 1.0:
++			col = gen.old_color(x, z, h, ny).lerp(col, s)
++	# Propiedad: lo ajeno cerca del pueblo se oscurece (como siempre); lo propio lejos se entibia.
++	var cheb := maxf(absf(x), absf(z))
++	var zs := CHUNK / 5.0
++	var a := col.a
++	if owned.has("%d,%d" % [floori((x + 200.0) / zs), floori((z + 200.0) / zs)]):
++		if cheb > 200.0:
++			col = col.lerp(Color(0.95, 0.82, 0.5), 0.14)
++	else:
++		var dim := DIM_LOCKED * (1.0 - smoothstep(200.0, 600.0, cheb))
++		if dim > 0.0:
++			col = col.darkened(dim)
++	col.a = a
++	return col
++
++
++## Muestra una rejilla (n+2)² (con un borde de una celda para normales y suavizado) de alturas y biomas.
++func _sample(x0: float, z0: float, step: float, n: int) -> Array:
++	var m := n + 2
+ 	var hs := PackedFloat32Array()
+ 	var bs := PackedByteArray()
+-	hs.resize(n * n)
+-	bs.resize(n * n)
+-	for j in range(n):
+-		var z := z0 + j * step
+-		for i in range(n):
+-			var x := x0 + i * step
++	hs.resize(m * m)
++	bs.resize(m * m)
++	for j in range(m):
++		var z := z0 + (j - 1) * step
++		for i in range(m):
++			var x := x0 + (i - 1) * step
+ 			var h := gen.height(x, z)
+-			hs[j * n + i] = h
+-			bs[j * n + i] = gen.biome_id(x, z, h)
++			hs[j * m + i] = h
++			bs[j * m + i] = gen.biome_id(x, z, h)
++	return [hs, bs]
++
++
++## Vértices, normales suaves (interpoladas por vértice) y colores de una rejilla muestreada con borde.
++## blur = true suaviza los colores (3×3) para que la capa lejana no se vea en bloques.
++func _grid_mesh(x0: float, z0: float, step: float, n: int, hs: PackedFloat32Array, bs: PackedByteArray, owned: Dictionary, blur: bool) -> Dictionary:
++	var m := n + 2
+ 	var verts := PackedVector3Array()
++	var normals := PackedVector3Array()
+ 	var cols := PackedColorArray()
+ 	verts.resize(n * n + 4 * n)
++	normals.resize(n * n + 4 * n)
+ 	cols.resize(n * n + 4 * n)
+-	var zs := CHUNK / 5.0
++	var full := PackedColorArray()
++	full.resize(m * m)
++	var nys := PackedFloat32Array()
++	nys.resize(m * m)
++	for j in range(m):
++		for i in range(m):
++			if not blur and (i == 0 or j == 0 or i == m - 1 or j == m - 1):
++				continue   # el borde solo hace falta para suavizar colores
++			var ii := clampi(i, 1, m - 2)
++			var jj := clampi(j, 1, m - 2)
++			var dx := (hs[jj * m + ii + 1] - hs[jj * m + ii - 1]) / (2.0 * step)
++			var dz := (hs[(jj + 1) * m + ii] - hs[(jj - 1) * m + ii]) / (2.0 * step)
++			var ny := 1.0 / sqrt(1.0 + dx * dx + dz * dz)
++			nys[j * m + i] = ny
++			full[j * m + i] = _vertex_color(x0 + (i - 1) * step, z0 + (j - 1) * step, hs[j * m + i], ny, bs[j * m + i], owned)
+ 	for j in range(n):
+ 		var z := z0 + j * step
+ 		for i in range(n):
+ 			var x := x0 + i * step
+-			var h := hs[j * n + i]
+-			var hx0 := hs[j * n + maxi(i - 1, 0)]
+-			var hx1 := hs[j * n + mini(i + 1, res)]
+-			var hz0 := hs[maxi(j - 1, 0) * n + i]
+-			var hz1 := hs[mini(j + 1, res) * n + i]
+-			var dx := (hx1 - hx0) / (step * float(mini(i + 1, res) - maxi(i - 1, 0)))
+-			var dz := (hz1 - hz0) / (step * float(mini(j + 1, res) - maxi(j - 1, 0)))
+-			var ny := 1.0 / sqrt(1.0 + dx * dx + dz * dz)
+-			var col: Color
+-			var s := gen.blend_at(x, z)
+-			if s <= 0.0:
+-				col = gen.old_color(x, z, h, ny)
+-			else:
+-				col = gen.ground_color(x, z, h, 1.0 - ny, bs[j * n + i])
+-				if s < 1.0:
+-					col = gen.old_color(x, z, h, ny).lerp(col, s)
+-			# Propiedad: lo ajeno cerca del pueblo se oscurece (como siempre); lo propio lejos se entibia.
+-			var cheb := maxf(absf(x), absf(z))
+-			var zk := "%d,%d" % [floori((x + 200.0) / zs), floori((z + 200.0) / zs)]
+-			var a := col.a
+-			if owned.has(zk):
+-				if cheb > 200.0:
+-					col = col.lerp(Color(0.95, 0.82, 0.5), 0.14)
+-			else:
+-				var dim := DIM_LOCKED * (1.0 - smoothstep(200.0, 600.0, cheb))
+-				if dim > 0.0:
+-					col = col.darkened(dim)
+-			col.a = a
++			var k := (j + 1) * m + (i + 1)
++			var h := hs[k]
++			var dx := (hs[k + 1] - hs[k - 1]) / (2.0 * step)
++			var dz := (hs[k + m] - hs[k - m]) / (2.0 * step)
+ 			verts[j * n + i] = Vector3(x, h, z)
++			normals[j * n + i] = Vector3(-dx, 1.0, -dz).normalized()
++			var col := full[k]
++			if blur:
++				var acc := Color(0, 0, 0, 0)
++				for oj in [-m, 0, m]:
++					for oi in [-1, 0, 1]:
++						acc += full[k + oj + oi]
++				acc = acc / 9.0
++				col = col.lerp(acc, 0.7)
+ 			cols[j * n + i] = col
+ 	# Faldones: copia de cada borde hundida (tapa grietas con chunks de otra resolución).
+ 	var drop := 2.0 + step * 0.6
+@@ -871,15 +1031,66 @@ func _chunk_arrays(c: Vector2i, lod: int, owned: Dictionary, cleared: Array) ->
+ 		for t in range(n):
+ 			var g := _edge_vertex(e, t, n)
+ 			verts[base + e * n + t] = verts[g] - Vector3(0, drop, 0)
++			normals[base + e * n + t] = normals[g]
+ 			cols[base + e * n + t] = cols[g].darkened(0.1)
+-	var out := {"c": c, "lod": lod, "verts": verts, "cols": cols, "sig": _sig_from(c, owned), "tree_n": 0}
++	return {"verts": verts, "normals": normals, "cols": cols}
++
++
++## Arreglos de un chunk detallado (hilo-seguro): vértices, normales, colores, faldones y árboles.
++## Con LOD_FAR devuelve la tesela lejana que contiene el chunk (compatibilidad).
++func _chunk_arrays(c: Vector2i, lod: int, owned: Dictionary, cleared: Array) -> Dictionary:
+ 	if lod == LOD_FAR:
+-		out["map"] = _map_pixels(hs, bs, n, step)
+-	elif not (c == Vector2i.ZERO):
++		return _tile_arrays(tile_of(c), owned)
++	var res: int = LOD_RES[lod]
++	var n := res + 1
++	var step := CHUNK / res
++	var x0 := c.x * CHUNK - CHUNK * 0.5
++	var z0 := c.y * CHUNK - CHUNK * 0.5
++	var smp := _sample(x0, z0, step, n)
++	var hsb: PackedFloat32Array = smp[0]
++	var bsb: PackedByteArray = smp[1]
++	var out := _grid_mesh(x0, z0, step, n, hsb, bsb, owned, false)
++	out["c"] = c
++	out["lod"] = lod
++	out["sig"] = _sig_from(c, owned)
++	out["tree_n"] = 0
++	if not (c == Vector2i.ZERO):
++		# Árboles: rejilla sin borde (n×n) para los índices de siempre.
++		var hs := PackedFloat32Array()
++		var bs := PackedByteArray()
++		hs.resize(n * n)
++		bs.resize(n * n)
++		var m := n + 2
++		for j in range(n):
++			for i in range(n):
++				hs[j * n + i] = hsb[(j + 1) * m + i + 1]
++				bs[j * n + i] = bsb[(j + 1) * m + i + 1]
+ 		_chunk_trees(c, lod, hs, bs, n, step, cleared, out)
+ 	return out
+ 
+ 
++## Tesela lejana de TILE×TILE chunks con celdas de CHUNK·TILE/FAR_RES m (80 m): normales suaves, colores
++## suavizados y los píxeles del minimapa (MAP_PX por chunk).
++func _tile_arrays(t: Vector2i, owned: Dictionary) -> Dictionary:
++	var o := tile_origin_chunk(t)
++	var res: int = LOD_RES[LOD_FAR]
++	var n := res + 1
++	var span := CHUNK * TILE
++	var step := span / res
++	var x0 := o.x * CHUNK - CHUNK * 0.5
++	var z0 := o.y * CHUNK - CHUNK * 0.5
++	var smp := _sample(x0, z0, step, n)
++	var hs: PackedFloat32Array = smp[0]
++	var bs: PackedByteArray = smp[1]
++	var out := _grid_mesh(x0, z0, step, n, hs, bs, owned, true)
++	out["tile"] = t
++	out["lod"] = LOD_FAR
++	out["sig"] = _tile_sig(t, owned)
++	out["tree_n"] = 0
++	out["map"] = _map_pixels(hs, bs, n + 2, step, res)
++	return out
++
++
+ func _sig_from(c: Vector2i, owned: Dictionary) -> String:
+ 	var parts := []
+ 	for zy in range(c.y * 5, c.y * 5 + 6):
+@@ -889,19 +1100,36 @@ func _sig_from(c: Vector2i, owned: Dictionary) -> String:
+ 	return ";".join(parts)
+ 
+ 
+-## 8×8 píxeles RGB del minimapa: color del bioma con sombreado del relieve.
+-func _map_pixels(hs: PackedFloat32Array, bs: PackedByteArray, n: int, step: float) -> PackedByteArray:
++func _tile_sig(t: Vector2i, owned: Dictionary) -> String:
++	var o := tile_origin_chunk(t)
++	var parts := []
++	for k in owned:
++		var p: PackedStringArray = str(k).split(",")
++		var c := MapSim.chunk_of_zone(int(p[0]), int(p[1]))
++		if c.x >= o.x and c.x < o.x + TILE and c.y >= o.y and c.y < o.y + TILE:
++			parts.append(str(k))
++	parts.sort()
++	return ";".join(parts)
++
++
++## Píxeles RGB del minimapa de una tesela (MAP_PX por chunk): color del bioma con sombreado del relieve.
++## hs/bs son la rejilla con borde (lado m = res + 3).
++func _map_pixels(hs: PackedFloat32Array, bs: PackedByteArray, m: int, step: float, res: int) -> PackedByteArray:
+ 	var px := PackedByteArray()
+-	px.resize(8 * 8 * 3)
++	var np := TILE * MAP_PX
++	px.resize(np * np * 3)
+ 	var k := 0
+-	for j in range(8):
+-		for i in range(8):
+-			var h := hs[j * n + i]
+-			var sh := clampf(1.0 + ((hs[j * n + i + 1] - h) * -0.6 + (hs[(j + 1) * n + i] - h) * -0.6) / step * 3.0, 0.7, 1.25)
+-			var col: Color = CountryGen.BIOME_MAP_COLORS[bs[j * n + i]]
+-			if bs[j * n + i] > CountryGen.B_RIO:
++	for j in range(np):
++		for i in range(np):
++			var gi := clampi(int((i + 0.5) * res / np), 0, res - 1) + 1
++			var gj := clampi(int((j + 0.5) * res / np), 0, res - 1) + 1
++			var q := gj * m + gi
++			var h := hs[q]
++			var sh := clampf(1.0 + ((hs[q + 1] - h) * -0.6 + (hs[q + m] - h) * -0.6) / step * 3.0, 0.7, 1.25)
++			var col: Color = CountryGen.BIOME_MAP_COLORS[bs[q]]
++			if bs[q] > CountryGen.B_RIO:
+ 				col = col * sh
+-			elif bs[j * n + i] == CountryGen.B_MAR:
++			elif bs[q] == CountryGen.B_MAR:
+ 				col = col.darkened(clampf(-h / 30.0, 0.0, 0.35))
+ 			px[k] = int(clampf(col.r, 0.0, 1.0) * 255.0)
+ 			px[k + 1] = int(clampf(col.g, 0.0, 1.0) * 255.0)
+@@ -910,6 +1138,22 @@ func _map_pixels(hs: PackedFloat32Array, bs: PackedByteArray, n: int, step: floa
+ 	return px
+ 
+ 
++## Rehace ya mismo las mallas (detalladas y teselas lejanas) cuya propiedad cambió.
++func _rebuild_owned_changes() -> void:
++	for c in chunks.keys():
++		var d: Dictionary = chunks[c]
++		if int(d.get("detail_lod", LOD_NONE)) == LOD_NONE:
++			continue
++		if _owned_sig(c) != str(d.get("sig", "")):
++			_apply_result(_chunk_arrays(c, int(d["detail_lod"]), _owned.duplicate(), _cleared_near(c)))
++	for t in tiles.keys():
++		var td: Dictionary = tiles[t]
++		if td.get("mi") == null:
++			continue
++		if _tile_sig(t, _owned) != str(td.get("sig", "")):
++			_apply_result(_tile_arrays(t, _owned.duplicate()))
++
++
+ ## Árboles de un chunk según su bioma: completos (tronco + copa) cerca, solo copas en el LOD medio.
+ func _chunk_trees(c: Vector2i, lod: int, hs: PackedFloat32Array, bs: PackedByteArray, n: int, step: float, cleared: Array, out: Dictionary) -> void:
+ 	var rng := RandomNumberGenerator.new()
+diff --git a/scripts/world/world.gd b/scripts/world/world.gd
+index 4f9a508..3da769f 100644
+--- a/scripts/world/world.gd
++++ b/scripts/world/world.gd
+@@ -463,7 +463,7 @@ func _update_placement() -> void:
+ 		_zone_marker.position = Vector3(-half + (zc.x + 0.5) * zs, 10, -half + (zc.y + 0.5) * zs)
+ 		var reason := ConstructionSim.zone_block_reason(GameState, zc.x, zc.y)
+ 		_zone_marker.material_override = MeshLib.ghost_mat(reason == "")
+-		hud.set_placement_hint("Comprar terreno al gobierno: %s · %s   (clic para comprar, clic derecho/Esc cancela)" % [Fmt.money(ConstructionSim.zone_cost(GameState)), reason if reason != "" else "disponible"])
++		hud.set_placement_hint("Comprar terreno al gobierno: %s · %s   (clic para comprar, clic derecho/Esc cancela)" % [Fmt.money(ConstructionSim.zone_cost(GameState, zc.x, zc.y)), reason if reason != "" else "disponible"])
+ 		return
+ 	p.x = snappedf(p.x, 0.25)
+ 	p.z = snappedf(p.z, 0.25)
+diff --git a/shaders/terrain_chunk.gdshader b/shaders/terrain_chunk.gdshader
+index 7999abe..c3a1092 100644
+--- a/shaders/terrain_chunk.gdshader
++++ b/shaders/terrain_chunk.gdshader
+@@ -1,25 +1,79 @@
+ shader_type spatial;
+ render_mode cull_disabled;
+-// Fase 9A: chunks del país (malla indexada). La normal plana sale de las derivadas de pantalla,
+-// así el estilo low-poly se conserva sin duplicar vértices. COLOR.a marca la hierba (estación).
+-// fog > 0: territorio sin explorar (bruma clara con el relieve tenue).
++// Fase 9A/9B: chunks del país (malla indexada con normales por vértice y colores interpolados).
++// - De cerca se ve low-poly (normal plana de las derivadas de pantalla); de lejos se mezcla con la normal
++//   suave del vértice: la capa lejana no se ve en bloques.
++// - Niebla: velo translúcido que atenúa biomas y relieve (nunca un blanco opaco). fog_tex tiene un valor por
++//   chunk (0 explorado, velo ligero, velo, fuera del país) y se interpola: los bordes son suaves.
++// - Fronteras de municipio: zone_tex (id por chunk); se dibuja una línea tenue donde cambia el id.
++// - is_far: tesela lejana; se recorta donde detail_tex marca un chunk con malla detallada visible.
++// COLOR.a marca la hierba (estación).
+ 
+ uniform vec3 season_tint = vec3(1.0);
+ uniform float snow_amount : hint_range(0.0, 1.0) = 0.0;
+-uniform float fog : hint_range(0.0, 1.0) = 0.0;
+-uniform vec3 fog_color = vec3(0.56, 0.6, 0.66);
++uniform sampler2D fog_tex : filter_linear, repeat_disable;
++uniform sampler2D zone_tex : filter_nearest, repeat_disable;
++uniform sampler2D detail_tex : filter_nearest, repeat_disable;
++uniform vec2 map_origin = vec2(0.0);
++uniform float map_texels = 68.0;
++uniform float chunk_size = 400.0;
++uniform bool is_far = false;
++uniform float border_alpha = 0.0;
++uniform float border_width = 20.0;
++uniform vec3 veil_color = vec3(0.8, 0.83, 0.87);
++
++varying vec3 world_pos;
++
++void vertex() {
++	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
++}
++
++float zone_id(ivec2 c) {
++	int w = int(map_texels);
++	c = clamp(c, ivec2(0), ivec2(w - 1));
++	return texelFetch(zone_tex, c, 0).r;
++}
+ 
+ void fragment() {
+-	vec3 n = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
+-	if (dot(n, VERTEX) > 0.0) {
+-		n = -n;   // el signo de dFdy depende del backend: la normal siempre mira a la cámara
++	vec2 cuv = (world_pos.xz - map_origin) / chunk_size;
++	if (is_far) {
++		if (texture(detail_tex, cuv / map_texels).r > 0.5) {
++			discard;
++		}
++	}
++	vec3 fn = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
++	if (dot(fn, VERTEX) > 0.0) {
++		fn = -fn;   // el signo de dFdy depende del backend: la normal siempre mira a la cámara
+ 	}
+-	NORMAL = n;
++	float dist = length(VERTEX);
++	float facet = 1.0 - smoothstep(180.0, 1400.0, dist);
++	NORMAL = normalize(mix(NORMAL, fn, facet));
+ 	vec3 c = COLOR.rgb;
+ 	float grass = COLOR.a;
+ 	c = mix(c, c * season_tint, grass);
+ 	c = mix(c, vec3(0.92, 0.94, 0.97) * max(max(COLOR.r, COLOR.g), 0.45) * 1.6, grass * snow_amount);
+-	c = mix(c, fog_color * (0.7 + 0.4 * dot(c, vec3(0.33))), fog);
++	// Velo translúcido: desatura, aclara un poco y baja el contraste, pero deja ver el relieve y el bioma.
++	float fog = texture(fog_tex, cuv / map_texels).r;
++	float lum = dot(c, vec3(0.3, 0.59, 0.11));
++	vec3 veiled = mix(c, vec3(lum), 0.65 * fog);
++	veiled = mix(veiled, veil_color * (0.55 + 0.6 * lum), 0.42 * fog);
++	c = veiled;
++	// Fronteras de municipio (tenues; más cálidas alrededor del tuyo).
++	if (border_alpha > 0.001) {
++		ivec2 ci = ivec2(floor(cuv));
++		vec2 f = cuv - floor(cuv);
++		float id = zone_id(ci);
++		float w = border_width / chunk_size;
++		float e = 0.0;
++		float mine = texelFetch(zone_tex, clamp(ci, ivec2(0), ivec2(int(map_texels) - 1)), 0).g;
++		if (f.x < w && abs(zone_id(ci + ivec2(-1, 0)) - id) > 0.001) { e = max(e, 1.0 - f.x / w); }
++		if (f.x > 1.0 - w && abs(zone_id(ci + ivec2(1, 0)) - id) > 0.001) { e = max(e, 1.0 - (1.0 - f.x) / w); }
++		if (f.y < w && abs(zone_id(ci + ivec2(0, -1)) - id) > 0.001) { e = max(e, 1.0 - f.y / w); }
++		if (f.y > 1.0 - w && abs(zone_id(ci + ivec2(0, 1)) - id) > 0.001) { e = max(e, 1.0 - (1.0 - f.y) / w); }
++		e = smoothstep(0.0, 0.5, e);
++		vec3 bc = mix(vec3(1.0), vec3(1.0, 0.82, 0.35), mine);
++		c = mix(c, bc, e * border_alpha * (1.0 + 0.5 * mine));
++	}
+ 	ALBEDO = c;
+ 	ROUGHNESS = 0.95;
+ 	SPECULAR = 0.2 * (1.0 - fog);
+diff --git a/tests/_probe.gd b/tests/_probe.gd
+new file mode 100644
+index 0000000..ab71cdb
+--- /dev/null
++++ b/tests/_probe.gd
+@@ -0,0 +1,16 @@
++extends Node
++
++func _ready() -> void:
++	for cid in MapSim.country_ids():
++		var t0 := Time.get_ticks_msec()
++		var g := CountryGen.new().init("interior", 77, str(cid))
++		var ms := Time.get_ticks_msec() - t0
++		var sizes := []
++		var towns := 0
++		for z in g.zones:
++			sizes.append(int(z["chunks"]))
++			if z["town"]:
++				towns += 1
++		sizes.sort()
++		print("%s size %d zones %d towns %d gen %d ms sizes min %d med %d max %d player %d" % [cid, g.size, g.zones.size(), towns, ms, sizes[0], sizes[sizes.size()/2], sizes[-1], g.zones[0]["chunks"]])
++	get_tree().quit()
+diff --git a/tests/_probe.tscn b/tests/_probe.tscn
+new file mode 100644
+index 0000000..f1102e9
+--- /dev/null
++++ b/tests/_probe.tscn
+@@ -0,0 +1,6 @@
++[gd_scene load_steps=2 format=3]
++
++[ext_resource type="Script" path="res://tests/_probe.gd" id="1"]
++
++[node name="Probe" type="Node"]
++script = ExtResource("1")
+diff --git a/tests/screenshot_mapa.gd b/tests/screenshot_mapa.gd
+index 8424ccc..f24fbfe 100644
+--- a/tests/screenshot_mapa.gd
++++ b/tests/screenshot_mapa.gd
+@@ -1,6 +1,7 @@
+ extends Node
+-## Capturas de la Fase 9A: país completo con zoom máximo (varias zonas reveladas y el resto en niebla),
+-## vista media de varios biomas y el minimapa ampliado.
++## Capturas de la Fase 9A/9B: país completo con zoom máximo (municipio del jugador y algunos vecinos
++## explorados, el resto bajo el velo translúcido, nombres visibles), un municipio desde altura media y el
++## mapa ampliado con la capa de propiedad.
+ ## xvfb-run -a -s "-screen 0 1600x900x24" godot --rendering-driver opengl3 res://tests/screenshot_mapa.tscn -- <carpeta>
+ 
+ 
+@@ -8,8 +9,8 @@ func _wait_streaming(t: Terrain, frames: int) -> void:
+ 	for i in range(frames):
+ 		await get_tree().process_frame
+ 		var pending := false
+-		for c in t.chunks:
+-			if t.chunks[c].get("far") == null or bool(t.chunks[c]["busy"]):
++		for k in t.tiles:
++			if t.tiles[k]["mi"] == null or bool(t.tiles[k]["busy"]):
+ 				pending = true
+ 				break
+ 		if not pending and i > 30:
+@@ -28,50 +29,64 @@ func _set_cam(rig: CameraRig, pos: Vector3, dist: float, yaw: float) -> void:
+ func _ready() -> void:
+ 	var args := OS.get_cmdline_user_args()
+ 	var out := args[0] if args.size() > 0 else "user://"
++	var only := args[1] if args.size() > 1 else ""
+ 	var gs = GameState
+ 	gs.new_game({"map_type": "rio", "seed": 2024, "difficulty": "facil", "country_id": "andoria", "town_name": "San Rafael"})
+ 	gs.suppress_notifications = true
+-	gs.money = 500000.0
++	gs.money = 2000000.0
+ 	gs.weather["type"] = "despejado"
+-	# Varias zonas reveladas: expediciones al norte y al sur, y una ruta comercial abierta.
+-	for p in [Vector2(-1600, -1200), Vector2(1200, 2000), Vector2(-3200, 1600), Vector2(2800, -2400)]:
+-		MapSim.reveal_around(gs, p, 700.0)
++	# Dos municipios vecinos explorados y una ruta comercial abierta (revela el municipio del pueblo).
++	var g := MapSim.gen(gs)
++	var nb: Array = g.zones[0]["neighbors"]
++	for i in range(mini(2, nb.size())):
++		MapSim.reveal_zone(gs, int(nb[i]))
+ 	var towns: Array = gs.trade.get("towns", [])
+ 	if not towns.is_empty():
+ 		gs.trade["connections"] = [{"town_id": str(towns[0]["id"])}]
+ 		MapSim.daily(gs)
+ 	for zx in [5, 6]:
+ 		ConstructionSim.unlock_zone(gs, zx, 2)
++	# Un territorio comprado al Estado cerca del pueblo (capa de propiedad).
++	LandSim.buy_from_state(gs, 2, 1)
+ 	TimeManager.total_hours += 10 - TimeManager.hour()
+ 	var world: Node3D = load("res://scenes/main.tscn").instantiate()
+ 	add_child(world)
+ 	await get_tree().process_frame
+ 	var rig: CameraRig = world.camera_rig
+ 	var t: Terrain = world.terrain
+-	# 1) País completo con zoom máximo.
+-	rig.view_country()
+-	_set_cam(rig, rig.target_pos, rig.max_dist, 0.0)
+-	await _wait_streaming(t, 900)
++	world.minimap.visible = false
++	if only == "nowater":
++		t.water.visible = false
++		only = "pais"
++	# 1) País completo con zoom máximo, encuadrado.
++	var b := t.country_rect_m()
++	_set_cam(rig, Vector3(b.get_center().x, 0, b.get_center().y), rig.max_dist, 0.0)
++	var t0 := Time.get_ticks_msec()
++	await _wait_streaming(t, 1500)
++	print("capa lejana completa en %d ms (%d teselas)" % [Time.get_ticks_msec() - t0, t.tiles.size()])
+ 	for i in range(20):
+ 		await get_tree().process_frame
+-	get_viewport().get_texture().get_image().save_png("%s/pais_zoom_maximo.png" % out)
+-	print("captura: pais_zoom_maximo.png (cámara a %.0f m, %d chunks)" % [rig.distance, t.chunks.size()])
+-	# 2) Vista media de varios biomas (cordillera, valle con río, bosque).
+-	_set_cam(rig, Vector3(-1100, 0, -900), 1500.0, 20.0)
+-	for i in range(240):
++	if only == "" or only == "pais":
++		get_viewport().get_texture().get_image().save_png("%s/pais_completo.png" % out)
++		print("captura: pais_completo.png (cámara a %.0f m, %d chunks)" % [rig.distance, t.chunks.size()])
++	# 2) Un municipio completo desde altura media (el pueblo es un punto dentro de una región grande).
++	var z: Dictionary = g.zones[int(gs.map["town_assign"].get(str(towns[0]["id"]), 0))] if not towns.is_empty() else g.zones[0]
++	var c: Vector2 = z["centroid"]
++	_set_cam(rig, Vector3(c.x, 0, c.y), 5200.0, 15.0)
++	for i in range(200):
+ 		await get_tree().process_frame
+-		if t.stats["high"] + t.stats["mid"] >= 12 and i > 60:
+-			break
+-	for i in range(30):
+-		await get_tree().process_frame
+-	get_viewport().get_texture().get_image().save_png("%s/pais_biomas.png" % out)
+-	print("captura: pais_biomas.png (alta %d, media %d)" % [t.stats["high"], t.stats["mid"]])
+-	# 3) Minimapa ampliado sobre la vista del pueblo.
++	if only == "" or only == "municipio":
++		get_viewport().get_texture().get_image().save_png("%s/municipio.png" % out)
++		print("captura: municipio.png (%s)" % MunicipalSim.name_of(gs, int(z["id"])))
++	# 3) Mapa ampliado con la capa de propiedad.
++	world.minimap.visible = true
+ 	_set_cam(rig, Vector3.ZERO, 120.0, 35.0)
+ 	world.minimap.set_expanded(true)
+-	world.minimap._select(Vector2i(2, -1))   # territorio sin explorar: costo y días de la expedición
++	world.minimap.set_owner_layer(true)
++	world.minimap._select(Vector2i(4, 1))
+ 	for i in range(60):
+ 		await get_tree().process_frame
+-	get_viewport().get_texture().get_image().save_png("%s/minimapa.png" % out)
+-	print("captura: minimapa.png")
++	if only == "" or only == "propiedad":
++		get_viewport().get_texture().get_image().save_png("%s/propiedad.png" % out)
++		print("captura: propiedad.png")
+ 	get_tree().quit()
