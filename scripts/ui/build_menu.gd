@@ -11,12 +11,7 @@ var list: VBoxContainer
 
 func setup() -> void:
 	add_theme_constant_override("separation", 8)
-	var head := HBoxContainer.new()
-	add_child(head)
-	var t := UIKit.label("Construir", 20, UIKit.ACCENT)
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(t)
-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
+	UIKit.header(self, "build", "Construir", func(): closed.emit(), [])
 	var row := HBoxContainer.new()
 	row.add_child(UIKit.label("Calidad de vivienda:"))
 	tier_opt = OptionButton.new()

@@ -14,18 +14,23 @@ var summary: RichTextLabel
 var hire_modal: Dictionary
 var hire_box: VBoxContainer
 var _name_edit: LineEdit
+var overview: VBoxContainer
+var _status_chip: Control
+var _head_icon: TextureRect
+var _ov_timer := 0.0
+
+const CAT_ICONS := {"negocio": "companies", "vivienda": "realestate", "gobierno": "government", "servicio": "utilities",
+	"logistica": "logistics", "transporte": "transit", "redes": "utilities", "publico": "government"}
 
 
 func setup(p_hud: Hud) -> void:
 	hud = p_hud
 	add_theme_constant_override("separation", 8)
-	var head := HBoxContainer.new()
-	add_child(head)
-	title = UIKit.label("", 20, UIKit.ACCENT)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.clip_text = true
-	head.add_child(title)
-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
+	title = UIKit.header(self, "companies", "", func(): closed.emit())
+	_head_icon = title.get_parent().get_child(0).get_child(0)
+	overview = VBoxContainer.new()
+	overview.add_theme_constant_override("separation", 6)
+	add_child(overview)
 	tabs = TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(tabs)
@@ -55,6 +60,8 @@ func rebuild() -> void:
 	var def: Dictionary = GameState.building_def(b)
 	var mine := GameState.owned_by_player(b)
 	var cat := str(def.get("category", ""))
+	_head_icon.texture = UIIcons.tex(str(CAT_ICONS.get(cat, "town")), 20)
+	_build_overview(b)
 	_add_tab("Resumen", _summary_tab(b, mine))
 	if mine and cat == "negocio":
 		_add_tab("Empleados", _employees_tab(b))
@@ -103,9 +110,12 @@ func _msg(text: String, cat := "info") -> void:
 
 func _summary_tab(b: Dictionary, mine: bool) -> Control:
 	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
 	summary = UIKit.rich()
 	summary.meta_clicked.connect(hud.on_meta_clicked)
 	v.add_child(summary)
+	if mine and not b["ledger"].get("last_month", {}).is_empty():
+		v.add_child(_ledger_chart(b))
 	if mine:
 		var row := HBoxContainer.new()
 		_name_edit = LineEdit.new()
@@ -172,6 +182,79 @@ func refresh() -> void:
 	if b.is_empty() or summary == null:
 		return
 	summary.text = _summary_text(b)
+	_ov_timer += 1.0
+	if _ov_timer >= 12.0:   # refresh() llega cada 0,25 s: la cabecera se renueva cada ~3 s
+		_ov_timer = 0.0
+		_build_overview(b)
+
+
+## Cabecera compacta: estado, resultado con mini-gráfica de ingresos diarios, empleados y producción.
+func _build_overview(b: Dictionary) -> void:
+	UIKit.clear(overview)
+	var gs := GameState
+	var def: Dictionary = gs.building_def(b)
+	var ld: Dictionary = gs.level_def(b)
+	var chips := UIKit.flow(4, 4)
+	overview.add_child(chips)
+	var st := str(b["status"])
+	var st_col: Color = {"activo": UIKit.GOOD, "construccion": UIKit.WARN, "mejorando": UIKit.WARN, "cerrado": UIKit.BAD}.get(st, UIKit.NEUTRAL)
+	var st_txt: String = {"activo": "Activo", "construccion": "En construcción", "mejorando": "Mejorando", "cerrado": "Cerrado"}.get(st, st)
+	if st in ["construccion", "mejorando"]:
+		st_txt += " %d%%" % int(100.0 * float(b["work_done"]) / maxf(1.0, float(b["work_needed"])))
+	chips.add_child(UIKit.chip(st_txt, st_col, "check" if st == "activo" else "build"))
+	chips.add_child(UIKit.chip("%s · Nv %d/%d" % [ld.get("label", ""), int(b["level"]), GameData.max_level(b["type"])], UIKit.ACCENT, "star"))
+	if NpcBusinessSim.is_npc(b):
+		chips.add_child(UIKit.chip("Empresa NPC", UIKit.INFO, "companies"))
+	elif gs.owned_by_player(b):
+		chips.add_child(UIKit.chip("Tuyo", UIKit.ACCENT_2, "character"))
+	if BusinessSim.is_business(b) and st == "activo" and gs.owned_by_player(b):
+		var cls := EconomySim.classify(b)
+		chips.add_child(UIKit.chip(cls, {"rentable": UIKit.GOOD, "equilibrio": UIKit.WARN, "deficitaria": UIKit.BAD}.get(cls, UIKit.NEUTRAL), "trend_up" if cls == "rentable" else "info"))
+	if not gs.owned_by_player(b) and not NpcBusinessSim.is_npc(b):
+		return
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	overview.add_child(row)
+	var h := UIHistory.building(bid)
+	var profit := BusinessSim.period_profit(b, "last_month")
+	var card := UIKit.kpi_card("money", "Resultado mes ant.", Fmt.money_compact(profit), "", h["income"], UIKit.sign_color(profit) if profit != 0.0 else UIKit.ACCENT, "Mini-gráfica: ingresos por día (últimos %d días)" % (h["income"] as Array).size(), 0.0)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(card)
+	if def.get("category", "") == "negocio":
+		var emp := 0
+		for c in gs.employees_of(bid):
+			if c.job_kind == "empleo":
+				emp += 1
+		var jobs := MineSim.jobs(gs, b)
+		var product := str(def.get("product", ""))
+		var prod_txt := "—"
+		if product != "" and product != "construccion":
+			prod_txt = "%s/día" % String.num(BusinessSim.expected_output(gs, b), 1).replace(".", ",")
+		var card2 := UIKit.kpi_card("gdp", "Producción" if product != "" else "Empleados", prod_txt if product != "" else "%d/%d" % [emp, jobs], "", h["output"], UIKit.ACCENT_2,
+			"%s · mini-gráfica: inventario por día" % (GameData.good_label(product) if product != "" else ""), 0.0)
+		card2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(card2)
+		if jobs > 0:
+			overview.add_child(UIKit.meter_row("population", "Empleados", float(emp) / float(jobs), "%d/%d" % [emp, jobs]))
+		var cap := BusinessSim.storage_cap(gs, b)
+		if product != "" and product != "construccion" and cap > 0.0:
+			var inv := float(b["inventory"].get(product, 0.0))
+			overview.add_child(UIKit.meter_row("catalog", "Inventario", inv / cap, Fmt.compact(inv), false, UIKit.ACCENT_2))
+
+
+## Barras de ingresos y gastos del mes anterior por concepto.
+func _ledger_chart(b: Dictionary) -> Control:
+	var m: Dictionary = b["ledger"].get("last_month", {})
+	if m.is_empty():
+		m = b["ledger"].get("month", {})
+	var rows := []
+	for k in BusinessSim.LEDGER_KEYS:
+		if m.has(k) and absf(float(m[k])) > 0.01 and not k in BusinessSim.NON_PNL_KEYS:
+			rows.append({"label": str(k).capitalize(), "values": [float(m[k])], "inc": k in BusinessSim.INCOME_KEYS, "color": UIKit.GOOD if k in BusinessSim.INCOME_KEYS else UIKit.BAD})
+	rows.sort_custom(func(a, c): return (1 if a["inc"] else 0) > (1 if c["inc"] else 0))
+	var bc := BarChart.new()
+	bc.set_data("Ingresos y gastos por concepto (mes anterior)", rows, [], true)
+	return bc
 
 
 func _summary_text(b: Dictionary) -> String:
@@ -201,7 +284,7 @@ func _summary_text(b: Dictionary) -> String:
 		"cerrado":
 			s += "[color=#e66]CERRADO (quiebra o embargo)[/color]\n"
 		_:
-			s += "Estado: [color=#6c6]activo[/color]\n"
+			pass
 	if GameState.owned_by_player(b):
 		s += WarehouseTab.summary_line(GameState, b)   # Almacén vinculado (verde) / ninguno (rojo).
 	s += TransitSim.panel_lines(GameState, b)   # Transporte: acceso por carretera, llegada de trabajadores.
@@ -213,11 +296,6 @@ func _summary_text(b: Dictionary) -> String:
 	if site_crew > 0:
 		s += "Trabajadores en obra: %d/%d\n" % [site_crew, int(GameData.level_def(b["type"], int(b["target_level"])).get("workers", 0))]
 	if def.get("category", "") == "negocio":
-		var emp := 0
-		for c in GameState.employees_of(bid):
-			if c.job_kind == "empleo":
-				emp += 1
-		s += "Empleados: %d/%d\n" % [emp, MineSim.jobs(GameState, b)]   # Minas: empleos según los frentes.
 		var product := str(def.get("product", ""))
 		if product == "construccion":
 			s += "Capacidad de obra: %.1f trabajadores-día/día\n" % BusinessSim.expected_output(GameState, b)
@@ -235,13 +313,6 @@ func _summary_text(b: Dictionary) -> String:
 			var profit := BusinessSim.period_profit(b, period[0])
 			var col := "#6c6" if profit >= 0 else "#e66"
 			s += "%s: ingresos %s · [color=%s]resultado %s[/color]\n" % [period[1], Fmt.money(inc), col, Fmt.money(profit)]
-		var m: Dictionary = b["ledger"].get("last_month", {})
-		if not m.is_empty():
-			var parts := []
-			for k in BusinessSim.LEDGER_KEYS:
-				if m.has(k):
-					parts.append("%s %s" % [k, Fmt.money(float(m[k]))])
-			s += "[color=#aaa]Mes anterior: %s[/color]\n" % ", ".join(parts)
 		s += "Inversión en obras: %s\n" % Fmt.money(BusinessSim.period_value(b, "total", "obras"))
 		if BusinessSim.is_nonprofit(b):
 			s += "Reserva de la fundación: %s\n" % Fmt.money(float(b["reserve"]))

@@ -27,12 +27,7 @@ var _f_max := 0.0
 func setup(p_hud: Hud) -> void:
 	hud = p_hud
 	add_theme_constant_override("separation", 8)
-	var head := HBoxContainer.new()
-	add_child(head)
-	var t := UIKit.label("Logística", 20, UIKit.ACCENT)
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(t)
-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
+	UIKit.header(self, "logistics", "Logística", func(): closed.emit(), [])
 	tabs = TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(tabs)

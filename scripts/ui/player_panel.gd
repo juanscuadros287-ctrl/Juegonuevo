@@ -9,20 +9,22 @@ signal message(text: String, category: String)
 var hud: Hud
 var info: RichTextLabel
 var actions: VBoxContainer
+var profile: VBoxContainer
+var _scroll: ScrollContainer
+var _family_title: Control
 
 
 func setup(p_hud: Hud) -> void:
 	hud = p_hud
 	add_theme_constant_override("separation", 8)
-	var head := HBoxContainer.new()
-	add_child(head)
-	var t := UIKit.label("Mi Personaje", 20, UIKit.ACCENT)
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(t)
-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
+	UIKit.header(self, "dynasty", "Mi personaje y dinastía", func(): closed.emit())
 	var sb := UIKit.scroll_box(Vector2(0, 200))
 	sb["scroll"].size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll = sb["scroll"]
 	add_child(sb["scroll"])
+	profile = VBoxContainer.new()
+	profile.add_theme_constant_override("separation", 6)
+	sb["box"].add_child(profile)
 	info = UIKit.rich()
 	info.meta_clicked.connect(hud.on_meta_clicked)
 	sb["box"].add_child(info)
@@ -36,10 +38,8 @@ func refresh() -> void:
 		info.text = "Sin personaje."
 		return
 	var today := GameState.today()
-	var s := "[font_size=20][color=#edc259]%s[/color][/font_size]\n" % p.full_name()
-	s += "%s · %d años\n" % ["Mujer" if p.gender == "F" else "Hombre", p.age_years(today)]
-	s += "Salud: %s%s · Felicidad: %s\n" % [hud.bar(p.health), "  [color=#e88](enfermo/a)[/color]" if p.sick else "", hud.bar(p.happiness)]
-	s += "Dinero: %s\n" % Fmt.money(GameState.money)
+	_build_profile(p)
+	var s := ""
 	var home := PlayerSim.player_home(GameState)
 	s += "Hogar: %s\n\n" % ("Sin hogar" if home.is_empty() else "%s (%s)" % [GameState.building_label(home), Housing.tier_label(str(home.get("tier", "normal")))])
 	s += "[b]Familia[/b]\n"
@@ -130,7 +130,74 @@ func _do(text: String) -> void:
 
 func _title(text: String) -> void:
 	actions.add_child(HSeparator.new())
-	actions.add_child(UIKit.label(text, 17, UIKit.ACCENT))
+	var l := UIKit.label(text, 17, UIKit.ACCENT)
+	actions.add_child(l)
+	if text.begins_with("Familia"):
+		_family_title = l
+
+
+## Desplaza la vista hasta la sección de familia (menú Mi dinastía → Familia y herederos).
+func scroll_to_family() -> void:
+	if _scroll == null:
+		return
+	await get_tree().process_frame
+	if is_instance_valid(_family_title):
+		_scroll.ensure_control_visible(_family_title)
+		_scroll.scroll_vertical = int(_family_title.position.y + actions.position.y) - 8
+
+
+## Ficha visual: retrato, indicadores, patrimonio, talentos y árbol familiar.
+func _build_profile(p: Citizen) -> void:
+	UIKit.clear(profile)
+	var gs := GameState
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 10)
+	profile.add_child(head)
+	var por := Portrait.new()
+	por.custom_minimum_size = Vector2(72, 72)
+	por.set_citizen(p, true)
+	head.add_child(por)
+	var nv := VBoxContainer.new()
+	nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nv.add_theme_constant_override("separation", 3)
+	head.add_child(nv)
+	nv.add_child(UIKit.label(p.full_name(), 19, UIKit.ACCENT))
+	var chips := UIKit.flow(4, 4)
+	nv.add_child(chips)
+	chips.add_child(UIKit.chip("%s · %d años" % ["Mujer" if p.gender == "F" else "Hombre", p.age_years(gs.today())], UIKit.TEXT_DIM, "character"))
+	chips.add_child(UIKit.chip("Generación %d" % DynastySim.generation(gs), UIKit.ACCENT, "dynasty"))
+	if p.sick:
+		chips.add_child(UIKit.chip("Enfermo/a", UIKit.BAD, "health"))
+	if not DynastySim.has_heir(gs):
+		chips.add_child(UIKit.chip("Sin heredero", UIKit.BAD, "alert"))
+	profile.add_child(UIKit.meter_row("health", "Salud", p.health / 100.0))
+	profile.add_child(UIKit.meter_row("happiness", "Felicidad", p.happiness / 100.0))
+	var money_row := HBoxContainer.new()
+	money_row.add_theme_constant_override("separation", 6)
+	profile.add_child(money_row)
+	for spec in [["money", "Dinero", Fmt.money(gs.money), UIKit.ACCENT], ["finance", "Deudas", Fmt.money(EconomySim.player_debt(gs)), UIKit.BAD if EconomySim.player_debt(gs) > 0 else UIKit.NEUTRAL],
+			["treasury", "Patrimonio", Fmt.money_compact(EconomySim.net_worth(gs)), UIKit.GOOD]]:
+		var c := UIKit.card(Color(0, 0, 0, 0), 6)
+		c["panel"].size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 4)
+		h.add_child(UIKit.icon(spec[0], 14, spec[3]))
+		h.add_child(UIKit.label(spec[1], 11, UIKit.TEXT_DIM))
+		c["box"].add_child(h)
+		c["box"].add_child(UIKit.label(spec[2], 15, (spec[3] as Color).lerp(UIKit.TEXT, 0.3)))
+		money_row.add_child(c["panel"])
+	var tal := HeirsSim.talents(gs, p)
+	if not tal.is_empty():
+		var ts := UIKit.section(profile, "Talentos del jefe de familia", "dynasty", true, "pp_talents")
+		for k in HeirsSim.TALENTS:
+			if tal.has(k):
+				ts.add_child(UIKit.meter_row("dynasty", HeirsSim.talent_label(k), float(tal[k]) / 100.0, str(int(tal[k])), false, UIKit.ACCENT))
+	var fs := UIKit.section(profile, "Árbol familiar", "family", true, "pp_tree")
+	var tree := FamilyTree.new()
+	tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	fs.add_child(tree)
+	tree.set_person(p)
+	tree.person_clicked.connect(func(pid): hud.on_meta_clicked(pid))
 
 
 func _rich(text: String) -> void:

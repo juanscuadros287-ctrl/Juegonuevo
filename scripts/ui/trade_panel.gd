@@ -17,13 +17,7 @@ var limit := 0.0
 func setup(p_hud: Hud) -> void:
 	hud = p_hud
 	add_theme_constant_override("separation", 8)
-	var head := HBoxContainer.new()
-	add_child(head)
-	var t := UIKit.label("Comercio exterior", 20, UIKit.ACCENT)
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(t)
-	head.add_child(UIKit.button("↻", refresh, 32))
-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
+	UIKit.header(self, "trade", "Comercio exterior", func(): closed.emit(), [UIKit.icon_button("refresh", refresh, "Actualizar", "", 16)])
 	var sb := UIKit.scroll_box(Vector2(0, 200))
 	sb["scroll"].size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(sb["scroll"])

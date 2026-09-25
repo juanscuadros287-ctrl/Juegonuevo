@@ -118,6 +118,67 @@ func _ready() -> void:
 	await get_tree().process_frame
 	hud._open_invite()
 	hud._close_interior()
+	# Interfaz nueva: categorías con menú desplegable, pestañas de estadísticas, tablas, centro de
+	# notificaciones, opciones, atajos de teclado, toasts agrupados y menú principal.
+	for cat in Hud.CATEGORIES:
+		hud.open_category(str(cat["id"]))
+		await get_tree().process_frame
+		for it in cat["items"]:
+			hud._open_item(str(it[0]))
+			await get_tree().process_frame
+	hud.close_category()
+	if hud.goods_catalog.visible:
+		hud.goods_catalog.close()
+	if hud.research_screen.visible:
+		hud.research_screen.close()
+	hud._close(hud.population_modal)
+	hud._show_dock("stats")
+	for t in StatsPanel.TABS:
+		hud.stats_panel.show_tab(str(t[0]))
+		await get_tree().process_frame
+	hud._open_population()
+	hud.pop_search.text = "a"
+	hud._filter_population()
+	hud.pop_table.sort_col = 1
+	hud.pop_table._apply_sort()
+	await get_tree().process_frame
+	hud._close(hud.population_modal)
+	for i in range(8):
+		hud.toast("Aviso de prueba %d" % (i % 3), ["negocio", "familia", "jugador"][i % 3])
+	await get_tree().process_frame
+	assert(hud.toasts.get_child_count() <= Hud.MAX_TOASTS + 1)
+	hud.open_notifications()
+	hud._log_filter["negocio"] = true
+	hud._rebuild_log()
+	await get_tree().process_frame
+	hud._close(hud.log_modal)
+	hud._open_options()
+	await get_tree().process_frame
+	hud._close(hud.options_modal)
+	var ev := InputEventKey.new()
+	ev.pressed = true
+	for k in [KEY_P, KEY_F, KEY_Y, KEY_C, KEY_K]:
+		ev.keycode = k
+		hud._unhandled_input(ev)
+		await get_tree().process_frame
+	hud.close_dock()
+	hud.player_panel.refresh()
+	for w in [LineChart.new(), BarChart.new(), DonutChart.new(), Gauge.new(), PyramidChart.new(), Sparkline.new(), Portrait.new(), DataTable.new()]:
+		hud.root.add_child(w)
+		w.queue_free()
+	for n in UIIcons.names():
+		assert(UIIcons.tex(n, 18) != null)
+	var menu: Control = load("res://scenes/main_menu.tscn").instantiate()
+	add_child(menu)
+	await get_tree().process_frame
+	menu._show_new()
+	menu._select_diff(3)
+	menu.country_opt.select(1)
+	menu._refresh_regions()
+	await get_tree().process_frame
+	menu._show_load()
+	menu._show_main()
+	menu.queue_free()
 	TimeManager.set_speed(1)
 	for i in range(30):
 		await get_tree().process_frame

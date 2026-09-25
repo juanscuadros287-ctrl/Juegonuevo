@@ -12,6 +12,7 @@ signal closed
 signal message(text: String, category: String)
 
 const TABS := [["bandeja", "Bandeja"], ["proponer", "Proponer"], ["activos", "Activos"], ["historial", "Historial"]]
+const TAB_ICONS := {"bandeja": "bell", "proponer": "plus", "activos": "check", "historial": "list"}
 const FREQ_OPTIONS := [0, 7, 15, 30, 60, 90, -1]   # 0 = entrega única, -1 = personalizada
 
 var hud: Hud
@@ -45,13 +46,7 @@ var counter_prices: Dictionary = {}   # id de solicitud -> precio de contraofert
 func setup(p_hud: Hud) -> void:
 	hud = p_hud
 	add_theme_constant_override("separation", 8)
-	var head := HBoxContainer.new()
-	add_child(head)
-	var t := UIKit.label("Contratos", 20, UIKit.ACCENT)
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(t)
-	head.add_child(UIKit.button("↻", refresh, 32))
-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
+	UIKit.header(self, "contracts", "Contratos", func(): closed.emit(), [UIKit.icon_button("refresh", refresh, "Actualizar", "", 16)])
 	tab_bar = HBoxContainer.new()
 	add_child(tab_bar)
 	var sb := UIKit.scroll_box(Vector2(0, 200))
@@ -76,7 +71,11 @@ func _result(err: String, ok_text: String) -> void:
 
 func _section(title: String) -> void:
 	body.add_child(HSeparator.new())
-	body.add_child(UIKit.label(title, 16, UIKit.ACCENT))
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
+	h.add_child(UIKit.icon("contracts", 16, UIKit.ACCENT))
+	h.add_child(UIKit.label(title, 16, UIKit.ACCENT))
+	body.add_child(h)
 
 
 func _note(text: String, parent: Node = null) -> void:
@@ -116,6 +115,8 @@ func refresh() -> void:
 		elif id == "activos" and not GameState.market.is_empty():
 			label += " (%d)" % ContractSim.active_contracts(GameState).size()
 		var b := UIKit.button(label, func(): set_tab(id))
+		b.icon = UIIcons.tex(str(TAB_ICONS.get(id, "info")), 16)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.toggle_mode = true
 		b.button_pressed = id == tab
 		tab_bar.add_child(b)
