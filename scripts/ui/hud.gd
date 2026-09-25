@@ -36,6 +36,7 @@ var finance_panel: FinancePanel
 var stats_panel: StatsPanel
 var research_screen: ResearchScreen
 var goods_catalog: GoodsCatalog
+var global_econ: GlobalEconWindow   # Economía global: ciclos, monedas, bolsa y seguros.
 var government_panel: GovernmentPanel
 var logistics_panel: LogisticsPanel
 var trade_panel: TradePanel
@@ -99,6 +100,10 @@ func _ready() -> void:
 	goods_catalog = GoodsCatalog.new()
 	root.add_child(goods_catalog)
 	goods_catalog.setup()
+	global_econ = GlobalEconWindow.new()
+	root.add_child(global_econ)
+	global_econ.setup()
+	global_econ.message.connect(toast)
 	hint_lbl = UIKit.label("", 15, UIKit.ACCENT)
 	hint_lbl.anchor_left = 0.5
 	hint_lbl.anchor_right = 0.5
@@ -180,6 +185,9 @@ func _build_top_bar() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
+	var cycle := CycleIndicator.new()   # Economía global: fase del ciclo y señales.
+	row.add_child(cycle)
+	cycle.pressed.connect(func(): global_econ.open(0))
 	weather_lbl = _stat(row)
 	date_lbl = _stat(row)
 	date_lbl.custom_minimum_size.x = 225
@@ -267,6 +275,7 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Servicios públicos", func(): _show_dock("utilities"), 160))
 	box.add_child(UIKit.button("Transporte público", func(): _show_dock("transit"), 160))
 	box.add_child(UIKit.button("Catálogo de bienes", func(): goods_catalog.open(), 160))
+	box.add_child(UIKit.button("Economía mundial", func(): global_econ.open(), 160))
 
 
 # --- Notificaciones -----------------------------------------------------------------

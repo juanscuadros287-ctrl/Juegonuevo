@@ -5,7 +5,7 @@ Reemplazar los 5 países ficticios por el mundo real con sus países (ver docs/M
 
 Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que están en curso.
 
-## A. Economía global (después de la Fase 9A, que deja moneda por país)
+## A. Economía global (hecho — ver docs/ECONOMIA_GLOBAL.md)
 1. **Bolsa de valores mundial**, que se desbloquea por época y cuando el gobierno la autoriza (ley o institución). Permite convertir empresas en S.A., emitir acciones, comprar acciones de empresas NPC, cobrar dividendos y sufrir compras hostiles.
 2. **Ciclos económicos por país**: auge, recesión, crisis bancarias y burbujas, con señales previas.
 3. **Moneda e inflación por país**, no por pueblo: tipo de cambio que afecta importaciones y exportaciones.

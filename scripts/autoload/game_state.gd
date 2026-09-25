@@ -36,6 +36,7 @@ var map: Dictionary = {}               # Fase 9A: país por chunks, revelado y e
 var informal: Dictionary = {}          # Sección E: IVA causado, riesgo, caso abierto, negocios ocultos (MoneySim)
 var transit: Dictionary = {}           # Transporte: carreteras por puntos, buses, paraderos, parqueaderos (TransitSim)
 var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, acometidas, tarifas y facturas (GridSim/WaterSim)
+var world_econ: Dictionary = {}        # Economía global: ciclos, monedas, bolsa, seguros, calidad y marca (GlobalEconSim)
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
 var weather: Dictionary = {}
@@ -133,6 +134,7 @@ func _clear() -> void:
 	map = {}
 	economy = {}
 	utilities = {}
+	world_econ = {}
 	transit = {}
 	loans = []
 	next_loan_id = 1
@@ -158,6 +160,7 @@ func _init_expansions() -> void:
 	GridSim.init_state(self)
 	TransitSim.init_state(self)
 	MoneySim.init_state(self)   # Sección E: efectivo y mercado negro.
+	GlobalEconSim.init_state(self)   # Economía global (partidas viejas: valores por defecto).
 
 
 # --- Simulación diaria -----------------------------------------------------
@@ -172,6 +175,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	FreeMarketSim.produce(self)   # Libre mercado: producción de las empresas NPC.
 	LogisticsSim.daily(self)
 	TradeSim.daily(self)
+	GlobalEconSim.daily(self)   # Economía global: riesgo de los envíos (seguro de carga).
 	TransitSim.daily(self)   # Transporte: trazados a otros pueblos, buses, pasajes y parqueaderos.
 	TourismSim.daily(self)
 	RealEstateSim.daily(self)   # Bienes raíces: pago por etapas / pausa de obras.
@@ -202,6 +206,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		TourismSim.monthly(self)
 		AdvertisingSim.monthly(self)
 		EconomySim.monthly(self)
+		GlobalEconSim.monthly(self)   # Economía global: ciclos, monedas, calidad, bolsa y seguros.
 		PlayerSim.monthly(self)
 		MoneySim.monthly(self)   # Sección E: inspecciones y cierre del mes.
 		_record_month()
@@ -477,6 +482,7 @@ func to_dict() -> Dictionary:
 		"utilities": utilities,
 		"map": map,
 		"transit": transit,
+		"world_econ": world_econ,
 		"loans": loans,
 		"next_loan_id": next_loan_id,
 		"weather": weather,
@@ -552,6 +558,7 @@ func load_dict(d: Dictionary) -> void:
 	utilities = d.get("utilities", {})
 	map = d.get("map", {})   # Partida sin mapa (antes de la Fase 9A): MapSim la convierte en país.
 	transit = d.get("transit", {})
+	world_econ = d.get("world_econ", {})
 	_init_expansions()
 	if not d.has("utilities"):
 		GridSim.migrate(self)   # Partida sin redes: período de gracia si ya había centrales.

@@ -66,6 +66,7 @@ static func monthly(gs) -> void:
 	_expire_tenders(gs)
 	_pay_debts(gs)
 	_check_regime(gs)
+	GlobalEconSim.gov_monthly(gs)   # Economía global: el gobierno estudia la Ley de Mercado de Valores.
 
 
 ## Deudas pendientes del gobierno por obras públicas.

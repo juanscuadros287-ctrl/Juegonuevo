@@ -44,7 +44,7 @@ static func player_rate(gs) -> float:
 
 static func credit_limit(gs) -> float:
 	var nw := EconomySim.net_worth(gs)
-	var lim := maxf(float(ext_cfg().get("min_limit", 1000)) * gs.price_level(), nw * float(ext_cfg().get("limit_networth_ratio", 0.5)))
+	var lim := maxf(float(ext_cfg().get("min_limit", 1000)) * gs.price_level(), nw * float(ext_cfg().get("limit_networth_ratio", 0.5))) * GlobalEconSim.credit_limit_mult(gs)   # Ciclo económico.
 	if int(gs.player.get("credit_marks", 0)) >= 3:
 		return 0.0
 	return maxf(0.0, lim - EconomySim.player_debt(gs))
