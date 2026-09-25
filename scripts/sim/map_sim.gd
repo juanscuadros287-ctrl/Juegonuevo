@@ -457,7 +457,22 @@ static func climate_at(x: float, z: float, gs = null) -> Dictionary:
 ## Multiplicador del costo de una vía (carretera, riel, tubería, cable) entre a y b según el terreno:
 ## pendiente (excavar), subidas grandes (túnel), agua (puente), cañones y altura. 1.0 en terreno llano.
 ## Enganchado en RoadSim.segment_cost; TransitSim o GridSim pueden usarlo igual.
-static func terrain_cost_mult(a: Vector2, b: Vector2, gs = null) -> float:
+## Multiplicador medio (ponderado por largo) de una polilínea; include_water = false cuando quien
+## llama ya cobra los puentes aparte (TransitSim).
+static func terrain_cost_mult_path(points: PackedVector2Array, gs = null, include_water := true) -> float:
+	var total := 0.0
+	var acc := 0.0
+	var i := 0
+	while i < points.size() - 1:
+		var j := mini(i + 5, points.size() - 1)   # tramos de ~20 m (TransitSim muestrea cada 4 m)
+		var l := points[i].distance_to(points[j])
+		acc += terrain_cost_mult(points[i], points[j], gs, include_water) * l
+		total += l
+		i = j
+	return snappedf(acc / total, 0.01) if total > 0.0 else 1.0
+
+
+static func terrain_cost_mult(a: Vector2, b: Vector2, gs = null, include_water := true) -> float:
 	var g := gen(gs)
 	var tc: Dictionary = cfg().get("terrain_cost", {})
 	var length := a.distance_to(b)
@@ -484,7 +499,8 @@ static func terrain_cost_mult(a: Vector2, b: Vector2, gs = null) -> float:
 	var mult := 1.0
 	var slope := slope_sum / n
 	mult += minf(maxf(0.0, slope - float(tc.get("slope_free", 0.08))) * float(tc.get("slope_mult", 7.0)), float(tc.get("max_slope_extra", 4.0)))
-	mult += float(wet) / n * float(tc.get("bridge_mult", 3.0))
+	if include_water:
+		mult += float(wet) / n * float(tc.get("bridge_mult", 3.0))
 	# Túnel: una cresta alta entre los dos extremos.
 	if hmax - maxf(h_first, h_last) > float(tc.get("tunnel_rise", 22.0)):
 		mult += float(tc.get("tunnel_mult", 2.5))

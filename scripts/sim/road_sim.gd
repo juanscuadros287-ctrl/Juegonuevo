@@ -66,6 +66,9 @@ static func _cost_for_length(gs, length: float, kind: String) -> Dictionary:
 static func _zone_unlocked(gs, p: Vector2) -> bool:
 	var zs: float = gs.MAP_SIZE / gs.ZONE_GRID
 	var half: float = gs.MAP_SIZE * 0.5
+	if absf(p.x) > half or absf(p.y) > half:   # Fase 9A: parcelas compradas fuera del pueblo (índices globales).
+		var zc := MapSim.zone_at(gs, p.x, p.y)
+		return gs.is_zone_unlocked(zc.x, zc.y)
 	return gs.is_zone_unlocked(clampi(int((p.x + half) / zs), 0, gs.ZONE_GRID - 1), clampi(int((p.y + half) / zs), 0, gs.ZONE_GRID - 1))
 
 

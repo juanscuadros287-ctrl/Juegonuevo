@@ -133,6 +133,7 @@ func _town_card(gs, t: Dictionary) -> void:
 		b.disabled = TradeSim.open_block_reason(gs, tid) != ""
 		b.tooltip_text = TradeSim.open_block_reason(gs, tid)
 		v.add_child(b)
+		TransitPanel.trade_buttons(v, gs, tid, func(t, c): message.emit(t, c))   # Transporte: trazar el camino a mano.
 		return
 	# Ruta abierta.
 	var work: Dictionary = conn.get("work", {})
@@ -189,6 +190,7 @@ func _town_card(gs, t: Dictionary) -> void:
 		rb.disabled = rwhy != ""
 		rb.tooltip_text = rwhy
 		btns.add_child(rb)
+	TransitPanel.trade_buttons(v, gs, tid, func(t, c): message.emit(t, c))   # Transporte: trazado a mano del camino y la vía.
 
 
 func _trade_section(gs, tid: String) -> void:

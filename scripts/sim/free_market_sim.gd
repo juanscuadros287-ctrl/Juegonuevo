@@ -4,7 +4,7 @@ extends RefCounted
 ## en GameState.market (se guarda automáticamente; las partidas viejas lo crean al cargar).
 ##   NpcBusinessSim   — empresarios NPC del pueblo del jugador (abren, contratan, heredan, quiebran).
 ##   TownEconomySim   — pueblos vecinos que crecen y comercian entre ellos.
-##   ContractSim      — contratos de compraventa (solicitudes entrantes y ofertas salientes).
+##   ContractSim      — contratos de compra y venta, únicos o recurrentes a precio fijo.
 ##   GovPlansSim      — el gobierno construye parques, salud, policía, escuelas y vivienda social.
 ## Generador aleatorio propio (no altera la secuencia de gs.rng del resto de la simulación).
 
@@ -18,7 +18,7 @@ static func init_state(gs) -> void:
 	for key in ["inbox", "sent", "contracts", "shipments", "purchase_offers", "gov_plans", "log"]:
 		if not m.has(key):
 			m[key] = []
-	for key in ["reputation", "npc", "stats", "school"]:
+	for key in ["reputation", "reliability", "npc", "stats", "school"]:
 		if not m.has(key):
 			m[key] = {}
 	if not m.has("next_id"):
@@ -28,6 +28,7 @@ static func init_state(gs) -> void:
 		r.seed = int(gs.settings.get("seed", 0)) * 6007 + 31337
 		m["rng_state"] = str(r.state)
 	TownEconomySim.ensure(gs)
+	ContractSim.migrate(gs)   # Contratos de partidas viejas: cuotas mensuales → frecuencia 30.
 
 
 static func next_id(gs) -> int:
