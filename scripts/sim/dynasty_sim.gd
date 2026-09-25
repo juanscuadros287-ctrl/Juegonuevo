@@ -150,7 +150,13 @@ static func _old_age_warning(gs) -> void:
 	if p == null:
 		return
 	var age: int = p.age_years(gs.today())
-	if age < int(cfg().get("old_age_warning", 60)) or has_heir(gs):
+	if has_heir(gs):
+		return
+	# Urgente: enfermo o con salud baja y sin heredero → aviso importante cada mes.
+	if p.sick or p.health < float(cfg().get("urgent_health", 50.0)):
+		gs.notify("⚠ URGENTE: %s está %s y NO tiene heredero. Si muere, termina la dinastía. Busca médico/hospital y define un heredero (hijos, adopción u orden de herederos)." % [p.first_name, "enfermo/a" if p.sick else "con salud baja (%d%%)" % int(p.health)], "importante")
+		return
+	if age < int(cfg().get("old_age_warning", 60)):
 		return
 	var year: int = TimeManager.year()
 	var last := int(gs.player.get("heir_warn_year", -100))

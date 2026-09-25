@@ -211,6 +211,12 @@ func _update_top_bar() -> void:
 	health_lbl.text = "Salud: " + Fmt.pct(GameState.avg_health())
 	var p := GameState.player_citizen()
 	player_lbl.text = "%s, %d años%s" % [p.first_name, p.age_years(GameState.today()), " (enfermo/a)" if p.sick else ""] if p != null else ""
+	# Sin heredero: aviso permanente en rojo (si mueres, termina la dinastía).
+	var no_heir := p != null and not DynastySim.has_heir(GameState)
+	if no_heir:
+		player_lbl.text += "  ⚠ SIN HEREDERO"
+	player_lbl.add_theme_color_override("font_color", Color(1.0, 0.35, 0.3) if no_heir and (p.sick or p.health < 50.0) else (Color(1.0, 0.75, 0.3) if no_heir else Color(0.95, 0.95, 0.95)))
+	player_lbl.tooltip_text = "Si mueres sin heredero, termina la dinastía. Ten hijos, adopta o define tu orden de herederos (Mi Personaje)." if no_heir else ""
 	var season_label := str(WeatherSim.season_data(GameState).get("label", ""))
 	var w := WeatherSim.weather_data(GameState)
 	weather_lbl.text = "%s · %s %d°C" % [season_label, w.get("label", ""), int(GameState.weather.get("temp", 0))]
