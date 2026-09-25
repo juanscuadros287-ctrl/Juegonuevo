@@ -139,6 +139,8 @@ static func generate_deposits(map_type: String, seed_value: int, reg: Dictionary
 		var amount := snappedf(rng.randf_range(float(rng_amt[0]), float(rng_amt[1])) * float(p[2]), 1.0)
 		out.append({"id": out.size() + 1, "type": t, "x": pos.x, "z": pos.y, "amount": amount, "initial": amount})
 	terrain.free()
+	for d in out:
+		MineSim.init_new_deposit(d)   # Minas por partes: área irregular y ley.
 	return out
 
 
@@ -157,7 +159,7 @@ static func _find_spot(terrain: Terrain, rng: RandomNumberGenerator, ring: int, 
 		p = p.snapped(Vector2(0.5, 0.5))
 		var ok := true
 		for d in placed:
-			if p.distance_to(Vector2(float(d["x"]), float(d["z"]))) < spacing:
+			if p.distance_to(Vector2(float(d["x"]), float(d["z"]))) < float(d.get("sp", spacing)):
 				ok = false
 				break
 		if not ok or not terrain.is_land(p.x, p.y, 0.8):
@@ -170,7 +172,11 @@ static func _find_spot(terrain: Terrain, rng: RandomNumberGenerator, ring: int, 
 
 
 static func deposits(gs) -> Array:
-	return gs.logistics.get("deposits", [])
+	var deps: Array = gs.logistics.get("deposits", [])
+	for d in deps:
+		if not d.has("shape"):
+			MineSim.ensure_area(d)   # Migración: yacimientos puntuales → áreas en el mismo punto.
+	return deps
 
 
 static func get_deposit(gs, id: int) -> Dictionary:
@@ -180,10 +186,22 @@ static func get_deposit(gs, id: int) -> Dictionary:
 	return {}
 
 
-## Yacimiento más cercano de un tipo con mineral restante (o {} si no hay dentro del radio).
+## Yacimiento de un tipo con mineral restante que contiene el punto (x, z) en su área; si
+## hay varios, el de centro más cercano. Con max_dist ≥ 0: el más cercano a esa distancia del centro.
 static func nearest_deposit(gs, type: String, x: float, z: float, max_dist := -1.0) -> Dictionary:
 	if max_dist < 0.0:
-		max_dist = float(cfg().get("deposit_radius", 11.0))
+		var inside := {}
+		var inside_d := INF
+		for d in deposits(gs):
+			if str(d["type"]) != type or float(d["amount"]) <= 0.0 or not MineSim.contains(d, x, z):
+				continue
+			var dd := Vector2(x, z).distance_to(Vector2(float(d["x"]), float(d["z"])))
+			if dd < inside_d:
+				inside_d = dd
+				inside = d
+		if not inside.is_empty():
+			return inside
+		max_dist = float(cfg().get("deposit_radius", 11.0))   # Tolerancia de minas antiguas junto al punto.
 	var best := {}
 	var best_d := max_dist
 	for d in deposits(gs):
@@ -202,7 +220,7 @@ static func deposit_block_reason(gs, type_id: String, x: float, z: float) -> Str
 	if need == "":
 		return ""
 	if nearest_deposit(gs, need, x, z).is_empty():
-		return "Debe construirse junto a un yacimiento de %s (míralos en Logística → Región)" % resource_label(need).to_lower()
+		return "El centro de excavación va DENTRO del área de un yacimiento de %s con reserva (zona teñida en el suelo; míralos en Logística → Región)" % resource_label(need).to_lower()
 	return ""
 
 
@@ -211,7 +229,10 @@ static func deposit_for(gs, b: Dictionary) -> Dictionary:
 	var need := str(gs.level_def(b).get("requires_deposit", ""))
 	if need == "":
 		return {}
-	return nearest_deposit(gs, need, float(b["x"]), float(b["z"]))
+	var dep := nearest_deposit(gs, need, float(b["x"]), float(b["z"]))
+	if not dep.is_empty():
+		MineSim.state(b)["deposit_id"] = int(dep["id"])   # Para cerrar la mina cuando se agote.
+	return dep
 
 
 ## Descuenta mineral extraído y avisa cuando el yacimiento se agota.
@@ -221,8 +242,9 @@ static func deplete(gs, dep: Dictionary, qty: float) -> void:
 	var before := float(dep["amount"])
 	dep["amount"] = maxf(0.0, before - qty)
 	var initial := maxf(1.0, float(dep.get("initial", before)))
-	if before > initial * 0.1 and float(dep["amount"]) <= initial * 0.1:
-		gs.notify("El yacimiento de %s está casi agotado (quedan %d unidades)." % [resource_label(str(dep["type"])).to_lower(), int(dep["amount"])], "negocio")
+	var warn := float(MineSim.cfg().get("deplete_warn", 0.2))
+	if before > initial * warn and float(dep["amount"]) <= initial * warn:
+		gs.notify("Al yacimiento de %s le queda el %d %% (%d unidades): la extracción rinde menos y pronto se agotará." % [resource_label(str(dep["type"])).to_lower(), int(round(warn * 100.0)), int(dep["amount"])], "negocio")
 	elif float(dep["amount"]) <= 0.0:
 		gs.notify("Se agotó un yacimiento de %s. La mina ya no produce." % resource_label(str(dep["type"])).to_lower(), "jugador")
 
@@ -277,13 +299,14 @@ static func reveal_tech_deposits(gs) -> Array:
 		# Se evita a los yacimientos existentes y a los edificios ya construidos.
 		var avoid: Array = deps.duplicate()
 		for b in gs.buildings:
-			avoid.append({"x": float(b["x"]), "z": float(b["z"])})
+			avoid.append({"x": float(b["x"]), "z": float(b["z"]), "sp": 18.0})   # Los edificios, a la distancia de antes.
 		var rng_amt: Array = resource_def(t).get("amount", [1000, 2000])
 		for i in range(n):
 			var ring := 1 if reg_deps.has(t) and i == 0 else 2
 			var pos := _find_spot(terrain, rng, ring, avoid, float(cfg().get("deposit_min_spacing", 18.0)), mt)
 			var amount := snappedf(rng.randf_range(float(rng_amt[0]), float(rng_amt[1])), 1.0)
 			var dep := {"id": next_id, "type": t, "x": pos.x, "z": pos.y, "amount": amount, "initial": amount}
+			MineSim.init_new_deposit(dep)   # Minas por partes: área irregular y ley.
 			next_id += 1
 			deps.append(dep)
 			avoid.append(dep)

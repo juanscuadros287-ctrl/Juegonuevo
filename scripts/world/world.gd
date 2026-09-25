@@ -92,7 +92,7 @@ func _ready() -> void:
 	interior.name = "Interior"
 	add_child(interior)
 
-	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new(), UtilitiesVisuals.new()]:
+	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new(), UtilitiesVisuals.new(), MiningVisuals.new()]:
 		add_child(vis)
 		vis.setup(self)
 
@@ -368,6 +368,8 @@ func start_placement(type_id: String, tier: String) -> void:
 	cancel_placement()
 	if UtilitiesVisuals.instance and UtilitiesVisuals.instance.trace_mode:
 		UtilitiesVisuals.instance.cancel_trace()
+	if MiningVisuals.instance and MiningVisuals.instance.part_mode:
+		MiningVisuals.instance.cancel_part_placement()
 	place_type = type_id
 	place_tier = tier
 	var parts: Array = Housing.exterior_parts({"type": type_id, "level": 1, "tier": tier}) if type_id == "vivienda" else GameData.level_def(type_id, 1).get("model", [])
@@ -478,6 +480,8 @@ func _update_placement() -> void:
 	if LogisticsVisuals.instance:
 		gm = LogisticsVisuals.instance.placement_feedback(place_type, place_pos, move_id, place_ok, gm)
 		link_hint = LogisticsVisuals.instance.placement_text()
+	if MiningVisuals.instance:
+		link_hint += MiningVisuals.instance.placement_text(place_type, place_pos)   # Minas: dentro del yacimiento.
 	_set_ghost_mat(_ghost, gm)
 	var deg := int(round(fposmod(rad_to_deg(place_rot), 360.0)))
 	if move_id >= 0:

@@ -19,7 +19,7 @@
     "cantera": "piedra"
   },
   "deposit_radius": 11.0,
-  "deposit_min_spacing": 18.0,
+  "deposit_min_spacing": 40.0,
   "minor_deposit_chance": 0.5,
   "minor_deposit_amount": 0.35,
   "place_names": ["San Isidro", "Santa Rosa", "La Esperanza", "El Carmen", "San Pedro", "Las Palmas", "Buenavista", "El Rosario", "San Miguel", "La Candelaria", "Piedras Blancas", "Los Alisos", "Santa Bárbara", "El Retiro", "Guayabal", "San Lorenzo"],

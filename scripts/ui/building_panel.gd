@@ -72,6 +72,8 @@ func rebuild() -> void:
 		_add_tab("Vehículos", FleetTab.build(GameState, b, hud, rebuild))   # Comprar/vender vehículos.
 	if mine and WarehouseTab.applies(GameState, b):
 		_add_tab("Almacén", WarehouseTab.build(GameState, b, hud))   # Almacenes individuales y vínculo.
+	if MineTab.applies(GameState, b):
+		_add_tab("Mina", MineTab.build(GameState, b, hud, rebuild))   # Minas por partes: reserva, ley y frentes.
 	if cat == "vivienda":
 		_add_tab("Vivienda", _home_tab(b, mine))
 	if UnitsTab.applies(GameState, b):
@@ -212,7 +214,7 @@ func _summary_text(b: Dictionary) -> String:
 		for c in GameState.employees_of(bid):
 			if c.job_kind == "empleo":
 				emp += 1
-		s += "Empleados: %d/%d\n" % [emp, int(ld.get("jobs", 0))]
+		s += "Empleados: %d/%d\n" % [emp, MineSim.jobs(GameState, b)]   # Minas: empleos según los frentes.
 		var product := str(def.get("product", ""))
 		if product == "construccion":
 			s += "Capacidad de obra: %.1f trabajadores-día/día\n" % BusinessSim.expected_output(GameState, b)

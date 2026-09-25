@@ -84,16 +84,18 @@ static func asked_wage(gs, c: Citizen, type_id: String) -> float:
 static func expected_output(gs, b: Dictionary) -> float:
 	var def: Dictionary = gs.building_def(b)
 	var ld: Dictionary = gs.level_def(b)
-	var total := 0.0
+	var prods := []
 	for c in gs.employees_of(int(b["id"])):
 		if c.job_kind == "empleo" and not c.sick:
-			total += productivity(c, str(def.get("skill", "")))
+			prods.append(productivity(c, str(def.get("skill", ""))))
+	var total := MineSim.workforce(gs, b, prods)   # Minas: solo trabajan los puestos de los frentes.
 	total *= float(ld.get("prod_per_worker", 1.0))
 	if def.get("seasonal", false):
 		total *= float(WeatherSim.season_data(gs).get("farming", 1.0)) * float(WeatherSim.weather_data(gs).get("farming", 1.0)) * EventsSim.mult(gs, "farming")
 	total *= float(def.get("resource_bonus", {}).get(str(gs.settings.get("map_type", "")), 1.0))
 	total *= RegionSim.region_mult(gs, b)   # Fase 6: recursos de la región.
 	total *= TechSim.mult(gs, "production", str(def.get("product", "")))
+	total *= MineSim.yield_mult(gs, b)   # Minas: ley × reserva restante × escombrera.
 	return total
 
 
@@ -275,7 +277,7 @@ static func candidates(gs, b: Dictionary) -> Array:
 
 
 static func hire(gs, b: Dictionary, c: Citizen, wage: float) -> String:
-	var jobs := int(gs.level_def(b).get("jobs", 0))
+	var jobs := MineSim.jobs(gs, b)   # Minas: los empleos dependen de los frentes.
 	var current := 0
 	for e in gs.employees_of(int(b["id"])):
 		if e.job_kind == "empleo":

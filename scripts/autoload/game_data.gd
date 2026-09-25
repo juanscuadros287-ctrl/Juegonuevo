@@ -48,6 +48,7 @@ func load_all() -> void:
 	government = _load("government.json")
 	events = _load("events.json")
 	_extra = {}
+	MineSim.patch_defs(self)   # Minas por partes: modelos grandes del centro de excavación.
 
 
 ## Carga <base>.json y fusiona encima todos los <base>_*.json (contenido modular por fase).

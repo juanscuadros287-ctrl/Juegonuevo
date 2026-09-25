@@ -155,9 +155,12 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 		var ofp: float = gs.footprint_of(b)
 		if Vector2(x, z).distance_to(Vector2(float(b["x"]), float(b["z"]))) < (fp + ofp) * 0.5 + 0.8:
 			return "Se superpone con otro edificio"
-	var dep := RegionSim.deposit_block_reason(gs, type_id, x, z)   # Fase 6: minas junto a su yacimiento.
+	var dep := RegionSim.deposit_block_reason(gs, type_id, x, z)   # Fase 6: minas dentro del área de su yacimiento.
 	if dep != "":
 		return dep
+	var mine_parts := MineSim.parts_block_reason(gs, x, z, fp, ignore_id)   # Minas: no encima de frentes ni escombreras.
+	if mine_parts != "":
+		return mine_parts
 	return WaterSim.placement_block_reason(gs, type_id, x, z)   # Redes: la toma de río va junto al agua dulce.
 
 
@@ -172,6 +175,7 @@ static func start_construction(gs, type_id: String, x: float, z: float, rot: flo
 	var cost := cost_for(gs, type_id, 1, false, tier)
 	_pay_cost(gs, cost)
 	var b := make_building(gs, type_id, 1, x, z, rot, "jugador")
+	MineSim.on_new_building(gs, b)   # Minas: el centro nuevo empieza sin frentes.
 	b["status"] = "construccion"
 	b["work_needed"] = float(cost["days"] * cost["workers"])
 	b["name"] = bname

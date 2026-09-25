@@ -163,6 +163,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	TourismSim.daily(self)
 	RealEstateSim.daily(self)   # Bienes raíces: pago por etapas / pausa de obras.
 	ConstructionSim.daily(self)
+	MineSim.daily(self)   # Minas: obras de frentes, mantenimiento y cierre al agotarse.
 	GridSim.daily(self)   # Redes: tormentas, reparaciones y acometidas (antes del reparto eléctrico).
 	MarketSim.begin_day(self)
 	WaterSim.daily(self)
