@@ -29,8 +29,8 @@ const B_MONTANA := 8
 const B_NEVADO := 9
 const BIOME_COLORS := [
 	Color(0.62, 0.58, 0.44), Color(0.86, 0.8, 0.58), Color(0.55, 0.55, 0.42), Color(0.34, 0.42, 0.25),
-	Color(0.43, 0.62, 0.3), Color(0.24, 0.46, 0.22), Color(0.13, 0.38, 0.15), Color(0.87, 0.74, 0.5),
-	Color(0.52, 0.49, 0.43), Color(0.94, 0.95, 0.98)]
+	Color(0.4, 0.57, 0.28), Color(0.22, 0.42, 0.2), Color(0.12, 0.34, 0.14), Color(0.84, 0.71, 0.48),
+	Color(0.45, 0.42, 0.37), Color(0.92, 0.93, 0.96)]
 ## Color de cada bioma para el minimapa (el agua se ve azul).
 const BIOME_MAP_COLORS := [
 	Color(0.16, 0.36, 0.58), Color(0.86, 0.8, 0.58), Color(0.25, 0.5, 0.72), Color(0.33, 0.43, 0.3),

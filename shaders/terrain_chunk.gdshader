@@ -7,15 +7,19 @@ render_mode cull_disabled;
 uniform vec3 season_tint = vec3(1.0);
 uniform float snow_amount : hint_range(0.0, 1.0) = 0.0;
 uniform float fog : hint_range(0.0, 1.0) = 0.0;
-uniform vec3 fog_color = vec3(0.8, 0.84, 0.9);
+uniform vec3 fog_color = vec3(0.56, 0.6, 0.66);
 
 void fragment() {
-	NORMAL = normalize(cross(dFdy(VERTEX), dFdx(VERTEX)));
+	vec3 n = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
+	if (dot(n, VERTEX) > 0.0) {
+		n = -n;   // el signo de dFdy depende del backend: la normal siempre mira a la cámara
+	}
+	NORMAL = n;
 	vec3 c = COLOR.rgb;
 	float grass = COLOR.a;
 	c = mix(c, c * season_tint, grass);
 	c = mix(c, vec3(0.92, 0.94, 0.97) * max(max(COLOR.r, COLOR.g), 0.45) * 1.6, grass * snow_amount);
-	c = mix(c, fog_color * (0.82 + 0.18 * dot(c, vec3(0.33))), fog);
+	c = mix(c, fog_color * (0.7 + 0.4 * dot(c, vec3(0.33))), fog);
 	ALBEDO = c;
 	ROUGHNESS = 0.95;
 	SPECULAR = 0.2 * (1.0 - fog);

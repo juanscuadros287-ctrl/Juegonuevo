@@ -139,7 +139,8 @@ func _update_camera() -> void:
 	camera.far = maxf(2500.0, distance * 4.0)
 	camera.near = clampf(distance * 0.004, 0.3, 40.0)
 	if env:
-		env.fog_density = BASE_FOG * minf(1.0, 400.0 / maxf(distance, 1.0))
+		# Igual que antes en el pueblo; sobre el país solo una bruma leve en el horizonte.
+		env.fog_density = BASE_FOG * pow(minf(1.0, TOWN_MAX_DIST / maxf(distance, 1.0)), 1.6)
 
 
 func _pan(v: Vector2) -> void:

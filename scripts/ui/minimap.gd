@@ -25,7 +25,7 @@ var _redraw_t := 0.0
 func setup(p_world: Node) -> void:
 	world = p_world
 	terrain = world.terrain
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Pequeño
 	small_panel = PanelContainer.new()
@@ -56,7 +56,10 @@ func setup(p_world: Node) -> void:
 	# Grande
 	big_panel = PanelContainer.new()
 	big_panel.add_theme_stylebox_override("panel", UIKit.panel_style(Color(0.08, 0.09, 0.11, 0.95), 8, 10))
-	big_panel.set_anchors_preset(Control.PRESET_CENTER)
+	big_panel.anchor_left = 0.5
+	big_panel.anchor_right = 0.5
+	big_panel.anchor_top = 0.5
+	big_panel.anchor_bottom = 0.5
 	big_panel.offset_left = -(BIG + 330) * 0.5
 	big_panel.offset_right = (BIG + 330) * 0.5
 	big_panel.offset_top = -(BIG + 20) * 0.5
@@ -275,7 +278,9 @@ class MapView:
 		for cy in range(g.c0, g.c1 + 1):
 			for cx in range(g.c0, g.c1 + 1):
 				if not MapSim.is_revealed(gs, cx, cy):
-					draw_rect(Rect2((cx - g.c0) * cpx, (cy - g.c0) * cpx, cpx + 0.5, cpx + 0.5), Color(0.8, 0.83, 0.88, 0.62))
+					var x0 := roundf((cx - g.c0) * cpx)
+					var y0 := roundf((cy - g.c0) * cpx)
+					draw_rect(Rect2(x0, y0, roundf((cx - g.c0 + 1) * cpx) - x0, roundf((cy - g.c0 + 1) * cpx) - y0), Color(0.8, 0.83, 0.88, 0.62))
 		# Fronteras tenues entre municipios.
 		if _borders.is_empty():
 			_build_borders()

@@ -130,7 +130,10 @@ func _build_markers() -> void:
 		label.render_priority = 2
 		label.outline_modulate = Color(0, 0, 0, 0.85)
 		label.offset = Vector2(0, 34)
-		var nm := town_name if player else (str(names[int(z["id"]) % names.size()]) if not names.is_empty() else "Pueblo %d" % int(z["id"]))
+		var nm := town_name
+		if not player:
+			var k := markers.size()
+			nm = ("%s%s" % [str(names[k % names.size()]), "" if k < names.size() else " del Norte" if k < names.size() * 2 else " %d" % k]) if not names.is_empty() else "Pueblo %d" % int(z["id"])
 		z["placeholder_name"] = nm
 		label.text = nm
 		node.add_child(label)
@@ -178,7 +181,7 @@ func _process(_delta: float) -> void:
 	var cp := cam.global_position
 	var alt := cp.y - maxf(terrain.height_at(cp.x, cp.z), terrain.water_level)
 	var k := smoothstep(SHOW_FROM, FULL_AT, alt)
-	line_mat.albedo_color = Color(1, 1, 1, 0.42 * k)
+	line_mat.albedo_color = Color(1, 1, 1, 0.55 * k)
 	lines.visible = k > 0.01
 	for m in markers:
 		var node: Node3D = m["node"]

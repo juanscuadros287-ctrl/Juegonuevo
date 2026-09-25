@@ -28,7 +28,7 @@ const MAX_MID := 48
 const FAR_BATCH := 24
 const FRAME_BUDGET_MS := 5.0
 const DIM_LOCKED := 0.32
-const FOG_AMOUNT := 0.78
+const FOG_AMOUNT := 0.62
 const OUTSIDE_FOG := 0.9
 
 var size: float = 400.0
@@ -445,7 +445,7 @@ func _make_chunk_mat(fog: float) -> ShaderMaterial:
 	m.shader = load("res://shaders/terrain_chunk.gdshader")
 	m.set_shader_parameter("fog", fog)
 	if fog >= OUTSIDE_FOG:
-		m.set_shader_parameter("fog_color", Vector3(0.74, 0.78, 0.84))
+		m.set_shader_parameter("fog_color", Vector3(0.6, 0.64, 0.7))
 	return m
 
 
