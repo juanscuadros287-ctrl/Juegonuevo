@@ -10,5 +10,3 @@ Los agentes se detuvieron por el límite semanal de uso. Su avance quedó guarda
 | interfaz.patch | Sistema de diseño, iconos, HUD compacto, paneles y gráficas |
 
 Retomar: `git apply wip/<parche>.patch` en una rama nueva desde `f32063a` (o merge y resolver), terminar lo pendiente y correr todas las pruebas.
-| economia_global.patch | Bolsa mundial, ciclos, moneda por país, seguros, calidad y marca |
-| efectivo_mercado_negro.patch | IVA, efectivo/banco, ventas no declaradas, mercado negro, inspecciones y soborno |
