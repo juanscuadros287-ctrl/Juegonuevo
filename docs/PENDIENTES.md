@@ -1,5 +1,8 @@
 # Pedidos en cola (aprobados por Sebastián)
 
+## PRIORIDAD: mapa mundial con países reales
+Reemplazar los 5 países ficticios por el mundo real con sus países (ver docs/MAPA_MUNDIAL.md, sección CAMBIO). Se combina con el parche wip/fase9b_mapa.patch.
+
 Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que están en curso.
 
 ## A. Economía global (después de la Fase 9A, que deja moneda por país)
