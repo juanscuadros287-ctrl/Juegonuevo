@@ -25,6 +25,7 @@ func _ready() -> void:
 	_test_lobby_and_scandal()
 	_test_factions()
 	_test_save_load()
+	await _test_ui()
 	print("== %s (%d fallos) ==" % ["TODO OK" if failures == 0 else "CON FALLOS", failures])
 	get_tree().quit(1 if failures > 0 else 0)
 
@@ -335,3 +336,44 @@ func _test_save_load() -> void:
 	check(HeirsSim.heir_order(GameState).is_empty() and PoliticsSim.state(GameState)["offices"].is_empty(), "partidas antiguas cargan con valores por defecto")
 	TimeManager.advance_days(65)
 	check(GameState.running, "la simulación sigue tras cargar")
+
+
+# --- Interfaz: el panel del personaje con familia, herederos, matrimonio y política ------------------------
+
+func _test_ui() -> void:
+	_new_town(312)
+	var world: Node3D = load("res://scenes/main.tscn").instantiate()
+	add_child(world)
+	await get_tree().process_frame
+	var hud: Hud = world.hud
+	var p := GameState.player_citizen()
+	var kid := _kid(24)
+	var small := _kid(9)
+	HeirsSim.set_plan(GameState, small, "tutor", "ciencia")
+	HeirsSim.add_heir(GameState, kid.id)
+	HeirsSim.add_heir(GameState, small.id)
+	HeirsSim.ensure_talents(GameState, kid)["politica"] = 70.0
+	PlayerSim._add_affinity(GameState, _single_npc("F" if p.gender == "M" else "M").id, 60.0)
+	_single_npc("F" if kid.gender == "M" else "M")
+	GameState.trade["connections"] = [{"town_id": "x", "town_name": "Villa Norte", "distance": 60.0, "transport": "carreta"}]
+	ConstructionSim.start_construction(GameState, "granja", 30, -8, 0.0, "Granja", "sas")
+	PoliticsSim.take_office(GameState, kid, "concejal")
+	hud._show_dock("player")
+	await get_tree().process_frame
+	var pp: PlayerPanel = hud.player_panel
+	var texts := []
+	for n in pp.actions.find_children("*", "Button", true, false):
+		texts.append((n as Button).text)
+	check(texts.any(func(t): return t == "▲") and texts.any(func(t): return t == "Añadir a la lista" or t == "▼"), "panel: orden de herederos con subir y bajar")
+	check(texts.any(func(t): return t.begins_with("Proponerle matrimonio")), "panel: propuesta de matrimonio con ficha")
+	check(texts.any(func(t): return t.begins_with("Buscar pareja en otro pueblo")), "panel: matrimonio con otro pueblo")
+	check(texts.any(func(t): return t.begins_with("Legal ")) and texts.any(func(t): return t.begins_with("Soborno ")), "panel: lobby legal y soborno")
+	# Pulsar ▲ reordena.
+	for n in pp.actions.find_children("*", "Button", true, false):
+		if (n as Button).text == "▲":
+			(n as Button).pressed.emit()
+			break
+	await get_tree().process_frame
+	check(HeirsSim.heir_order(GameState).size() == 2, "panel: el botón subir funciona")
+	world.queue_free()
+	await get_tree().process_frame
