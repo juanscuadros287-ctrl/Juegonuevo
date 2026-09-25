@@ -223,6 +223,7 @@ func _summary_text(b: Dictionary) -> String:
 	var lab_txt := LaborSim.status_text(GameState, b)   # Trabajo: sindicato, huelga y ofertas de la competencia.
 	if lab_txt != "" and GameState.owned_by_player(b):
 		s += "[color=#e66]%s[/color]\n" % lab_txt
+	s += GlobalEconSim.panel_lines(GameState, b)   # Economía global: calidad, marca y seguros.
 	var site_crew := 0
 	for c in GameState.employees_of(bid):
 		if c.job_kind == "obra":

@@ -36,6 +36,7 @@ var finance_panel: FinancePanel
 var stats_panel: StatsPanel
 var research_screen: ResearchScreen
 var goods_catalog: GoodsCatalog
+var global_econ: GlobalEconWindow   # Economía global: ciclos, monedas, bolsa y seguros.
 var government_panel: GovernmentPanel
 var logistics_panel: LogisticsPanel
 var trade_panel: TradePanel
@@ -44,6 +45,7 @@ var tourism_panel: TourismPanel
 var realestate_panel: RealEstatePanel   # Bienes raíces
 var utilities_panel: UtilitiesPanel
 var transit_panel: TransitPanel
+var cash_panel: CashPanel   # Sección E: efectivo y riesgo
 var era_lbl: Label
 
 # Interior
@@ -98,6 +100,10 @@ func _ready() -> void:
 	goods_catalog = GoodsCatalog.new()
 	root.add_child(goods_catalog)
 	goods_catalog.setup()
+	global_econ = GlobalEconWindow.new()
+	root.add_child(global_econ)
+	global_econ.setup()
+	global_econ.message.connect(toast)
 	hint_lbl = UIKit.label("", 15, UIKit.ACCENT)
 	hint_lbl.anchor_left = 0.5
 	hint_lbl.anchor_right = 0.5
@@ -179,6 +185,9 @@ func _build_top_bar() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
+	var cycle := CycleIndicator.new()   # Economía global: fase del ciclo y señales.
+	row.add_child(cycle)
+	cycle.pressed.connect(func(): global_econ.open(0))
 	weather_lbl = _stat(row)
 	date_lbl = _stat(row)
 	date_lbl.custom_minimum_size.x = 225
@@ -251,6 +260,7 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Mis Empresas", func(): _show_dock("companies"), 160))
 	box.add_child(UIKit.button("Bienes raíces", func(): _show_dock("realestate"), 160))
 	box.add_child(UIKit.button("Finanzas", func(): _show_dock("finance"), 160))
+	box.add_child(UIKit.button("Efectivo y riesgo", func(): _show_dock("cash"), 160))
 	box.add_child(UIKit.button("Estadísticas", func(): _show_dock("stats"), 160))
 	box.add_child(UIKit.button("Población", _open_population, 160))
 	box.add_child(UIKit.button("Notificaciones", _open_log, 160))
@@ -265,6 +275,7 @@ func _build_side_menu() -> void:
 	box.add_child(UIKit.button("Servicios públicos", func(): _show_dock("utilities"), 160))
 	box.add_child(UIKit.button("Transporte público", func(): _show_dock("transit"), 160))
 	box.add_child(UIKit.button("Catálogo de bienes", func(): goods_catalog.open(), 160))
+	box.add_child(UIKit.button("Economía mundial", func(): global_econ.open(), 160))
 
 
 # --- Notificaciones -----------------------------------------------------------------
@@ -373,7 +384,8 @@ func _build_dock() -> void:
 	utilities_panel = UtilitiesPanel.new()
 	contracts_panel = ContractsPanel.new()
 	transit_panel = TransitPanel.new()
-	for panel in [logistics_panel, trade_panel, tourism_panel, realestate_panel, utilities_panel, contracts_panel, transit_panel]:
+	cash_panel = CashPanel.new()
+	for panel in [logistics_panel, trade_panel, tourism_panel, realestate_panel, utilities_panel, contracts_panel, transit_panel, cash_panel]:
 		panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 		stack.add_child(panel)
 		panel.setup(self)
@@ -402,7 +414,10 @@ func _show_dock(mode: String) -> void:
 	realestate_panel.visible = mode == "realestate"
 	utilities_panel.visible = mode == "utilities"
 	transit_panel.visible = mode == "transit"
+	cash_panel.visible = mode == "cash"
 	match mode:
+		"cash":
+			cash_panel.refresh()
 		"transit":
 			transit_panel.refresh()
 		"realestate":

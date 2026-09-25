@@ -507,7 +507,7 @@ static func export_price(gs, town_id: String, good: String, extra := 0.0) -> flo
 	var sat := float(row.get("sat", 0.0)) + maxf(0.0, extra)
 	var sat_f := maxf(float(pc.get("min_factor", 0.35)), 1.0 / (1.0 + float(pc.get("saturation_weight", 0.6)) * sat / month_demand))
 	var p := base_price(good) * float(row.get("buy_mult", 1.0)) * float(row.get("fluct", 1.0)) * sat_f
-	p *= _event_mult(t, good, gs.today()) * gs.price_mult() * _diff_trade(gs, "export")
+	p *= _event_mult(t, good, gs.today()) * gs.price_mult() * _diff_trade(gs, "export") * GlobalEconSim.trade_fx_mult(gs, town_id)   # Tipo de cambio.
 	return p
 
 
@@ -523,7 +523,7 @@ static func import_price(gs, town_id: String, good: String, extra := 0.0) -> flo
 	var scar_f := minf(float(pc.get("max_factor", 2.2)), 1.0 + float(pc.get("scarcity_weight", 0.5)) * scar / supply)
 	var p := base_price(good) * float(row.get("sell_mult", 1.0)) * float(row.get("fluct", 1.0)) * scar_f
 	p /= _event_mult(t, good, gs.today())  # Un auge de demanda allá encarece; una bonanza abarata.
-	p *= gs.price_mult() * _diff_trade(gs, "import") * GovSim.import_mult(gs)
+	p *= gs.price_mult() * _diff_trade(gs, "import") * GovSim.import_mult(gs) * GlobalEconSim.trade_fx_mult(gs, town_id)   # Tipo de cambio.
 	return p
 
 

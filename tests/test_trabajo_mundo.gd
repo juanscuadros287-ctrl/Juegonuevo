@@ -343,7 +343,7 @@ func _test_climate() -> void:
 	check(out1 < out0 or out0 <= 0.0, "producción de la granja %.2f → %.2f" % [out0, out1])
 	check(ClimateSim.output_mult(gs, mill) == 1.0, "no afecta a un negocio que no es agro (leñador)")
 	check(price1 > price0 * 1.1 and price1 < price0 * 1.5, "sube el precio de la comida por escasez (%s → %s)" % [Fmt.money2(price0), Fmt.money2(price1)])
-	check(EconomySim.market_price(gs, "harina") > 0.0 and ClimateSim.price_mult(gs, "harina") < ClimateSim.price_mult(gs, "trigo"), "los procesados suben menos que la materia prima")
+	check(EconomySim.market_price(gs, "harina") > 0.0 and float(gs.world_events["climate"]["price"].get("harina", 1.0)) < float(gs.world_events["climate"]["price"].get("trigo", 1.0)), "los procesados suben menos que la materia prima")
 	# Tecnología que mitiga.
 	gs.techs.append("canales_riego")
 	TechSim._recompute_mods(gs)

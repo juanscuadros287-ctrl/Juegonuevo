@@ -1,0 +1,2842 @@
+diff --git a/data/technologies_clima.json b/data/technologies_clima.json
+new file mode 100644
+index 0000000..511a08e
+--- /dev/null
++++ b/data/technologies_clima.json
+@@ -0,0 +1,71 @@
++{
++ "_nota": "Trabajo y mundo (docs/TRABAJO_MUNDO.md): mitigación del clima y de la contaminación. Efecto 'clima' (key = evento) multiplica el daño de ese evento climático. El árbol ubica cada tecnología por época y rama; ninguna comparte celda: canales de riego (colonial, agricultura, tras rotación de cultivos, columna libre), diques (industrial, construcción, tras arquitectura urbana), filtros (industrial, industria, tras química), invernaderos (moderna, agricultura, tras refrigeración) y precipitadores (moderna, industria, tras filtros).",
++ "canales_riego": {
++  "label": "Canales de riego",
++  "era": 1,
++  "branch": "agricultura",
++  "cost": 540,
++  "requires": [
++   "rotacion_cultivos"
++  ],
++  "effects": [
++   {"type": "clima", "key": "sequia", "value": 0.5},
++   {"type": "clima", "key": "ola_calor", "value": 0.7},
++   {"type": "clima", "key": "mala_cosecha", "value": 0.85}
++  ],
++  "description": "Acequias y norias llevan agua a los campos: las sequías y las olas de calor dañan mucho menos las cosechas."
++ },
++ "diques": {
++  "label": "Diques y encauzamiento",
++  "era": 2,
++  "branch": "construccion",
++  "cost": 2700,
++  "requires": [
++   "arquitectura_urbana"
++  ],
++  "effects": [
++   {"type": "clima", "key": "inundacion", "value": 0.35}
++  ],
++  "description": "Muros de contención y canales de alivio: las crecidas del río casi no afectan campos ni edificios ribereños."
++ },
++ "filtros_industriales": {
++  "label": "Filtros industriales",
++  "era": 2,
++  "branch": "industria",
++  "cost": 3000,
++  "requires": [
++   "quimica"
++  ],
++  "effects": [],
++  "description": "Filtros de humo, lavadores de gases y depuradoras de agua: cada fábrica, mina o central puede instalarlos (−50 % de contaminación) con costo y mantenimiento.",
++  "future": "Mejora «Filtros y depuradoras» en el panel de cada negocio contaminante"
++ },
++ "invernaderos": {
++  "label": "Invernaderos",
++  "era": 3,
++  "branch": "agricultura",
++  "cost": 8000,
++  "requires": [
++   "refrigeracion"
++  ],
++  "effects": [
++   {"type": "clima", "key": "helada", "value": 0.35},
++   {"type": "clima", "key": "mala_cosecha", "value": 0.7},
++   {"type": "clima", "key": "sequia", "value": 0.8}
++  ],
++  "description": "Vidrio, calefacción y riego controlado: las heladas y las plagas ya no arruinan la cosecha."
++ },
++ "precipitadores": {
++  "label": "Precipitadores electrostáticos",
++  "era": 3,
++  "branch": "industria",
++  "cost": 9000,
++  "requires": [
++   "filtros_industriales",
++   "electricidad"
++  ],
++  "effects": [],
++  "description": "Captura eléctrica del hollín y depuradoras modernas: la mejora de filtros reduce la contaminación un 80 %.",
++  "future": "Mejora de filtros de segunda generación"
++ }
++}
+diff --git a/data/trabajo_mundo.json b/data/trabajo_mundo.json
+new file mode 100644
+index 0000000..0b2952d
+--- /dev/null
++++ b/data/trabajo_mundo.json
+@@ -0,0 +1,95 @@
++{
++ "_nota": "Secciones B (trabajo) y D (mundo) de docs/PENDIENTES.md. Todo moderado. Ver docs/TRABAJO_MUNDO.md. Cada sistema usa su propio RNG determinista (semilla + día + sal) para no alterar el resto de la simulación.",
++ "experience": {
++  "_nota": "Experiencia por oficio (años trabajados en el sector = habilidad del negocio). Rendimiento ×(1 + max_bonus × min(1, años / veteran_years)); pide sueldo ×(1 + wage_bonus × lo mismo).",
++  "veteran_years": 10.0,
++  "max_bonus": 0.2,
++  "wage_bonus": 0.1,
++  "initial_share": 0.5
++ },
++ "unions": {
++  "_nota": "Sindicatos desde la época industrial. Un negocio con min_staff empleados o más puede organizarse si los sueldos están bajo el mercado (ratio sueldo / sueldo pedido), la felicidad es baja o falta personal (sobrecarga de horas).",
++  "min_era": 2,
++  "min_staff": 3,
++  "wage_ratio_ok": 0.97,
++  "happiness_ok": 50.0,
++  "overwork_ratio": 0.5,
++  "base_chance": 0.12,
++  "max_chance": 0.1,
++  "cooldown_days": 360,
++  "reply_days": 14,
++  "raise_range": [0.06, 0.18],
++  "counter_min_ratio": 0.5,
++  "strike_days": [3, 10],
++  "strike_output": [0.0, 0.3],
++  "settlement_ratio": 0.5,
++  "strike_happiness": -4.0,
++  "accept_happiness": 5.0
++ },
++ "npc": {
++  "_nota": "Competencia NPC suave: guerras de precio (sin vender a pérdida) y ofertas de sueldo a tus mejores empleados.",
++  "price_war_chance": 0.1,
++  "price_war_days": [30, 75],
++  "price_war_max_cut": 0.12,
++  "price_war_margin_share": 0.7,
++  "price_war_cooldown_days": 240,
++  "poach_chance": 0.06,
++  "poach_min_years": 1.5,
++  "poach_raise": [0.12, 0.22],
++  "poach_reserve_days": 45,
++  "poach_reply_days": 7,
++  "poach_leave_chance": 0.7,
++  "poach_cooldown_days": 180
++ },
++ "climate": {
++  "_nota": "Eventos climáticos por estación y clima de la zona (MapSim.climate_at en la plaza y en cada edificio). farming = rendimiento del agro mientras dura; price = alza de precio de los bienes agrícolas por escasez (se atenúa con la tecnología). forecast_days = aviso previo (0 = sin pronóstico; forecast_tech amplía). Mitigación: efectos 'clima' de data/technologies_clima.json (multiplica el daño).",
++  "agro_types": ["granja", "trigal", "algodonal", "rebano", "estancia", "colmenar", "huerto_hierbas"],
++  "agro_goods": ["comida", "trigo", "algodon", "lana", "ganado", "harina", "pan", "carne", "cera", "hierbas"],
++  "processed_share": 0.5,
++  "processed_goods": ["harina", "pan", "carne"],
++  "river_radius": 14.0,
++  "cooldown_days": 60,
++  "events": {
++   "sequia": {"label": "Sequía", "seasons": ["verano", "primavera"], "chance": 0.035, "dry": 1.5, "hot": 0.6, "days": [30, 75], "farming": 0.55, "price": 0.25, "forecast_days": 12,
++    "text": "Sequía: el agro rinde menos y suben los alimentos. El riego y los invernaderos la mitigan."},
++   "helada": {"label": "Helada", "seasons": ["invierno", "otono", "primavera"], "chance": 0.03, "cold": 1.6, "altitude": 0.012, "days": [8, 20], "farming": 0.6, "price": 0.15, "forecast_days": 0, "forecast_tech": "telegrafo", "forecast_tech_days": 4,
++    "text": "Helada: cultivos y rebaños dañados. Los invernaderos la mitigan."},
++   "inundacion": {"label": "Inundación", "seasons": ["primavera", "otono"], "chance": 0.02, "wet": 1.4, "rain_boost": 1.5, "days": [7, 18], "farming": 0.65, "river_output": 0.6, "river_damage": 0.04, "price": 0.15, "forecast_days": 5,
++    "text": "Inundación: campos anegados y edificios junto al río afectados. Los diques la contienen."},
++   "ola_calor": {"label": "Ola de calor", "seasons": ["verano"], "chance": 0.035, "hot": 1.2, "days": [10, 25], "farming": 0.8, "price": 0.1, "forecast_days": 6,
++    "text": "Ola de calor: el agro y el ganado rinden menos. El riego ayuda."},
++   "mala_cosecha": {"label": "Mala cosecha (plagas)", "seasons": ["otono", "verano"], "chance": 0.02, "wet": 0.5, "days": [30, 60], "farming": 0.75, "price": 0.15, "forecast_days": 10,
++    "text": "Mala cosecha: plagas en los campos. El riego y los invernaderos la reducen."}
++  }
++ },
++ "pollution": {
++  "_nota": "Emisión = pollution del nivel × (empleados / puestos) × (1 − filtros). Se acumula por fuente (acc = acc × keep + emisión, mensual) y alcanza a las casas a menos de radius m (cae lineal con la distancia). Enfermedad ×(1 + min(max_disease, exposición × disease_per_point)); felicidad −min(max_unhappy, exposición × unhappy_per_point).",
++  "keep": 0.5,
++  "radius": 45.0,
++  "disease_per_point": 0.03,
++  "max_disease": 0.6,
++  "unhappy_per_point": 0.35,
++  "max_unhappy": 6.0,
++  "filters": {
++   "1": {"label": "Filtros y depuradoras", "tech": "filtros_industriales", "reduction": 0.5, "cost_ratio": 0.25, "upkeep_ratio": 0.02},
++   "2": {"label": "Precipitadores electrostáticos y depuradoras modernas", "tech": "precipitadores", "reduction": 0.8, "cost_ratio": 0.35, "upkeep_ratio": 0.025}
++  }
++ },
++ "wars": {
++  "_nota": "Guerras sin combate entre países ficticios (data/countries.json) o potencias externas. Encarecen o cortan importaciones de algunos bienes, suben la demanda (precio) de otros y crean demanda de guerra en los pueblos conectados (evento del pueblo). Terminan solas.",
++  "min_months": 24,
++  "chance_monthly": 0.006,
++  "cooldown_days": 1800,
++  "months": [4, 12],
++  "powers": ["el Imperio de Valdoria", "la Confederación del Norte", "el Reino de Costaluna", "la Liga Mercante de Ostra"],
++  "demand_goods": ["acero", "hierro", "carbon", "comida", "conservas", "carne", "herramientas", "ropa", "zapatos", "cuero", "combustible"],
++  "demand_count": [3, 5],
++  "demand_mult": [1.1, 1.25],
++  "import_goods": ["maquinaria", "motor", "componentes_electronicos", "medicamentos", "relojes", "electrodomesticos", "herramientas", "tela", "acero"],
++  "import_count": [2, 4],
++  "import_mult": [1.3, 1.6],
++  "cut_chance": 0.35,
++  "cut_mult": 2.0,
++  "town_event_mult": 1.3
++ }
++}
+diff --git a/docs/PENDIENTES.md b/docs/PENDIENTES.md
+index f0e0e28..46de6e1 100644
+--- a/docs/PENDIENTES.md
++++ b/docs/PENDIENTES.md
+@@ -9,7 +9,7 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
+ 4. **Seguros**: de incendio, robo y carga. También pueden ser un negocio del jugador.
+ 5. **Marca y calidad de producto.** Calidad = f(nivel del edificio, tecnología, maquinaria, habilidad de los empleados, calidad de los insumos). La reputación de la marca sube el precio aceptado; la mala calidad la baja.
+ 
+-## B. Trabajo (moderado, nada exagerado)
++## B. Trabajo (hecho — ver docs/TRABAJO_MUNDO.md)
+ 6. **Sindicatos y huelgas**, cuando hay sueldos bajos o malas condiciones. Paros cortos y negociables.
+ 7. **Experiencia por oficio**: el veterano produce más; si se va, se pierde.
+ 8. **Competencia NPC**: guerras de precio suaves y ofertas a tus empleados.
+@@ -19,7 +19,7 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
+ 10. **Política**: campañas, cargos, lobby y riesgo de escándalo.
+ 11. **Matrimonio**: al casarse se unen las fortunas, pero el jugador decide el orden de herederos (1.º, 2.º, 3.º…). Proponer matrimonio viendo el patrimonio de la otra persona; ella acepta o rechaza, no se obliga.
+ 
+-## D. Mundo
++## D. Mundo (hecho — ver docs/TRABAJO_MUNDO.md)
+ 12. **Clima y estaciones** que afectan la producción: sequías, heladas, inundaciones y malas cosechas.
+ 13. **Contaminación**: enferma a los vecinos y trae multas. Se reduce con maquinaria especializada (filtros, depuradoras) y con energías renovables.
+ 15. **Guerras entre países sin combate** (moderadas): cortan rutas y cambian la demanda.
+diff --git a/docs/TRABAJO_MUNDO.md b/docs/TRABAJO_MUNDO.md
+new file mode 100644
+index 0000000..511cf22
+--- /dev/null
++++ b/docs/TRABAJO_MUNDO.md
+@@ -0,0 +1,112 @@
++# Trabajo y mundo — secciones B y D de PENDIENTES
++
++Pedido de Sebastián: "dentro de la medida de lo normal, nada exagerado". Todo es moderado, raro y con aviso.
++La configuración está en `data/trabajo_mundo.json` y las tecnologías nuevas en `data/technologies_clima.json`.
++
++## Resumen para el jugador
++- **Experiencia por oficio.** Cada empleado acumula años en su sector (la habilidad del negocio: agricultura,
++  minería, artesanía…). Con 10 años es veterano: rinde **+20 %** (lineal: 5 años = +10 %) y pide hasta un
++  **10 % más de sueldo**. Se ve en la pestaña **Empleados**, en la lista de candidatos ("oficio 4.2 a (+8 %)") y
++  en la ficha del ciudadano (**Oficios**). Si renuncia o lo despides, la experiencia se va con él y la competencia
++  NPC puede contratarlo.
++- **Sindicatos y huelgas** (desde la Revolución industrial). En un negocio con 3 empleados o más, si los sueldos
++  están bajo el mercado, la felicidad es baja o falta personal (demasiadas horas), los empleados pueden organizarse:
++  cada mes hay a lo sumo un **10 %** de probabilidad (según la presión). Primero **piden un aumento** (6–18 %) y
++  te avisan. En la pestaña Empleados puedes **Aceptar**, hacer una **Contraoferta** (la mitad) o **Rechazar**.
++  Una contraoferta de al menos la mitad se acepta con probabilidad creciente; si no, o si rechazas o no respondes
++  en 14 días, hay una **huelga de 3 a 10 días** con la producción al **0–30 %**. Termina sola con un **acuerdo**
++  (la mitad del aumento pedido). Después, un año de calma en ese negocio.
++- **Competencia NPC.** Las empresas NPC que venden lo mismo que tú pueden **bajar precios** unos 30–75 días
++  (máx. 12 %, y solo lo que les permite su margen: nunca venden a pérdida; si pierden dinero no bajan). A veces
++  **ofrecen más sueldo** (+12–22 %) a tu empleado más experimentado del mismo oficio: te avisan y en la pestaña
++  Empleados puedes **Igualar** o **Dejarlo ir**. Si no respondes en 7 días, se va con un 70 % de probabilidad.
++- **Clima y estaciones.** Sequías, heladas, inundaciones, olas de calor y malas cosechas según la estación y el
++  clima de la zona (`MapSim.climate_at`: un pueblo seco sufre más sequías, uno frío o alto más heladas, uno de
++  río más inundaciones). Afectan al **agro** (granja, trigal, algodonal, rebaño, estancia, colmenar, huerto de
++  hierbas), cada edificio según su clima local; la **inundación** también a los edificios **junto al río**
++  (menos producción y una reparación). Mientras duran **suben los precios** de los bienes agrícolas (los
++  procesados —harina, pan, carne— la mitad). **Pronóstico**: casi siempre hay aviso unos días antes (las heladas
++  solo con el telégrafo). En promedio ~4 % de probabilidad mensual y 60 días de calma entre eventos.
++- **Mitigación con tecnología** (nuevas): *Canales de riego* (colonial: sequía −50 %, ola de calor −30 %, plagas
++  −15 %), *Diques y encauzamiento* (industrial: inundación −65 %), *Invernaderos* (moderna: helada −65 %, plagas
++  −30 %, sequía −20 %). La tecnología también atenúa el alza de precios.
++- **Contaminación.** Industrias pesadas, centrales de carbón o gas, minas y refinerías emiten según su nivel
++  (`pollution`) y su producción (empleados/puestos). Se **acumula en la zona** y enferma y entristece a los
++  vecinos que viven a menos de 45 m (hasta ×1,6 de probabilidad de enfermar y −6 de felicidad). El panel del
++  edificio muestra "Contaminación: X (−Y % con filtros) · acumulada en la zona · N viviendas afectadas" y humo
++  proporcional sobre el edificio (capa visual `PollutionVisuals`).
++  - **Multas**: las cobra el gobierno según su política (`env_fine`: los virreyes no multan; liberales y
++    conservadores poco; el Partido Social más; el Verde mucho) sobre la emisión real. La **licencia ambiental**
++    del lobby (PoliticsSim) exime. Llega un aviso mensual con el total.
++  - **Filtros y depuradoras**: mejora por negocio en el Resumen del edificio. Con *Filtros industriales*
++    (industrial) −50 % (cuesta 25 % del nivel, mantenimiento 2 %/mes); con *Precipitadores electrostáticos*
++    (moderna) −80 % (35 %, 2,5 %/mes). El equipo se importa (el dinero sale del pueblo).
++  - **Renovables**: las centrales eólica, solar e hidroeléctrica no contaminan.
++- **Guerras entre países sin combate.** Rara (0,6 % mensual, desde el año 2 y con 5 años de calma después):
++  entre dos países ficticios de `data/countries.json` (nunca el tuyo) o potencias externas. Durante 4–12 meses
++  sube la demanda (precio de mercado ×1,10–1,25) de 3–5 bienes (acero, hierro, carbón, alimentos, ropa,
++  calzado, combustible…), se encarece (×1,3–1,6) o **corta** (×2, contrabando) la importación de 2–4 bienes
++  (maquinaria, motores, componentes, medicamentos…), y los pueblos conectados piden un bien de guerra (sus
++  precios de exportación ×1,3). Aviso al empezar y al terminar; termina sola.
++
++## Archivos
++| Archivo | Contenido |
++|---|---|
++| `scripts/sim/labor_sim.gd` | `LaborSim`: experiencia por oficio, sindicatos y huelgas, guerras de precio y ofertas NPC. RNG propio (`rf/rr/ri`: semilla + día + sal) |
++| `scripts/sim/climate_sim.gd` | `ClimateSim`: eventos por estación y clima de la zona, pronóstico, efecto por edificio (`output_mult`), alza de precios (`price_mult`), inundación junto al río |
++| `scripts/sim/pollution_sim.gd` | `PollutionSim`: emisión, acumulación, exposición por vivienda, enfermedad/felicidad, multa, filtros, texto del panel |
++| `scripts/sim/war_sim.gd` | `WarSim`: guerras, demanda (`price_mult`), importación (`import_mult`), eventos de pueblos |
++| `scripts/world/pollution_visuals.gd` | Humo proporcional sobre los edificios contaminantes |
++| `data/trabajo_mundo.json` | Parámetros de todo lo anterior |
++| `data/technologies_clima.json` | Canales de riego, diques, filtros industriales, invernaderos, precipitadores (efecto `clima`) |
++| `tests/test_trabajo_mundo.gd/.tscn` | Pruebas de todo (ver abajo) |
++
++## Estado y guardado
++- `GameState.labor`: `unions` (por id de edificio: `state` demanda/huelga, `pct`, plazos, `factor`), `price_wars`
++  (por id de empresa NPC: `until`, `base_markup`, `cut`), `offers` (ofertas a tus empleados), `cooldown`,
++  `next_id`, `seeded`.
++- `GameState.world_events`: `climate` (`events` con `start/until/sev`, `price` y `bmult` precalculados, `cool_until`),
++  `pollution` (`acc` por fuente, `exposure` por vivienda, `fines_last`, `filters_upkeep_last`), `war` (`active`,
++  `last_end`, `count`).
++- `Citizen.trade_exp` (oficio → años). Edificio: `b["filters"]` (0, 1 o 2).
++- Todo con valores por defecto: una partida vieja carga sin estos campos y los adultos reciben parte de su
++  experiencia general como experiencia en su mejor habilidad (`initial_share` = 0,5).
++
++## Enganches en archivos compartidos (cambios de una línea)
++- `game_state.gd`: variables `labor` y `world_events`, `_clear`, `to_dict/load_dict`, `_init_expansions`
++  (init de los 4 módulos), `simulate_day` (diario: `LaborSim/ClimateSim/WarSim.daily` antes de `PlayerSim.daily`;
++  mensual: `LaborSim` y `PollutionSim` tras `FreeMarketSim`, `ClimateSim` y `WarSim` tras `EventsSim`).
++- `citizen.gd`: campo `trade_exp` (guardado).
++- `business_sim.gd`: `productivity` × `LaborSim.exp_mult`; `asked_wage` × `LaborSim.wage_mult`;
++  `expected_output` × `LaborSim.strike_mult` × `ClimateSim.output_mult`.
++- `npc_business_sim.gd`: `_output` × `ClimateSim.output_mult`.
++- `economy_sim.gd`: `good_factor` × `ClimateSim.price_mult` × `WarSim.price_mult` (sube también la referencia de
++  los vecinos, así que no compran menos por el alza: pagan más).
++- `market_sim.gd`: importación de los vecinos × `WarSim.import_mult(gs, good)`.
++- `population_sim.gd`: `_health` × `PollutionSim.disease_mult`; `_happiness` + `PollutionSim.happiness_delta`.
++- `events_sim.gd`: la contaminación global suma `PollutionSim.total_emission` (con producción y filtros).
++- `gov_sim.gd`: la multa ambiental usa `PollutionSim.fine` (emisión real; respeta la licencia ambiental).
++- `tech_sim.gd`: texto del efecto `clima`.
++- UI: `building_panel.gd` (líneas de contaminación/clima/sindicato en el resumen, botón de filtros, caja del
++  sindicato y de ofertas en Empleados, experiencia por oficio), `hud.gd` (Oficios en la ficha), `world.gd`
++  (`PollutionVisuals`).
++- **No** se tocaron map_sim, country_gen, terrain, trade_sim, construction_sim ni transit_sim. La guerra escribe en
++  `gs.trade.towns[i]["event"]` (el mecanismo de eventos de pueblo que ya existe), solo si el pueblo no tiene uno
++  vigente, y lo borra al terminar.
++
++## Economía cerrada
++- Sueldos (aumentos, acuerdos, ofertas igualadas): del jugador o de la caja NPC a los ciudadanos.
++- Multas: del jugador al tesoro. Huelga, clima, precios y guerra: no mueven dinero por sí mismos.
++- Salen del pueblo (como el mantenimiento o las importaciones): filtros (compra y mantenimiento) y la reparación
++  por inundación. Nada crea dinero (lo verifica la prueba).
++- Cada sistema usa su propio RNG determinista, así el resto de la simulación no cambia su secuencia aleatoria.
++
++## Pruebas
++`godot --headless res://tests/test_trabajo_mundo.tscn`: datos y árbol sin superposiciones; experiencia (+20 %
++veterano, sueldo, acumulación, se va con él y la NPC lo contrata); sindicato colonial no, pedido, rechazo, huelga
++que baja la producción y termina con acuerdo, plazo vencido, aceptar y contraoferta; guerra de precios sin pérdida
++y fin, oferta de sueldo igualada / rechazada / vencida; sequía con pronóstico que baja la producción agrícola y
++sube el precio, riego e invernaderos que mitigan, inundación junto al río y diques; contaminación que se acumula y
++enferma a los vecinos, casas lejanas sin efecto, multa, filtro que la reduce, mantenimiento, licencia ambiental,
++renovables y virreyes sin multa; guerra que cambia precios e importaciones y termina; dinero conservado; guardado,
++carga y partida vieja.
+diff --git a/scripts/autoload/game_state.gd b/scripts/autoload/game_state.gd
+index ea6d575..d9b7423 100644
+--- a/scripts/autoload/game_state.gd
++++ b/scripts/autoload/game_state.gd
+@@ -34,6 +34,8 @@ var economy: Dictionary = {}           # nivel de precios, inflación, oferta/de
+ var map: Dictionary = {}               # Fase 9A: país por chunks, revelado y expediciones (MapSim)
+ var transit: Dictionary = {}           # Transporte: carreteras por puntos, buses, paraderos, parqueaderos (TransitSim)
+ var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, acometidas, tarifas y facturas (GridSim/WaterSim)
++var labor: Dictionary = {}             # Trabajo: sindicatos, huelgas, guerras de precio y ofertas NPC (LaborSim)
++var world_events: Dictionary = {}      # Mundo: clima, contaminación local y guerras (ClimateSim/PollutionSim/WarSim)
+ var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
+ var next_loan_id: int = 1
+ var weather: Dictionary = {}
+@@ -129,6 +131,8 @@ func _clear() -> void:
+ 	map = {}
+ 	economy = {}
+ 	utilities = {}
++	labor = {}
++	world_events = {}
+ 	transit = {}
+ 	loans = []
+ 	next_loan_id = 1
+@@ -153,6 +157,10 @@ func _init_expansions() -> void:
+ 	RealEstateSim.init_state(self)
+ 	GridSim.init_state(self)
+ 	TransitSim.init_state(self)
++	LaborSim.init_state(self)   # Trabajo: experiencia por oficio, sindicatos y competencia NPC.
++	ClimateSim.init_state(self)   # Mundo: clima por zona, contaminación local y guerras.
++	PollutionSim.init_state(self)
++	WarSim.init_state(self)
+ 
+ 
+ # --- Simulación diaria -----------------------------------------------------
+@@ -179,6 +187,9 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
+ 	BusinessSim.end_day(self)
+ 	FreeMarketSim.daily(self)     # Empresas NPC, contratos y planes del gobierno.
+ 	TechSim.end_day(self)
++	LaborSim.daily(self)   # Trabajo: experiencia, plazos de sindicatos, huelgas, guerras de precio y ofertas.
++	ClimateSim.daily(self)   # Mundo: pronósticos y eventos climáticos.
++	WarSim.daily(self)
+ 	PlayerSim.daily(self)
+ 	if new_month and running:
+ 		RealEstateSim.monthly(self)   # Bienes raíces: unidades, preventas, arriendo y venta.
+@@ -189,7 +200,11 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
+ 		BusinessSim.monthly(self)
+ 		GovSim.monthly(self)
+ 		FreeMarketSim.monthly(self)
++		LaborSim.monthly(self)   # Trabajo: sindicatos, guerras de precio y ofertas a tus empleados.
++		PollutionSim.monthly(self)   # Mundo: contaminación acumulada por zona y filtros.
+ 		EventsSim.monthly(self)
++		ClimateSim.monthly(self)
++		WarSim.monthly(self)
+ 		LogisticsSim.monthly(self)
+ 		TradeSim.monthly(self)
+ 		TransitSim.monthly(self)
+@@ -466,6 +481,8 @@ func to_dict() -> Dictionary:
+ 		"realestate": realestate,
+ 		"economy": economy,
+ 		"utilities": utilities,
++		"labor": labor,
++		"world_events": world_events,
+ 		"map": map,
+ 		"transit": transit,
+ 		"loans": loans,
+@@ -539,6 +556,8 @@ func load_dict(d: Dictionary) -> void:
+ 	market = d.get("market", {})
+ 	realestate = d.get("realestate", {})
+ 	utilities = d.get("utilities", {})
++	labor = d.get("labor", {})
++	world_events = d.get("world_events", {})
+ 	map = d.get("map", {})   # Partida sin mapa (antes de la Fase 9A): MapSim la convierte en país.
+ 	transit = d.get("transit", {})
+ 	_init_expansions()
+diff --git a/scripts/sim/business_sim.gd b/scripts/sim/business_sim.gd
+index d17c8bb..440e087 100644
+--- a/scripts/sim/business_sim.gd
++++ b/scripts/sim/business_sim.gd
+@@ -70,6 +70,7 @@ static func productivity(c: Citizen, skill: String) -> float:
+ 		p *= 1.3
+ 	p *= clampf(c.health / 100.0, 0.3, 1.0)
+ 	p *= 0.75 + c.happiness / 100.0 * 0.5
++	p *= LaborSim.exp_mult(c, skill)   # Trabajo: experiencia en el oficio (veterano hasta +20 %).
+ 	return p
+ 
+ 
+@@ -77,6 +78,7 @@ static func asked_wage(gs, c: Citizen, type_id: String) -> float:
+ 	var def := GameData.building_def(type_id)
+ 	var s := float(c.skills.get(str(def.get("skill", "")), 0.0))
+ 	var w := float(def.get("base_wage", 2.0)) * (0.8 + s / 200.0 + minf(c.experience, 30.0) * 0.01 + c.education * 0.1 + (0.4 if c.profession != "" else 0.0))
++	w *= LaborSim.wage_mult(c, str(def.get("skill", "")))   # Trabajo: el veterano pide algo más.
+ 	return snappedf(w * gs.price_mult(), 0.05)
+ 
+ 
+@@ -96,6 +98,7 @@ static func expected_output(gs, b: Dictionary) -> float:
+ 	total *= RegionSim.region_mult(gs, b)   # Fase 6: recursos de la región.
+ 	total *= TechSim.mult(gs, "production", str(def.get("product", "")))
+ 	total *= MineSim.yield_mult(gs, b)   # Minas: ley × reserva restante × escombrera.
++	total *= LaborSim.strike_mult(gs, b) * ClimateSim.output_mult(gs, b)   # Trabajo: huelga · Mundo: clima de la zona.
+ 	return total
+ 
+ 
+diff --git a/scripts/sim/citizen.gd b/scripts/sim/citizen.gd
+index caf1860..edbdfb5 100644
+--- a/scripts/sim/citizen.gd
++++ b/scripts/sim/citizen.gd
+@@ -11,6 +11,7 @@ var health: float = 100.0           # 0-100
+ var sick: bool = false
+ var skills: Dictionary = {}         # habilidad -> 0-100
+ var experience: float = 0.0         # años de experiencia laboral
++var trade_exp: Dictionary = {}      # Trabajo: años de experiencia por oficio (habilidad del sector) → LaborSim
+ var education: int = 0             # índice en education_levels
+ var money: float = 0.0
+ var debt: float = 0.0
+@@ -70,6 +71,7 @@ func to_dict() -> Dictionary:
+ 		"last_birth_day": last_birth_day, "needs_met": needs_met, "visual_seed": visual_seed,
+ 		"school_id": school_id, "school_years": school_years, "school_level": school_level, "uni_years": uni_years,
+ 		"profession": profession, "career": career, "prison_until": prison_until, "prison_id": prison_id,
++		"trade_exp": trade_exp,
+ 	}
+ 
+ 
+@@ -113,4 +115,8 @@ static func from_dict(d: Dictionary) -> Citizen:
+ 	c.career = str(d.get("career", ""))
+ 	c.prison_until = int(d.get("prison_until", -1))
+ 	c.prison_id = int(d.get("prison_id", -1))
++	c.trade_exp = {}
++	var te: Dictionary = d.get("trade_exp", {})
++	for k in te:
++		c.trade_exp[str(k)] = float(te[k])
+ 	return c
+diff --git a/scripts/sim/climate_sim.gd b/scripts/sim/climate_sim.gd
+new file mode 100644
+index 0000000..aee4ac8
+--- /dev/null
++++ b/scripts/sim/climate_sim.gd
+@@ -0,0 +1,307 @@
++class_name ClimateSim
++extends RefCounted
++## Clima y estaciones que afectan la producción (sección D.12, docs/TRABAJO_MUNDO.md).
++##
++## Eventos de varios días (sequía, helada, inundación, ola de calor, mala cosecha) según la estación y el
++## clima de la zona (MapSim.climate_at en la plaza; cada edificio se compara con la plaza). Afectan sobre
++## todo al agro (granja, trigal, algodonal, rebaño, estancia…); la inundación también a los edificios junto
++## al río (menos producción y una reparación). Mientras duran suben los precios de los bienes agrícolas por
++## escasez (EconomySim.good_factor). Con pronóstico (aviso previo) cuando se puede. Mitigación con
++## tecnología: efectos "clima" de data/technologies_clima.json (riego, diques, invernaderos).
++## Estado: GameState.world_events["climate"]. RNG propio (LaborSim.rf): no altera el resto.
++
++static var _clim_cache: Dictionary = {}     # "id|x|z|clave" -> clima local del edificio
++static var _river_cache: Dictionary = {}    # "x|z|clave" -> bool
++static var _town_key := ""
++static var _town_clim: Dictionary = {}
++
++
++static func cfg() -> Dictionary:
++	return LaborSim.cfg().get("climate", {})
++
++
++static func ev_def(id: String) -> Dictionary:
++	return cfg().get("events", {}).get(id, {})
++
++
++static func st(gs) -> Dictionary:
++	if not gs.world_events.has("climate"):
++		gs.world_events["climate"] = {}
++	return gs.world_events["climate"]
++
++
++static func init_state(gs) -> void:
++	var s := st(gs)
++	if not s.has("events") or not (s["events"] is Array):
++		s["events"] = []
++	for k in ["price", "bmult"]:
++		if not s.has(k) or not (s[k] is Dictionary):
++			s[k] = {}
++	s["cool_until"] = int(s.get("cool_until", 0))
++
++
++# --- Clima local ----------------------------------------------------------------------------------------
++
++static func _gen_key(gs) -> String:
++	return "%s|%d|%s" % [str(gs.settings.get("map_type", "")), int(gs.settings.get("seed", 0)), MapSim.country_id(gs)]
++
++
++static func town_climate(gs) -> Dictionary:
++	var k := _gen_key(gs)
++	if k != _town_key or _town_clim.is_empty():
++		_town_key = k
++		_town_clim = MapSim.climate_at(0.0, 0.0, gs)
++		_clim_cache = {}
++		_river_cache = {}
++	return _town_clim
++
++
++static func building_climate(gs, b: Dictionary) -> Dictionary:
++	town_climate(gs)
++	var key := "%d|%d|%d" % [int(b["id"]), int(float(b.get("x", 0.0))), int(float(b.get("z", 0.0)))]
++	if not _clim_cache.has(key):
++		_clim_cache[key] = MapSim.climate_at(float(b.get("x", 0.0)), float(b.get("z", 0.0)), gs)
++	return _clim_cache[key]
++
++
++## ¿Hay río o lago a menos de river_radius metros?
++static func near_river(gs, b: Dictionary) -> bool:
++	town_climate(gs)
++	var x := float(b.get("x", 0.0))
++	var z := float(b.get("z", 0.0))
++	var key := "%d|%d" % [int(x), int(z)]
++	if _river_cache.has(key):
++		return bool(_river_cache[key])
++	var r := float(cfg().get("river_radius", 14.0))
++	var found := false
++	for p in [Vector2.ZERO, Vector2(r, 0), Vector2(-r, 0), Vector2(0, r), Vector2(0, -r), Vector2(r, r) * 0.7, Vector2(-r, r) * 0.7, Vector2(r, -r) * 0.7, Vector2(-r, -r) * 0.7]:
++		if MapSim.biome_at(x + p.x, z + p.y, gs) == "rio":
++			found = true
++			break
++	_river_cache[key] = found
++	return found
++
++
++static func is_agro(def_type: String) -> bool:
++	return cfg().get("agro_types", []).has(def_type)
++
++
++# --- Eventos ------------------------------------------------------------------------------------------------
++
++static func active_events(gs) -> Array:
++	return st(gs).get("events", []).filter(func(e): return int(e["start"]) <= gs.today())
++
++
++static func forecasts(gs) -> Array:
++	return st(gs).get("events", []).filter(func(e): return int(e["start"]) > gs.today())
++
++
++## Probabilidad mensual de un evento según la estación, el clima de la plaza y la dificultad.
++static func chance(gs, id: String) -> float:
++	var d := ev_def(id)
++	var seasons: Array = d.get("seasons", [])
++	if not seasons.is_empty() and not seasons.has(gs.season):
++		return 0.0
++	var c := town_climate(gs)
++	var t := float(c.get("temperature", 0.0))
++	var h := float(c.get("humidity", 0.0))
++	var f := 1.0
++	f += float(d.get("dry", 0.0)) * maxf(0.0, -h)
++	f += float(d.get("wet", 0.0)) * maxf(0.0, h)
++	f += float(d.get("hot", 0.0)) * maxf(0.0, t)
++	f += float(d.get("cold", 0.0)) * maxf(0.0, -t)
++	f += float(d.get("altitude", 0.0)) * maxf(0.0, float(c.get("altitude", 0.0)))
++	if id == "inundacion":
++		if str(gs.settings.get("map_type", "")) == "rio":
++			f *= float(d.get("rain_boost", 1.5))
++		if str(gs.weather.get("type", "")) in ["lluvia", "tormenta"]:
++			f *= float(d.get("rain_boost", 1.5))
++	return float(d.get("chance", 0.02)) * f * float(gs.diff().get("event_freq_mult", 1.0))
++
++
++static func monthly(gs) -> void:
++	var s := st(gs)
++	if not s["events"].is_empty() or gs.today() < int(s.get("cool_until", 0)):
++		return
++	if gs.problems.get("events", []).any(func(e): return str(e.get("id", "")) == "sequia"):
++		return   # Ya hay una sequía general (EventsSim): no se suma otra.
++	for id in cfg().get("events", {}):
++		if LaborSim.rf(gs, "clima_" + str(id)) < chance(gs, str(id)):
++			schedule(gs, str(id))
++			return
++
++
++## Programa un evento: con pronóstico si se puede (empieza en unos días) o de inmediato.
++static func schedule(gs, id: String, lead := -1, days := -1, sev := -1.0) -> Dictionary:
++	var d := ev_def(id)
++	if d.is_empty():
++		return {}
++	if lead < 0:
++		lead = int(d.get("forecast_days", 0))
++		var ft := str(d.get("forecast_tech", ""))
++		if lead <= 0 and ft != "" and gs.has_tech(ft):
++			lead = int(d.get("forecast_tech_days", 3))
++	if days < 0:
++		days = LaborSim.ri(gs, "clima_dias_" + id, d.get("days", [10, 30]))
++	if sev < 0.0:
++		sev = snappedf(LaborSim.rr(gs, "clima_sev_" + id, [0.8, 1.2]), 0.01)
++	var e := {"id": id, "start": gs.today() + lead, "until": gs.today() + lead + maxi(1, days), "sev": sev, "started": false}
++	st(gs)["events"].append(e)
++	if lead > 0:
++		gs.notify("Pronóstico del tiempo: probable %s en unos %d días (%d días de duración). Prepara tus campos y existencias." % [str(d.get("label", id)).to_lower(), lead, days], "clima")
++	else:
++		_start(gs, e)
++	_refresh(gs)
++	return e
++
++
++static func _start(gs, e: Dictionary) -> void:
++	e["started"] = true
++	var d := ev_def(str(e["id"]))
++	var mit := mitigation(gs, str(e["id"]))
++	var extra := "" if mit >= 0.99 else " (tu tecnología reduce el daño un %d %%)" % int(round((1.0 - mit) * 100.0))
++	gs.notify("%s%s" % [str(d.get("text", d.get("label", e["id"]))), extra], "importante")
++	gs.count("climate_events")
++	if str(e["id"]) == "inundacion":
++		_flood_damage(gs, e)
++
++
++## Inundación: reparación de los edificios del jugador junto al río (el dinero sale del pueblo: materiales).
++static func _flood_damage(gs, e: Dictionary) -> void:
++	var d := ev_def("inundacion")
++	var ratio := float(d.get("river_damage", 0.04)) * float(e.get("sev", 1.0)) * mitigation(gs, "inundacion")
++	var total := 0.0
++	var n := 0
++	for b in gs.buildings:
++		if not gs.owned_by_player(b) or str(b["status"]) == "construccion" or not near_river(gs, b):
++			continue
++		var cost: float = float(gs.level_def(b).get("cost", 0.0)) * gs.price_mult() * ratio
++		if cost <= 0.0:
++			continue
++		BusinessSim.pay(gs, b, cost, "reparaciones")
++		total += cost
++		n += 1
++	if n > 0:
++		gs.notify("La inundación dañó %d edificios tuyos junto al río: reparaciones por %s." % [n, Fmt.money(total)], "jugador")
++
++
++static func daily(gs) -> void:
++	var s := st(gs)
++	var list: Array = s.get("events", [])
++	if list.is_empty():
++		if not s["price"].is_empty() or not s["bmult"].is_empty():
++			s["price"] = {}
++			s["bmult"] = {}
++		return
++	var today: int = gs.today()
++	var changed := false
++	for e in list.duplicate():
++		if not bool(e.get("started", false)) and today >= int(e["start"]):
++			_start(gs, e)
++			changed = true
++		if today >= int(e["until"]):
++			list.erase(e)
++			s["cool_until"] = today + int(cfg().get("cooldown_days", 60))
++			gs.notify("Terminó: %s. El campo se recupera y los precios vuelven a la normalidad." % str(ev_def(str(e["id"])).get("label", e["id"])), "clima")
++			changed = true
++	if changed or today % 7 == 0:
++		_refresh(gs)
++
++
++# --- Efectos --------------------------------------------------------------------------------------------------
++
++## Multiplicador del daño por la tecnología (1 = sin mitigación).
++static func mitigation(gs, id: String) -> float:
++	return clampf(TechSim.mult(gs, "clima", id), 0.0, 1.0)
++
++
++## Sensibilidad local (0,6–1,4) de un edificio según su clima comparado con la plaza.
++static func local_sens(gs, b: Dictionary, id: String) -> float:
++	var tc := town_climate(gs)
++	var bc := building_climate(gs, b)
++	var dt := float(bc.get("temperature", 0.0)) - float(tc.get("temperature", 0.0))
++	var dh := float(bc.get("humidity", 0.0)) - float(tc.get("humidity", 0.0))
++	var s := 1.0
++	match id:
++		"sequia":
++			s = 1.0 - dh * 0.6 + dt * 0.3
++		"helada":
++			s = 1.0 - dt * 0.8 + maxf(0.0, float(bc.get("altitude", 0.0)) - float(tc.get("altitude", 0.0))) * 0.01
++		"ola_calor":
++			s = 1.0 + dt * 0.8
++		"inundacion":
++			s = 1.3 if near_river(gs, b) else 0.8
++		_:
++			s = 1.0 + dh * 0.3
++	return clampf(s, 0.6, 1.4)
++
++
++## Rendimiento de un edificio por los eventos activos (1 = normal).
++static func compute_mult(gs, b: Dictionary) -> float:
++	var m := 1.0
++	var agro := is_agro(str(b.get("type", "")))
++	for e in active_events(gs):
++		var id := str(e["id"])
++		var d := ev_def(id)
++		var mit := mitigation(gs, id)
++		if agro:
++			var dmg := (1.0 - float(d.get("farming", 1.0))) * float(e.get("sev", 1.0)) * local_sens(gs, b, id) * mit
++			m *= clampf(1.0 - dmg, 0.2, 1.0)
++		elif id == "inundacion" and str(b.get("status", "")) == "activo" and near_river(gs, b):
++			var dmg2 := (1.0 - float(d.get("river_output", 0.6))) * float(e.get("sev", 1.0)) * mit
++			m *= clampf(1.0 - dmg2, 0.3, 1.0)
++	return m
++
++
++static func _refresh(gs) -> void:
++	var s := st(gs)
++	var bm := {}
++	var price := {}
++	var act := active_events(gs)
++	if not act.is_empty():
++		for b in gs.buildings:
++			if str(b.get("status", "")) != "activo":
++				continue
++			if not is_agro(str(b.get("type", ""))) and not act.any(func(e): return str(e["id"]) == "inundacion"):
++				continue
++			var m := compute_mult(gs, b)
++			if m < 0.999:
++				bm[str(int(b["id"]))] = m
++		var share := float(cfg().get("processed_share", 0.5))
++		var processed: Array = cfg().get("processed_goods", [])
++		for e in act:
++			var id := str(e["id"])
++			var up := float(ev_def(id).get("price", 0.0)) * float(e.get("sev", 1.0)) * mitigation(gs, id)
++			for g in cfg().get("agro_goods", []):
++				var k := up * (share if processed.has(g) else 1.0)
++				price[g] = float(price.get(g, 1.0)) * (1.0 + k)
++	s["bmult"] = bm
++	s["price"] = price
++
++
++## Multiplicador de producción de un edificio (consulta rápida para BusinessSim/NpcBusinessSim).
++static func output_mult(gs, b: Dictionary) -> float:
++	var bm: Dictionary = gs.world_events.get("climate", {}).get("bmult", {})
++	if bm.is_empty():
++		return 1.0
++	return float(bm.get(str(int(b.get("id", -1))), 1.0))
++
++
++## Alza de precio por escasez de un bien (1 = normal).
++static func price_mult(gs, good: String) -> float:
++	var p: Dictionary = gs.world_events.get("climate", {}).get("price", {})
++	if p.is_empty() or not p.has(good):
++		return 1.0
++	if MarketSim.sellers(good).is_empty():
++		return 1.0   # Sin productores locales el pueblo se autoabastece o importa: no hay escasez local que encarezca.
++	return float(p[good])
++
++
++## Texto para paneles: eventos activos y pronósticos.
++static func summary(gs) -> String:
++	var parts := []
++	for e in active_events(gs):
++		parts.append("%s (%d días más)" % [str(ev_def(str(e["id"])).get("label", e["id"])), maxi(0, int(e["until"]) - gs.today())])
++	for e in forecasts(gs):
++		parts.append("Pronóstico: %s en %d días" % [str(ev_def(str(e["id"])).get("label", e["id"])).to_lower(), int(e["start"]) - gs.today()])
++	return ", ".join(parts)
+diff --git a/scripts/sim/economy_sim.gd b/scripts/sim/economy_sim.gd
+index 897d8ad..4c0df9b 100644
+--- a/scripts/sim/economy_sim.gd
++++ b/scripts/sim/economy_sim.gd
+@@ -25,7 +25,8 @@ static func good_state(gs, good: String) -> Dictionary:
+ 
+ ## Multiplicador de oferta/demanda de un bien (1 = normal).
+ static func good_factor(gs, good: String) -> float:
+-	return float(good_state(gs, good).get("factor", 1.0))
++	# Mundo: escasez por clima (ClimateSim) y demanda de guerra (WarSim).
++	return float(good_state(gs, good).get("factor", 1.0)) * ClimateSim.price_mult(gs, good) * WarSim.price_mult(gs, good)
+ 
+ 
+ ## Precio de mercado por unidad (referencia para ciudadanos y precios automáticos).
+diff --git a/scripts/sim/events_sim.gd b/scripts/sim/events_sim.gd
+index 156f2fa..d0270c3 100644
+--- a/scripts/sim/events_sim.gd
++++ b/scripts/sim/events_sim.gd
+@@ -97,10 +97,7 @@ static func _update_events(gs) -> void:
+ 
+ 
+ static func _pollution(gs) -> void:
+-	var total := 0.0
+-	for b in gs.buildings:
+-		if b["status"] == "activo":
+-			total += float(gs.level_def(b).get("pollution", 0.0))
++	var total := PollutionSim.total_emission(gs)   # Mundo: según producción y filtros (renovables: 0).
+ 	var norm := maxf(3.0, gs.citizens.size() * float(cfg().get("pollution", {}).get("normalizer", 0.3)))
+ 	gs.problems["pollution"] = clampf(total / norm * 25.0, 0.0, 100.0)
+ 
+diff --git a/scripts/sim/gov_sim.gd b/scripts/sim/gov_sim.gd
+index a0eb4df..bbb2f69 100644
+--- a/scripts/sim/gov_sim.gd
++++ b/scripts/sim/gov_sim.gd
+@@ -101,9 +101,9 @@ static func _collect_taxes(gs) -> void:
+ 		if wt > 0.0:
+ 			BusinessSim.pay(gs, b, wt, "impuestos")
+ 			totals["nomina"] += wt
+-		var pol := float(gs.level_def(b).get("pollution", 0.0))
+-		if pol > 0.0 and b["status"] == "activo" and float(p.get("env_fine", 0.0)) > 0.0 and not PoliticsSim.has_license(gs, "ambiental"):
+-			var fine: float = pol * float(p.get("env_fine", 0.0)) * gs.price_level() * 10.0
++		# Mundo: multa según la emisión real (producción y filtros); la licencia ambiental exime.
++		var fine: float = PollutionSim.fine(gs, b, float(p.get("env_fine", 0.0)))
++		if fine > 0.0:
+ 			BusinessSim.pay(gs, b, fine, "multas")
+ 			totals["multas"] += fine
+ 	var total := 0.0
+diff --git a/scripts/sim/labor_sim.gd b/scripts/sim/labor_sim.gd
+new file mode 100644
+index 0000000..13b4370
+--- /dev/null
++++ b/scripts/sim/labor_sim.gd
+@@ -0,0 +1,567 @@
++class_name LaborSim
++extends RefCounted
++## Trabajo (sección B de docs/PENDIENTES.md, ver docs/TRABAJO_MUNDO.md). Todo moderado.
++##
++## - Experiencia por oficio: cada empleado acumula años en el sector (la habilidad del negocio) en
++##   Citizen.trade_exp. Rinde hasta +20 % (veterano, 10 años) y pide algo más de sueldo. Si se va o
++##   lo despiden, la experiencia se va con él (la competencia NPC puede contratarlo).
++## - Sindicatos y huelgas (desde la época industrial): con sueldos bajo el mercado, poca felicidad o
++##   falta de personal, los empleados de un negocio piden un aumento. El jugador acepta, hace una
++##   contraoferta o rechaza; si rechaza (o no responde a tiempo) hay una huelga corta de 3–10 días
++##   con producción al 0–30 %, que termina con un acuerdo (la mitad del aumento pedido).
++## - Competencia NPC: las empresas NPC bajan precios temporalmente cuando compiten con un negocio
++##   tuyo (nunca por debajo de su costo) y ofrecen más sueldo a tus mejores empleados (puedes igualar).
++## Estado: GameState.labor. RNG propio y determinista (semilla + día + sal): no altera el resto.
++
++const U_DEMAND := "demanda"
++const U_STRIKE := "huelga"
++
++
++static func cfg() -> Dictionary:
++	return GameData.extra("trabajo_mundo")
++
++
++static func ecfg() -> Dictionary:
++	return cfg().get("experience", {})
++
++
++static func ucfg() -> Dictionary:
++	return cfg().get("unions", {})
++
++
++static func ncfg() -> Dictionary:
++	return cfg().get("npc", {})
++
++
++static func init_state(gs) -> void:
++	var l: Dictionary = gs.labor
++	for k in ["unions", "price_wars", "cooldown"]:
++		if not l.has(k) or not (l[k] is Dictionary):
++			l[k] = {}
++	if not l.has("offers") or not (l["offers"] is Array):
++		l["offers"] = []
++	l["next_id"] = int(l.get("next_id", 1))
++	gs.labor = l
++	if not bool(l.get("seeded", false)):
++		seed_experience(gs)
++		l["seeded"] = true
++
++
++# --- RNG propio ---------------------------------------------------------------------------------------
++
++static func rf(gs, salt: String) -> float:
++	var r := RandomNumberGenerator.new()
++	r.seed = hash("%d|%d|%s" % [int(gs.settings.get("seed", 0)), int(gs.today()), salt])
++	return r.randf()
++
++
++static func rr(gs, salt: String, arr: Array) -> float:
++	if arr.size() < 2:
++		return float(arr[0]) if not arr.is_empty() else 0.0
++	return lerpf(float(arr[0]), float(arr[1]), rf(gs, salt))
++
++
++static func ri(gs, salt: String, arr: Array) -> int:
++	return int(round(rr(gs, salt, arr)))
++
++
++static func _next_id(gs) -> int:
++	var id := int(gs.labor.get("next_id", 1))
++	gs.labor["next_id"] = id + 1
++	return id
++
++
++# --- Experiencia por oficio ------------------------------------------------------------------------------
++
++## Años de experiencia de un ciudadano en un oficio (habilidad del sector).
++static func years(c: Citizen, skill: String) -> float:
++	return float(c.trade_exp.get(skill, 0.0)) if skill != "" else 0.0
++
++
++static func veteran_share(c: Citizen, skill: String) -> float:
++	return clampf(years(c, skill) / maxf(0.1, float(ecfg().get("veteran_years", 10.0))), 0.0, 1.0)
++
++
++## Multiplicador de rendimiento por experiencia en el oficio (1 … 1,2).
++static func exp_mult(c: Citizen, skill: String) -> float:
++	return 1.0 + float(ecfg().get("max_bonus", 0.2)) * veteran_share(c, skill)
++
++
++## Multiplicador del sueldo que pide por su experiencia (1 … 1,1).
++static func wage_mult(c: Citizen, skill: String) -> float:
++	return 1.0 + float(ecfg().get("wage_bonus", 0.1)) * veteran_share(c, skill)
++
++
++## Texto corto para la interfaz: "oficio 4,2 a (+8 %)".
++static func exp_text(c: Citizen, skill: String) -> String:
++	var y := years(c, skill)
++	return "oficio %.1f a (+%d %%)" % [y, int(round((exp_mult(c, skill) - 1.0) * 100.0))]
++
++
++## Ficha del ciudadano: "Agricultura 4,2 a (+8 %), Minería 1,0 a (+2 %)".
++static func trades_text(c: Citizen) -> String:
++	var keys := c.trade_exp.keys().filter(func(k): return float(c.trade_exp[k]) >= 0.1)
++	if keys.is_empty():
++		return "sin experiencia de oficio"
++	keys.sort_custom(func(a, b): return float(c.trade_exp[a]) > float(c.trade_exp[b]))
++	var parts := []
++	for k in keys:
++		parts.append("%s %.1f a (+%d %%)" % [GameData.skill_label(str(k)), float(c.trade_exp[k]), int(round((exp_mult(c, str(k)) - 1.0) * 100.0))])
++	return ", ".join(parts)
++
++
++## Partidas nuevas o viejas: los adultos que ya trabajaron traen parte de su experiencia en su mejor habilidad.
++static func seed_experience(gs) -> void:
++	var share := float(ecfg().get("initial_share", 0.5))
++	for c in gs.citizens.values():
++		if c.trade_exp.is_empty() and c.experience > 0.0:
++			var sk: String = c.best_skill()
++			if sk != "":
++				c.trade_exp[sk] = snappedf(c.experience * share, 0.01)
++
++
++static func _accumulate(gs) -> void:
++	var step := 1.0 / 365.0
++	for c in gs.citizens.values():
++		if c.job_id < 0 or (c.job_kind != "empleo" and c.job_kind != "dueño"):
++			continue
++		var b: Dictionary = gs.get_building(c.job_id)
++		if b.is_empty():
++			continue
++		var skill := str(gs.building_def(b).get("skill", ""))
++		if skill == "":
++			continue
++		c.trade_exp[skill] = float(c.trade_exp.get(skill, 0.0)) + step
++
++
++# --- Ciclos ------------------------------------------------------------------------------------------------
++
++static func daily(gs) -> void:
++	_accumulate(gs)
++	_unions_daily(gs)
++	_price_wars_daily(gs)
++	_offers_daily(gs)
++
++
++static func monthly(gs) -> void:
++	_unions_monthly(gs)
++	_price_wars_monthly(gs)
++	_poach_monthly(gs)
++
++
++# --- Sindicatos y huelgas -----------------------------------------------------------------------------------
++
++static func staff(gs, b: Dictionary) -> Array:
++	return gs.employees_of(int(b["id"])).filter(func(c): return c.job_kind == "empleo")
++
++
++static func union_of(gs, b: Dictionary) -> Dictionary:
++	return gs.labor.get("unions", {}).get(str(int(b["id"])), {})
++
++
++static func on_strike(gs, b: Dictionary) -> bool:
++	return str(union_of(gs, b).get("state", "")) == U_STRIKE
++
++
++## Multiplicador de producción por huelga (1 sin huelga; 0–0,3 durante el paro).
++static func strike_mult(gs, b: Dictionary) -> float:
++	var unions: Dictionary = gs.labor.get("unions", {})
++	if unions.is_empty():
++		return 1.0
++	var u: Dictionary = unions.get(str(int(b.get("id", -1))), {})
++	if str(u.get("state", "")) != U_STRIKE:
++		return 1.0
++	return float(u.get("factor", 0.0))
++
++
++## Condiciones del personal: {"ratio" sueldo/pedido, "happiness", "overwork", "staff", "score"}.
++static func grievance(gs, b: Dictionary) -> Dictionary:
++	var uc := ucfg()
++	var emps := staff(gs, b)
++	var wages := 0.0
++	var asked := 0.0
++	var hap := 0.0
++	for c in emps:
++		wages += c.wage
++		asked += BusinessSim.asked_wage(gs, c, str(b["type"]))
++		hap += c.happiness
++	var n := emps.size()
++	var ratio := wages / maxf(0.01, asked) if n > 0 else 1.0
++	hap = hap / n if n > 0 else 60.0
++	var jobs := int(gs.level_def(b).get("jobs", 1))
++	var overwork := jobs >= 4 and n < int(ceil(jobs * float(uc.get("overwork_ratio", 0.5))))
++	var w := clampf((float(uc.get("wage_ratio_ok", 0.97)) - ratio) / 0.3, 0.0, 1.0)
++	var h := clampf((float(uc.get("happiness_ok", 50.0)) - hap) / 30.0, 0.0, 1.0)
++	var score := w + h * 0.7 + (0.4 if overwork else 0.0)
++	return {"ratio": ratio, "happiness": hap, "overwork": overwork, "staff": n, "score": score}
++
++
++static func _unions_monthly(gs) -> void:
++	var uc := ucfg()
++	if gs.era() < int(uc.get("min_era", 2)):
++		return
++	var unions: Dictionary = gs.labor["unions"]
++	var cool: Dictionary = gs.labor["cooldown"]
++	var today: int = gs.today()
++	var freq := float(gs.diff().get("event_freq_mult", 1.0))
++	for b in gs.buildings:
++		if not gs.owned_by_player(b) or str(b["status"]) != "activo" or not BusinessSim.is_business(b):
++			continue
++		var key := str(int(b["id"]))
++		if unions.has(key) or int(cool.get("u" + key, -1)) > today:
++			continue
++		var g := grievance(gs, b)
++		if int(g["staff"]) < int(uc.get("min_staff", 3)) or float(g["score"]) <= 0.0:
++			continue
++		var chance := minf(float(uc.get("max_chance", 0.1)), float(uc.get("base_chance", 0.12)) * float(g["score"])) * freq
++		if rf(gs, "union" + key) >= chance:
++			continue
++		start_demand(gs, b, g)
++
++
++## Los empleados se organizan y piden un aumento (también lo usan las pruebas).
++static func start_demand(gs, b: Dictionary, g := {}) -> Dictionary:
++	var uc := ucfg()
++	if g.is_empty():
++		g = grievance(gs, b)
++	var rr_: Array = uc.get("raise_range", [0.06, 0.18])
++	var ratio := float(g.get("ratio", 1.0))
++	var pct := clampf((1.0 / maxf(0.3, ratio) - 1.0) + 0.04, float(rr_[0]), float(rr_[1]))
++	pct = snappedf(pct, 0.01)
++	var why := []
++	if ratio < float(uc.get("wage_ratio_ok", 0.97)):
++		why.append("sueldos bajo el mercado")
++	if float(g.get("happiness", 60.0)) < float(uc.get("happiness_ok", 50.0)):
++		why.append("malas condiciones")
++	if bool(g.get("overwork", false)):
++		why.append("demasiadas horas por falta de personal")
++	if why.is_empty():
++		why.append("mejores condiciones")
++	var u := {"state": U_DEMAND, "pct": pct, "day": gs.today(), "deadline": gs.today() + int(uc.get("reply_days", 14)),
++		"reason": ", ".join(why), "label": gs.building_label(b)}
++	gs.labor["unions"][str(int(b["id"]))] = u
++	gs.count("union_demands")
++	gs.notify("SINDICATO en %s: los %d empleados piden +%d %% de sueldo (%s). Responde en la pestaña Empleados antes de %d días o harán huelga." % [
++		gs.building_label(b), int(g.get("staff", 0)), int(round(pct * 100.0)), u["reason"], int(uc.get("reply_days", 14))], "importante")
++	return u
++
++
++static func _raise_wages(gs, b: Dictionary, pct: float, happy: float) -> int:
++	var n := 0
++	for c in staff(gs, b):
++		c.wage = snappedf(c.wage * (1.0 + pct), 0.01)
++		c.happiness = clampf(c.happiness + happy, 0.0, 100.0)
++		n += 1
++	return n
++
++
++static func _close_union(gs, b: Dictionary) -> void:
++	var key := str(int(b["id"]))
++	gs.labor["unions"].erase(key)
++	gs.labor["cooldown"]["u" + key] = gs.today() + int(ucfg().get("cooldown_days", 360))
++
++
++## Aceptar el aumento pedido.
++static func accept_demand(gs, b: Dictionary) -> String:
++	var u := union_of(gs, b)
++	if str(u.get("state", "")) != U_DEMAND:
++		return "No hay un pedido pendiente."
++	var pct := float(u["pct"])
++	var n := _raise_wages(gs, b, pct, float(ucfg().get("accept_happiness", 5.0)))
++	_close_union(gs, b)
++	gs.notify("Aceptaste el pedido del sindicato de %s: +%d %% de sueldo a %d empleados." % [gs.building_label(b), int(round(pct * 100.0)), n], "negocio")
++	return ""
++
++
++## Contraoferta: si es al menos la mitad de lo pedido, la aceptan con una probabilidad que crece con
++## el monto; si no, van a la huelga. Devuelve "" si aceptaron, o el motivo.
++static func counter_offer(gs, b: Dictionary, pct2: float) -> String:
++	var u := union_of(gs, b)
++	if str(u.get("state", "")) != U_DEMAND:
++		return "No hay un pedido pendiente."
++	var pct := float(u["pct"])
++	pct2 = maxf(0.0, pct2)
++	if pct2 >= pct - 0.0001:
++		return accept_demand(gs, b)
++	var min_r := float(ucfg().get("counter_min_ratio", 0.5))
++	var r := pct2 / maxf(0.001, pct)
++	var p := 0.0 if r < min_r else 0.4 + 0.6 * (r - min_r) / maxf(0.01, 1.0 - min_r)
++	if rf(gs, "counter%d" % int(b["id"])) < p:
++		var n := _raise_wages(gs, b, pct2, float(ucfg().get("accept_happiness", 5.0)) * 0.6)
++		_close_union(gs, b)
++		gs.notify("El sindicato de %s aceptó tu contraoferta: +%d %% de sueldo a %d empleados." % [gs.building_label(b), int(round(pct2 * 100.0)), n], "negocio")
++		return ""
++	start_strike(gs, b, "rechazó tu contraoferta")
++	return "El sindicato rechazó la contraoferta: huelga."
++
++
++## Rechazar el pedido: huelga corta.
++static func reject_demand(gs, b: Dictionary) -> String:
++	var u := union_of(gs, b)
++	if str(u.get("state", "")) != U_DEMAND:
++		return "No hay un pedido pendiente."
++	start_strike(gs, b, "rechazaste el pedido")
++	return ""
++
++
++static func start_strike(gs, b: Dictionary, why: String) -> void:
++	var uc := ucfg()
++	var key := str(int(b["id"]))
++	var u: Dictionary = gs.labor["unions"].get(key, {"pct": float(uc.get("raise_range", [0.06, 0.18])[0])})
++	var days := ri(gs, "strike_days" + key, uc.get("strike_days", [3, 10]))
++	u["state"] = U_STRIKE
++	u["start"] = gs.today()
++	u["until"] = gs.today() + maxi(1, days)
++	u["factor"] = snappedf(rr(gs, "strike_out" + key, uc.get("strike_output", [0.0, 0.3])), 0.01)
++	u["label"] = gs.building_label(b)
++	gs.labor["unions"][key] = u
++	for c in staff(gs, b):
++		c.happiness = clampf(c.happiness + float(uc.get("strike_happiness", -4.0)), 0.0, 100.0)
++	gs.count("strikes")
++	gs.notify("HUELGA en %s (%s): producción al %d %% durante unos %d días." % [gs.building_label(b), why, int(round(float(u["factor"]) * 100.0)), days], "importante")
++	EventBus.building_changed.emit(int(b["id"]))
++
++
++static func _unions_daily(gs) -> void:
++	var unions: Dictionary = gs.labor.get("unions", {})
++	if unions.is_empty():
++		return
++	var today: int = gs.today()
++	for key in unions.keys():
++		var u: Dictionary = unions[key]
++		var b: Dictionary = gs.get_building(int(key))
++		if b.is_empty() or not gs.owned_by_player(b) or str(b["status"]) == "cerrado":
++			unions.erase(key)
++			continue
++		if str(u.get("state", "")) == U_DEMAND and today >= int(u.get("deadline", today)):
++			start_strike(gs, b, "no respondiste al pedido")
++		elif str(u.get("state", "")) == U_STRIKE and today >= int(u.get("until", today)):
++			var pct := snappedf(float(u.get("pct", 0.06)) * float(ucfg().get("settlement_ratio", 0.5)), 0.01)
++			var n := _raise_wages(gs, b, pct, 2.0)
++			_close_union(gs, b)
++			gs.notify("Terminó la huelga en %s: acuerdo de +%d %% de sueldo para %d empleados. La producción vuelve a la normalidad." % [gs.building_label(b), int(round(pct * 100.0)), n], "negocio")
++			EventBus.building_changed.emit(int(b["id"]))
++
++
++# --- Competencia NPC: guerras de precio -------------------------------------------------------------------
++
++static func price_war_of(gs, b: Dictionary) -> Dictionary:
++	return gs.labor.get("price_wars", {}).get(str(int(b["id"])), {})
++
++
++static func _player_rival(gs, product: String) -> Dictionary:
++	for b in gs.buildings:
++		if gs.owned_by_player(b) and str(b["status"]) == "activo" and str(gs.building_def(b).get("product", "")) == product:
++			return b
++	return {}
++
++
++static func _price_wars_monthly(gs) -> void:
++	var nc := ncfg()
++	var wars: Dictionary = gs.labor["price_wars"]
++	var cool: Dictionary = gs.labor["cooldown"]
++	var today: int = gs.today()
++	for b in NpcBusinessSim.npc_buildings(gs):
++		var key := str(int(b["id"]))
++		if wars.has(key) or str(b["status"]) != "activo" or str(b.get("npc_state", "")) != NpcBusinessSim.STATE_OPEN:
++			continue
++		if int(cool.get("w" + key, -1)) > today:
++			continue
++		var product := str(gs.building_def(b).get("product", ""))
++		var rival := _player_rival(gs, product)
++		if rival.is_empty():
++			continue
++		if rf(gs, "pwar" + key) >= float(nc.get("price_war_chance", 0.1)):
++			continue
++		start_price_war(gs, b, rival)
++
++
++## La empresa NPC baja su margen sin vender a pérdida: el recorte sale de su margen de ganancia.
++## Devuelve el recorte aplicado (0 si no puede bajar sin perder).
++static func start_price_war(gs, b: Dictionary, rival: Dictionary) -> float:
++	var nc := ncfg()
++	var sales := BusinessSim.period_value(b, "last_month", "ventas")
++	var profit := BusinessSim.period_profit(b, "last_month")
++	var margin := profit / sales if sales > 0.0 else 0.0
++	if margin <= 0.02:
++		return 0.0
++	var markup := float(b.get("markup", 0.08))
++	var cut := minf(float(nc.get("price_war_max_cut", 0.12)), margin * float(nc.get("price_war_margin_share", 0.7)) * (1.0 + markup))
++	cut = snappedf(cut, 0.005)
++	if cut <= 0.0:
++		return 0.0
++	var key := str(int(b["id"]))
++	var days := ri(gs, "pwar_days" + key, nc.get("price_war_days", [30, 75]))
++	gs.labor["price_wars"][key] = {"until": gs.today() + days, "base_markup": markup, "cut": cut,
++		"rival": int(rival.get("id", -1)), "label": gs.building_label(b)}
++	b["markup"] = markup - cut
++	var product := str(gs.building_def(b).get("product", ""))
++	b["price"] = clampf(snappedf(EconomySim.market_price(gs, product) * (1.0 + float(b["markup"])), 0.01), 0.01, BusinessSim.max_price(gs, b))
++	gs.notify("Competencia: %s bajó sus precios un %d %% para quitarle clientes a tu %s (por unos %d días, sin vender a pérdida)." % [
++		gs.building_label(b), int(round(cut / (1.0 + markup) * 100.0)), gs.building_label(rival) if not rival.is_empty() else "negocio", days], "negocio")
++	return cut
++
++
++static func end_price_war(gs, key: String) -> void:
++	var w: Dictionary = gs.labor["price_wars"].get(key, {})
++	gs.labor["price_wars"].erase(key)
++	gs.labor["cooldown"]["w" + key] = gs.today() + int(ncfg().get("price_war_cooldown_days", 240))
++	var b: Dictionary = gs.get_building(int(key))
++	if b.is_empty() or not NpcBusinessSim.is_npc(b):
++		return
++	b["markup"] = float(w.get("base_markup", b.get("markup", 0.08)))
++	gs.notify("%s volvió a sus precios normales." % gs.building_label(b), "negocio")
++
++
++static func _price_wars_daily(gs) -> void:
++	var wars: Dictionary = gs.labor.get("price_wars", {})
++	if wars.is_empty():
++		return
++	for key in wars.keys():
++		var b: Dictionary = gs.get_building(int(key))
++		if b.is_empty() or not NpcBusinessSim.is_npc(b) or gs.today() >= int(wars[key].get("until", 0)):
++			end_price_war(gs, key)
++
++
++# --- Competencia NPC: ofertas a tus empleados ------------------------------------------------------------
++
++static func pending_offers(gs, b := {}) -> Array:
++	return gs.labor.get("offers", []).filter(func(o): return str(o.get("status", "")) == "pendiente" and (b.is_empty() or int(o["from"]) == int(b["id"])))
++
++
++static func _poach_monthly(gs) -> void:
++	var nc := ncfg()
++	var cool: Dictionary = gs.labor["cooldown"]
++	var today: int = gs.today()
++	var freq := float(gs.diff().get("event_freq_mult", 1.0))
++	for npc in NpcBusinessSim.npc_buildings(gs):
++		if str(npc["status"]) != "activo" or str(npc.get("npc_state", "")) != NpcBusinessSim.STATE_OPEN:
++			continue
++		var key := str(int(npc["id"]))
++		if int(cool.get("p" + key, -1)) > today:
++			continue
++		if NpcBusinessSim.staff_count(gs, npc) >= int(gs.level_def(npc).get("jobs", 1)):
++			continue
++		if rf(gs, "poach" + key) >= float(nc.get("poach_chance", 0.06)) * freq:
++			continue
++		make_offer(gs, npc)
++
++
++## La empresa NPC ofrece más sueldo a tu empleado más experimentado del mismo oficio. Devuelve la oferta o {}.
++static func make_offer(gs, npc: Dictionary, target: Citizen = null) -> Dictionary:
++	var nc := ncfg()
++	var skill := str(gs.building_def(npc).get("skill", ""))
++	var today: int = gs.today()
++	var cool: Dictionary = gs.labor["cooldown"]
++	if target == null:
++		var best_y := float(nc.get("poach_min_years", 1.5))
++		for c in gs.citizens.values():
++			if c.job_kind != "empleo" or c.job_id < 0 or int(cool.get("c%d" % c.id, -1)) > today:
++				continue
++			var y := years(c, skill)
++			if y < best_y:
++				continue
++			var from: Dictionary = gs.get_building(c.job_id)
++			if from.is_empty() or not gs.owned_by_player(from) or str(gs.building_def(from).get("skill", "")) != skill:
++				continue
++			if pending_offers(gs).any(func(o): return int(o["cid"]) == c.id):
++				continue
++			best_y = y
++			target = c
++	if target == null:
++		return {}
++	var from_b: Dictionary = gs.get_building(target.job_id)
++	if from_b.is_empty():
++		return {}
++	var wage := snappedf(maxf(target.wage * (1.0 + rr(gs, "poach_raise%d" % target.id, nc.get("poach_raise", [0.12, 0.22]))),
++			BusinessSim.asked_wage(gs, target, str(npc["type"])) * 1.05), 0.05)
++	if float(npc.get("reserve", 0.0)) < wage * float(nc.get("poach_reserve_days", 45)):
++		return {}
++	var o := {"id": _next_id(gs), "cid": target.id, "name": target.full_name(), "npc": int(npc["id"]), "npc_label": gs.building_label(npc),
++		"from": int(from_b["id"]), "from_label": gs.building_label(from_b), "wage": wage, "old_wage": target.wage,
++		"years": snappedf(years(target, skill), 0.1), "day": today, "deadline": today + int(nc.get("poach_reply_days", 7)), "status": "pendiente"}
++	gs.labor["offers"].append(o)
++	while gs.labor["offers"].size() > 30:
++		gs.labor["offers"].pop_front()
++	gs.labor["cooldown"]["p%d" % int(npc["id"])] = today + int(nc.get("poach_cooldown_days", 180))
++	gs.labor["cooldown"]["c%d" % target.id] = today + int(nc.get("poach_cooldown_days", 180))
++	gs.notify("%s (%.1f años de oficio) recibió una oferta de %s: %s/día (hoy gana %s en tu %s). Iguálala en la pestaña Empleados o se irá." % [
++		target.full_name(), float(o["years"]), o["npc_label"], Fmt.money2(wage), Fmt.money2(target.wage), o["from_label"]], "importante")
++	return o
++
++
++static func _offer(gs, id: int) -> Dictionary:
++	for o in gs.labor.get("offers", []):
++		if int(o["id"]) == id:
++			return o
++	return {}
++
++
++## Igualar la oferta: el empleado se queda con el nuevo sueldo.
++static func match_offer(gs, id: int) -> String:
++	var o := _offer(gs, id)
++	if o.is_empty() or str(o["status"]) != "pendiente":
++		return "La oferta ya no está vigente."
++	var c: Citizen = gs.citizens.get(int(o["cid"]))
++	if c == null or c.job_id != int(o["from"]):
++		o["status"] = "vencida"
++		return "Ya no trabaja contigo."
++	c.wage = float(o["wage"])
++	c.happiness = clampf(c.happiness + 3.0, 0.0, 100.0)
++	o["status"] = "igualada"
++	gs.notify("Igualaste la oferta: %s se queda en %s por %s/día." % [c.full_name(), o["from_label"], Fmt.money2(c.wage)], "negocio")
++	return ""
++
++
++## No igualar: el empleado se va a la empresa NPC con su experiencia.
++static func decline_offer(gs, id: int) -> String:
++	var o := _offer(gs, id)
++	if o.is_empty() or str(o["status"]) != "pendiente":
++		return "La oferta ya no está vigente."
++	_leave_to_npc(gs, o)
++	return ""
++
++
++static func _leave_to_npc(gs, o: Dictionary) -> void:
++	var c: Citizen = gs.citizens.get(int(o["cid"]))
++	var npc: Dictionary = gs.get_building(int(o["npc"]))
++	o["status"] = "se_fue"
++	if c == null or c.job_id != int(o["from"]) or npc.is_empty() or not NpcBusinessSim.is_npc(npc) or str(npc["status"]) != "activo":
++		o["status"] = "vencida"
++		return
++	c.job_id = -1
++	c.job_kind = ""
++	c.wage = 0.0
++	NpcBusinessSim.staff_index(gs)
++	NpcBusinessSim.hire_silent(gs, npc, c)
++	c.wage = float(o["wage"])
++	gs.notify("%s dejó tu %s y se fue a %s por %s/día: su experiencia (%.1f años) se va con él/ella." % [
++		c.full_name(), o["from_label"], o["npc_label"], Fmt.money2(c.wage), float(o["years"])], "negocio")
++	EventBus.citizens_moved.emit()
++
++
++static func _offers_daily(gs) -> void:
++	var nc := ncfg()
++	for o in gs.labor.get("offers", []):
++		if str(o.get("status", "")) != "pendiente" or gs.today() < int(o.get("deadline", 0)):
++			continue
++		if rf(gs, "leave%d" % int(o["id"])) < float(nc.get("poach_leave_chance", 0.7)):
++			_leave_to_npc(gs, o)
++		else:
++			o["status"] = "rechazada"
++			gs.notify("%s decidió quedarse en tu %s pese a la oferta de %s." % [o["name"], o["from_label"], o["npc_label"]], "negocio")
++
++
++# --- Interfaz ------------------------------------------------------------------------------------------------
++
++## Línea de estado laboral de un negocio para el panel (vacío si no hay nada).
++static func status_text(gs, b: Dictionary) -> String:
++	var u := union_of(gs, b)
++	var parts := []
++	if str(u.get("state", "")) == U_DEMAND:
++		parts.append("Sindicato: piden +%d %% de sueldo (%s). Plazo: %d días." % [int(round(float(u["pct"]) * 100.0)), u.get("reason", ""), maxi(0, int(u["deadline"]) - gs.today())])
++	elif str(u.get("state", "")) == U_STRIKE:
++		parts.append("HUELGA: producción al %d %% por %d días más." % [int(round(float(u["factor"]) * 100.0)), maxi(0, int(u["until"]) - gs.today())])
++	for o in pending_offers(gs, b):
++		parts.append("%s tiene una oferta de %s: %s/día (gana %s)." % [o["name"], o["npc_label"], Fmt.money2(float(o["wage"])), Fmt.money2(float(o["old_wage"]))])
++	return "\n".join(parts)
+diff --git a/scripts/sim/market_sim.gd b/scripts/sim/market_sim.gd
+index 6092dd6..1b65e1c 100644
+--- a/scripts/sim/market_sim.gd
++++ b/scripts/sim/market_sim.gd
+@@ -77,7 +77,7 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
+ 	var quality := 1.0
+ 	var g: Dictionary = GameData.goods.get(good, {})
+ 	if left > 0.0001:
+-		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs)
++		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs) * WarSim.import_mult(gs, good)   # Mundo: guerra.
+ 		var well := good == WaterSim.GOOD   # Redes: el agua del pozo comunitario es gratis (no se importa).
+ 		if employed and imp > 0.0 and not well and PopulationSim.pay_with(gs, payers, left * imp):
+ 			imported = left  # El dinero sale del pueblo.
+diff --git a/scripts/sim/npc_business_sim.gd b/scripts/sim/npc_business_sim.gd
+index 83987ba..a81c4e9 100644
+--- a/scripts/sim/npc_business_sim.gd
++++ b/scripts/sim/npc_business_sim.gd
+@@ -161,6 +161,7 @@ static func _output(gs, b: Dictionary, emps: Array) -> float:
+ 		total *= float(WeatherSim.season_data(gs).get("farming", 1.0)) * float(WeatherSim.weather_data(gs).get("farming", 1.0)) * EventsSim.mult(gs, "farming")
+ 	total *= float(def.get("resource_bonus", {}).get(str(gs.settings.get("map_type", "")), 1.0))
+ 	total *= TechSim.mult(gs, "production", str(def.get("product", "")))
++	total *= ClimateSim.output_mult(gs, b)   # Mundo: sequías, heladas, inundaciones…
+ 	return total
+ 
+ 
+diff --git a/scripts/sim/pollution_sim.gd b/scripts/sim/pollution_sim.gd
+new file mode 100644
+index 0000000..fcdc6d6
+--- /dev/null
++++ b/scripts/sim/pollution_sim.gd
+@@ -0,0 +1,271 @@
++class_name PollutionSim
++extends RefCounted
++## Contaminación local (sección D.13, docs/TRABAJO_MUNDO.md).
++##
++## - Emisión de un edificio = "pollution" de su nivel × actividad (empleados / puestos) × (1 − filtros).
++##   Las centrales eólica, solar e hidroeléctrica no contaminan (no declaran "pollution").
++## - Se acumula por fuente cada mes (acc = acc × keep + emisión) y llega a las casas a menos de `radius`
++##   metros (cae lineal con la distancia): exposición por vivienda.
++## - Los vecinos expuestos enferman más (PopulationSim._health) y están menos felices (_happiness).
++## - Multas: GovSim cobra env_fine × emisión (según el gobierno y la época) salvo con la licencia
++##   ambiental del lobby (PoliticsSim.has_license). La contaminación global de EventsSim también usa la
++##   emisión (con filtros).
++## - Filtros y depuradoras: mejora comprable por negocio (tecnología, costo y mantenimiento mensual).
++## Estado: GameState.world_events["pollution"] y b["filters"] (nivel de filtros, 0 = sin filtros).
++
++
++static func cfg() -> Dictionary:
++	return LaborSim.cfg().get("pollution", {})
++
++
++static func st(gs) -> Dictionary:
++	if not gs.world_events.has("pollution"):
++		gs.world_events["pollution"] = {}
++	return gs.world_events["pollution"]
++
++
++static func init_state(gs) -> void:
++	var s := st(gs)
++	for k in ["acc", "exposure"]:
++		if not s.has(k) or not (s[k] is Dictionary):
++			s[k] = {}
++	s["fines_last"] = float(s.get("fines_last", 0.0))
++	s["filters_upkeep_last"] = float(s.get("filters_upkeep_last", 0.0))
++
++
++# --- Emisión ---------------------------------------------------------------------------------------------
++
++static func base_pollution(gs, b: Dictionary) -> float:
++	return float(gs.level_def(b).get("pollution", 0.0))
++
++
++static func filter_def(tier: int) -> Dictionary:
++	return cfg().get("filters", {}).get(str(tier), {})
++
++
++static func filter_reduction(b: Dictionary) -> float:
++	var t := int(b.get("filters", 0))
++	return float(filter_def(t).get("reduction", 0.0)) if t > 0 else 0.0
++
++
++## Fracción de actividad: empleados trabajando / puestos (edificios sin puestos: 1).
++static func activity(gs, b: Dictionary, counts := {}) -> float:
++	var jobs := int(gs.level_def(b).get("jobs", 0))
++	if jobs <= 0:
++		return 1.0
++	var n := 0
++	if counts.is_empty():
++		for c in gs.employees_of(int(b["id"])):
++			if c.job_kind == "empleo" or c.job_kind == "dueño":
++				n += 1
++	else:
++		n = int(counts.get(int(b["id"]), 0))
++	return clampf(float(n) / jobs, 0.0, 1.0)
++
++
++## Emisión mensual del edificio (con producción y filtros). 0 si no está activo.
++static func emission(gs, b: Dictionary, counts := {}) -> float:
++	if str(b.get("status", "")) != "activo":
++		return 0.0
++	var p := base_pollution(gs, b)
++	if p <= 0.0:
++		return 0.0
++	var act := activity(gs, b, counts)
++	if gs.building_def(b).get("category", "") != "negocio":
++		act = 1.0
++	return p * act * (1.0 - filter_reduction(b)) * LaborSim.strike_mult(gs, b)
++
++
++static func _worker_counts(gs) -> Dictionary:
++	var counts := {}
++	for c in gs.citizens.values():
++		if c.job_id >= 0 and (c.job_kind == "empleo" or c.job_kind == "dueño"):
++			counts[c.job_id] = int(counts.get(c.job_id, 0)) + 1
++	return counts
++
++
++## Suma de emisiones (para la contaminación global de EventsSim).
++static func total_emission(gs) -> float:
++	var counts := _worker_counts(gs)
++	var t := 0.0
++	for b in gs.buildings:
++		t += emission(gs, b, counts)
++	return t
++
++
++# --- Acumulación y exposición ----------------------------------------------------------------------------
++
++static func monthly(gs) -> void:
++	var s := st(gs)
++	var keep := float(cfg().get("keep", 0.5))
++	var counts := _worker_counts(gs)
++	var acc: Dictionary = s["acc"]
++	var new_acc := {}
++	var sources := []
++	for b in gs.buildings:
++		var key := str(int(b["id"]))
++		var e := emission(gs, b, counts)
++		var v := float(acc.get(key, 0.0)) * keep + e
++		if v > 0.05:
++			new_acc[key] = snappedf(v, 0.001)
++			sources.append([Vector2(float(b.get("x", 0.0)), float(b.get("z", 0.0))), v])
++	s["acc"] = new_acc
++	_compute_exposure(gs, sources)
++	_filters_upkeep(gs)
++	var fines := float(gs.government.get("taxes_last", {}).get("multas", 0.0))
++	s["fines_last"] = fines
++	if fines > 0.0:
++		gs.notify("Multa ambiental del gobierno: %s por la contaminación de tus negocios. Los filtros, las renovables o la licencia ambiental la reducen." % Fmt.money(fines), "jugador")
++
++
++static func _compute_exposure(gs, sources: Array) -> void:
++	var r := float(cfg().get("radius", 45.0))
++	var exp_map := {}
++	if not sources.is_empty():
++		for b in gs.buildings:
++			if str(gs.building_def(b).get("category", "")) != "vivienda":
++				continue
++			var p := Vector2(float(b.get("x", 0.0)), float(b.get("z", 0.0)))
++			var e := 0.0
++			for src in sources:
++				var d: float = p.distance_to(src[0])
++				if d < r:
++					e += float(src[1]) * (1.0 - d / r)
++			if e > 0.01:
++				exp_map[str(int(b["id"]))] = snappedf(e, 0.001)
++	st(gs)["exposure"] = exp_map
++
++
++## Recalcula ya (pruebas y paneles): acumulado sin decaer + exposición.
++static func refresh_now(gs) -> void:
++	var s := st(gs)
++	var counts := _worker_counts(gs)
++	var sources := []
++	for b in gs.buildings:
++		var v := maxf(float(s["acc"].get(str(int(b["id"])), 0.0)), emission(gs, b, counts))
++		if v > 0.05:
++			sources.append([Vector2(float(b.get("x", 0.0)), float(b.get("z", 0.0))), v])
++	_compute_exposure(gs, sources)
++
++
++static func exposure_of_home(gs, home_id: int) -> float:
++	if home_id < 0:
++		return 0.0
++	var ex: Dictionary = gs.world_events.get("pollution", {}).get("exposure", {})
++	if ex.is_empty():
++		return 0.0
++	return float(ex.get(str(home_id), 0.0))
++
++
++## Multiplicador de la probabilidad de enfermar por vivir cerca de fuentes contaminantes.
++static func disease_mult(gs, c: Citizen) -> float:
++	var e := exposure_of_home(gs, c.home_id)
++	if e <= 0.0:
++		return 1.0
++	return 1.0 + minf(float(cfg().get("max_disease", 0.6)), e * float(cfg().get("disease_per_point", 0.03)))
++
++
++## Felicidad (negativa) por vivir junto a humo y hollín.
++static func happiness_delta(gs, c: Citizen) -> float:
++	var e := exposure_of_home(gs, c.home_id)
++	if e <= 0.0:
++		return 0.0
++	return -minf(float(cfg().get("max_unhappy", 6.0)), e * float(cfg().get("unhappy_per_point", 0.35)))
++
++
++## Multa ambiental mensual del edificio (lo llama GovSim._collect_taxes).
++static func fine(gs, b: Dictionary, env_fine: float) -> float:
++	if env_fine <= 0.0 or PoliticsSim.has_license(gs, "ambiental"):
++		return 0.0
++	return emission(gs, b) * env_fine * gs.price_level() * 10.0
++
++
++# --- Filtros y depuradoras -------------------------------------------------------------------------------
++
++## Mejor nivel de filtros disponible con la tecnología investigada (0 = ninguno).
++static func best_tier(gs) -> int:
++	var best := 0
++	for t in cfg().get("filters", {}):
++		if gs.has_tech(str(filter_def(int(t)).get("tech", ""))):
++			best = maxi(best, int(t))
++	return best
++
++
++static func filter_cost(gs, b: Dictionary, tier: int) -> float:
++	return float(gs.level_def(b).get("cost", 0.0)) * float(filter_def(tier).get("cost_ratio", 0.25)) * gs.price_mult()
++
++
++static func filter_upkeep(gs, b: Dictionary) -> float:
++	var t := int(b.get("filters", 0))
++	if t <= 0:
++		return 0.0
++	return float(gs.level_def(b).get("cost", 0.0)) * float(filter_def(t).get("upkeep_ratio", 0.004)) * gs.price_mult()
++
++
++static func filter_block_reason(gs, b: Dictionary) -> String:
++	if not gs.owned_by_player(b):
++		return "No es tuyo."
++	if base_pollution(gs, b) <= 0.0:
++		return "Este negocio no contamina."
++	var tier := best_tier(gs)
++	if tier <= 0:
++		return "Requiere la tecnología %s." % GameData.tech_label(str(filter_def(1).get("tech", "filtros_industriales")))
++	if int(b.get("filters", 0)) >= tier:
++		return "Ya tiene los mejores filtros disponibles."
++	var cost := filter_cost(gs, b, tier)
++	if gs.money < cost:
++		return "Necesitas %s." % Fmt.money(cost)
++	return ""
++
++
++## Compra e instala filtros (el equipo se importa: el dinero sale del pueblo).
++static func buy_filters(gs, b: Dictionary) -> String:
++	var why := filter_block_reason(gs, b)
++	if why != "":
++		return why
++	var tier := best_tier(gs)
++	var cost := filter_cost(gs, b, tier)
++	BusinessSim.pay(gs, b, cost, "obras")
++	b["filters"] = tier
++	gs.notify("Instalaste %s en %s por %s: contaminación −%d %%." % [str(filter_def(tier).get("label", "filtros")).to_lower(), gs.building_label(b), Fmt.money(cost), int(round(filter_reduction(b) * 100.0))], "negocio")
++	EventBus.building_changed.emit(int(b["id"]))
++	return ""
++
++
++static func _filters_upkeep(gs) -> void:
++	var total := 0.0
++	for b in gs.buildings:
++		if not gs.owned_by_player(b) or int(b.get("filters", 0)) <= 0 or str(b["status"]) == "cerrado":
++			continue
++		var u := filter_upkeep(gs, b)
++		if u > 0.0:
++			BusinessSim.pay(gs, b, u, "mantenimiento")
++			total += u
++	st(gs)["filters_upkeep_last"] = total
++
++
++## "Contaminación: X (−Y % con filtros)" para el panel del edificio ("" si no contamina).
++static func panel_text(gs, b: Dictionary) -> String:
++	var base := base_pollution(gs, b)
++	if base <= 0.0:
++		return ""
++	var e := emission(gs, b)
++	var red := filter_reduction(b)
++	var s := "Contaminación: %.1f" % e
++	if red > 0.0:
++		s += " (−%d %% con filtros)" % int(round(red * 100.0))
++	else:
++		s += " (sin filtros)"
++	var near := 0
++	var acc := float(st(gs).get("acc", {}).get(str(int(b["id"])), 0.0))
++	if acc > 0.0:
++		s += " · acumulada en la zona %.1f" % acc
++	var ex: Dictionary = st(gs).get("exposure", {})
++	var r := float(cfg().get("radius", 45.0))
++	var p := Vector2(float(b.get("x", 0.0)), float(b.get("z", 0.0)))
++	for h in gs.buildings:
++		if ex.has(str(int(h["id"]))) and p.distance_to(Vector2(float(h.get("x", 0.0)), float(h.get("z", 0.0)))) < r:
++			near += 1
++	if near > 0:
++		s += " · %d viviendas afectadas" % near
++	return s
+diff --git a/scripts/sim/population_sim.gd b/scripts/sim/population_sim.gd
+index 5d5b786..a383600 100644
+--- a/scripts/sim/population_sim.gd
++++ b/scripts/sim/population_sim.gd
+@@ -352,6 +352,7 @@ static func _health(gs, c: Citizen, age: int, season: Dictionary, wdata: Diction
+ 		var chance := float(dcfg.get("daily_chance", 0.0012)) * float(diff.get("disease_mult", 1.0)) * TechSim.world_mult(gs, "disease")
+ 		chance *= float(season.get("disease", 1.0)) * float(wdata.get("disease", 1.0))
+ 		chance *= WaterSim.disease_mult(gs, c)   # Redes: agua por tubería protege; pozos escasos enferman.
++		chance *= PollutionSim.disease_mult(gs, c)   # Mundo: vivir junto a fuentes contaminantes enferma.
+ 		if age <= 5 or age >= 60:
+ 			chance *= float(dcfg.get("vulnerable_mult", 2.0))
+ 		if c.needs_met < 0.6:
+@@ -398,6 +399,7 @@ static func _happiness(gs, c: Citizen, occupancy: Dictionary, wdata: Dictionary)
+ 	target += float(c.get_meta("bonus", 0.0)) + TechSim.happiness_bonus(gs)
+ 	target += float(wdata.get("happiness", 0))
+ 	target += TransitSim.happiness_delta(gs, c)   # Transporte: caminar lejos cansa; bus y auto alegran.
++	target += PollutionSim.happiness_delta(gs, c)   # Mundo: humo y hollín en el barrio.
+ 	target = clampf(target, 0.0, 100.0)
+ 	c.happiness = clampf(c.happiness + (target - c.happiness) * float(h.get("adjust_rate", 0.05)), 0.0, 100.0)
+ 
+diff --git a/scripts/sim/tech_sim.gd b/scripts/sim/tech_sim.gd
+index ba5a965..e350638 100644
+--- a/scripts/sim/tech_sim.gd
++++ b/scripts/sim/tech_sim.gd
+@@ -191,6 +191,8 @@ static func effects_text(id: String) -> Array:
+ 				out.append("Felicidad +%d" % int(v))
+ 			"era":
+ 				out.append("Abre la %s" % GameData.era_label(int(v)))
++			"clima":   # Mundo: mitigación de eventos climáticos (ClimateSim).
++				out.append("Daño por %s −%d%%" % [str(ClimateSim.ev_def(str(e.get("key", ""))).get("label", e.get("key", ""))).to_lower(), int(round((1.0 - v) * 100.0))])
+ 	return out
+ 
+ 
+diff --git a/scripts/sim/war_sim.gd b/scripts/sim/war_sim.gd
+new file mode 100644
+index 0000000..311f6b8
+--- /dev/null
++++ b/scripts/sim/war_sim.gd
+@@ -0,0 +1,157 @@
++class_name WarSim
++extends RefCounted
++## Guerras entre países sin combate (sección D.15, docs/TRABAJO_MUNDO.md). Moderadas y raras.
++##
++## Un conflicto entre países ficticios (data/countries.json, sin contar el tuyo) o potencias externas:
++##   - encarece o corta la importación de algunos bienes (MarketSim.purchase: import_mult);
++##   - sube la demanda (precio de mercado, EconomySim.good_factor) de otros: acero, alimentos, carbón…;
++##   - los pueblos conectados piden bienes de guerra (evento del pueblo en GameState.trade: tus
++##     exportaciones de ese bien se pagan mejor mientras dure);
++##   - aviso en notificaciones y termina solo al cabo de unos meses.
++## Estado: GameState.world_events["war"]. RNG propio (LaborSim.rf).
++
++
++static func cfg() -> Dictionary:
++	return LaborSim.cfg().get("wars", {})
++
++
++static func st(gs) -> Dictionary:
++	if not gs.world_events.has("war"):
++		gs.world_events["war"] = {}
++	return gs.world_events["war"]
++
++
++static func init_state(gs) -> void:
++	var s := st(gs)
++	if not s.has("active") or not (s["active"] is Dictionary):
++		s["active"] = {}
++	s["last_end"] = int(s.get("last_end", -100000))
++	s["count"] = int(s.get("count", 0))
++
++
++static func active(gs) -> Dictionary:
++	return gs.world_events.get("war", {}).get("active", {})
++
++
++static func is_active(gs) -> bool:
++	return not active(gs).is_empty()
++
++
++## Posibles bandos: países de countries.json (menos el tuyo) y potencias externas.
++static func parties(gs) -> Array:
++	var out := []
++	var mine := MapSim.country_id(gs)
++	for id in MapSim.country_ids():
++		if str(id) != mine:
++			out.append(str(MapSim.country_def(str(id)).get("label", id)))
++	for p in cfg().get("powers", []):
++		out.append(str(p))
++	return out
++
++
++static func monthly(gs) -> void:
++	var s := st(gs)
++	if is_active(gs):
++		return
++	var today: int = gs.today()
++	if today < int(cfg().get("min_months", 24)) * 30 or today < int(s.get("last_end", -100000)) + int(cfg().get("cooldown_days", 1800)):
++		return
++	if LaborSim.rf(gs, "guerra") < float(cfg().get("chance_monthly", 0.006)) * float(gs.diff().get("event_freq_mult", 1.0)):
++		start_war(gs)
++
++
++static func _pick(gs, list: Array, n: int, salt: String) -> Array:
++	var pool := list.filter(func(g): return GameData.goods.has(str(g)))
++	var out := []
++	var i := 0
++	while out.size() < n and not pool.is_empty():
++		var k := int(floor(LaborSim.rf(gs, "%s%d" % [salt, i]) * pool.size())) % pool.size()
++		out.append(str(pool[k]))
++		pool.remove_at(k)
++		i += 1
++	return out
++
++
++## Empieza una guerra (las pruebas pueden forzar la duración en meses).
++static func start_war(gs, months := -1) -> Dictionary:
++	var c := cfg()
++	var ps := parties(gs)
++	if ps.size() < 2:
++		return {}
++	var ia := int(floor(LaborSim.rf(gs, "bando_a") * ps.size())) % ps.size()
++	var ib := (ia + 1 + int(floor(LaborSim.rf(gs, "bando_b") * (ps.size() - 1)))) % ps.size()
++	if months < 0:
++		months = LaborSim.ri(gs, "guerra_meses", c.get("months", [4, 12]))
++	var demand := {}
++	for g in _pick(gs, c.get("demand_goods", []), LaborSim.ri(gs, "n_dem", c.get("demand_count", [3, 5])), "dem"):
++		demand[g] = snappedf(LaborSim.rr(gs, "dm" + g, c.get("demand_mult", [1.1, 1.25])), 0.01)
++	var imports := {}
++	var cut := []
++	for g in _pick(gs, c.get("import_goods", []), LaborSim.ri(gs, "n_imp", c.get("import_count", [2, 4])), "imp"):
++		if LaborSim.rf(gs, "cut" + g) < float(c.get("cut_chance", 0.35)):
++			imports[g] = float(c.get("cut_mult", 2.0))
++			cut.append(g)
++		else:
++			imports[g] = snappedf(LaborSim.rr(gs, "im" + g, c.get("import_mult", [1.3, 1.6])), 0.01)
++	var w := {"a": ps[ia], "b": ps[ib], "start": gs.today(), "until": gs.today() + maxi(1, months) * 30,
++		"demand": demand, "imports": imports, "cut": cut, "towns": []}
++	# Los pueblos conectados piden bienes de guerra (evento del pueblo, sin pisar uno vigente).
++	for conn in gs.trade.get("connections", []):
++		var t := TradeSim.town(gs, str(conn.get("town_id", "")))
++		if t.is_empty() or not t.get("event", {}).is_empty():
++			continue
++		for g in demand:
++			if t.get("goods", {}).has(g):
++				t["event"] = {"good": g, "mult": float(c.get("town_event_mult", 1.3)), "until_day": int(w["until"]), "war": true}
++				w["towns"].append(str(conn["town_id"]))
++				break
++	st(gs)["active"] = w
++	st(gs)["count"] = int(st(gs).get("count", 0)) + 1
++	gs.count("wars")
++	var dem_txt := ", ".join(demand.keys().map(func(g): return GameData.good_label(str(g)).to_lower()))
++	var imp_txt := ", ".join(imports.keys().map(func(g): return GameData.good_label(str(g)).to_lower() + (" (cortado)" if cut.has(g) else "")))
++	gs.notify("GUERRA entre %s y %s (sin combates aquí). Por unos %d meses sube la demanda de %s y se encarece la importación de %s." % [w["a"], w["b"], months, dem_txt, imp_txt], "importante")
++	return w
++
++
++static func daily(gs) -> void:
++	var w := active(gs)
++	if w.is_empty() or gs.today() < int(w.get("until", 0)):
++		return
++	end_war(gs)
++
++
++static func end_war(gs) -> void:
++	var w := active(gs)
++	if w.is_empty():
++		return
++	for tid in w.get("towns", []):
++		var t := TradeSim.town(gs, str(tid))
++		if not t.is_empty() and bool(t.get("event", {}).get("war", false)):
++			t["event"] = {}
++	st(gs)["active"] = {}
++	st(gs)["last_end"] = gs.today()
++	gs.notify("Terminó la guerra entre %s y %s: el comercio y los precios vuelven a la normalidad." % [w.get("a", "?"), w.get("b", "?")], "importante")
++
++
++## Alza de demanda (precio de mercado) de un bien por la guerra (1 = normal).
++static func price_mult(gs, good: String) -> float:
++	var w: Dictionary = gs.world_events.get("war", {}).get("active", {})
++	if w.is_empty():
++		return 1.0
++	return float(w.get("demand", {}).get(good, 1.0))
++
++
++## Encarecimiento de la importación de un bien (2 = cortado: solo contrabando carísimo).
++static func import_mult(gs, good: String) -> float:
++	var w: Dictionary = gs.world_events.get("war", {}).get("active", {})
++	if w.is_empty():
++		return 1.0
++	return float(w.get("imports", {}).get(good, 1.0))
++
++
++static func summary(gs) -> String:
++	var w := active(gs)
++	if w.is_empty():
++		return ""
++	return "Guerra entre %s y %s (%d días más)" % [w.get("a", "?"), w.get("b", "?"), maxi(0, int(w.get("until", 0)) - gs.today())]
+diff --git a/scripts/ui/building_panel.gd b/scripts/ui/building_panel.gd
+index 2d5d368..a6234d2 100644
+--- a/scripts/ui/building_panel.gd
++++ b/scripts/ui/building_panel.gd
+@@ -131,6 +131,15 @@ func _summary_tab(b: Dictionary, mine: bool) -> Control:
+ 			closed.emit())
+ 		del.tooltip_text = "Elimina el edificio sin reembolso."
+ 		v.add_child(del)
++		if PollutionSim.base_pollution(GameState, b) > 0.0:   # Mundo: filtros y depuradoras.
++			var tier := maxi(1, PollutionSim.best_tier(GameState))
++			var fb := UIKit.button("Instalar %s (%s)" % [str(PollutionSim.filter_def(tier).get("label", "filtros")).to_lower(), Fmt.money(PollutionSim.filter_cost(GameState, b, tier))], func():
++				_msg(PollutionSim.buy_filters(GameState, _b()), "jugador")
++				rebuild())
++			var why := PollutionSim.filter_block_reason(GameState, b)
++			fb.disabled = why != ""
++			fb.tooltip_text = why if why != "" else "Reduce la contaminación un %d %%. Mantenimiento: %s/mes." % [int(round(float(PollutionSim.filter_def(tier).get("reduction", 0.5)) * 100.0)), Fmt.money(float(GameState.level_def(b).get("cost", 0.0)) * float(PollutionSim.filter_def(tier).get("upkeep_ratio", 0.02)) * GameState.price_mult())]
++			v.add_child(fb)
+ 		if b["status"] == "cerrado":
+ 			v.add_child(UIKit.button("Reabrir (%s)" % Fmt.money(BusinessSim.reopen_cost(GameState, b)), func():
+ 				_msg(BusinessSim.reopen(GameState, _b()), "jugador")
+@@ -206,6 +215,14 @@ func _summary_text(b: Dictionary) -> String:
+ 		s += WarehouseTab.summary_line(GameState, b)   # Almacén vinculado (verde) / ninguno (rojo).
+ 	s += TransitSim.panel_lines(GameState, b)   # Transporte: acceso por carretera, llegada de trabajadores.
+ 	s += GridSim.panel_lines(GameState, b)   # Redes: "Electricidad: conectado / sin conexión" y "Agua: …".
++	var pol_txt := PollutionSim.panel_text(GameState, b)   # Mundo: "Contaminación: X (−Y % con filtros)".
++	if pol_txt != "":
++		s += "[color=#c9a26b]%s[/color]\n" % pol_txt
++	if ClimateSim.output_mult(GameState, b) < 0.999:
++		s += "[color=#e9b949]Clima: %s · rendimiento ×%.2f[/color]\n" % [ClimateSim.summary(GameState), ClimateSim.output_mult(GameState, b)]
++	var lab_txt := LaborSim.status_text(GameState, b)   # Trabajo: sindicato, huelga y ofertas de la competencia.
++	if lab_txt != "" and GameState.owned_by_player(b):
++		s += "[color=#e66]%s[/color]\n" % lab_txt
+ 	var site_crew := 0
+ 	for c in GameState.employees_of(bid):
+ 		if c.job_kind == "obra":
+@@ -265,11 +282,12 @@ func _employees_tab(b: Dictionary) -> Control:
+ 	req.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	req.custom_minimum_size.x = 380
+ 	v.add_child(req)
++	_labor_box(v, b)   # Trabajo: sindicato (aceptar / contraoferta / rechazar) y ofertas de la competencia.
+ 	for c in GameState.employees_of(bid):
+ 		if c.job_kind != "empleo":
+ 			continue
+ 		var row := HBoxContainer.new()
+-		var info := UIKit.label("%s · %s %d · exp %.1f · %s/día" % [c.full_name(), GameData.skill_label(skill).substr(0, 4), int(c.skills.get(skill, 0)), c.experience, Fmt.money2(c.wage)], 13)
++		var info := UIKit.label("%s · %s %d · %s · %s/día" % [c.full_name(), GameData.skill_label(skill).substr(0, 4), int(c.skills.get(skill, 0)), LaborSim.exp_text(c, skill), Fmt.money2(c.wage)], 13)
+ 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ 		info.tooltip_text = "Pide %s/día · Felicidad %d%%" % [Fmt.money2(BusinessSim.asked_wage(GameState, c, b["type"])), int(c.happiness)]
+ 		row.add_child(info)
+@@ -284,6 +302,48 @@ func _employees_tab(b: Dictionary) -> Control:
+ 	return v
+ 
+ 
++## Trabajo: pedido del sindicato y ofertas de la competencia NPC a tus empleados.
++func _labor_box(v: VBoxContainer, b: Dictionary) -> void:
++	var gs := GameState
++	var u := LaborSim.union_of(gs, b)
++	if not u.is_empty():
++		var t := UIKit.label(LaborSim.status_text(gs, b).split("\n")[0], 13, Color(1.0, 0.55, 0.45))
++		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++		t.custom_minimum_size.x = 380
++		v.add_child(t)
++		if str(u.get("state", "")) == LaborSim.U_DEMAND:
++			var pct := float(u["pct"])
++			var row := HBoxContainer.new()
++			row.add_child(UIKit.button("Aceptar +%d %%" % int(round(pct * 100.0)), func():
++				_msg(LaborSim.accept_demand(GameState, _b()), "jugador")
++				rebuild()
++				tabs.current_tab = 1, 120))
++			row.add_child(UIKit.button("Contraoferta +%d %%" % int(round(pct * 50.0)), func():
++				_msg(LaborSim.counter_offer(GameState, _b(), snappedf(pct * 0.5, 0.01)), "jugador")
++				rebuild()
++				tabs.current_tab = 1, 140))
++			row.add_child(UIKit.button("Rechazar", func():
++				_msg(LaborSim.reject_demand(GameState, _b()), "jugador")
++				rebuild()
++				tabs.current_tab = 1, 90))
++			v.add_child(row)
++	for o in LaborSim.pending_offers(gs, b):
++		var row2 := HBoxContainer.new()
++		var lab := UIKit.label("%s: oferta de %s por %s/día (hoy %s)" % [o["name"], o["npc_label"], Fmt.money2(float(o["wage"])), Fmt.money2(float(o["old_wage"]))], 13, Color(1.0, 0.8, 0.4))
++		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		row2.add_child(lab)
++		var oid := int(o["id"])
++		row2.add_child(UIKit.button("Igualar", func():
++			_msg(LaborSim.match_offer(GameState, oid), "jugador")
++			rebuild()
++			tabs.current_tab = 1, 80))
++		row2.add_child(UIKit.button("Dejarlo ir", func():
++			_msg(LaborSim.decline_offer(GameState, oid), "jugador")
++			rebuild()
++			tabs.current_tab = 1, 90))
++		v.add_child(row2)
++
++
+ func _change_wage(cid: int, delta: float) -> void:
+ 	if GameState.citizens.has(cid):
+ 		var c: Citizen = GameState.citizens[cid]
+@@ -308,7 +368,7 @@ func _open_hire() -> void:
+ 		var status := " · jornalero" if c.job_kind == "obra" else ""
+ 		if c.profession != "":
+ 			status += " · " + GameData.profession_label(c.profession).to_upper()
+-		var info := UIKit.label("%s, %d años · %s %d · exp %.1f · %s · pide %s%s" % [c.full_name(), c.age_years(today), GameData.skill_label(skill), int(c.skills.get(skill, 0)), c.experience, GameData.education_label(c.education), Fmt.money2(asked), status], 13)
++		var info := UIKit.label("%s, %d años · %s %d · %s · %s · pide %s%s" % [c.full_name(), c.age_years(today), GameData.skill_label(skill), int(c.skills.get(skill, 0)), LaborSim.exp_text(c, skill), GameData.education_label(c.education), Fmt.money2(asked), status], 13)
+ 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ 		row.add_child(info)
+ 		var cid: int = c.id
+diff --git a/scripts/ui/hud.gd b/scripts/ui/hud.gd
+index 513e905..e73c8e5 100644
+--- a/scripts/ui/hud.gd
++++ b/scripts/ui/hud.gd
+@@ -486,6 +486,7 @@ func _citizen_text(c: Citizen) -> String:
+ 		sk.append("%s %d" % [GameData.skill_label(k), int(c.skills[k])])
+ 	s += ", ".join(sk) + "\n"
+ 	s += "[b]Talentos[/b]: %s\n" % HeirsSim.talents_text(GameState, c)   # Sección C.
++	s += "[b]Oficios[/b]: %s\n" % LaborSim.trades_text(c)   # Trabajo: experiencia por oficio.
+ 	if not me and PlayerSim.can_court(GameState, c) == "":
+ 		s += MarriageSim.sheet_text(GameState, c) + "Aceptaría casarse contigo: ≈%d%%\n" % int(MarriageSim.proposal_chance(GameState, c) * 100.0)
+ 	s += "\n[b]Familia[/b]\n"
+diff --git a/scripts/world/pollution_visuals.gd b/scripts/world/pollution_visuals.gd
+new file mode 100644
+index 0000000..9fbe2ff
+--- /dev/null
++++ b/scripts/world/pollution_visuals.gd
+@@ -0,0 +1,80 @@
++class_name PollutionVisuals
++extends Node3D
++## Capa visual de la contaminación (docs/TRABAJO_MUNDO.md): columnas de humo gris sobre los edificios
++## que contaminan, proporcionales a su emisión (menos con filtros; nada en renovables). Las bocanadas
++## suben y se desvanecen. world.gd llama setup(world) al iniciar. Se puede ocultar con `visible`.
++
++const MAX_PUFFS := 6
++const RISE := 1.6
++
++var world: Node3D
++var _timer := 0.0
++var _sources: Array = []      # [{pos: Vector3, puffs: Array[MeshInstance3D], rate: float}]
++var _mat: StandardMaterial3D
++var _mesh: SphereMesh
++
++
++func setup(p_world: Node3D) -> void:
++	world = p_world
++	name = "PollutionVisuals"
++	_mat = StandardMaterial3D.new()
++	_mat.albedo_color = Color(0.35, 0.34, 0.33, 0.45)
++	_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
++	_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
++	_mesh = SphereMesh.new()
++	_mesh.radius = 1.0
++	_mesh.height = 2.0
++	_mesh.radial_segments = 8
++	_mesh.rings = 4
++	_rebuild()
++
++
++func _height(x: float, z: float) -> float:
++	var t = world.get("terrain") if world else null
++	if t != null and t.has_method("height_at"):
++		return float(t.height_at(x, z))
++	return 0.0
++
++
++func _rebuild() -> void:
++	for s in _sources:
++		for p in s["puffs"]:
++			p.queue_free()
++	_sources = []
++	if not GameState.running:
++		return
++	for b in GameState.buildings:
++		var e := PollutionSim.emission(GameState, b)
++		if e <= 0.05:
++			continue
++		var x := float(b.get("x", 0.0))
++		var z := float(b.get("z", 0.0))
++		var top := _height(x, z) + 5.0 + GameState.footprint_of(b) * 0.4
++		var n := clampi(int(ceil(e)), 1, MAX_PUFFS)
++		var puffs := []
++		for i in range(n):
++			var m := MeshInstance3D.new()
++			m.mesh = _mesh
++			m.material_override = _mat
++			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++			add_child(m)
++			puffs.append(m)
++		_sources.append({"pos": Vector3(x, top, z), "puffs": puffs, "rate": 0.25 + e * 0.05, "phase": randf()})
++
++
++func _process(delta: float) -> void:
++	if world == null:
++		return
++	_timer += delta
++	if _timer >= 3.0:
++		_timer = 0.0
++		_rebuild()
++	var t := Time.get_ticks_msec() / 1000.0
++	for s in _sources:
++		var n: int = s["puffs"].size()
++		for i in range(n):
++			var m: MeshInstance3D = s["puffs"][i]
++			var k := fposmod(t * float(s["rate"]) + float(s["phase"]) + float(i) / n, 1.0)
++			m.position = s["pos"] + Vector3(k * 2.5, k * RISE * n + 0.5, k * 0.8)
++			m.scale = Vector3.ONE * (0.6 + k * 1.6)
++			m.visible = k < 0.95
+diff --git a/scripts/world/world.gd b/scripts/world/world.gd
+index 4f9a508..a048047 100644
+--- a/scripts/world/world.gd
++++ b/scripts/world/world.gd
+@@ -94,7 +94,7 @@ func _ready() -> void:
+ 	interior.name = "Interior"
+ 	add_child(interior)
+ 
+-	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new(), UtilitiesVisuals.new(), TransitVisuals.new(), MiningVisuals.new()]:
++	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new(), UtilitiesVisuals.new(), TransitVisuals.new(), MiningVisuals.new(), PollutionVisuals.new()]:   # Mundo: humo sobre los contaminantes.
+ 		add_child(vis)
+ 		vis.setup(self)
+ 
+diff --git a/tests/test_trabajo_mundo.gd b/tests/test_trabajo_mundo.gd
+new file mode 100644
+index 0000000..e196f74
+--- /dev/null
++++ b/tests/test_trabajo_mundo.gd
+@@ -0,0 +1,650 @@
++extends Node
++## Pruebas de las secciones B (trabajo) y D (mundo): sindicatos y huelgas, experiencia por oficio,
++## competencia NPC, clima que afecta el agro y los precios, tecnología que mitiga, contaminación local,
++## filtros, multas, guerras sin combate, dinero conservado y guardado.
++## godot --headless res://tests/test_trabajo_mundo.tscn
++
++var failures := 0
++
++
++func check(cond: bool, msg: String) -> void:
++	if cond:
++		print("  OK   ", msg)
++	else:
++		failures += 1
++		print("  FAIL ", msg)
++
++
++func _ready() -> void:
++	print("== Trabajo y mundo: secciones B y D ==")
++	_test_data()
++	_test_experience()
++	_test_union_strike()
++	_test_union_accept_counter()
++	_test_npc_competition()
++	_test_climate()
++	_test_flood_river()
++	_test_pollution()
++	_test_war()
++	_test_money_conserved()
++	_test_save_load()
++	print("== %s (%d fallos) ==" % ["TODO OK" if failures == 0 else "CON FALLOS", failures])
++	get_tree().quit(1 if failures > 0 else 0)
++
++
++# --- Utilidades ----------------------------------------------------------------------------------
++
++func _new_town(seed_v: int, diff := "facil") -> void:
++	GameState.new_game({"seed": seed_v, "difficulty": diff})
++	GameState.money = 80000.0
++
++
++func _build_now(type_id: String, x: float, z: float) -> Dictionary:
++	var r := ConstructionSim.start_construction(GameState, type_id, x, z, 0.0, "", "sas")
++	if r.has("error"):
++		print("    error construcción %s: %s" % [type_id, r["error"]])
++		return {}
++	var b: Dictionary = r["building"]
++	var guard := 0
++	while b["status"] != "activo" and guard < 400:
++		TimeManager.advance_days(1)
++		guard += 1
++	return b
++
++
++func _staff_up(b: Dictionary, wage_factor := 1.1) -> int:
++	var jobs := int(GameState.level_def(b).get("jobs", 1))
++	var hired := 0
++	for c in BusinessSim.candidates(GameState, b):
++		if hired >= jobs:
++			break
++		c.education = maxi(c.education, int(GameState.level_def(b).get("min_education", 0)))
++		if BusinessSim.hire(GameState, b, c, maxf(GovSim.min_wage(GameState), BusinessSim.asked_wage(GameState, c, str(b["type"])) * wage_factor)) == "":
++			hired += 1
++	return hired
++
++
++func _staff(b: Dictionary) -> Array:
++	return LaborSim.staff(GameState, b)
++
++
++func _total() -> float:
++	return float(FreeMarketSim.money_snapshot(GameState)["total"])
++
++
++func _rich_citizen(skill: String) -> Citizen:
++	var best: Citizen = null
++	for c in GameState.citizens.values():
++		if GameState.is_player(c.id) or c.job_id >= 0 or c.age_years(GameState.today()) < 22:
++			continue
++		if best == null or float(c.skills.get(skill, 0.0)) > float(best.skills.get(skill, 0.0)):
++			best = c
++	best.skills[skill] = maxf(40.0, float(best.skills.get(skill, 0.0)))
++	best.money += 5000.0
++	return best
++
++
++func _open_npc(type_id: String, x: float, z: float) -> Dictionary:
++	var owner := _rich_citizen(str(GameData.building_def(type_id).get("skill", "")))
++	var b := NpcBusinessSim.open_business(GameState, owner, type_id, x, z, 0.0)
++	var guard := 0
++	while str(b["status"]) != "activo" and guard < 300:
++		TimeManager.advance_days(1)
++		guard += 1
++	TimeManager.advance_days(1)
++	return b
++
++
++# --- Datos -----------------------------------------------------------------------------------------
++
++func _test_data() -> void:
++	print("-- Datos --")
++	_new_town(401)
++	var cfg := LaborSim.cfg()
++	check(not cfg.is_empty() and cfg.has("unions") and cfg.has("climate") and cfg.has("pollution") and cfg.has("wars"), "data/trabajo_mundo.json cargado")
++	var clima: Dictionary = GameData.extra("technologies_clima")
++	var cells := {}
++	var ok := true
++	for id in clima:
++		if str(id).begins_with("_"):
++			continue
++		var t: Dictionary = GameData.technologies.get(id, {})
++		ok = ok and not t.is_empty()
++		for r in t.get("requires", []):
++			ok = ok and GameData.technologies.has(r) and int(GameData.technologies[r].get("era", 1)) <= int(t.get("era", 1))
++	check(ok and clima.size() >= 5, "technologies_clima.json: %d tecnologías con prerrequisitos válidos" % (clima.size() - 1))
++	# Posiciones del árbol: se replica el algoritmo de ResearchScreen._layout y se verifica que ninguna celda se repita.
++	var rs := ResearchScreen.new()
++	rs.canvas = Control.new()
++	rs._layout()
++	var seen := {}
++	var dup := []
++	for id in rs.positions:
++		var k := str(rs.positions[id])
++		if seen.has(k):
++			dup.append("%s/%s" % [seen[k], id])
++		seen[k] = id
++	check(dup.is_empty() and rs.positions.has("canales_riego") and rs.positions.has("precipitadores"), "el árbol ubica las tecnologías nuevas sin superponerse %s" % str(dup))
++	rs.canvas.free()
++	rs.free()
++	check(TechSim.effects_text("canales_riego").size() == 3, "efectos de mitigación visibles: %s" % ", ".join(TechSim.effects_text("canales_riego")))
++
++
++# --- 7. Experiencia por oficio -------------------------------------------------------------------------
++
++func _test_experience() -> void:
++	print("-- Experiencia por oficio --")
++	_new_town(402)
++	var gs = GameState
++	var seeded := 0
++	for c in gs.citizens.values():
++		if not c.trade_exp.is_empty():
++			seeded += 1
++	check(seeded > 0, "los adultos traen experiencia inicial en su oficio (%d)" % seeded)
++	var c: Citizen = null
++	for x in gs.citizens.values():
++		if not gs.is_player(x.id) and x.age_years(gs.today()) >= 20:
++			c = x
++			break
++	c.trade_exp = {}
++	var p0 := BusinessSim.productivity(c, "agricultura")
++	var w0 := BusinessSim.asked_wage(gs, c, "granja")
++	c.trade_exp["agricultura"] = 10.0
++	var p1 := BusinessSim.productivity(c, "agricultura")
++	var w1 := BusinessSim.asked_wage(gs, c, "granja")
++	check(absf(p1 / p0 - 1.2) < 0.001, "un veterano (10 años) rinde +20 %% (%.3f → %.3f)" % [p0, p1])
++	check(w1 > w0 and w1 <= w0 * 1.12, "y pide algo más de sueldo (%s → %s)" % [Fmt.money2(w0), Fmt.money2(w1)])
++	c.trade_exp["agricultura"] = 5.0
++	check(absf(BusinessSim.productivity(c, "agricultura") / p0 - 1.1) < 0.001, "a mitad de camino (5 años) rinde +10 %")
++	check(LaborSim.exp_mult(c, "mineria") == 1.0, "la experiencia es por oficio (no sirve en otro sector)")
++	# Acumula trabajando.
++	var farm := _build_now("granja", 20, 16)
++	_staff_up(farm)
++	var e := _staff(farm)[0] as Citizen
++	var y0 := LaborSim.years(e, "agricultura")
++	for i in range(365):
++		LaborSim._accumulate(gs)
++	var y1 := LaborSim.years(e, "agricultura")
++	check(absf(y1 - y0 - 1.0) < 0.01, "un año trabajando suma un año de oficio (%.2f → %.2f)" % [y0, y1])
++	# Si lo despiden, la experiencia se va con él y la competencia puede contratarlo.
++	e.trade_exp["agricultura"] = 8.0
++	BusinessSim.fire(gs, e, "")
++	check(LaborSim.years(e, "agricultura") == 8.0 and e.job_id < 0, "despedido: conserva sus 8 años de oficio")
++	var npc := _open_npc("granja", -26, 24)
++	NpcBusinessSim.staff_index(gs)
++	NpcBusinessSim.hire_silent(gs, npc, e)
++	check(e.job_id == int(npc["id"]) and NpcBusinessSim._output(gs, npc, [e]) > 0.0, "la competencia NPC lo contrata y aprovecha su experiencia")
++	var panel_ok := LaborSim.exp_text(e, "agricultura").begins_with("oficio 8.0")
++	check(panel_ok, "texto para la ficha: %s" % LaborSim.exp_text(e, "agricultura"))
++
++
++# --- 6. Sindicatos y huelgas ---------------------------------------------------------------------------
++
++func _test_union_strike() -> void:
++	print("-- Sindicato, rechazo y huelga --")
++	_new_town(403)
++	var gs = GameState
++	var b := _build_now("lenador", 22, -18)
++	var n := _staff_up(b, 0.75)
++	check(n >= 3, "leñador con %d empleados" % n)
++	# Época colonial: no hay sindicatos.
++	for i in range(40):
++		LaborSim._unions_monthly(gs)
++	check(gs.labor["unions"].is_empty(), "en la época colonial no hay sindicatos")
++	gs.research["era"] = 2
++	for c in _staff(b):
++		c.wage = maxf(GovSim.min_wage(gs), BusinessSim.asked_wage(gs, c, "lenador") * 0.7)
++	var g := LaborSim.grievance(gs, b)
++	check(float(g["ratio"]) < 0.9 and float(g["score"]) > 0.0, "sueldos bajo el mercado (ratio %.2f, presión %.2f)" % [float(g["ratio"]), float(g["score"])])
++	# Frecuencia baja: con presión máxima, a lo sumo ~10 % mensual.
++	var hits := 0
++	for m in range(60):
++		var ch := minf(float(LaborSim.ucfg().get("max_chance", 0.1)), float(LaborSim.ucfg().get("base_chance", 0.12)) * float(g["score"]))
++		if ch <= 0.1001:
++			hits += 1
++	check(hits == 60, "probabilidad mensual acotada (≤ 10 %)")
++	var u := LaborSim.start_demand(gs, b)
++	check(str(u["state"]) == "demanda" and float(u["pct"]) >= 0.06 and float(u["pct"]) <= 0.18, "el sindicato pide +%d %% antes de parar" % int(round(float(u["pct"]) * 100.0)))
++	check(gs.notifications_log.any(func(x): return "SINDICATO" in str(x["text"])), "aviso en notificaciones")
++	var out0 := BusinessSim.expected_output(gs, b)
++	var wages0 := 0.0
++	for c in _staff(b):
++		wages0 += c.wage
++	check(LaborSim.reject_demand(gs, b) == "" and LaborSim.on_strike(gs, b), "rechazas: huelga")
++	var uu: Dictionary = LaborSim.union_of(gs, b)
++	var days := int(uu["until"]) - int(uu["start"])
++	check(days >= 3 and days <= 10, "huelga corta (%d días)" % days)
++	var out1 := BusinessSim.expected_output(gs, b)
++	check(out1 <= out0 * 0.3 + 0.0001, "la huelga baja la producción (%.2f → %.2f, %d %%)" % [out0, out1, int(round(float(uu["factor"]) * 100.0))])
++	check(gs.notifications_log.any(func(x): return "HUELGA" in str(x["text"])), "aviso de huelga")
++	for i in range(days + 1):
++		TimeManager.advance_days(1)
++	check(not LaborSim.on_strike(gs, b) and LaborSim.union_of(gs, b).is_empty(), "la huelga termina sola")
++	var wages1 := 0.0
++	for c in _staff(b):
++		wages1 += c.wage
++	check(wages1 > wages0, "termina con un acuerdo: sueldos %s → %s" % [Fmt.money2(wages0), Fmt.money2(wages1)])
++	check(BusinessSim.expected_output(gs, b) > out1 + 0.01, "la producción vuelve a la normalidad")
++	check(gs.notifications_log.any(func(x): return "Terminó la huelga" in str(x["text"])), "aviso del acuerdo")
++	# Sin respuesta en el plazo: huelga.
++	LaborSim.start_demand(gs, b)
++	for i in range(int(LaborSim.ucfg().get("reply_days", 14)) + 1):
++		TimeManager.advance_days(1)
++	check(LaborSim.on_strike(gs, b) or LaborSim.union_of(gs, b).is_empty(), "si no respondes a tiempo, paran")
++
++
++func _test_union_accept_counter() -> void:
++	print("-- Sindicato: aceptar y contraoferta --")
++	_new_town(404)
++	var gs = GameState
++	gs.research["era"] = 2
++	var b := _build_now("lenador", -22, 18)
++	_staff_up(b, 0.75)
++	LaborSim.start_demand(gs, b)
++	var pct := float(LaborSim.union_of(gs, b)["pct"])
++	var w0: float = (_staff(b)[0] as Citizen).wage
++	check(LaborSim.accept_demand(gs, b) == "" and LaborSim.union_of(gs, b).is_empty(), "aceptar cierra el pedido")
++	var w1: float = (_staff(b)[0] as Citizen).wage
++	check(absf(w1 - snappedf(w0 * (1.0 + pct), 0.01)) < 0.011, "aceptar sube el sueldo pedido (%s → %s)" % [Fmt.money2(w0), Fmt.money2(w1)])
++	LaborSim.start_demand(gs, b)
++	var pct2 := float(LaborSim.union_of(gs, b)["pct"])
++	var r := LaborSim.counter_offer(gs, b, pct2 * 0.2)
++	check(r != "" and LaborSim.on_strike(gs, b), "una contraoferta muy baja termina en huelga")
++	gs.labor["unions"] = {}
++	LaborSim.start_demand(gs, b)
++	var pct3 := float(LaborSim.union_of(gs, b)["pct"])
++	check(LaborSim.counter_offer(gs, b, pct3) == "", "una contraoferta igual al pedido se acepta")
++
++
++# --- 8. Competencia NPC -----------------------------------------------------------------------------------
++
++func _test_npc_competition() -> void:
++	print("-- Competencia NPC --")
++	_new_town(405)
++	var gs = GameState
++	var mine := _build_now("granja", 24, 14)
++	_staff_up(mine)
++	var npc := _open_npc("granja", -28, 22)
++	check(NpcBusinessSim.is_npc(npc) and str(npc["status"]) == "activo", "empresa NPC de la competencia abierta")
++	# Guerra de precios sin vender a pérdida.
++	npc["ledger"]["last_month"] = {"ventas": 100.0, "salarios": 70.0, "mantenimiento": 10.0}
++	var m0 := float(npc.get("markup", 0.08))
++	var p0 := float(npc["price"])
++	var cut := LaborSim.start_price_war(gs, npc, mine)
++	var p1 := float(npc["price"])
++	check(cut > 0.0 and float(npc["markup"]) < m0 and p1 < p0, "baja precios temporalmente (%s → %s)" % [Fmt.money2(p0), Fmt.money2(p1)])
++	check((1.0 + float(npc["markup"])) / (1.0 + m0) >= 1.0 - 0.2 * 0.7 - 0.001, "el recorte sale de su margen (20 %): no vende a pérdida")
++	check(cut <= 0.12 + 0.0001, "recorte suave (máx. 12 %)")
++	check(gs.notifications_log.any(func(x): return "bajó sus precios" in str(x["text"])), "aviso de la guerra de precios")
++	npc["ledger"]["last_month"] = {"ventas": 100.0, "salarios": 99.0}
++	var npc_b := _open_npc("granja", 30, -26)
++	npc_b["ledger"]["last_month"] = {"ventas": 100.0, "salarios": 110.0}
++	check(LaborSim.start_price_war(gs, npc_b, mine) == 0.0, "si pierde dinero no baja precios")
++	var w: Dictionary = LaborSim.price_war_of(gs, npc)
++	for i in range(int(w["until"]) - gs.today() + 1):
++		LaborSim._price_wars_daily(gs)
++		TimeManager.advance_days(1)
++	check(LaborSim.price_war_of(gs, npc).is_empty() and absf(float(npc["markup"]) - m0) < 0.0001, "la guerra de precios termina y vuelve a su margen")
++	# Oferta de sueldo a tu mejor empleado.
++	npc["reserve"] = 5000.0
++	var best: Citizen = _staff(mine)[0]
++	best.trade_exp["agricultura"] = 40.0
++	var o := LaborSim.make_offer(gs, npc)
++	check(not o.is_empty() and int(o["cid"]) == best.id, "la NPC tienta a tu empleado más experimentado (%s, 40 años)" % best.full_name())
++	check(float(o["wage"]) > best.wage, "ofrece más sueldo (%s → %s)" % [Fmt.money2(best.wage), Fmt.money2(float(o["wage"]))])
++	check(gs.notifications_log.any(func(x): return "recibió una oferta" in str(x["text"])), "te avisan")
++	check(LaborSim.match_offer(gs, int(o["id"])) == "" and absf(best.wage - float(o["wage"])) < 0.001 and best.job_id == int(mine["id"]), "igualas la oferta y se queda")
++	var other: Citizen = _staff(mine)[1]
++	other.trade_exp["agricultura"] = 3.0
++	var o2 := LaborSim.make_offer(gs, npc, other)
++	check(not o2.is_empty(), "otra oferta a %s" % other.full_name())
++	LaborSim.decline_offer(gs, int(o2["id"]))
++	check(other.job_id == int(npc["id"]) and absf(other.wage - float(o2["wage"])) < 0.001 and LaborSim.years(other, "agricultura") >= 3.0, "si no la igualas se va a la competencia con su experiencia")
++	var third: Citizen = _staff(mine)[1]
++	var o3 := LaborSim.make_offer(gs, npc, third)
++	for i in range(int(LaborSim.ncfg().get("poach_reply_days", 7)) + 1):
++		TimeManager.advance_days(1)
++	check(str(o3.get("status", "")) != "pendiente", "sin respuesta, decide solo al vencer el plazo (%s)" % str(o3.get("status", "")))
++
++
++# --- 12. Clima ------------------------------------------------------------------------------------------------
++
++func _test_climate() -> void:
++	print("-- Clima: sequía, precios y tecnología --")
++	_new_town(406)
++	var gs = GameState
++	var farm := _build_now("granja", 18, 20)
++	_staff_up(farm)
++	var mill := _build_now("lenador", -20, 20)
++	_staff_up(mill)
++	var c0 := ClimateSim.town_climate(gs)
++	check(c0.has("temperature") and c0.has("humidity"), "clima de la zona por MapSim.climate_at (T %.2f, H %.2f, %s)" % [float(c0["temperature"]), float(c0["humidity"]), str(c0.get("biome", ""))])
++	gs.season = "verano"
++	check(ClimateSim.chance(gs, "sequia") > 0.0 and ClimateSim.chance(gs, "helada") == 0.0, "las sequías dependen de la estación (verano sí, heladas no)")
++	gs.season = "invierno"
++	check(ClimateSim.chance(gs, "helada") > 0.0, "en invierno puede helar")
++	var out0 := BusinessSim.expected_output(gs, farm)
++	var wood0 := BusinessSim.expected_output(gs, mill)
++	var price0 := EconomySim.market_price(gs, "comida")
++	var e := ClimateSim.schedule(gs, "sequia", 5, 20, 1.0)
++	check(not e.is_empty() and ClimateSim.forecasts(gs).size() == 1 and ClimateSim.output_mult(gs, farm) == 1.0, "pronóstico: aviso previo antes de la sequía")
++	check(gs.notifications_log.any(func(x): return "Pronóstico" in str(x["text"])), "aviso del pronóstico en notificaciones")
++	for i in range(5):
++		TimeManager.advance_days(1)
++	check(ClimateSim.active_events(gs).size() == 1, "la sequía empieza en la fecha pronosticada")
++	var out1 := BusinessSim.expected_output(gs, farm)
++	var mult1 := ClimateSim.output_mult(gs, farm)
++	var bm_saved: Dictionary = gs.world_events["climate"]["bmult"]
++	gs.world_events["climate"]["bmult"] = {}
++	out0 = BusinessSim.expected_output(gs, farm)
++	gs.world_events["climate"]["bmult"] = bm_saved
++	var price1 := EconomySim.market_price(gs, "comida")
++	check(mult1 < 0.75 and mult1 > 0.2, "la sequía baja la producción agrícola (×%.2f)" % mult1)
++	check(out1 < out0 or out0 <= 0.0, "producción de la granja %.2f → %.2f" % [out0, out1])
++	check(ClimateSim.output_mult(gs, mill) == 1.0, "no afecta a un negocio que no es agro (leñador)")
++	check(price1 > price0 * 1.1 and price1 < price0 * 1.5, "sube el precio de la comida por escasez (%s → %s)" % [Fmt.money2(price0), Fmt.money2(price1)])
++	check(EconomySim.market_price(gs, "harina") > 0.0 and ClimateSim.price_mult(gs, "harina") < ClimateSim.price_mult(gs, "trigo"), "los procesados suben menos que la materia prima")
++	# Tecnología que mitiga.
++	gs.techs.append("canales_riego")
++	TechSim._recompute_mods(gs)
++	ClimateSim._refresh(gs)
++	var mult2 := ClimateSim.output_mult(gs, farm)
++	var price2 := EconomySim.market_price(gs, "comida")
++	check(mult2 > mult1 + 0.1, "el riego mitiga la sequía (×%.2f → ×%.2f)" % [mult1, mult2])
++	check(price2 < price1, "y la escasez sube menos el precio (%s → %s)" % [Fmt.money2(price1), Fmt.money2(price2)])
++	for i in range(21):
++		TimeManager.advance_days(1)
++	check(ClimateSim.active_events(gs).is_empty() and ClimateSim.output_mult(gs, farm) == 1.0 and ClimateSim.price_mult(gs, "comida") == 1.0, "la sequía termina y todo vuelve a la normalidad")
++	# Heladas con invernaderos.
++	var h := ClimateSim.schedule(gs, "helada", 0, 10, 1.0)
++	var hm0 := ClimateSim.output_mult(gs, farm)
++	gs.techs.append("invernaderos")
++	TechSim._recompute_mods(gs)
++	ClimateSim._refresh(gs)
++	check(not h.is_empty() and hm0 < 1.0 and ClimateSim.output_mult(gs, farm) > hm0, "los invernaderos mitigan la helada (×%.2f → ×%.2f)" % [hm0, ClimateSim.output_mult(gs, farm)])
++	# Frecuencia moderada: probabilidad mensual baja.
++	var total := 0.0
++	for s in ["primavera", "verano", "otono", "invierno"]:
++		gs.season = s
++		for id in ClimateSim.cfg().get("events", {}):
++			total += ClimateSim.chance(gs, str(id))
++	check(total / 4.0 < 0.2, "frecuencia moderada (%.1f %% mensual en promedio)" % (total / 4.0 * 100.0))
++
++
++func _test_flood_river() -> void:
++	print("-- Inundación junto al río --")
++	GameState.new_game({"seed": 407, "difficulty": "facil", "map_type": "rio"})
++	GameState.money = 50000.0
++	var gs = GameState
++	var spot := Vector2(INF, INF)
++	for r in range(10, 200, 6):
++		for k in range(24):
++			var a := k * TAU / 24.0
++			var p := Vector2(cos(a), sin(a)) * r
++			if MapSim.biome_at(p.x, p.y, gs) == "rio":
++				spot = p
++				break
++		if spot.x != INF:
++			break
++	if spot.x == INF:
++		print("    (sin río cerca de la plaza en esta semilla: se omite)")
++		return
++	var fake := {"id": 999999, "type": "lenador", "x": spot.x + 3.0, "z": spot.y, "status": "activo", "owner": "jugador"}
++	var far := {"id": 999998, "type": "lenador", "x": 0.0, "z": 0.0, "status": "activo", "owner": "jugador"}
++	ClimateSim.schedule(gs, "inundacion", 0, 10, 1.0)
++	check(ClimateSim.near_river(gs, fake) and ClimateSim.compute_mult(gs, fake) < 0.8, "la inundación afecta un edificio junto al río (×%.2f)" % ClimateSim.compute_mult(gs, fake))
++	check(ClimateSim.near_river(gs, far) or ClimateSim.compute_mult(gs, far) == 1.0, "un edificio lejos del río no se afecta")
++	gs.techs.append("diques")
++	TechSim._recompute_mods(gs)
++	check(ClimateSim.compute_mult(gs, fake) > 0.85, "los diques contienen la crecida (×%.2f)" % ClimateSim.compute_mult(gs, fake))
++
++
++# --- 13. Contaminación -----------------------------------------------------------------------------------------
++
++func _test_pollution() -> void:
++	print("-- Contaminación, filtros y multas --")
++	_new_town(408)
++	var gs = GameState
++	var q := _build_now("cantera", 26, 0)
++	_staff_up(q)
++	q["level"] = 2   # Cantera con pólvora: contaminación 2.
++	_staff_up(q)
++	var home: Dictionary = {}
++	for b in gs.buildings:
++		if str(gs.building_def(b).get("category", "")) == "vivienda" and not gs.residents_of(int(b["id"])).is_empty() and not gs.residents_of(int(b["id"])).any(func(c): return gs.is_player(c.id)):
++			home = b
++			break
++	home["x"] = float(q["x"]) + 7.0
++	home["z"] = float(q["z"]) + 5.0
++	var neighbor: Citizen = gs.residents_of(int(home["id"]))[0]
++	var e0 := PollutionSim.emission(gs, q)
++	check(e0 > 0.0, "la cantera emite %.2f (nivel %.0f × actividad %.2f)" % [e0, PollutionSim.base_pollution(gs, q), PollutionSim.activity(gs, q)])
++	for i in range(4):
++		PollutionSim.monthly(gs)
++	var ex := PollutionSim.exposure_of_home(gs, int(home["id"]))
++	check(ex > 0.0 and float(gs.world_events["pollution"]["acc"].get(str(int(q["id"])), 0.0)) > e0, "se acumula en la zona (acumulado %.2f, exposición de la casa vecina %.2f)" % [float(gs.world_events["pollution"]["acc"].get(str(int(q["id"])), 0.0)), ex])
++	var dm := PollutionSim.disease_mult(gs, neighbor)
++	var hd := PollutionSim.happiness_delta(gs, neighbor)
++	check(dm > 1.02 and dm <= 1.6, "los vecinos enferman más (×%.2f)" % dm)
++	check(hd < 0.0 and hd >= -6.0, "y están menos felices (%.1f)" % hd)
++	# Estadística: más enfermos con la exposición.
++	var saved: Dictionary = gs.world_events["pollution"]["exposure"]
++	gs.world_events["pollution"]["exposure"] = {str(int(home["id"])): 30.0}
++	var sick_exp := _sick_count(neighbor, 60000)
++	gs.world_events["pollution"]["exposure"] = {}
++	var sick_clean := _sick_count(neighbor, 60000)
++	gs.world_events["pollution"]["exposure"] = saved
++	check(sick_exp > sick_clean * 1.2, "con mucha exposición enferman más (%d vs %d en 60000 días simulados)" % [sick_exp, sick_clean])
++	var far_home: Dictionary = {}
++	for b in gs.buildings:
++		if str(gs.building_def(b).get("category", "")) == "vivienda" and Vector2(float(b["x"]), float(b["z"])).distance_to(Vector2(float(q["x"]), float(q["z"]))) > 60.0:
++			far_home = b
++			break
++	check(far_home.is_empty() or PollutionSim.exposure_of_home(gs, int(far_home["id"])) == 0.0, "las casas lejanas no se afectan")
++	check(PollutionSim.panel_text(gs, q).begins_with("Contaminación: "), "panel: %s" % PollutionSim.panel_text(gs, q))
++	# Multa (gobierno Verde, época moderna) — sin licencia ambiental.
++	gs.government["gov_id"] = "verde"
++	var t0 := float(gs.government["treasury"])
++	GovSim._collect_taxes(gs)
++	var fine0 := float(gs.government["taxes_last"]["multas"])
++	check(fine0 > 0.0, "multa ambiental del gobierno: %s" % Fmt.money(fine0))
++	check(float(gs.government["treasury"]) >= t0 + fine0 - 0.01, "la multa va al tesoro")
++	# Filtro que reduce.
++	check(PollutionSim.buy_filters(gs, q) != "", "sin la tecnología no se pueden comprar filtros")
++	gs.techs.append("filtros_industriales")
++	var cost := PollutionSim.filter_cost(gs, q, 1)
++	var money0: float = gs.money
++	check(PollutionSim.buy_filters(gs, q) == "" and int(q["filters"]) == 1, "compras filtros y depuradoras por %s" % Fmt.money(cost))
++	check(absf(money0 - gs.money - cost) < 0.01, "se pagan (equipo importado)")
++	var e1 := PollutionSim.emission(gs, q)
++	check(absf(e1 - e0 * 0.5) < 0.001, "los filtros reducen la emisión a la mitad (%.2f → %.2f)" % [e0, e1])
++	check("−50 % con filtros" in PollutionSim.panel_text(gs, q), "panel: %s" % PollutionSim.panel_text(gs, q))
++	GovSim._collect_taxes(gs)
++	var fine1 := float(gs.government["taxes_last"]["multas"])
++	check(fine1 < fine0 * 0.6, "la multa baja con filtros (%s → %s)" % [Fmt.money(fine0), Fmt.money(fine1)])
++	for i in range(6):
++		PollutionSim.monthly(gs)
++	check(PollutionSim.exposure_of_home(gs, int(home["id"])) < ex, "la contaminación acumulada baja (%.2f → %.2f)" % [ex, PollutionSim.exposure_of_home(gs, int(home["id"]))])
++	check(float(gs.world_events["pollution"]["filters_upkeep_last"]) > 0.0, "los filtros tienen mantenimiento mensual (%s)" % Fmt.money(float(gs.world_events["pollution"]["filters_upkeep_last"])))
++	# Licencia ambiental del lobby: sin multas.
++	PoliticsSim.state(gs)["lobbies"].append({"kind": "licencia", "target": "ambiental", "until": gs.today() + 365, "bribe": false, "since": gs.today()})
++	GovSim._collect_taxes(gs)
++	check(float(gs.government["taxes_last"]["multas"]) == 0.0, "la licencia ambiental del lobby se respeta (sin multa)")
++	# Las renovables no contaminan.
++	for id in ["central_eolica", "planta_solar", "central_hidro"]:
++		var d := GameData.building_def(id)
++		if d.is_empty():
++			continue
++		var pol := 0.0
++		for ld in d.get("levels", []):
++			pol += float(ld.get("pollution", 0.0))
++		check(pol == 0.0, "%s no contamina" % id)
++	# Gobierno colonial: sin multa.
++	gs.government["gov_id"] = "virrey_austero"
++	PoliticsSim.state(gs)["lobbies"] = []
++	GovSim._collect_taxes(gs)
++	check(float(gs.government["taxes_last"]["multas"]) == 0.0, "los virreyes coloniales no multan (la regulación llega con el tiempo)")
++
++
++func _sick_count(c: Citizen, n: int) -> int:
++	var gs = GameState
++	var sick := 0
++	var season := WeatherSim.season_data(gs)
++	var wdata := WeatherSim.weather_data(gs)
++	var diff: Dictionary = gs.diff()
++	var h0 := c.health
++	for i in range(n):
++		c.sick = false
++		c.health = 90.0
++		c.needs_met = 1.0
++		PopulationSim._health(gs, c, 30, season, wdata, diff)
++		if c.sick:
++			sick += 1
++	c.sick = false
++	c.health = h0
++	return sick
++
++
++# --- 15. Guerras ---------------------------------------------------------------------------------------------
++
++func _test_war() -> void:
++	print("-- Guerra entre países --")
++	_new_town(409)
++	var gs = GameState
++	var towns := TradeSim.towns(gs)
++	var tid := str(towns[0]["id"])
++	towns[0]["event"] = {}
++	gs.trade["connections"].append({"town_id": tid, "town_name": str(towns[0].get("name", "")), "distance": 50.0, "road": 1, "mode": "a_pie"})
++	var prices0 := {}
++	for g in LaborSim.cfg()["wars"]["demand_goods"]:
++		prices0[g] = EconomySim.market_price(gs, str(g))
++	var w := WarSim.start_war(gs, 3)
++	check(not w.is_empty() and WarSim.is_active(gs) and str(w["a"]) != str(w["b"]), "estalla una guerra entre %s y %s" % [w.get("a", "?"), w.get("b", "?")])
++	check(not str(w["a"]).contains(str(MapSim.country_def(MapSim.country_id(gs)).get("label", "@@"))), "tu país no pelea")
++	var up := 0
++	for g in w["demand"]:
++		if EconomySim.market_price(gs, str(g)) > float(prices0[g]) * 1.05:
++			up += 1
++	check(up == w["demand"].size() and up >= 3, "sube la demanda (precio) de %s" % ", ".join(w["demand"].keys()))
++	var imp_ok := true
++	for g in w["imports"]:
++		imp_ok = imp_ok and WarSim.import_mult(gs, str(g)) >= 1.3
++	check(imp_ok and w["imports"].size() >= 2, "se encarecen o cortan importaciones: %s" % str(w["imports"]))
++	check(gs.notifications_log.any(func(x): return "GUERRA" in str(x["text"])), "aviso en notificaciones")
++	var ev: Dictionary = TradeSim.town(gs, tid).get("event", {})
++	check(ev.is_empty() or bool(ev.get("war", false)), "el pueblo conectado pide bienes de guerra (%s)" % str(ev.get("good", "—")))
++	# Frecuencia: rara (menos de una cada ~10 años de media).
++	check(float(WarSim.cfg().get("chance_monthly", 0.0)) * 12.0 < 0.1, "evento raro (%.1f %% al año)" % (float(WarSim.cfg().get("chance_monthly", 0.0)) * 1200.0))
++	for i in range(3 * 30 + 1):
++		TimeManager.advance_days(1)
++	check(not WarSim.is_active(gs), "la guerra termina sola")
++	var back := true
++	for g in w["demand"]:
++		back = back and WarSim.price_mult(gs, str(g)) == 1.0
++	check(back and WarSim.import_mult(gs, str(w["imports"].keys()[0])) == 1.0, "precios e importaciones vuelven a la normalidad")
++	check(not bool(TradeSim.town(gs, tid).get("event", {}).get("war", false)), "termina la demanda de guerra del pueblo")
++	# No empieza antes de tiempo ni en el período de calma.
++	WarSim.monthly(gs)
++	check(not WarSim.is_active(gs), "después de una guerra hay años de calma")
++
++
++# --- Dinero conservado -------------------------------------------------------------------------------------
++
++func _test_money_conserved() -> void:
++	print("-- Dinero conservado --")
++	_new_town(410)
++	var gs = GameState
++	gs.research["era"] = 2
++	var b := _build_now("lenador", 20, -20)
++	_staff_up(b, 0.8)
++	var npc := _open_npc("granja", -26, -22)
++	npc["reserve"] = 3000.0
++	var t0 := _total()
++	LaborSim.start_demand(gs, b)
++	LaborSim.reject_demand(gs, b)
++	ClimateSim.schedule(gs, "sequia", 0, 20, 1.0)
++	WarSim.start_war(gs, 2)
++	npc["ledger"]["last_month"] = {"ventas": 100.0, "salarios": 60.0}
++	LaborSim.start_price_war(gs, npc, b)
++	var emp: Citizen = _staff(b)[0]
++	emp.trade_exp["agricultura"] = 4.0
++	var o := LaborSim.make_offer(gs, npc, emp)
++	if not o.is_empty():
++		LaborSim.decline_offer(gs, int(o["id"]))
++	LaborSim._accumulate(gs)
++	ClimateSim._refresh(gs)
++	PollutionSim.refresh_now(gs)
++	check(absf(_total() - t0) < 0.01, "sindicatos, huelgas, clima, guerra y competencia no crean ni destruyen dinero (Δ %.4f)" % (_total() - t0))
++	gs.government["gov_id"] = "verde"
++	var q := _build_now("cantera", -30, 4)
++	_staff_up(q)
++	var t1 := _total()
++	GovSim._collect_taxes(gs)
++	var taxes := 0.0
++	for k in gs.government["taxes_last"]:
++		taxes += float(gs.government["taxes_last"][k])
++	check(absf(_total() - t1) < 0.01 and float(gs.government["taxes_last"]["multas"]) > 0.0, "las multas pasan del jugador al tesoro (Δ total %.4f)" % (_total() - t1))
++	# Un mes de los ciclos nuevos (diarios y mensual) sin filtros: el dinero total no cambia.
++	var t2 := _total()
++	for i in range(30):
++		LaborSim.daily(gs)
++		ClimateSim.daily(gs)
++		WarSim.daily(gs)
++	LaborSim.monthly(gs)
++	PollutionSim.monthly(gs)
++	ClimateSim.monthly(gs)
++	WarSim.monthly(gs)
++	check(absf(_total() - t2) < 0.01, "un mes de los ciclos nuevos no crea ni destruye dinero (Δ %.4f)" % (_total() - t2))
++
++
++# --- Guardado ---------------------------------------------------------------------------------------------
++
++func _test_save_load() -> void:
++	print("-- Guardado y carga --")
++	_new_town(411)
++	var gs = GameState
++	gs.research["era"] = 2
++	var b := _build_now("lenador", 20, 22)
++	_staff_up(b, 0.8)
++	var q := _build_now("cantera", -24, 20)
++	_staff_up(q)
++	gs.techs.append("filtros_industriales")
++	PollutionSim.buy_filters(gs, q)
++	LaborSim.start_demand(gs, b)
++	LaborSim.reject_demand(gs, b)
++	ClimateSim.schedule(gs, "sequia", 3, 20, 1.0)
++	WarSim.start_war(gs, 4)
++	PollutionSim.monthly(gs)
++	var emp: Citizen = _staff(b)[0]
++	emp.trade_exp["agricultura"] = 7.5
++	var before := JSON.stringify([gs.labor, gs.world_events])
++	var exp0 := LaborSim.years(emp, "agricultura")
++	check(SaveManager.save_game("prueba_trabajo_mundo"), "guardar")
++	GameState.new_game({"seed": 1, "difficulty": "normal"})
++	check(SaveManager.load_game("prueba_trabajo_mundo"), "cargar")
++	gs = GameState
++	var after := JSON.stringify([gs.labor, gs.world_events])
++	check(before == after, "sindicatos, huelgas, clima, contaminación y guerra se conservan")
++	var emp2: Citizen = gs.citizens.get(emp.id)
++	check(emp2 != null and absf(LaborSim.years(emp2, "agricultura") - exp0) < 0.0001, "la experiencia por oficio se conserva (%.1f años)" % exp0)
++	var q2: Dictionary = gs.get_building(int(q["id"]))
++	check(int(q2.get("filters", 0)) == 1, "los filtros se conservan")
++	check(LaborSim.on_strike(gs, gs.get_building(int(b["id"]))), "la huelga sigue tras cargar")
++	TimeManager.advance_days(15)
++	check(not LaborSim.on_strike(gs, gs.get_building(int(b["id"]))), "y termina después de cargar")
++	SaveManager.delete_save("prueba_trabajo_mundo")
++	# Partida vieja sin estado nuevo: valores por defecto.
++	var d: Dictionary = gs.to_dict()
++	d.erase("labor")
++	d.erase("world_events")
++	for cd in d["citizens"]:
++		cd.erase("trade_exp")
++	gs.load_dict(d)
++	check(gs.labor.has("unions") and gs.world_events.has("climate") and gs.world_events.has("pollution") and gs.world_events.has("war"), "partida vieja: estado nuevo con valores por defecto")
++	var seeded := 0
++	for c in gs.citizens.values():
++		if not c.trade_exp.is_empty():
++			seeded += 1
++	check(seeded > 0, "partida vieja: la experiencia por oficio se inicializa (%d)" % seeded)
++	TimeManager.advance_days(40)
++	check(gs.running, "la partida vieja sigue simulando")
+diff --git a/tests/test_trabajo_mundo.tscn b/tests/test_trabajo_mundo.tscn
+new file mode 100644
+index 0000000..4d5c866
+--- /dev/null
++++ b/tests/test_trabajo_mundo.tscn
+@@ -0,0 +1,6 @@
++[gd_scene load_steps=2 format=3]
++
++[ext_resource type="Script" path="res://tests/test_trabajo_mundo.gd" id="1"]
++
++[node name="TestTrabajoMundo" type="Node"]
++script = ExtResource("1")
+diff --git a/tests/tmp_diag/diag.gd b/tests/tmp_diag/diag.gd
+new file mode 100644
+index 0000000..1f93669
+--- /dev/null
++++ b/tests/tmp_diag/diag.gd
+@@ -0,0 +1,26 @@
++extends Node
++func _ready() -> void:
++	var s := int(OS.get_environment("SEED")) if OS.get_environment("SEED") != "" else 7
++	GameState.new_game({"difficulty": "normal", "seed": s})
++	for y in range(25):
++		GameState.money = 1000000.0
++		var sick := 0
++		var clim := 0
++		for d in range(365):
++			TimeManager.advance_days(1)
++			if not ClimateSim.active_events(GameState).is_empty():
++				clim += 1
++			if d % 30 == 0:
++				for c in GameState.citizens.values():
++					if c.sick:
++						sick += 1
++		if not GameState.running:
++			print("fin")
++			break
++		var ex: Dictionary = GameState.world_events["pollution"]["exposure"]
++		var tot := 0.0
++		for k in ex:
++			tot += float(ex[k])
++		var npcs := NpcBusinessSim.npc_buildings(GameState).map(func(b): return "%s(%.1f)" % [b["type"], PollutionSim.emission(GameState, b)])
++		print("año %d pobl %d feliz %.0f salud %.0f sick_muestras %d clima_dias %d expo_casas %d expo_total %.1f comida_f %.2f npcs %s" % [TimeManager.year(), GameState.citizens.size(), GameState.avg_happiness(), GameState.avg_health(), sick, clim, ex.size(), tot, EconomySim.good_factor(GameState, "comida"), str(npcs)])
++	get_tree().quit()
+diff --git a/tests/tmp_diag/diag.tscn b/tests/tmp_diag/diag.tscn
+new file mode 100644
+index 0000000..b27066c
+--- /dev/null
++++ b/tests/tmp_diag/diag.tscn
+@@ -0,0 +1,4 @@
++[gd_scene load_steps=2 format=3]
++[ext_resource type="Script" path="res://tests/tmp_diag/diag.gd" id="1"]
++[node name="D" type="Node"]
++script = ExtResource("1")
+diff --git a/tests/tmp_diag/multi.gd b/tests/tmp_diag/multi.gd
+new file mode 100644
+index 0000000..24548be
+--- /dev/null
++++ b/tests/tmp_diag/multi.gd
+@@ -0,0 +1,19 @@
++extends Node
++func _ready() -> void:
++	var line := ""
++	for s in [7, 8, 9, 10, 11, 12]:
++		GameState.new_game({"difficulty": "normal", "seed": s})
++		var hap := 0.0
++		var crime := 0.0
++		var n := 0
++		for y in range(20):
++			GameState.money = 1000000.0
++			TimeManager.advance_days(365)
++			if not GameState.running:
++				break
++			hap += GameState.avg_happiness()
++			crime += float(GameState.problems.get("crime", 0))
++			n += 1
++		line += "s%d: años %d pobl %d feliz %.0f crimen %.0f | " % [s, n, GameState.citizens.size(), hap / maxf(1, n), crime / maxf(1, n)]
++	print("RES ", line)
++	get_tree().quit()
+diff --git a/tests/tmp_diag/multi.tscn b/tests/tmp_diag/multi.tscn
+new file mode 100644
+index 0000000..0b0256e
+--- /dev/null
++++ b/tests/tmp_diag/multi.tscn
+@@ -0,0 +1,4 @@
++[gd_scene load_steps=2 format=3]
++[ext_resource type="Script" path="res://tests/tmp_diag/multi.gd" id="1"]
++[node name="D" type="Node"]
++script = ExtResource("1")

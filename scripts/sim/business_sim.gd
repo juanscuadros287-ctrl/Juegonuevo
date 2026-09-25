@@ -3,7 +3,7 @@ extends RefCounted
 ## Negocios del jugador: producción, salarios, mantenimiento, contabilidad,
 ## contratación manual y renuncias. Parámetros en data/businesses.json.
 
-const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "subsidios", "salarios", "mantenimiento", "insumos", "impuestos", "multas", "reparaciones", "robos", "incobrables", "obras"]
+const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "subsidios", "salarios", "mantenimiento", "insumos", "impuestos", "iva", "salarios_negro", "multas", "reparaciones", "robos", "incobrables", "obras"]
 const INCOME_KEYS := ["ventas", "alquileres", "intereses", "subsidios"]
 ## Movimientos que no son ingreso ni gasto (inversión y capital prestado).
 const NON_PNL_KEYS := ["obras", "prestado"]
@@ -139,6 +139,10 @@ static func is_nonprofit(b: Dictionary) -> bool:
 static func earn(gs, b: Dictionary, amount: float, key := "ventas") -> void:
 	if NpcBusinessSim.book(gs, b, amount, key, true):
 		return  # Libre mercado: empresa NPC (caja propia) u obra del gobierno (tesoro).
+	if key == "ventas":
+		amount = MoneySim.on_sale(gs, b, amount)   # Sección E: IVA causado y parte no declarada (en efectivo).
+		if amount <= 0.0:
+			return
 	ledger_add(b, key, amount)
 	if is_nonprofit(b):
 		b["reserve"] = float(b["reserve"]) + amount
@@ -178,8 +182,9 @@ static func produce(gs) -> void:
 		for c in gs.employees_of(int(b["id"])):
 			if c.job_kind != "empleo":
 				continue
-			c.money += c.wage
-			pay(gs, b, c.wage, "salarios")
+			if not MoneySim.pay_wage_black(gs, b, c):   # Sección E: sueldo en negro (efectivo) si está activado.
+				c.money += c.wage
+				pay(gs, b, c.wage, "salarios")
 			c.experience += 1.0 / 365.0
 			c.skills[skill] = minf(100.0, float(c.skills.get(skill, 0.0)) + 0.02)
 		if b["status"] != "activo":

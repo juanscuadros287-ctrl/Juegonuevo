@@ -14,6 +14,7 @@ const MAX_HISTORY := 12 * 400
 var running := false
 var settings: Dictionary = {}
 var money: float = 0.0
+var cash: float = 0.0                  # Sección E: parte de money en efectivo (banco = money - cash). MoneySim
 var citizens: Dictionary = {}          # id (int) -> Citizen
 var next_citizen_id: int = 1
 var buildings: Array = []              # Array[Dictionary]
@@ -32,10 +33,12 @@ var market: Dictionary = {}            # Libre mercado: empresas NPC, contratos,
 var realestate: Dictionary = {}        # Bienes raíces: demanda de vivienda y contadores (RealEstateSim)
 var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
 var map: Dictionary = {}               # Fase 9A: país por chunks, revelado y expediciones (MapSim)
+var informal: Dictionary = {}          # Sección E: IVA causado, riesgo, caso abierto, negocios ocultos (MoneySim)
 var transit: Dictionary = {}           # Transporte: carreteras por puntos, buses, paraderos, parqueaderos (TransitSim)
 var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, acometidas, tarifas y facturas (GridSim/WaterSim)
 var labor: Dictionary = {}             # Trabajo: sindicatos, huelgas, guerras de precio y ofertas NPC (LaborSim)
 var world_events: Dictionary = {}      # Mundo: clima, contaminación local y guerras (ClimateSim/PollutionSim/WarSim)
+var world_econ: Dictionary = {}        # Economía global: ciclos, monedas, bolsa, seguros, calidad y marca (GlobalEconSim)
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
 var weather: Dictionary = {}
@@ -112,6 +115,8 @@ func _clear() -> void:
 	running = false
 	settings = {}
 	money = 0.0
+	cash = 0.0
+	informal = {}
 	citizens = {}
 	next_citizen_id = 1
 	buildings = []
@@ -133,6 +138,7 @@ func _clear() -> void:
 	utilities = {}
 	labor = {}
 	world_events = {}
+	world_econ = {}
 	transit = {}
 	loans = []
 	next_loan_id = 1
@@ -161,6 +167,8 @@ func _init_expansions() -> void:
 	ClimateSim.init_state(self)   # Mundo: clima por zona, contaminación local y guerras.
 	PollutionSim.init_state(self)
 	WarSim.init_state(self)
+	MoneySim.init_state(self)   # Sección E: efectivo y mercado negro.
+	GlobalEconSim.init_state(self)   # Economía global (partidas viejas: valores por defecto).
 
 
 # --- Simulación diaria -----------------------------------------------------
@@ -175,6 +183,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	FreeMarketSim.produce(self)   # Libre mercado: producción de las empresas NPC.
 	LogisticsSim.daily(self)
 	TradeSim.daily(self)
+	GlobalEconSim.daily(self)   # Economía global: riesgo de los envíos (seguro de carga).
 	TransitSim.daily(self)   # Transporte: trazados a otros pueblos, buses, pasajes y parqueaderos.
 	TourismSim.daily(self)
 	RealEstateSim.daily(self)   # Bienes raíces: pago por etapas / pausa de obras.
@@ -191,6 +200,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	ClimateSim.daily(self)   # Mundo: pronósticos y eventos climáticos.
 	WarSim.daily(self)
 	PlayerSim.daily(self)
+	MoneySim.daily(self)   # Sección E: negocios ocultos, banco en rojo y plazo del caso.
 	if new_month and running:
 		RealEstateSim.monthly(self)   # Bienes raíces: unidades, preventas, arriendo y venta.
 		GridSim.monthly(self)   # Redes: facturas de luz y agua, mantenimiento, inquilinos sin servicios.
@@ -211,7 +221,9 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		TourismSim.monthly(self)
 		AdvertisingSim.monthly(self)
 		EconomySim.monthly(self)
+		GlobalEconSim.monthly(self)   # Economía global: ciclos, monedas, calidad, bolsa y seguros.
 		PlayerSim.monthly(self)
+		MoneySim.monthly(self)   # Sección E: inspecciones y cierre del mes.
 		_record_month()
 
 
@@ -464,6 +476,8 @@ func to_dict() -> Dictionary:
 	return {
 		"settings": settings,
 		"money": money,
+		"cash": cash,
+		"informal": informal,
 		"citizens": cit,
 		"next_citizen_id": next_citizen_id,
 		"buildings": buildings,
@@ -485,6 +499,7 @@ func to_dict() -> Dictionary:
 		"world_events": world_events,
 		"map": map,
 		"transit": transit,
+		"world_econ": world_econ,
 		"loans": loans,
 		"next_loan_id": next_loan_id,
 		"weather": weather,
@@ -505,6 +520,8 @@ func load_dict(d: Dictionary) -> void:
 	settings = d.get("settings", {})
 	settings["seed"] = int(settings.get("seed", 0))
 	money = float(d.get("money", 0.0))
+	cash = float(d.get("cash", 0.0))
+	informal = d.get("informal", {})
 	for cd in d.get("citizens", []):
 		var c := Citizen.from_dict(cd)
 		citizens[c.id] = c
@@ -560,6 +577,7 @@ func load_dict(d: Dictionary) -> void:
 	world_events = d.get("world_events", {})
 	map = d.get("map", {})   # Partida sin mapa (antes de la Fase 9A): MapSim la convierte en país.
 	transit = d.get("transit", {})
+	world_econ = d.get("world_econ", {})
 	_init_expansions()
 	if not d.has("utilities"):
 		GridSim.migrate(self)   # Partida sin redes: período de gracia si ya había centrales.

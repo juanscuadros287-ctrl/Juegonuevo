@@ -66,6 +66,7 @@ static func monthly(gs) -> void:
 	_expire_tenders(gs)
 	_pay_debts(gs)
 	_check_regime(gs)
+	GlobalEconSim.gov_monthly(gs)   # Economía global: el gobierno estudia la Ley de Mercado de Valores.
 
 
 ## Deudas pendientes del gobierno por obras públicas.
@@ -106,6 +107,7 @@ static func _collect_taxes(gs) -> void:
 		if fine > 0.0:
 			BusinessSim.pay(gs, b, fine, "multas")
 			totals["multas"] += fine
+	MoneySim.collect_sales_tax(gs, totals)   # Sección E: impuesto a la venta causado en el mes.
 	var total := 0.0
 	for k in totals:
 		total += float(totals[k])
