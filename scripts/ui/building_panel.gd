@@ -206,6 +206,7 @@ func _summary_text(b: Dictionary) -> String:
 		s += WarehouseTab.summary_line(GameState, b)   # Almacén vinculado (verde) / ninguno (rojo).
 	s += TransitSim.panel_lines(GameState, b)   # Transporte: acceso por carretera, llegada de trabajadores.
 	s += GridSim.panel_lines(GameState, b)   # Redes: "Electricidad: conectado / sin conexión" y "Agua: …".
+	s += GlobalEconSim.panel_lines(GameState, b)   # Economía global: calidad, marca y seguros.
 	var site_crew := 0
 	for c in GameState.employees_of(bid):
 		if c.job_kind == "obra":

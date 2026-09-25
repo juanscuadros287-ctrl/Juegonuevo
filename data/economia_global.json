@@ -1,0 +1,108 @@
+{
+ "_nota": "Economía global (sección A de PENDIENTES). Ver docs/ECONOMIA_GLOBAL.md. Todo moderado: los efectos del ciclo se aplican de forma gradual (smoothing) y con topes.",
+ "cycles": {
+  "_nota": "Fases por país. demand = gasto discrecional; credit_rate = puntos de tasa que se suman; credit_limit = cupo de crédito; property = precio de propiedades; stock = índice bursátil; pe = relación precio/ganancia de la bolsa; fx = desvío real de la moneda (+ = se deprecia); growth = crecimiento anual de las ganancias de las empresas.",
+  "phases": {
+   "auge": {"label": "Auge", "demand": 1.08, "credit_rate": -0.005, "credit_limit": 1.1, "property": 1.07, "stock": 1.1, "pe": 12.0, "fx": -0.03, "growth": 0.06, "inflation_add": 0.01, "months": [6, 16], "color": [0.45, 0.85, 0.45]},
+   "normal": {"label": "Normal", "demand": 1.0, "credit_rate": 0.0, "credit_limit": 1.0, "property": 1.0, "stock": 1.0, "pe": 10.0, "fx": 0.0, "growth": 0.02, "inflation_add": 0.0, "months": [12, 30], "color": [0.8, 0.8, 0.8]},
+   "recesion": {"label": "Recesión", "demand": 0.88, "credit_rate": 0.01, "credit_limit": 0.85, "property": 0.94, "stock": 0.88, "pe": 8.0, "fx": 0.04, "growth": -0.06, "inflation_add": -0.01, "months": [5, 12], "color": [0.95, 0.65, 0.3]},
+   "crisis": {"label": "Crisis", "demand": 0.8, "credit_rate": 0.025, "credit_limit": 0.65, "property": 0.86, "stock": 0.75, "pe": 6.5, "fx": 0.08, "growth": -0.14, "inflation_add": 0.015, "months": [3, 8], "color": [0.95, 0.35, 0.3]}
+  },
+  "transitions": {
+   "normal": {"auge": 0.45, "recesion": 0.43, "crisis": 0.12},
+   "auge": {"normal": 0.55, "recesion": 0.2, "crisis": 0.25},
+   "recesion": {"normal": 0.8, "crisis": 0.2},
+   "crisis": {"recesion": 0.55, "normal": 0.45}
+  },
+  "crisis_kinds": {
+   "panico_bancario": {"label": "Pánico bancario", "credit_limit_mult": 0.8, "credit_rate_add": 0.01, "signal": "credito"},
+   "burbuja_inmobiliaria": {"label": "Burbuja inmobiliaria", "property_mult": 0.93, "bubble_peak": 1.12, "signal": "vivienda"}
+  },
+  "lead_months": [3, 5],
+  "smoothing": 0.35,
+  "home_credit_heat_limit": 0.25,
+  "min_first_change_months": 8
+ },
+ "currency": {
+  "_nota": "Tipo de cambio = unidades de moneda local por 1 unidad de referencia. Nominal = inicial × (precios del país / precios de referencia) × desvío real. El desvío real vuelve a 1 + fx del ciclo. Para el país del jugador, la inflación es la simulada por EconomySim (dinero, crédito y escasez); los demás usan base_inflation de data/countries.json.",
+  "world_inflation": 0.03,
+  "real_vol": 0.012,
+  "real_revert": 0.15,
+  "real_min": 0.8,
+  "real_max": 1.25,
+  "inflation_noise": 0.003,
+  "domestic_trade_share": 0.35,
+  "foreign_trade_share": 1.0,
+  "citizen_import_share": 0.5,
+  "history": 36
+ },
+ "stock": {
+  "unlock_era": 2,
+  "law": {"propose_cost": 350, "review_days": [30, 60], "retry_days": 180, "base_chance": 0.5, "social_weight": 0.5, "influence_weight": 0.1, "min_chance": 0.15, "max_chance": 0.9, "gov_monthly_chance": {"2": 0.015, "3": 0.05}},
+  "company_shares": 1000,
+  "listing_fee": 250,
+  "trade_fee": 0.01,
+  "max_issue_ratio": 0.35,
+  "issue_cooldown_days": 90,
+  "issue_discount": 0.05,
+  "investor_buffer_days": 60,
+  "investor_share": 0.25,
+  "town_invest_share": 0.04,
+  "payout_default": 0.3,
+  "payout_max": 0.8,
+  "payout_raider": 0.7,
+  "price_revert": 0.3,
+  "price_vol": 0.03,
+  "max_move": 0.15,
+  "impact": 0.15,
+  "pressure_decay": 0.5,
+  "book_floor": 0.6,
+  "raider_start_chance": 0.3,
+  "raider_monthly_buy": 0.08,
+  "raider_spend_share": 0.6,
+  "raider_min_money": 2000,
+  "greenmail_premium": 0.25,
+  "npc_list_min_value": 1500,
+  "npc_list_chance": 0.12,
+  "npc_list_min_months": 6,
+  "npc_max_listed": 6,
+  "npc_float": 0.4,
+  "npc_payout": 0.35,
+  "foreign_max": 8,
+  "foreign_payout": 0.4,
+  "world_cash": 1000000,
+  "foreign_names": ["Ferrocarriles", "Naviera", "Minera", "Banco", "Textiles", "Cervecería", "Siderúrgica", "Telégrafos", "Petrolera", "Azucarera"],
+  "history": 36
+ },
+ "insurance": {
+  "types": {
+   "incendio": {"label": "Incendio", "scope": "edificio", "rate": 0.0011, "deductible": 0.1, "description": "Paga la reparación del edificio y lo perdido del inventario si hay un incendio."},
+   "robo": {"label": "Robo", "scope": "negocio", "base": 1.2, "deductible": 0.15, "description": "Paga lo robado en tus negocios (menos el deducible). La prima sube con el crimen del pueblo."},
+   "carga": {"label": "Pérdida de carga", "scope": "global", "rate": 0.02, "min": 1.0, "deductible": 0.1, "description": "Cubre los envíos de comercio exterior que se pierden en el camino (bandidos, naufragios, accidentes)."},
+   "cosecha": {"label": "Cosecha", "scope": "campo", "rate": 0.035, "deductible": 0.2, "trigger": 0.85, "description": "Paga la cosecha perdida por sequías, heladas o mal clima (no por el invierno normal)."}
+  },
+  "loading": 1.45,
+  "min_premium": 0.5,
+  "external": {"label": "Compañía de Seguros La Previsora", "capital": 20000},
+  "cargo_loss_chance": 0.025,
+  "own": {
+   "demand_base": 1.4,
+   "demand_slope": 0.6,
+   "min_rate": 0.5,
+   "max_rate": 2.5,
+   "town_share": 0.5,
+   "town_business_value": 900,
+   "npc_theft_chance": 0.08,
+   "total_loss_chance": 0.2
+  }
+ },
+ "quality": {
+  "_nota": "Calidad = L^0.30 × T^0.20 × M^0.15 × S^0.25 × I^0.10 (media geométrica ponderada, 0,4–1,8). L nivel del edificio, T tecnología, M maquinaria y mejoras, S habilidad y experiencia del personal, I calidad de los insumos.",
+  "weights": {"level": 0.3, "tech": 0.2, "machines": 0.15, "staff": 0.25, "inputs": 0.1},
+  "upgrade_cost_ratio": 0.2,
+  "max_upgrades": 3,
+  "upgrade_step": 0.1,
+  "brand": {"start": 50.0, "quality_weight": 6.0, "sales_bonus": 0.3, "no_sales": -0.5, "breach": -5.0, "drift": 0.03},
+  "accept": {"quality_weight": 0.3, "brand_weight": 0.2, "min": 0.85, "max": 1.3}
+ }
+}

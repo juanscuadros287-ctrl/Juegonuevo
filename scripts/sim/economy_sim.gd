@@ -235,7 +235,7 @@ static func property_value(gs, b: Dictionary) -> float:
 	if RealEstateSim.has_units(b):
 		return RealEstateSim.owned_value(gs, b)   # Bienes raíces: solo las unidades que aún son tuyas.
 	if Housing.is_home(b):
-		return float(b.get("sale_price", 0.0)) * float(gs.economy.get("price_level", 1.0))
+		return float(b.get("sale_price", 0.0)) * float(gs.economy.get("price_level", 1.0)) * GlobalEconSim.property_mult(gs)   # Ciclo económico.
 	return BusinessSim.period_value(b, "total", "obras") * float(cfg().get("property_value_ratio", 0.7))
 
 
