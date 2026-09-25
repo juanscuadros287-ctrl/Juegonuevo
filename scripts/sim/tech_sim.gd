@@ -136,6 +136,8 @@ static func _recompute_mods(gs) -> void:
 static func mult(gs, type: String, key := "") -> float:
 	var mods: Dictionary = gs.research.get("mods", {})
 	var m := float(mods.get(type, 1.0))
+	if type == "research":
+		m *= HeirsSim.research_mult(gs)   # Sección C: talento de ciencia del jefe de familia.
 	if key != "":
 		m *= float(mods.get(type + ":" + key, 1.0)) * float(mods.get(type + ":all", 1.0))
 	return m

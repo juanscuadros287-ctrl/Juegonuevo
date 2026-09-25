@@ -89,7 +89,7 @@ static func _collect_taxes(gs) -> void:
 		if BusinessSim.is_business(b) and not nonprofit and not exempt(gs, "profit_tax"):
 			var profit := BusinessSim.period_profit(b, "last_month")
 			if profit > 0.0:
-				var t := profit * float(p.get("profit_tax", 0.0))
+				var t := profit * float(p.get("profit_tax", 0.0)) * PoliticsSim.profit_tax_mult(gs, b)   # Sección C: talento, cargos y lobby.
 				BusinessSim.pay(gs, b, t, "impuestos")
 				totals["renta"] += t
 		if not nonprofit:
@@ -102,7 +102,7 @@ static func _collect_taxes(gs) -> void:
 			BusinessSim.pay(gs, b, wt, "impuestos")
 			totals["nomina"] += wt
 		var pol := float(gs.level_def(b).get("pollution", 0.0))
-		if pol > 0.0 and b["status"] == "activo" and float(p.get("env_fine", 0.0)) > 0.0:
+		if pol > 0.0 and b["status"] == "activo" and float(p.get("env_fine", 0.0)) > 0.0 and not PoliticsSim.has_license(gs, "ambiental"):
 			var fine: float = pol * float(p.get("env_fine", 0.0)) * gs.price_level() * 10.0
 			BusinessSim.pay(gs, b, fine, "multas")
 			totals["multas"] += fine
@@ -218,7 +218,11 @@ static func _check_regime(gs) -> void:
 	var r := regime(gs)
 	if str(r.get("type", "decree")) == "decree":
 		if today >= int(gs.government.get("next_change_day", 0)):
-			_set_government(gs, _random_gov(gs, gs.era(), str(gs.government["gov_id"])))
+			# Sección C: la facción que financiaste puede llegar al poder.
+			var next := PoliticsSim.pick_decree_gov(gs, str(gs.government["gov_id"]))
+			if next == "":
+				next = _random_gov(gs, gs.era(), str(gs.government["gov_id"]))
+			_set_government(gs, next)
 			_schedule_next(gs)
 		return
 	var eday := int(gs.government.get("election_day", -1))
@@ -286,6 +290,7 @@ static func donate(gs, gov_id: String, amount: float) -> String:
 	if gs.money < amount:
 		return "No tienes suficiente dinero"
 	gs.add_money(-amount)
+	PoliticsSim.spread_to_citizens(gs, amount)   # Economía cerrada: la campaña paga a trabajadores del pueblo.
 	var d: Dictionary = gs.government.get("donations", {})
 	d[gov_id] = float(d.get(gov_id, 0.0)) + amount
 	gs.government["donations"] = d

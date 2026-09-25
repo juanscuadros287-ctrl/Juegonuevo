@@ -14,7 +14,7 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
 7. **Experiencia por oficio**: el veterano produce más; si se va, se pierde.
 8. **Competencia NPC**: guerras de precio suaves y ofertas a tus empleados.
 
-## C. Dinastía y poder (en curso)
+## C. Dinastía y poder (hecho — ver docs/DINASTIA.md)
 9. **Educación de herederos**, con talentos distintos.
 10. **Política**: campañas, cargos, lobby y riesgo de escándalo.
 11. **Matrimonio**: al casarse se unen las fortunas, pero el jugador decide el orden de herederos (1.º, 2.º, 3.º…). Proponer matrimonio viendo el patrimonio de la otra persona; ella acepta o rechaza, no se obliga.

@@ -133,28 +133,9 @@ static func date(gs, c: Citizen) -> String:
 	return "Cita con %s. Relación: %d/100." % [c.first_name, int(v)]
 
 
+## Proponer matrimonio no obliga: la otra persona decide (MarriageSim). Si acepta, se unen las fortunas.
 static func propose(gs, c: Citizen) -> String:
-	var r := can_court(gs, c)
-	if r != "":
-		return r
-	var a := affinity(gs, c.id)
-	var need := float(cfg().get("propose_min_affinity", 75))
-	if a < need:
-		return "Aún no es el momento (relación %d/%d)" % [int(a), int(need)]
-	var chance := clampf((a - 50.0) / 50.0, 0.2, 0.95)
-	if gs.rng.randf() > chance:
-		_add_affinity(gs, c.id, -10.0)
-		return "%s dijo que todavía no. Sigue intentándolo." % c.first_name
-	var p: Citizen = gs.player_citizen()
-	PopulationSim.marry(p, c)
-	c.home_id = p.home_id
-	if c.job_kind == "obra":
-		c.job_id = -1
-		c.job_kind = ""
-	gs.count("marriages")
-	gs.notify("¡Te casaste con %s!" % c.full_name(), "familia")
-	EventBus.citizens_moved.emit()
-	return "¡%s aceptó! Ahora viven juntos." % c.first_name
+	return MarriageSim.propose(gs, c)
 
 
 # --- Familia y hogar --------------------------------------------------------------------
@@ -341,17 +322,19 @@ static func on_player_death(gs, dead: Citizen) -> void:
 	for id in dead.children_ids:
 		if gs.citizens.has(id):
 			heirs.append(gs.citizens[id])
-	if heirs.is_empty():
+	# Sección C: el orden de herederos que eligió el jugador manda (primero vivo de la lista).
+	var chosen: Citizen = HeirsSim.pick_heir(gs, dead)
+	if chosen == null and heirs.is_empty():
 		DynastySim.on_dynasty_end(gs, dead)
 		gs.running = false
 		gs.notify("Has muerto sin herederos. Fin de la dinastía.", "jugador")
 		EventBus.player_died.emit()
 		return
-	var chosen: Citizen = null
 	var designated := int(gs.player.get("heir_id", -1))
-	for h in heirs:
-		if h.id == designated:
-			chosen = h
+	if chosen == null:
+		for h in heirs:
+			if h.id == designated:
+				chosen = h
 	if chosen == null:
 		heirs.sort_custom(func(a, b): return a.birth_day < b.birth_day)
 		chosen = heirs[0]
@@ -369,5 +352,6 @@ static func on_player_death(gs, dead: Citizen) -> void:
 	gs.money += chosen.money
 	chosen.money = 0.0
 	var inheritance := DynastySim.on_succession(gs, dead, chosen)
-	gs.notify("%s murió. Tu heredero(a) %s (%d años) toma el control de la familia. %s" % [dead.full_name(), chosen.full_name(), chosen.age_years(gs.today()), inheritance], "jugador")
+	HeirsSim.on_succession(gs, dead, chosen)
+	gs.notify("%s murió. Tu heredero(a) %s (%d años) toma el control de la familia. %s Bonos por sus talentos: %s." % [dead.full_name(), chosen.full_name(), chosen.age_years(gs.today()), inheritance, HeirsSim.bonus_text(gs)], "jugador")
 	EventBus.player_changed.emit()
