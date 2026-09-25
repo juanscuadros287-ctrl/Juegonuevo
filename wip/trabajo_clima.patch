@@ -77,18 +77,18 @@ index 0000000..511a08e
 +}
 diff --git a/data/trabajo_mundo.json b/data/trabajo_mundo.json
 new file mode 100644
-index 0000000..65b89d0
+index 0000000..0b2952d
 --- /dev/null
 +++ b/data/trabajo_mundo.json
-@@ -0,0 +1,269 @@
+@@ -0,0 +1,95 @@
 +{
 + "_nota": "Secciones B (trabajo) y D (mundo) de docs/PENDIENTES.md. Todo moderado. Ver docs/TRABAJO_MUNDO.md. Cada sistema usa su propio RNG determinista (semilla + día + sal) para no alterar el resto de la simulación.",
 + "experience": {
 +  "_nota": "Experiencia por oficio (años trabajados en el sector = habilidad del negocio). Rendimiento ×(1 + max_bonus × min(1, años / veteran_years)); pide sueldo ×(1 + wage_bonus × lo mismo).",
 +  "veteran_years": 10.0,
-+  "max_bonus": 0,
-+  "wage_bonus": 0,
-+  "initial_share": 0
++  "max_bonus": 0.2,
++  "wage_bonus": 0.1,
++  "initial_share": 0.5
 + },
 + "unions": {
 +  "_nota": "Sindicatos desde la época industrial. Un negocio con min_staff empleados o más puede organizarse si los sueldos están bajo el mercado (ratio sueldo / sueldo pedido), la felicidad es baja o falta personal (sobrecarga de horas).",
@@ -101,19 +101,10 @@ index 0000000..65b89d0
 +  "max_chance": 0.1,
 +  "cooldown_days": 360,
 +  "reply_days": 14,
-+  "raise_range": [
-+   0.06,
-+   0.18
-+  ],
++  "raise_range": [0.06, 0.18],
 +  "counter_min_ratio": 0.5,
-+  "strike_days": [
-+   3,
-+   10
-+  ],
-+  "strike_output": [
-+   0.0,
-+   0.3
-+  ],
++  "strike_days": [3, 10],
++  "strike_output": [0.0, 0.3],
 +  "settlement_ratio": 0.5,
 +  "strike_happiness": -4.0,
 +  "accept_happiness": 5.0
@@ -121,19 +112,13 @@ index 0000000..65b89d0
 + "npc": {
 +  "_nota": "Competencia NPC suave: guerras de precio (sin vender a pérdida) y ofertas de sueldo a tus mejores empleados.",
 +  "price_war_chance": 0.1,
-+  "price_war_days": [
-+   30,
-+   75
-+  ],
++  "price_war_days": [30, 75],
 +  "price_war_max_cut": 0.12,
 +  "price_war_margin_share": 0.7,
 +  "price_war_cooldown_days": 240,
 +  "poach_chance": 0.06,
 +  "poach_min_years": 1.5,
-+  "poach_raise": [
-+   0.12,
-+   0.22
-+  ],
++  "poach_raise": [0.12, 0.22],
 +  "poach_reserve_days": 45,
 +  "poach_reply_days": 7,
 +  "poach_leave_chance": 0.7,
@@ -141,128 +126,23 @@ index 0000000..65b89d0
 + },
 + "climate": {
 +  "_nota": "Eventos climáticos por estación y clima de la zona (MapSim.climate_at en la plaza y en cada edificio). farming = rendimiento del agro mientras dura; price = alza de precio de los bienes agrícolas por escasez (se atenúa con la tecnología). forecast_days = aviso previo (0 = sin pronóstico; forecast_tech amplía). Mitigación: efectos 'clima' de data/technologies_clima.json (multiplica el daño).",
-+  "agro_types": [
-+   "granja",
-+   "trigal",
-+   "algodonal",
-+   "rebano",
-+   "estancia",
-+   "colmenar",
-+   "huerto_hierbas"
-+  ],
-+  "agro_goods": [
-+   "comida",
-+   "trigo",
-+   "algodon",
-+   "lana",
-+   "ganado",
-+   "harina",
-+   "pan",
-+   "carne",
-+   "cera",
-+   "hierbas"
-+  ],
++  "agro_types": ["granja", "trigal", "algodonal", "rebano", "estancia", "colmenar", "huerto_hierbas"],
++  "agro_goods": ["comida", "trigo", "algodon", "lana", "ganado", "harina", "pan", "carne", "cera", "hierbas"],
 +  "processed_share": 0.5,
-+  "processed_goods": [
-+   "harina",
-+   "pan",
-+   "carne"
-+  ],
++  "processed_goods": ["harina", "pan", "carne"],
 +  "river_radius": 14.0,
 +  "cooldown_days": 60,
 +  "events": {
-+   "sequia": {
-+    "label": "Sequía",
-+    "seasons": [
-+     "verano",
-+     "primavera"
-+    ],
-+    "chance": 0,
-+    "dry": 1.5,
-+    "hot": 0.6,
-+    "days": [
-+     30,
-+     75
-+    ],
-+    "farming": 0.55,
-+    "price": 0.25,
-+    "forecast_days": 12,
-+    "text": "Sequía: el agro rinde menos y suben los alimentos. El riego y los invernaderos la mitigan."
-+   },
-+   "helada": {
-+    "label": "Helada",
-+    "seasons": [
-+     "invierno",
-+     "otono",
-+     "primavera"
-+    ],
-+    "chance": 0,
-+    "cold": 1.6,
-+    "altitude": 0.012,
-+    "days": [
-+     8,
-+     20
-+    ],
-+    "farming": 0.6,
-+    "price": 0.15,
-+    "forecast_days": 0,
-+    "forecast_tech": "telegrafo",
-+    "forecast_tech_days": 4,
-+    "text": "Helada: cultivos y rebaños dañados. Los invernaderos la mitigan."
-+   },
-+   "inundacion": {
-+    "label": "Inundación",
-+    "seasons": [
-+     "primavera",
-+     "otono"
-+    ],
-+    "chance": 0,
-+    "wet": 1.4,
-+    "rain_boost": 1.5,
-+    "days": [
-+     7,
-+     18
-+    ],
-+    "farming": 0.65,
-+    "river_output": 0.6,
-+    "river_damage": 0.04,
-+    "price": 0.15,
-+    "forecast_days": 5,
-+    "text": "Inundación: campos anegados y edificios junto al río afectados. Los diques la contienen."
-+   },
-+   "ola_calor": {
-+    "label": "Ola de calor",
-+    "seasons": [
-+     "verano"
-+    ],
-+    "chance": 0,
-+    "hot": 1.2,
-+    "days": [
-+     10,
-+     25
-+    ],
-+    "farming": 0.8,
-+    "price": 0.1,
-+    "forecast_days": 6,
-+    "text": "Ola de calor: el agro y el ganado rinden menos. El riego ayuda."
-+   },
-+   "mala_cosecha": {
-+    "label": "Mala cosecha (plagas)",
-+    "seasons": [
-+     "otono",
-+     "verano"
-+    ],
-+    "chance": 0,
-+    "wet": 0.5,
-+    "days": [
-+     30,
-+     60
-+    ],
-+    "farming": 0.75,
-+    "price": 0.15,
-+    "forecast_days": 10,
-+    "text": "Mala cosecha: plagas en los campos. El riego y los invernaderos la reducen."
-+   }
++   "sequia": {"label": "Sequía", "seasons": ["verano", "primavera"], "chance": 0.035, "dry": 1.5, "hot": 0.6, "days": [30, 75], "farming": 0.55, "price": 0.25, "forecast_days": 12,
++    "text": "Sequía: el agro rinde menos y suben los alimentos. El riego y los invernaderos la mitigan."},
++   "helada": {"label": "Helada", "seasons": ["invierno", "otono", "primavera"], "chance": 0.03, "cold": 1.6, "altitude": 0.012, "days": [8, 20], "farming": 0.6, "price": 0.15, "forecast_days": 0, "forecast_tech": "telegrafo", "forecast_tech_days": 4,
++    "text": "Helada: cultivos y rebaños dañados. Los invernaderos la mitigan."},
++   "inundacion": {"label": "Inundación", "seasons": ["primavera", "otono"], "chance": 0.02, "wet": 1.4, "rain_boost": 1.5, "days": [7, 18], "farming": 0.65, "river_output": 0.6, "river_damage": 0.04, "price": 0.15, "forecast_days": 5,
++    "text": "Inundación: campos anegados y edificios junto al río afectados. Los diques la contienen."},
++   "ola_calor": {"label": "Ola de calor", "seasons": ["verano"], "chance": 0.035, "hot": 1.2, "days": [10, 25], "farming": 0.8, "price": 0.1, "forecast_days": 6,
++    "text": "Ola de calor: el agro y el ganado rinden menos. El riego ayuda."},
++   "mala_cosecha": {"label": "Mala cosecha (plagas)", "seasons": ["otono", "verano"], "chance": 0.02, "wet": 0.5, "days": [30, 60], "farming": 0.75, "price": 0.15, "forecast_days": 10,
++    "text": "Mala cosecha: plagas en los campos. El riego y los invernaderos la reducen."}
 +  }
 + },
 + "pollution": {
@@ -274,83 +154,28 @@ index 0000000..65b89d0
 +  "unhappy_per_point": 0.35,
 +  "max_unhappy": 6.0,
 +  "filters": {
-+   "1": {
-+    "label": "Filtros y depuradoras",
-+    "tech": "filtros_industriales",
-+    "reduction": 0.5,
-+    "cost_ratio": 0.25,
-+    "upkeep_ratio": 0.02
-+   },
-+   "2": {
-+    "label": "Precipitadores electrostáticos y depuradoras modernas",
-+    "tech": "precipitadores",
-+    "reduction": 0.8,
-+    "cost_ratio": 0.35,
-+    "upkeep_ratio": 0.025
-+   }
++   "1": {"label": "Filtros y depuradoras", "tech": "filtros_industriales", "reduction": 0.5, "cost_ratio": 0.25, "upkeep_ratio": 0.02},
++   "2": {"label": "Precipitadores electrostáticos y depuradoras modernas", "tech": "precipitadores", "reduction": 0.8, "cost_ratio": 0.35, "upkeep_ratio": 0.025}
 +  }
 + },
 + "wars": {
 +  "_nota": "Guerras sin combate entre países ficticios (data/countries.json) o potencias externas. Encarecen o cortan importaciones de algunos bienes, suben la demanda (precio) de otros y crean demanda de guerra en los pueblos conectados (evento del pueblo). Terminan solas.",
 +  "min_months": 24,
-+  "chance_monthly": 0,
++  "chance_monthly": 0.006,
 +  "cooldown_days": 1800,
-+  "months": [
-+   4,
-+   12
-+  ],
-+  "powers": [
-+   "el Imperio de Valdoria",
-+   "la Confederación del Norte",
-+   "el Reino de Costaluna",
-+   "la Liga Mercante de Ostra"
-+  ],
-+  "demand_goods": [
-+   "acero",
-+   "hierro",
-+   "carbon",
-+   "comida",
-+   "conservas",
-+   "carne",
-+   "herramientas",
-+   "ropa",
-+   "zapatos",
-+   "cuero",
-+   "combustible"
-+  ],
-+  "demand_count": [
-+   3,
-+   5
-+  ],
-+  "demand_mult": [
-+   1.1,
-+   1.25
-+  ],
-+  "import_goods": [
-+   "maquinaria",
-+   "motor",
-+   "componentes_electronicos",
-+   "medicamentos",
-+   "relojes",
-+   "electrodomesticos",
-+   "herramientas",
-+   "tela",
-+   "acero"
-+  ],
-+  "import_count": [
-+   2,
-+   4
-+  ],
-+  "import_mult": [
-+   1.3,
-+   1.6
-+  ],
++  "months": [4, 12],
++  "powers": ["el Imperio de Valdoria", "la Confederación del Norte", "el Reino de Costaluna", "la Liga Mercante de Ostra"],
++  "demand_goods": ["acero", "hierro", "carbon", "comida", "conservas", "carne", "herramientas", "ropa", "zapatos", "cuero", "combustible"],
++  "demand_count": [3, 5],
++  "demand_mult": [1.1, 1.25],
++  "import_goods": ["maquinaria", "motor", "componentes_electronicos", "medicamentos", "relojes", "electrodomesticos", "herramientas", "tela", "acero"],
++  "import_count": [2, 4],
++  "import_mult": [1.3, 1.6],
 +  "cut_chance": 0.35,
 +  "cut_mult": 2.0,
 +  "town_event_mult": 1.3
 + }
 +}
-\ No newline at end of file
 diff --git a/docs/PENDIENTES.md b/docs/PENDIENTES.md
 index f0e0e28..46de6e1 100644
 --- a/docs/PENDIENTES.md
@@ -623,10 +448,10 @@ index caf1860..edbdfb5 100644
  	return c
 diff --git a/scripts/sim/climate_sim.gd b/scripts/sim/climate_sim.gd
 new file mode 100644
-index 0000000..b5716cb
+index 0000000..aee4ac8
 --- /dev/null
 +++ b/scripts/sim/climate_sim.gd
-@@ -0,0 +1,305 @@
+@@ -0,0 +1,307 @@
 +class_name ClimateSim
 +extends RefCounted
 +## Clima y estaciones que afectan la producción (sección D.12, docs/TRABAJO_MUNDO.md).
@@ -919,9 +744,11 @@ index 0000000..b5716cb
 +## Alza de precio por escasez de un bien (1 = normal).
 +static func price_mult(gs, good: String) -> float:
 +	var p: Dictionary = gs.world_events.get("climate", {}).get("price", {})
-+	if p.is_empty():
++	if p.is_empty() or not p.has(good):
 +		return 1.0
-+	return float(p.get(good, 1.0))
++	if MarketSim.sellers(good).is_empty():
++		return 1.0   # Sin productores locales el pueblo se autoabastece o importa: no hay escasez local que encarezca.
++	return float(p[good])
 +
 +
 +## Texto para paneles: eventos activos y pronósticos.
@@ -2976,5 +2803,40 @@ index 0000000..b27066c
 @@ -0,0 +1,4 @@
 +[gd_scene load_steps=2 format=3]
 +[ext_resource type="Script" path="res://tests/tmp_diag/diag.gd" id="1"]
++[node name="D" type="Node"]
++script = ExtResource("1")
+diff --git a/tests/tmp_diag/multi.gd b/tests/tmp_diag/multi.gd
+new file mode 100644
+index 0000000..24548be
+--- /dev/null
++++ b/tests/tmp_diag/multi.gd
+@@ -0,0 +1,19 @@
++extends Node
++func _ready() -> void:
++	var line := ""
++	for s in [7, 8, 9, 10, 11, 12]:
++		GameState.new_game({"difficulty": "normal", "seed": s})
++		var hap := 0.0
++		var crime := 0.0
++		var n := 0
++		for y in range(20):
++			GameState.money = 1000000.0
++			TimeManager.advance_days(365)
++			if not GameState.running:
++				break
++			hap += GameState.avg_happiness()
++			crime += float(GameState.problems.get("crime", 0))
++			n += 1
++		line += "s%d: años %d pobl %d feliz %.0f crimen %.0f | " % [s, n, GameState.citizens.size(), hap / maxf(1, n), crime / maxf(1, n)]
++	print("RES ", line)
++	get_tree().quit()
+diff --git a/tests/tmp_diag/multi.tscn b/tests/tmp_diag/multi.tscn
+new file mode 100644
+index 0000000..0b0256e
+--- /dev/null
++++ b/tests/tmp_diag/multi.tscn
+@@ -0,0 +1,4 @@
++[gd_scene load_steps=2 format=3]
++[ext_resource type="Script" path="res://tests/tmp_diag/multi.gd" id="1"]
 +[node name="D" type="Node"]
 +script = ExtResource("1")

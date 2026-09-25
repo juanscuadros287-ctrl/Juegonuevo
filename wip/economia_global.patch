@@ -1,0 +1,3304 @@
+diff --git a/data/businesses_seguros.json b/data/businesses_seguros.json
+new file mode 100644
+index 0000000..86bb167
+--- /dev/null
++++ b/data/businesses_seguros.json
+@@ -0,0 +1,14 @@
++{
++ "_nota": "Economía global: tu aseguradora (InsuranceSim). Cobra primas a empresas NPC, dueños de casas y negocios de los pueblos conectados y paga sus siniestros. clients_per_worker = pólizas que atiende cada empleado. La tarifa se fija en Economía mundial → Seguros.",
++ "aseguradora": {
++  "label": "Aseguradora", "category": "negocio", "sector": "Finanzas", "order": 11, "product": "servicio", "insurer": true,
++  "skill": "comercio", "base_wage": 2.3, "footprint": 5.0,
++  "description": "Vende seguros de incendio y robo a las empresas NPC, a los dueños de casas y a negocios de los pueblos con ruta comercial. Cobra primas cada mes y paga los siniestros: con una tarifa baja tienes más clientes pero más riesgo; un mal año de incendios puede costarte caro.",
++  "levels": [
++   {"label": "Agencia de seguros", "cost": 900, "materials": {"madera": 15, "piedra": 25}, "build_days": 20, "workers": 3, "jobs": 2, "prod_per_worker": 0, "clients_per_worker": 20, "quality": 1.0, "upkeep": 0.3, "unit_cost": 0, "tech": "contabilidad",
++    "model": [{"s": "box", "size": [4.6, 3.0, 3.8], "pos": [0, 1.5, 0], "c": [0.82, 0.8, 0.72]}, {"s": "prism", "size": [5.0, 1.1, 4.2], "pos": [0, 3.55, 0], "rot": 90, "c": [0.45, 0.28, 0.2]}, {"s": "box", "size": [1.0, 1.8, 0.1], "pos": [0, 0.9, 1.93], "c": [0.25, 0.18, 0.1]}, {"s": "box", "size": [2.6, 0.5, 0.08], "pos": [0, 2.5, 1.95], "c": [0.2, 0.35, 0.6]}]},
++   {"label": "Compañía de seguros", "cost": 3600, "materials": {"madera": 25, "piedra": 110}, "build_days": 45, "workers": 6, "jobs": 5, "prod_per_worker": 0, "clients_per_worker": 30, "quality": 1.1, "upkeep": 1.0, "unit_cost": 0, "tech": "banca_moderna",
++    "model": [{"s": "box", "size": [6.2, 5.2, 5.0], "pos": [0, 2.6, 0], "c": [0.86, 0.84, 0.78]}, {"s": "box", "size": [6.6, 0.4, 5.4], "pos": [0, 5.4, 0], "c": [0.4, 0.4, 0.44]}, {"s": "cyl", "size": [0.2, 3.4, 0.2], "pos": [-2.0, 1.7, 2.6], "c": [0.95, 0.93, 0.88]}, {"s": "cyl", "size": [0.2, 3.4, 0.2], "pos": [-0.7, 1.7, 2.6], "c": [0.95, 0.93, 0.88]}, {"s": "cyl", "size": [0.2, 3.4, 0.2], "pos": [0.7, 1.7, 2.6], "c": [0.95, 0.93, 0.88]}, {"s": "cyl", "size": [0.2, 3.4, 0.2], "pos": [2.0, 1.7, 2.6], "c": [0.95, 0.93, 0.88]}, {"s": "box", "size": [3.2, 0.6, 0.08], "pos": [0, 4.3, 2.52], "c": [0.2, 0.35, 0.6]}]}
++  ]
++ }
++}
+diff --git a/data/economia_global.json b/data/economia_global.json
+new file mode 100644
+index 0000000..ce01f28
+--- /dev/null
++++ b/data/economia_global.json
+@@ -0,0 +1,108 @@
++{
++ "_nota": "Economía global (sección A de PENDIENTES). Ver docs/ECONOMIA_GLOBAL.md. Todo moderado: los efectos del ciclo se aplican de forma gradual (smoothing) y con topes.",
++ "cycles": {
++  "_nota": "Fases por país. demand = gasto discrecional; credit_rate = puntos de tasa que se suman; credit_limit = cupo de crédito; property = precio de propiedades; stock = índice bursátil; pe = relación precio/ganancia de la bolsa; fx = desvío real de la moneda (+ = se deprecia); growth = crecimiento anual de las ganancias de las empresas.",
++  "phases": {
++   "auge": {"label": "Auge", "demand": 1.08, "credit_rate": -0.005, "credit_limit": 1.1, "property": 1.07, "stock": 1.1, "pe": 12.0, "fx": -0.03, "growth": 0.06, "inflation_add": 0.01, "months": [6, 16], "color": [0.45, 0.85, 0.45]},
++   "normal": {"label": "Normal", "demand": 1.0, "credit_rate": 0.0, "credit_limit": 1.0, "property": 1.0, "stock": 1.0, "pe": 10.0, "fx": 0.0, "growth": 0.02, "inflation_add": 0.0, "months": [12, 30], "color": [0.8, 0.8, 0.8]},
++   "recesion": {"label": "Recesión", "demand": 0.88, "credit_rate": 0.01, "credit_limit": 0.85, "property": 0.94, "stock": 0.88, "pe": 8.0, "fx": 0.04, "growth": -0.06, "inflation_add": -0.01, "months": [5, 12], "color": [0.95, 0.65, 0.3]},
++   "crisis": {"label": "Crisis", "demand": 0.8, "credit_rate": 0.025, "credit_limit": 0.65, "property": 0.86, "stock": 0.75, "pe": 6.5, "fx": 0.08, "growth": -0.14, "inflation_add": 0.015, "months": [3, 8], "color": [0.95, 0.35, 0.3]}
++  },
++  "transitions": {
++   "normal": {"auge": 0.45, "recesion": 0.43, "crisis": 0.12},
++   "auge": {"normal": 0.55, "recesion": 0.2, "crisis": 0.25},
++   "recesion": {"normal": 0.8, "crisis": 0.2},
++   "crisis": {"recesion": 0.55, "normal": 0.45}
++  },
++  "crisis_kinds": {
++   "panico_bancario": {"label": "Pánico bancario", "credit_limit_mult": 0.8, "credit_rate_add": 0.01, "signal": "credito"},
++   "burbuja_inmobiliaria": {"label": "Burbuja inmobiliaria", "property_mult": 0.93, "bubble_peak": 1.12, "signal": "vivienda"}
++  },
++  "lead_months": [3, 5],
++  "smoothing": 0.35,
++  "home_credit_heat_limit": 0.25,
++  "min_first_change_months": 8
++ },
++ "currency": {
++  "_nota": "Tipo de cambio = unidades de moneda local por 1 unidad de referencia. Nominal = inicial × (precios del país / precios de referencia) × desvío real. El desvío real vuelve a 1 + fx del ciclo. Para el país del jugador, la inflación es la simulada por EconomySim (dinero, crédito y escasez); los demás usan base_inflation de data/countries.json.",
++  "world_inflation": 0.03,
++  "real_vol": 0.012,
++  "real_revert": 0.15,
++  "real_min": 0.8,
++  "real_max": 1.25,
++  "inflation_noise": 0.003,
++  "domestic_trade_share": 0.35,
++  "foreign_trade_share": 1.0,
++  "citizen_import_share": 0.5,
++  "history": 36
++ },
++ "stock": {
++  "unlock_era": 2,
++  "law": {"propose_cost": 350, "review_days": [30, 60], "retry_days": 180, "base_chance": 0.5, "social_weight": 0.5, "influence_weight": 0.1, "min_chance": 0.15, "max_chance": 0.9, "gov_monthly_chance": {"2": 0.015, "3": 0.05}},
++  "company_shares": 1000,
++  "listing_fee": 250,
++  "trade_fee": 0.01,
++  "max_issue_ratio": 0.35,
++  "issue_cooldown_days": 90,
++  "issue_discount": 0.05,
++  "investor_buffer_days": 60,
++  "investor_share": 0.25,
++  "town_invest_share": 0.04,
++  "payout_default": 0.3,
++  "payout_max": 0.8,
++  "payout_raider": 0.7,
++  "price_revert": 0.3,
++  "price_vol": 0.03,
++  "max_move": 0.15,
++  "impact": 0.15,
++  "pressure_decay": 0.5,
++  "book_floor": 0.6,
++  "raider_start_chance": 0.3,
++  "raider_monthly_buy": 0.08,
++  "raider_spend_share": 0.6,
++  "raider_min_money": 2000,
++  "greenmail_premium": 0.25,
++  "npc_list_min_value": 1500,
++  "npc_list_chance": 0.12,
++  "npc_list_min_months": 6,
++  "npc_max_listed": 6,
++  "npc_float": 0.4,
++  "npc_payout": 0.35,
++  "foreign_max": 8,
++  "foreign_payout": 0.4,
++  "world_cash": 1000000,
++  "foreign_names": ["Ferrocarriles", "Naviera", "Minera", "Banco", "Textiles", "Cervecería", "Siderúrgica", "Telégrafos", "Petrolera", "Azucarera"],
++  "history": 36
++ },
++ "insurance": {
++  "types": {
++   "incendio": {"label": "Incendio", "scope": "edificio", "rate": 0.0011, "deductible": 0.1, "description": "Paga la reparación del edificio y lo perdido del inventario si hay un incendio."},
++   "robo": {"label": "Robo", "scope": "negocio", "base": 1.2, "deductible": 0.15, "description": "Paga lo robado en tus negocios (menos el deducible). La prima sube con el crimen del pueblo."},
++   "carga": {"label": "Pérdida de carga", "scope": "global", "rate": 0.02, "min": 1.0, "deductible": 0.1, "description": "Cubre los envíos de comercio exterior que se pierden en el camino (bandidos, naufragios, accidentes)."},
++   "cosecha": {"label": "Cosecha", "scope": "campo", "rate": 0.035, "deductible": 0.2, "trigger": 0.85, "description": "Paga la cosecha perdida por sequías, heladas o mal clima (no por el invierno normal)."}
++  },
++  "loading": 1.45,
++  "min_premium": 0.5,
++  "external": {"label": "Compañía de Seguros La Previsora", "capital": 20000},
++  "cargo_loss_chance": 0.025,
++  "own": {
++   "demand_base": 1.4,
++   "demand_slope": 0.6,
++   "min_rate": 0.5,
++   "max_rate": 2.5,
++   "town_share": 0.5,
++   "town_business_value": 900,
++   "npc_theft_chance": 0.08,
++   "total_loss_chance": 0.2
++  }
++ },
++ "quality": {
++  "_nota": "Calidad = L^0.30 × T^0.20 × M^0.15 × S^0.25 × I^0.10 (media geométrica ponderada, 0,4–1,8). L nivel del edificio, T tecnología, M maquinaria y mejoras, S habilidad y experiencia del personal, I calidad de los insumos.",
++  "weights": {"level": 0.3, "tech": 0.2, "machines": 0.15, "staff": 0.25, "inputs": 0.1},
++  "upgrade_cost_ratio": 0.2,
++  "max_upgrades": 3,
++  "upgrade_step": 0.1,
++  "brand": {"start": 50.0, "quality_weight": 6.0, "sales_bonus": 0.3, "no_sales": -0.5, "breach": -5.0, "drift": 0.03},
++  "accept": {"quality_weight": 0.3, "brand_weight": 0.2, "min": 0.85, "max": 1.3}
++ }
++}
+diff --git a/scripts/autoload/game_state.gd b/scripts/autoload/game_state.gd
+index ea6d575..0e9aebe 100644
+--- a/scripts/autoload/game_state.gd
++++ b/scripts/autoload/game_state.gd
+@@ -34,6 +34,7 @@ var economy: Dictionary = {}           # nivel de precios, inflación, oferta/de
+ var map: Dictionary = {}               # Fase 9A: país por chunks, revelado y expediciones (MapSim)
+ var transit: Dictionary = {}           # Transporte: carreteras por puntos, buses, paraderos, parqueaderos (TransitSim)
+ var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, acometidas, tarifas y facturas (GridSim/WaterSim)
++var world_econ: Dictionary = {}        # Economía global: ciclos, monedas, bolsa, seguros, calidad y marca (GlobalEconSim)
+ var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
+ var next_loan_id: int = 1
+ var weather: Dictionary = {}
+@@ -129,6 +130,7 @@ func _clear() -> void:
+ 	map = {}
+ 	economy = {}
+ 	utilities = {}
++	world_econ = {}
+ 	transit = {}
+ 	loans = []
+ 	next_loan_id = 1
+@@ -153,6 +155,7 @@ func _init_expansions() -> void:
+ 	RealEstateSim.init_state(self)
+ 	GridSim.init_state(self)
+ 	TransitSim.init_state(self)
++	GlobalEconSim.init_state(self)   # Economía global (partidas viejas: valores por defecto).
+ 
+ 
+ # --- Simulación diaria -----------------------------------------------------
+@@ -167,6 +170,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
+ 	FreeMarketSim.produce(self)   # Libre mercado: producción de las empresas NPC.
+ 	LogisticsSim.daily(self)
+ 	TradeSim.daily(self)
++	GlobalEconSim.daily(self)   # Economía global: riesgo de los envíos (seguro de carga).
+ 	TransitSim.daily(self)   # Transporte: trazados a otros pueblos, buses, pasajes y parqueaderos.
+ 	TourismSim.daily(self)
+ 	RealEstateSim.daily(self)   # Bienes raíces: pago por etapas / pausa de obras.
+@@ -196,6 +200,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
+ 		TourismSim.monthly(self)
+ 		AdvertisingSim.monthly(self)
+ 		EconomySim.monthly(self)
++		GlobalEconSim.monthly(self)   # Economía global: ciclos, monedas, calidad, bolsa y seguros.
+ 		PlayerSim.monthly(self)
+ 		_record_month()
+ 
+@@ -468,6 +473,7 @@ func to_dict() -> Dictionary:
+ 		"utilities": utilities,
+ 		"map": map,
+ 		"transit": transit,
++		"world_econ": world_econ,
+ 		"loans": loans,
+ 		"next_loan_id": next_loan_id,
+ 		"weather": weather,
+@@ -541,6 +547,7 @@ func load_dict(d: Dictionary) -> void:
+ 	utilities = d.get("utilities", {})
+ 	map = d.get("map", {})   # Partida sin mapa (antes de la Fase 9A): MapSim la convierte en país.
+ 	transit = d.get("transit", {})
++	world_econ = d.get("world_econ", {})
+ 	_init_expansions()
+ 	if not d.has("utilities"):
+ 		GridSim.migrate(self)   # Partida sin redes: período de gracia si ya había centrales.
+diff --git a/scripts/sim/bank_sim.gd b/scripts/sim/bank_sim.gd
+index 018066c..d4ac8a6 100644
+--- a/scripts/sim/bank_sim.gd
++++ b/scripts/sim/bank_sim.gd
+@@ -44,7 +44,7 @@ static func player_rate(gs) -> float:
+ 
+ static func credit_limit(gs) -> float:
+ 	var nw := EconomySim.net_worth(gs)
+-	var lim := maxf(float(ext_cfg().get("min_limit", 1000)) * gs.price_level(), nw * float(ext_cfg().get("limit_networth_ratio", 0.5)))
++	var lim := maxf(float(ext_cfg().get("min_limit", 1000)) * gs.price_level(), nw * float(ext_cfg().get("limit_networth_ratio", 0.5))) * GlobalEconSim.credit_limit_mult(gs)   # Ciclo económico.
+ 	if int(gs.player.get("credit_marks", 0)) >= 3:
+ 		return 0.0
+ 	return maxf(0.0, lim - EconomySim.player_debt(gs))
+diff --git a/scripts/sim/economy_sim.gd b/scripts/sim/economy_sim.gd
+index 897d8ad..054e32a 100644
+--- a/scripts/sim/economy_sim.gd
++++ b/scripts/sim/economy_sim.gd
+@@ -235,7 +235,7 @@ static func property_value(gs, b: Dictionary) -> float:
+ 	if RealEstateSim.has_units(b):
+ 		return RealEstateSim.owned_value(gs, b)   # Bienes raíces: solo las unidades que aún son tuyas.
+ 	if Housing.is_home(b):
+-		return float(b.get("sale_price", 0.0)) * float(gs.economy.get("price_level", 1.0))
++		return float(b.get("sale_price", 0.0)) * float(gs.economy.get("price_level", 1.0)) * GlobalEconSim.property_mult(gs)   # Ciclo económico.
+ 	return BusinessSim.period_value(b, "total", "obras") * float(cfg().get("property_value_ratio", 0.7))
+ 
+ 
+diff --git a/scripts/sim/events_sim.gd b/scripts/sim/events_sim.gd
+index 156f2fa..09395a7 100644
+--- a/scripts/sim/events_sim.gd
++++ b/scripts/sim/events_sim.gd
+@@ -150,6 +150,7 @@ static func _crime(gs) -> void:
+ 			for g in b["inventory"]:
+ 				b["inventory"][g] = float(b["inventory"][g]) * 0.85
+ 			BusinessSim.pay(gs, b, loss, "robos")
++			InsuranceSim.on_theft(gs, b, loss)   # Economía global: seguro de robo.
+ 			thief.money += loss
+ 			stolen += loss
+ 		else:
+@@ -224,5 +225,6 @@ static func _fires(gs) -> void:
+ 			gs.notify("Un incendio destruyó %s. Sus habitantes quedaron sin hogar." % label, "importante")
+ 		else:
+ 			gs.notify("Incendio en %s (%s)." % [label, "controlado" if contained else "daños menores"], "info")
++		InsuranceSim.on_fire(gs, b, ratio, contained)   # Economía global: seguro de incendio (tuyo o de tu aseguradora).
+ 	if TimeManager.month() == 1:
+ 		gs.problems["fires_year"] = 0
+diff --git a/scripts/sim/global_econ_sim.gd b/scripts/sim/global_econ_sim.gd
+new file mode 100644
+index 0000000..d913703
+--- /dev/null
++++ b/scripts/sim/global_econ_sim.gd
+@@ -0,0 +1,556 @@
++class_name GlobalEconSim
++extends RefCounted
++## Economía global (sección A de docs/PENDIENTES.md; ver docs/ECONOMIA_GLOBAL.md).
++## Orquesta los sistemas nuevos y guarda su estado en GameState.world_econ:
++##   - Ciclos económicos por país (auge, normal, recesión, crisis: pánico bancario o burbuja
++##     inmobiliaria) con señales previas (indicadores) y efectos moderados y graduales.
++##   - Moneda e inflación por país (data/countries.json: currency, base_inflation,
++##     exchange_rate_to_ref). El tipo de cambio fluctúa y encarece o abarata el comercio exterior.
++##   - StockSim (bolsa mundial), InsuranceSim (seguros) y QualitySim (calidad y marca).
++## Generador aleatorio propio y guardado (no altera la secuencia de gs.rng).
++## Parámetros en data/economia_global.json.
++
++
++static func cfg() -> Dictionary:
++	return GameData.extra("economia_global")
++
++
++static func cycle_cfg() -> Dictionary:
++	return cfg().get("cycles", {})
++
++
++static func fx_cfg() -> Dictionary:
++	return cfg().get("currency", {})
++
++
++static func phase_def(phase: String) -> Dictionary:
++	return cycle_cfg().get("phases", {}).get(phase, {})
++
++
++static func phase_label(phase: String) -> String:
++	return str(phase_def(phase).get("label", phase))
++
++
++static func kind_label(kind: String) -> String:
++	return str(cycle_cfg().get("crisis_kinds", {}).get(kind, {}).get("label", kind))
++
++
++# --- Estado ------------------------------------------------------------------------------------
++
++static func init_state(gs) -> void:
++	var w: Dictionary = gs.world_econ
++	if not w.has("rng_state"):
++		var r := RandomNumberGenerator.new()
++		r.seed = int(gs.settings.get("seed", 0)) * 4099 + 777
++		w["rng_state"] = str(r.state)
++	if not w.has("countries") or not (w["countries"] is Dictionary):
++		w["countries"] = {}
++	if not w.has("p_ref"):
++		w["p_ref"] = 1.0
++	if not w.has("home_p0"):
++		w["home_p0"] = maxf(0.01, float(gs.price_level()))
++	if not w.has("credit_hist"):
++		w["credit_hist"] = []
++	gs.world_econ = w
++	_ensure_countries(gs)
++	StockSim.init_state(gs)
++	InsuranceSim.init_state(gs)
++	QualitySim.init_state(gs)
++
++
++static func ready(gs) -> bool:
++	return gs.world_econ is Dictionary and gs.world_econ.has("countries")
++
++
++## Países del archivo de países (si el mapa cambia la lista, se agregan los nuevos).
++static func country_defs() -> Dictionary:
++	return GameData.extra("countries").get("countries", {})
++
++
++static func country_ids() -> Array:
++	var all := country_defs()
++	var ids := all.keys().filter(func(k): return not str(k).begins_with("_"))
++	ids.sort_custom(func(a, b): return int(all[a].get("order", 0)) < int(all[b].get("order", 0)) if int(all[a].get("order", 0)) != int(all[b].get("order", 0)) else str(a) < str(b))
++	return ids
++
++
++static func home_id(gs) -> String:
++	return MapSim.country_id(gs)
++
++
++static func _ensure_countries(gs) -> void:
++	var cs: Dictionary = gs.world_econ["countries"]
++	var home := home_id(gs)
++	for id in country_ids():
++		if cs.has(id):
++			continue
++		var d: Dictionary = country_defs()[id]
++		var rate0 := maxf(0.0001, float(d.get("exchange_rate_to_ref", 1.0)))
++		var months: Array = phase_def("normal").get("months", [12, 30])
++		var dur := ri(gs, int(months[0]), int(months[1]))
++		var mip := ri(gs, 0, dur - 1)
++		if id == home:
++			mip = 0
++			dur = maxi(dur, int(cycle_cfg().get("min_first_change_months", 8)))
++		cs[id] = {"phase": "normal", "kind": "", "months_in_phase": mip, "duration": dur, "next_phase": "", "next_kind": "",
++			"lead_left": 0, "rate0": rate0, "rate": rate0, "plevel": 1.0, "infl": float(d.get("base_inflation", 0.03)),
++			"real": 1.0, "eff": _targets("normal", ""), "ind": {"confianza": 55.0, "credito": 6.0, "vivienda": 2.0, "bolsa": 100.0},
++			"hist": [], "warned": ""}
++	gs.world_econ["countries"] = cs
++
++
++static func country(gs, id: String) -> Dictionary:
++	if not ready(gs):
++		return {}
++	return gs.world_econ["countries"].get(id, {})
++
++
++static func home(gs) -> Dictionary:
++	return country(gs, home_id(gs))
++
++
++# --- Aleatoriedad propia ----------------------------------------------------------------------------
++
++static func _r(gs) -> RandomNumberGenerator:
++	var r := RandomNumberGenerator.new()
++	r.state = int(str(gs.world_econ.get("rng_state", "1")))
++	return r
++
++
++static func _save_r(gs, r: RandomNumberGenerator) -> void:
++	gs.world_econ["rng_state"] = str(r.state)
++
++
++static func rf(gs) -> float:
++	var r := _r(gs)
++	var v := r.randf()
++	_save_r(gs, r)
++	return v
++
++
++static func rn(gs, sigma: float) -> float:
++	var r := _r(gs)
++	var v := r.randfn(0.0, sigma)
++	_save_r(gs, r)
++	return v
++
++
++static func ri(gs, a: int, b: int) -> int:
++	if b <= a:
++		return a
++	return mini(b, a + int(floorf(rf(gs) * float(b - a + 1))))
++
++
++# --- Ciclo diario / mensual -------------------------------------------------------------------------
++
++static func daily(gs) -> void:
++	if not ready(gs):
++		return
++	InsuranceSim.daily(gs)
++
++
++static func monthly(gs) -> void:
++	if not ready(gs):
++		init_state(gs)
++	_ensure_countries(gs)
++	_credit_heat(gs)
++	var w: Dictionary = gs.world_econ
++	w["p_ref"] = float(w.get("p_ref", 1.0)) * (1.0 + float(fx_cfg().get("world_inflation", 0.03)) / 12.0)
++	var home := home_id(gs)
++	for id in country_ids():
++		var st: Dictionary = w["countries"][id]
++		_cycle_step(gs, str(id), st, str(id) == home)
++		_currency_step(gs, str(id), st, str(id) == home)
++	QualitySim.monthly(gs)
++	StockSim.monthly(gs)
++	InsuranceSim.monthly(gs)
++
++
++## Llamado desde GovSim.monthly: el gobierno estudia la ley de la bolsa de valores.
++static func gov_monthly(gs) -> void:
++	if not ready(gs):
++		return
++	StockSim.review_law(gs)
++
++
++# --- Ciclos económicos --------------------------------------------------------------------------------
++
++## Valores objetivo de los efectos para una fase (y tipo de crisis).
++static func _targets(phase: String, kind: String) -> Dictionary:
++	var p := phase_def(phase)
++	var t := {"demand": float(p.get("demand", 1.0)), "credit_rate": float(p.get("credit_rate", 0.0)),
++		"credit_limit": float(p.get("credit_limit", 1.0)), "property": float(p.get("property", 1.0)),
++		"stock": float(p.get("stock", 1.0)), "pe": float(p.get("pe", 10.0)), "fx": float(p.get("fx", 0.0)),
++		"growth": float(p.get("growth", 0.02))}
++	var kd: Dictionary = cycle_cfg().get("crisis_kinds", {}).get(kind, {})
++	if phase == "crisis" and not kd.is_empty():
++		t["credit_limit"] = float(t["credit_limit"]) * float(kd.get("credit_limit_mult", 1.0))
++		t["credit_rate"] = float(t["credit_rate"]) + float(kd.get("credit_rate_add", 0.0))
++		t["property"] = float(t["property"]) * float(kd.get("property_mult", 1.0))
++	return t
++
++
++## Crecimiento anual del crédito del país del jugador (préstamos reales de la partida).
++static func _credit_heat(gs) -> void:
++	var h: Array = gs.world_econ.get("credit_hist", [])
++	h.append(EconomySim.total_credit(gs))
++	while h.size() > 13:
++		h.pop_front()
++	gs.world_econ["credit_hist"] = h
++
++
++static func home_credit_growth(gs) -> float:
++	var h: Array = gs.world_econ.get("credit_hist", [])
++	if h.size() < 2:
++		return 0.0
++	var old := float(h[0])
++	var now := float(h[h.size() - 1])
++	var base := maxf(old, 0.02 * EconomySim.total_money(gs))
++	if base <= 1.0:
++		return 0.0
++	return clampf((now - old) / base * 12.0 / float(h.size() - 1), -0.5, 1.0)
++
++
++static func _pick_next(gs, phase: String, is_home: bool) -> String:
++	var tr: Dictionary = cycle_cfg().get("transitions", {}).get(phase, {"normal": 1.0}).duplicate()
++	if is_home and tr.has("crisis"):
++		# Crédito recalentado en tu país: más probable un pánico bancario.
++		var heat := home_credit_growth(gs) - float(cycle_cfg().get("home_credit_heat_limit", 0.25))
++		if heat > 0.0:
++			tr["crisis"] = float(tr["crisis"]) * (1.0 + minf(2.0, heat * 4.0))
++	var total := 0.0
++	for k in tr:
++		total += float(tr[k])
++	var x := rf(gs) * total
++	for k in tr:
++		x -= float(tr[k])
++		if x <= 0.0:
++			return str(k)
++	return "normal"
++
++
++static func _cycle_step(gs, id: String, st: Dictionary, is_home: bool) -> void:
++	var cc := cycle_cfg()
++	st["months_in_phase"] = int(st.get("months_in_phase", 0)) + 1
++	if str(st.get("next_phase", "")) == "":
++		if int(st["months_in_phase"]) >= int(st.get("duration", 12)):
++			var nxt := _pick_next(gs, str(st["phase"]), is_home)
++			var kind := ""
++			if nxt == "crisis":
++				var home_heat := is_home and home_credit_growth(gs) > float(cc.get("home_credit_heat_limit", 0.25))
++				kind = "panico_bancario" if home_heat or rf(gs) < 0.5 else "burbuja_inmobiliaria"
++			st["next_phase"] = nxt
++			st["next_kind"] = kind
++			var lead: Array = cc.get("lead_months", [3, 5])
++			st["lead_left"] = ri(gs, int(lead[0]), int(lead[1]))
++	else:
++		st["lead_left"] = int(st.get("lead_left", 0)) - 1
++		if int(st["lead_left"]) <= 0:
++			var old := str(st["phase"])
++			st["phase"] = str(st["next_phase"])
++			st["kind"] = str(st.get("next_kind", ""))
++			st["next_phase"] = ""
++			st["next_kind"] = ""
++			st["months_in_phase"] = 0
++			var months: Array = phase_def(str(st["phase"])).get("months", [6, 12])
++			st["duration"] = ri(gs, int(months[0]), int(months[1]))
++			if is_home and old != str(st["phase"]):
++				gs.notify(_phase_news(gs, id, st), "importante")
++	_indicators(gs, id, st, is_home)
++	# Efectos graduales (moderados): se acercan a los de la fase y, antes de una crisis, a sus señales.
++	var tgt := _targets(str(st["phase"]), str(st.get("kind", "")))
++	var nk := str(st.get("next_kind", ""))
++	if str(st.get("next_phase", "")) == "crisis" and nk == "burbuja_inmobiliaria":
++		tgt["property"] = float(cc.get("crisis_kinds", {}).get(nk, {}).get("bubble_peak", 1.12))
++	elif str(st.get("next_phase", "")) == "crisis" and nk == "panico_bancario":
++		tgt["credit_limit"] = maxf(float(tgt["credit_limit"]), 1.1)
++	var s := float(cc.get("smoothing", 0.35))
++	var eff: Dictionary = st.get("eff", {})
++	for k in tgt:
++		eff[k] = float(eff.get(k, tgt[k])) + (float(tgt[k]) - float(eff.get(k, tgt[k]))) * s
++	st["eff"] = eff
++
++
++const IND_TARGETS := {
++	"auge": {"confianza": 72.0, "credito": 12.0, "vivienda": 6.0},
++	"normal": {"confianza": 55.0, "credito": 6.0, "vivienda": 2.0},
++	"recesion": {"confianza": 35.0, "credito": 1.0, "vivienda": -3.0},
++	"crisis": {"confianza": 20.0, "credito": -5.0, "vivienda": -8.0},
++}
++
++
++## Indicadores adelantados: se mueven hacia la fase que viene ANTES de que llegue (señales previas).
++static func _indicators(gs, id: String, st: Dictionary, is_home: bool) -> void:
++	var ind: Dictionary = st.get("ind", {})
++	var toward := str(st["phase"])
++	var nxt := str(st.get("next_phase", ""))
++	if nxt != "":
++		toward = nxt
++	var tg: Dictionary = IND_TARGETS.get(toward, IND_TARGETS["normal"]).duplicate()
++	var nk := str(st.get("next_kind", ""))
++	if nxt == "crisis":
++		# Antes de la crisis, la señal propia: crédito disparado (pánico) o vivienda disparada (burbuja).
++		if nk == "panico_bancario":
++			tg["credito"] = 22.0
++			tg["confianza"] = 48.0
++		elif nk == "burbuja_inmobiliaria":
++			tg["vivienda"] = 15.0
++			tg["confianza"] = 50.0
++	if str(st["phase"]) == "crisis" and str(st.get("kind", "")) == "burbuja_inmobiliaria":
++		tg["vivienda"] = -12.0
++	for k in ["confianza", "credito", "vivienda"]:
++		var v := float(ind.get(k, tg[k]))
++		ind[k] = v + (float(tg[k]) - v) * 0.4 + rn(gs, 1.5 if k == "confianza" else 0.8)
++	if is_home:
++		# En tu país el crédito medido pesa: préstamos reales de la partida.
++		ind["credito"] = float(ind["credito"]) * 0.7 + home_credit_growth(gs) * 100.0 * 0.3
++		ind["desempleo"] = EconomySim.unemployment(gs) * 100.0
++	ind["confianza"] = clampf(float(ind["confianza"]), 0.0, 100.0)
++	var target := 100.0 * float(st.get("eff", {}).get("stock", 1.0)) * float(st.get("plevel", 1.0))
++	var bolsa := float(ind.get("bolsa", 100.0))
++	ind["bolsa"] = maxf(10.0, bolsa + (target - bolsa) * 0.3 + bolsa * rn(gs, 0.02))
++	st["ind"] = ind
++	if is_home:
++		var sig := signals(gs, id)
++		var first := str(sig[0]) if not sig.is_empty() else ""
++		if first != "" and first != str(st.get("warned", "")) and str(st["phase"]) != "crisis":
++			gs.notify("Indicadores económicos: " + first, "importante")
++		st["warned"] = first
++
++
++static func _phase_news(gs, id: String, st: Dictionary) -> String:
++	var name := country_label(id)
++	match str(st["phase"]):
++		"auge":
++			return "%s entra en AUGE: la gente gasta más, el crédito se abarata y la bolsa sube." % name
++		"recesion":
++			return "%s entra en RECESIÓN: cae el consumo, el crédito se encarece y bajan las propiedades y la bolsa." % name
++		"crisis":
++			return "CRISIS en %s (%s): crédito escaso y caro, propiedades y bolsa a la baja, la moneda se deprecia." % [name, kind_label(str(st.get("kind", ""))).to_lower()]
++	return "La economía de %s vuelve a la normalidad." % name
++
++
++## Señales previas visibles (lo que dicen los indicadores), de la más grave a la más leve.
++static func signals(gs, id: String) -> Array:
++	var st := country(gs, id)
++	if st.is_empty():
++		return []
++	var ind: Dictionary = st.get("ind", {})
++	var out := []
++	var phase := str(st["phase"])
++	if float(ind.get("credito", 0.0)) > 15.0:
++		out.append("el crédito crece muy rápido (+%d %%/año): riesgo de pánico bancario." % int(round(float(ind["credito"]))))
++	if float(ind.get("vivienda", 0.0)) > 9.0:
++		out.append("los precios de la vivienda suben %d %%/año: posible burbuja inmobiliaria." % int(round(float(ind["vivienda"]))))
++	if float(ind.get("confianza", 50.0)) < 42.0 and phase in ["normal", "auge"]:
++		out.append("la confianza empresarial cae (%d/100): se acerca una recesión." % int(float(ind["confianza"])))
++	if float(ind.get("confianza", 50.0)) > 63.0 and phase in ["normal", "recesion", "crisis"]:
++		out.append("la confianza se recupera (%d/100): se acerca %s." % [int(float(ind["confianza"])), "un auge" if phase == "normal" else "la recuperación"])
++	return out
++
++
++## Riesgo de crisis o recesión (0–100) según los indicadores (para la barra del ciclo).
++static func risk(gs, id: String) -> float:
++	var st := country(gs, id)
++	if st.is_empty():
++		return 0.0
++	var ind: Dictionary = st.get("ind", {})
++	var r := 0.0
++	r += clampf((55.0 - float(ind.get("confianza", 55.0))) * 1.6, 0.0, 50.0)
++	r += clampf((float(ind.get("credito", 6.0)) - 8.0) * 2.5, 0.0, 35.0)
++	r += clampf((float(ind.get("vivienda", 2.0)) - 4.0) * 3.0, 0.0, 35.0)
++	return clampf(r, 0.0, 100.0)
++
++
++## Fuerza una fase (pruebas y escenarios). Aplica los efectos de inmediato.
++static func force_phase(gs, id: String, phase: String, kind := "") -> void:
++	var st := country(gs, id)
++	if st.is_empty():
++		return
++	st["phase"] = phase
++	st["kind"] = kind
++	st["next_phase"] = ""
++	st["next_kind"] = ""
++	st["months_in_phase"] = 0
++	var months: Array = phase_def(phase).get("months", [6, 12])
++	st["duration"] = int(months[1])
++	st["eff"] = _targets(phase, kind)
++
++
++static func eff(gs, key: String, fallback := 1.0, id := "") -> float:
++	var st := country(gs, home_id(gs) if id == "" else id)
++	if st.is_empty():
++		return fallback
++	return float(st.get("eff", {}).get(key, fallback))
++
++
++# --- Efectos (ganchos en otros sistemas) ------------------------------------------------------------
++
++## Gasto discrecional de los vecinos (MarketSim.discretionary).
++static func demand_mult(gs) -> float:
++	return eff(gs, "demand", 1.0)
++
++
++## Puntos de tasa de interés que se suman a los préstamos (LoanContract.era_rate_add).
++static func credit_rate_add(gs) -> float:
++	return eff(gs, "credit_rate", 0.0)
++
++
++## Cupo de crédito del banco externo (BankSim.credit_limit).
++static func credit_limit_mult(gs) -> float:
++	return eff(gs, "credit_limit", 1.0)
++
++
++## Precio de las propiedades (EconomySim.property_value y RealEstateSim.value_total).
++static func property_mult(gs) -> float:
++	return eff(gs, "property", 1.0)
++
++
++# --- Monedas ------------------------------------------------------------------------------------------
++
++static func country_label(id: String) -> String:
++	return str(country_defs().get(id, {}).get("label", id))
++
++
++static func currency_name(id: String) -> String:
++	return str(country_defs().get(id, {}).get("currency", {}).get("name", "moneda"))
++
++
++static func currency_symbol(id: String) -> String:
++	return str(country_defs().get(id, {}).get("currency", {}).get("symbol", "$"))
++
++
++## Unidades de la moneda del país por 1 unidad de referencia.
++static func rate(gs, id: String) -> float:
++	var st := country(gs, id)
++	if st.is_empty():
++		return maxf(0.0001, float(country_defs().get(id, {}).get("exchange_rate_to_ref", 1.0)))
++	return maxf(0.0001, float(st.get("rate", 1.0)))
++
++
++## Factor para convertir montos: amount_en_to = amount_en_from × fx(from, to).
++static func fx(gs, from_id: String, to_id: String) -> float:
++	return rate(gs, to_id) / rate(gs, from_id)
++
++
++static func to_home(gs, amount: float, from_id: String) -> float:
++	return amount * fx(gs, from_id, home_id(gs))
++
++
++## "12,50 S/A (≈ $15)": un monto en moneda extranjera con su equivalente en tu moneda.
++static func fmt_foreign(gs, amount: float, id: String) -> String:
++	if id == home_id(gs):
++		return Fmt.money2(amount)
++	return "%s %s (≈ %s)" % [_num(amount), currency_symbol(id), Fmt.money2(to_home(gs, amount, id))]
++
++
++static func _num(v: float) -> String:
++	return ("%.2f" % v).replace(".", ",")
++
++
++## Desvío real de la moneda del país (1 = paridad; > 1 = moneda débil / depreciada).
++static func real_index(gs, id := "") -> float:
++	var st := country(gs, home_id(gs) if id == "" else id)
++	return float(st.get("real", 1.0)) if not st.is_empty() else 1.0
++
++
++## Multiplicador de precios de comercio exterior con un pueblo (TradeSim.export_price/import_price).
++## Si tu moneda se deprecia, importar cuesta más y exportar paga más (en tu moneda).
++static func trade_fx_mult(gs, town_id: String) -> float:
++	if not ready(gs):
++		return 1.0
++	var t := TradeSim.town(gs, town_id)
++	var tc := str(t.get("country", ""))
++	var home := home_id(gs)
++	var fc := fx_cfg()
++	if tc == "" or tc == home or country(gs, tc).is_empty():
++		return 1.0 + float(fc.get("domestic_trade_share", 0.35)) * (real_index(gs) - 1.0)
++	var rel := real_index(gs) / maxf(0.01, real_index(gs, tc))
++	return 1.0 + float(fc.get("foreign_trade_share", 1.0)) * (rel - 1.0)
++
++
++## Importaciones de los vecinos (MarketSim.purchase): parte del bien viene de fuera.
++static func import_fx_mult(gs) -> float:
++	if not ready(gs):
++		return 1.0
++	return 1.0 + float(fx_cfg().get("citizen_import_share", 0.5)) * (real_index(gs) - 1.0)
++
++
++static func _currency_step(gs, id: String, st: Dictionary, is_home: bool) -> void:
++	var fc := fx_cfg()
++	var d: Dictionary = country_defs().get(id, {})
++	if is_home:
++		st["plevel"] = float(gs.price_level()) / maxf(0.01, float(gs.world_econ.get("home_p0", 1.0)))
++		st["infl"] = EconomySim.annual_inflation(gs)
++	else:
++		var infl := float(d.get("base_inflation", 0.03)) + float(phase_def(str(st["phase"])).get("inflation_add", 0.0)) + rn(gs, float(fc.get("inflation_noise", 0.003)) * 12.0)
++		infl = clampf(infl, -0.05, 0.4)
++		st["infl"] = infl
++		st["plevel"] = float(st.get("plevel", 1.0)) * (1.0 + infl / 12.0)
++	var target := 1.0 + float(st.get("eff", {}).get("fx", 0.0))
++	var real := float(st.get("real", 1.0))
++	real += (target - real) * float(fc.get("real_revert", 0.15)) + rn(gs, float(fc.get("real_vol", 0.012)))
++	st["real"] = clampf(real, float(fc.get("real_min", 0.8)), float(fc.get("real_max", 1.25)))
++	st["rate"] = float(st.get("rate0", 1.0)) * float(st["plevel"]) / maxf(0.01, float(gs.world_econ.get("p_ref", 1.0))) * float(st["real"])
++	var h: Array = st.get("hist", [])
++	h.append({"day": gs.today(), "rate": st["rate"], "infl": st["infl"], "phase": st["phase"], "bolsa": float(st.get("ind", {}).get("bolsa", 100.0))})
++	while h.size() > int(fc.get("history", 36)):
++		h.pop_front()
++	st["hist"] = h
++
++
++## Variación del tipo de cambio de un país en los últimos `months` meses (+ = se deprecia).
++static func rate_change(gs, id: String, months := 12) -> float:
++	var st := country(gs, id)
++	var h: Array = st.get("hist", [])
++	if h.size() < 2:
++		return 0.0
++	var i := maxi(0, h.size() - 1 - months)
++	return float(h[h.size() - 1]["rate"]) / maxf(0.0001, float(h[i]["rate"])) - 1.0
++
++
++# --- Interfaz y utilidades -------------------------------------------------------------------------------
++
++## Líneas para el panel de un edificio (calidad y marca, seguros).
++static func panel_lines(gs, b: Dictionary) -> String:
++	if not ready(gs):
++		return ""
++	return QualitySim.panel_lines(gs, b) + InsuranceSim.panel_lines(gs, b)
++
++
++## Paga a vecinos del pueblo sin empleo (artesanos, proveedores); si no hay, al tesoro. El dinero no sale.
++static func pay_local(gs, amount: float) -> void:
++	if amount <= 0.0:
++		return
++	var today: int = gs.today()
++	var adult := int(GameData.citizens.get("adult_age", 16))
++	var pool := []
++	for c in gs.citizens.values():
++		if c.job_id < 0 and not gs.is_player(c.id) and c.age_years(today) >= adult and c.prison_until < 0:
++			pool.append(c)
++	if pool.is_empty():
++		GovSim.add_treasury(gs, amount)
++		return
++	var n := mini(3, pool.size())
++	var start := ri(gs, 0, pool.size() - 1)
++	for i in range(n):
++		var c: Citizen = pool[(start + i) % pool.size()]
++		c.money += amount / float(n)
++
++
++## Dinero fuera del pueblo que manejan estos sistemas (caja de la bolsa mundial y aseguradora externa).
++static func outside_money(gs) -> float:
++	if not ready(gs):
++		return 0.0
++	return StockSim.world_cash(gs) + InsuranceSim.external_cash(gs)
++
++
++## Resumen corto del ciclo del país del jugador para la barra superior.
++static func bar_text(gs) -> String:
++	var st := home(gs)
++	if st.is_empty():
++		return ""
++	var t := phase_label(str(st["phase"]))
++	if str(st["phase"]) == "crisis" and str(st.get("kind", "")) != "":
++		t = kind_label(str(st["kind"]))
++	return "Economía: %s" % t
+diff --git a/scripts/sim/gov_sim.gd b/scripts/sim/gov_sim.gd
+index a0eb4df..4b0d033 100644
+--- a/scripts/sim/gov_sim.gd
++++ b/scripts/sim/gov_sim.gd
+@@ -66,6 +66,7 @@ static func monthly(gs) -> void:
+ 	_expire_tenders(gs)
+ 	_pay_debts(gs)
+ 	_check_regime(gs)
++	GlobalEconSim.gov_monthly(gs)   # Economía global: el gobierno estudia la Ley de Mercado de Valores.
+ 
+ 
+ ## Deudas pendientes del gobierno por obras públicas.
+diff --git a/scripts/sim/insurance_sim.gd b/scripts/sim/insurance_sim.gd
+new file mode 100644
+index 0000000..737b955
+--- /dev/null
++++ b/scripts/sim/insurance_sim.gd
+@@ -0,0 +1,556 @@
++class_name InsuranceSim
++extends RefCounted
++## Economía global — seguros (ver docs/ECONOMIA_GLOBAL.md).
++##
++## Pólizas del jugador con la aseguradora externa (La Previsora): incendio y robo por edificio, cosecha
++## por campo y pérdida de carga (global, comercio exterior). Prima mensual = pérdida esperada × recargo
++## (riesgo real: techo de paja, bomberos, crimen del pueblo, valor del comercio). Deducible por tipo.
++## Pagan cuando ocurre el evento: EventsSim._fires → on_fire, EventsSim._crime → on_theft, envíos de
++## TradeSim que se pierden en el camino (daily) y malas cosechas por sequía o mal clima (monthly).
++## La aseguradora externa tiene su propia caja (dinero fuera del pueblo, contado en outside_money):
++## las primas entran a ella y los siniestros salen de ella. Nada aparece de la nada.
++##
++## Tu propia aseguradora (negocio "aseguradora"): cobra primas a empresas NPC, a dueños de casas y a
++## negocios de los pueblos conectados, y paga sus siniestros (incendios reales del pueblo, robos y
++## siniestros estadísticos en los pueblos). Tú fijas la tarifa: más cara = menos clientes.
++## Estado: gs.world_econ["insurance"].
++
++const TYPES := ["incendio", "robo", "cosecha", "carga"]
++
++
++static func cfg() -> Dictionary:
++	return GlobalEconSim.cfg().get("insurance", {})
++
++
++static func type_def(t: String) -> Dictionary:
++	return cfg().get("types", {}).get(t, {})
++
++
++static func type_label(t: String) -> String:
++	return str(type_def(t).get("label", t))
++
++
++static func init_state(gs) -> void:
++	var w: Dictionary = gs.world_econ
++	if not w.has("insurance") or not (w["insurance"] is Dictionary):
++		w["insurance"] = {}
++	var s: Dictionary = w["insurance"]
++	for k in ["policies", "own", "month", "last_month"]:
++		if not s.has(k) or not (s[k] is Dictionary):
++			s[k] = {}
++	if not s.has("cargo"):
++		s["cargo"] = false
++	if not s.has("ext_cash"):
++		s["ext_cash"] = float(cfg().get("external", {}).get("capital", 20000)) * gs.price_mult()
++	if not s.has("log"):
++		s["log"] = []
++
++
++static func st(gs) -> Dictionary:
++	return gs.world_econ.get("insurance", {}) if gs.world_econ is Dictionary else {}
++
++
++static func external_cash(gs) -> float:
++	return float(st(gs).get("ext_cash", 0.0))
++
++
++static func external_label() -> String:
++	return str(cfg().get("external", {}).get("label", "La aseguradora"))
++
++
++static func _log(gs, text: String) -> void:
++	var l: Array = st(gs).get("log", [])
++	l.append({"date": TimeManager.date_string(false), "text": text})
++	while l.size() > 40:
++		l.pop_front()
++	st(gs)["log"] = l
++
++
++static func _stat(gs, key: String, amount: float) -> void:
++	var m: Dictionary = st(gs).get("month", {})
++	m[key] = float(m.get(key, 0.0)) + amount
++	st(gs)["month"] = m
++
++
++# --- Pólizas del jugador --------------------------------------------------------------------------------
++
++static func policies_of(gs, b: Dictionary) -> Array:
++	return st(gs).get("policies", {}).get(str(int(b.get("id", -1))), [])
++
++
++static func has_policy(gs, b: Dictionary, t: String) -> bool:
++	return policies_of(gs, b).has(t)
++
++
++static func eligible(gs, b: Dictionary, t: String) -> bool:
++	if not gs.owned_by_player(b) or str(b.get("status", "")) == "construccion":
++		return false
++	var def: Dictionary = gs.building_def(b)
++	match t:
++		"incendio":
++			return true
++		"robo":
++			return str(def.get("category", "")) == "negocio"
++		"cosecha":
++			return bool(def.get("seasonal", false))
++	return false
++
++
++static func building_value(gs, b: Dictionary) -> float:
++	return float(gs.level_def(b).get("cost", 300)) * gs.price_mult()
++
++
++static func inventory_value(gs, b: Dictionary) -> float:
++	var v := 0.0
++	for g in b.get("inventory", {}):
++		v += maxf(0.0, float(b["inventory"][g])) * EconomySim.market_price(gs, str(g))
++	return v
++
++
++## Prima mensual de una póliza del jugador (pérdida esperada × recargo, con el riesgo real de hoy).
++static func premium(gs, b: Dictionary, t: String) -> float:
++	var td := type_def(t)
++	var loading := float(cfg().get("loading", 1.45))
++	var p := 0.0
++	match t:
++		"incendio":
++			var risk := float(td.get("rate", 0.0011)) * (1.5 if int(b.get("level", 1)) == 1 else 1.0)
++			risk *= 1.0 - 0.6 * EventsSim.coverage(gs, "bomberos")
++			p = (building_value(gs, b) + inventory_value(gs, b) * 0.5) * risk
++		"robo":
++			p = float(td.get("base", 1.2)) * gs.price_level() * (0.4 + float(gs.problems.get("crime", 0.0)) / 40.0)
++		"cosecha":
++			var def: Dictionary = gs.building_def(b)
++			var monthly := BusinessSim.expected_output(gs, b) * 30.0 * EconomySim.market_price(gs, str(def.get("product", "")))
++			p = maxf(monthly, float(gs.level_def(b).get("jobs", 1)) * gs.price_mult() * 10.0) * float(td.get("rate", 0.035))
++	return maxf(float(cfg().get("min_premium", 0.5)) * gs.price_level(), p * loading)
++
++
++## Prima mensual del seguro de carga (según el comercio exterior del mes anterior).
++static func cargo_premium(gs) -> float:
++	var td := type_def("carga")
++	var lm: Dictionary = gs.trade.get("last_month", {}) if gs.trade is Dictionary else {}
++	var value := float(lm.get("exports", 0.0)) + float(lm.get("imports", 0.0))
++	return maxf(float(td.get("min", 1.0)) * gs.price_level(), value * float(td.get("rate", 0.02)) * float(cfg().get("loading", 1.45)))
++
++
++static func set_policy(gs, b: Dictionary, t: String, on: bool) -> String:
++	if on and not eligible(gs, b, t):
++		return "Esa póliza no aplica a %s." % gs.building_label(b)
++	var pol: Dictionary = st(gs)["policies"]
++	var key := str(int(b["id"]))
++	var arr: Array = pol.get(key, [])
++	if on and not arr.has(t):
++		arr.append(t)
++	elif not on:
++		arr.erase(t)
++	if arr.is_empty():
++		pol.erase(key)
++	else:
++		pol[key] = arr
++	return ""
++
++
++static func set_cargo(gs, on: bool) -> void:
++	st(gs)["cargo"] = on
++
++
++static func total_premiums(gs) -> float:
++	var total := 0.0
++	for key in st(gs).get("policies", {}):
++		var b: Dictionary = gs.get_building(int(key))
++		if b.is_empty():
++			continue
++		for t in st(gs)["policies"][key]:
++			total += premium(gs, b, str(t))
++	if bool(st(gs).get("cargo", false)):
++		total += cargo_premium(gs)
++	return total
++
++
++## Paga un siniestro desde la caja de la aseguradora externa. Devuelve lo pagado.
++static func _external_pay(gs, amount: float) -> float:
++	var cash := external_cash(gs)
++	var paid := clampf(amount, 0.0, maxf(0.0, cash))
++	st(gs)["ext_cash"] = cash - paid
++	if paid < amount - 0.01:
++		gs.notify("%s no tiene fondos para pagar todo el siniestro (pagó %s de %s)." % [external_label(), Fmt.money(paid), Fmt.money(amount)], "jugador")
++	return paid
++
++
++## Indemnización a un edificio del jugador: compensa el gasto registrado (la pérdida neta es el deducible).
++static func _indemnify_player(gs, b: Dictionary, amount: float, ledger_key: String) -> void:
++	if amount <= 0.0:
++		return
++	if BusinessSim.is_nonprofit(b):
++		b["reserve"] = float(b.get("reserve", 0.0)) + amount
++	else:
++		gs.add_money(amount)
++	if not b.is_empty() and b.has("ledger"):
++		BusinessSim.ledger_add(b, ledger_key, -amount)
++	gs.add_counter("insurance_claims", amount)
++	_stat(gs, "claims", amount)
++
++
++# --- Siniestros (ganchos) -----------------------------------------------------------------------------------
++
++## EventsSim._fires: después del incendio de cualquier edificio. `ratio` = daño; si el edificio ya no existe,
++## se destruyó (pérdida total).
++static func on_fire(gs, b: Dictionary, ratio: float, contained: bool) -> void:
++	if not GlobalEconSim.ready(gs):
++		return
++	var destroyed: bool = gs.get_building(int(b.get("id", -1))).is_empty()
++	var value := building_value(gs, b)
++	var keep := 0.9 if contained else 0.4
++	var inv_lost := inventory_value(gs, b) * (1.0 / keep - 1.0) if not destroyed else 0.0
++	var loss := value * (1.0 if destroyed else ratio) + inv_lost
++	if loss <= 0.0:
++		return
++	var ded := float(type_def("incendio").get("deductible", 0.1))
++	if gs.owned_by_player(b) and has_policy(gs, b, "incendio"):
++		var paid := _external_pay(gs, loss * (1.0 - ded))
++		_indemnify_player(gs, b, paid, "reparaciones")
++		gs.notify("Seguro de incendio: %s te pagó %s por %s (deducible %d %%)." % [external_label(), Fmt.money(paid), gs.building_label(b), int(ded * 100.0)], "jugador")
++		_log(gs, "Incendio en %s: cobraste %s." % [gs.building_label(b), Fmt.money(paid)])
++		return
++	var ins := insurer_of(gs, b)
++	if not ins.is_empty():
++		_own_claim(gs, ins, b, loss * (1.0 - ded), "incendio")
++
++
++## EventsSim._crime: robo en un negocio del jugador.
++static func on_theft(gs, b: Dictionary, loss: float) -> void:
++	if not GlobalEconSim.ready(gs) or loss <= 0.0:
++		return
++	if gs.owned_by_player(b) and has_policy(gs, b, "robo"):
++		var ded := float(type_def("robo").get("deductible", 0.15))
++		var inv_lost := inventory_value(gs, b) * (1.0 / 0.85 - 1.0)
++		var paid := _external_pay(gs, (loss + inv_lost) * (1.0 - ded))
++		_indemnify_player(gs, b, paid, "robos")
++		_log(gs, "Robo en %s: cobraste %s." % [gs.building_label(b), Fmt.money(paid)])
++
++
++## Envíos de comercio exterior: cada envío corre el riesgo una vez (bandidos, naufragio, accidente).
++static func daily(gs) -> void:
++	if not (gs.trade is Dictionary) or gs.trade.get("shipments", []).is_empty():
++		return
++	var chance := float(cfg().get("cargo_loss_chance", 0.025))
++	var list: Array = gs.trade["shipments"]
++	for s in list.duplicate():
++		if bool(s.get("ins_roll", false)):
++			continue
++		s["ins_roll"] = true
++		if GlobalEconSim.rf(gs) >= chance:
++			continue
++		list.erase(s)
++		var value := float(s.get("value", 0.0))
++		var good := TradeSim.good_label(str(s.get("good", "")))
++		var tname := str(TradeSim.town(gs, str(s.get("town_id", ""))).get("name", "otro pueblo"))
++		var what := "Se perdió en el camino un envío de %d %s %s %s (%s)." % [int(s.get("qty", 0)), good.to_lower(), "hacia" if str(s.get("kind", "")) == TradeSim.KIND_SELL else "desde", tname, Fmt.money(value)]
++		if bool(st(gs).get("cargo", false)):
++			var ded := float(type_def("carga").get("deductible", 0.1))
++			var paid := _external_pay(gs, value * (1.0 - ded))
++			gs.add_money(paid)
++			gs.add_counter("insurance_claims", paid)
++			_stat(gs, "claims", paid)
++			gs.notify(what + " El seguro de carga te pagó %s." % Fmt.money(paid), "jugador")
++			_log(gs, "Carga perdida (%s): cobraste %s." % [good, Fmt.money(paid)])
++		else:
++			gs.notify(what + " No tenías seguro de carga.", "jugador")
++			_log(gs, "Carga perdida sin seguro (%s, %s)." % [good, Fmt.money(value)])
++
++
++# --- Cierre mensual --------------------------------------------------------------------------------------
++
++static func monthly(gs) -> void:
++	init_state(gs)
++	var s := st(gs)
++	s["last_month"] = s.get("month", {})
++	s["month"] = {}
++	_collect_player_premiums(gs)
++	_crop_claims(gs)
++	for b in gs.buildings:
++		if is_insurer(gs, b) and gs.owned_by_player(b) and str(b.get("status", "")) == "activo":
++			_run_own(gs, b)
++
++
++static func _collect_player_premiums(gs) -> void:
++	var s := st(gs)
++	var pol: Dictionary = s["policies"]
++	for key in pol.keys():
++		var b: Dictionary = gs.get_building(int(key))
++		if b.is_empty() or not gs.owned_by_player(b):
++			pol.erase(key)
++			continue
++		for t in (pol[key] as Array).duplicate():
++			if not eligible(gs, b, str(t)):
++				continue
++			var p := premium(gs, b, str(t))
++			BusinessSim.pay(gs, b, p, "seguros")
++			s["ext_cash"] = external_cash(gs) + p
++			_stat(gs, "premiums", p)
++	if bool(s.get("cargo", false)):
++		var cp := cargo_premium(gs)
++		gs.add_money(-cp)
++		s["ext_cash"] = external_cash(gs) + cp
++		_stat(gs, "premiums", cp)
++
++
++## Seguro de cosecha: paga lo perdido por sequía o mal clima (no el invierno normal) en campos asegurados.
++static func _crop_claims(gs) -> void:
++	var trig := float(type_def("cosecha").get("trigger", 0.85))
++	var ev := EventsSim.mult(gs, "farming") * float(WeatherSim.weather_data(gs).get("farming", 1.0))
++	if ev >= trig:
++		return
++	var ded := float(type_def("cosecha").get("deductible", 0.2))
++	for key in st(gs).get("policies", {}):
++		var b: Dictionary = gs.get_building(int(key))
++		if b.is_empty() or not has_policy(gs, b, "cosecha") or not eligible(gs, b, "cosecha"):
++			continue
++		var product := str(gs.building_def(b).get("product", ""))
++		var out := BusinessSim.expected_output(gs, b)
++		var lost := out * (1.0 / maxf(0.1, ev) - 1.0) * 30.0 * EconomySim.market_price(gs, product)
++		if lost <= 0.0:
++			continue
++		var paid := _external_pay(gs, lost * (1.0 - ded))
++		_indemnify_player(gs, b, paid, "insumos")
++		gs.notify("Seguro de cosecha: %s te pagó %s por la mala cosecha de %s." % [external_label(), Fmt.money(paid), gs.building_label(b)], "jugador")
++		_log(gs, "Mala cosecha en %s: cobraste %s." % [gs.building_label(b), Fmt.money(paid)])
++
++
++# --- Tu aseguradora ------------------------------------------------------------------------------------------
++
++static func own_cfg() -> Dictionary:
++	return cfg().get("own", {})
++
++
++static func is_insurer(gs, b: Dictionary) -> bool:
++	return bool(gs.building_def(b).get("insurer", false))
++
++
++static func own_state(gs, b: Dictionary) -> Dictionary:
++	var own: Dictionary = st(gs).get("own", {})
++	var key := str(int(b["id"]))
++	if not own.has(key):
++		own[key] = {"rate": 1.2, "clients": [], "towns": {}, "month": {}, "last": {}, "total": {}}
++		st(gs)["own"] = own
++	return own[key]
++
++
++static func set_rate(gs, b: Dictionary, rate: float) -> void:
++	own_state(gs, b)["rate"] = clampf(rate, float(own_cfg().get("min_rate", 0.5)), float(own_cfg().get("max_rate", 2.5)))
++
++
++static func capacity(gs, b: Dictionary) -> int:
++	var n := 0
++	for c in gs.employees_of(int(b["id"])):
++		if c.job_kind == "empleo":
++			n += 1
++	return n * int(gs.level_def(b).get("clients_per_worker", 20))
++
++
++## Fracción de los posibles clientes que compran según tu tarifa (1 = prima justa × recargo normal).
++static func demand_share(rate: float) -> float:
++	var oc := own_cfg()
++	return clampf(float(oc.get("demand_base", 1.4)) - float(oc.get("demand_slope", 0.6)) * rate, 0.05, 0.9)
++
++
++## Posibles clientes locales: empresas NPC abiertas y casas de ciudadanos.
++static func _local_candidates(gs) -> Array:
++	var out := []
++	for b in gs.buildings:
++		if str(b.get("status", "")) != "activo":
++			continue
++		if NpcBusinessSim.is_npc(b) and str(b.get("npc_state", "")) == NpcBusinessSim.STATE_OPEN:
++			out.append(b)
++		elif str(b.get("owner", "")) == "ciudadano" and int(b.get("owner_id", -1)) >= 0 and str(gs.building_def(b).get("category", "")) == "vivienda":
++			out.append(b)
++	return out
++
++
++## Tu aseguradora que cubre a este edificio ({} si ninguna).
++static func insurer_of(gs, b: Dictionary) -> Dictionary:
++	var id := int(b.get("id", -1))
++	for key in st(gs).get("own", {}):
++		var o: Dictionary = st(gs)["own"][key]
++		if (o.get("clients", []) as Array).has(id):
++			var ins: Dictionary = gs.get_building(int(key))
++			if not ins.is_empty() and gs.owned_by_player(ins) and str(ins.get("status", "")) == "activo":
++				return ins
++	return {}
++
++
++## Prima justa mensual de un cliente local (antes de tu tarifa).
++static func fair_local(gs, b: Dictionary) -> float:
++	var risk := float(type_def("incendio").get("rate", 0.0011)) * (1.5 if int(b.get("level", 1)) == 1 else 1.0) * float(cfg().get("loading", 1.45))
++	var p := building_value(gs, b) * risk
++	if NpcBusinessSim.is_npc(b):
++		p += float(type_def("robo").get("base", 1.2)) * gs.price_level() * 0.5
++	return maxf(0.2 * gs.price_level(), p)
++
++
++static func fair_town(gs) -> float:
++	var v := float(own_cfg().get("town_business_value", 900)) * gs.price_mult()
++	return v * float(type_def("incendio").get("rate", 0.0011)) * 1.2 * float(cfg().get("loading", 1.45)) + float(type_def("robo").get("base", 1.2)) * gs.price_level() * 0.5
++
++
++static func _own_stat(o: Dictionary, key: String, amount: float) -> void:
++	var m: Dictionary = o.get("month", {})
++	m[key] = float(m.get(key, 0.0)) + amount
++	o["month"] = m
++	var t: Dictionary = o.get("total", {})
++	t[key] = float(t.get(key, 0.0)) + amount
++	o["total"] = t
++
++
++## Tu aseguradora paga un siniestro (sale de tu dinero, como gasto "siniestros" del negocio).
++static func _own_claim(gs, ins: Dictionary, b: Dictionary, amount: float, what: String) -> void:
++	if amount <= 0.0:
++		return
++	BusinessSim.pay(gs, ins, amount, "siniestros")
++	var o := own_state(gs, ins)
++	_own_stat(o, "claims", amount)
++	if NpcBusinessSim.is_npc(b):
++		b["reserve"] = float(b.get("reserve", 0.0)) + amount
++	else:
++		var owner: Citizen = gs.citizens.get(int(b.get("owner_id", -1)))
++		if owner != null:
++			owner.money += amount
++		else:
++			GovSim.add_treasury(gs, amount)
++	gs.notify("Tu aseguradora %s pagó %s por %s en %s." % [gs.building_label(ins), Fmt.money(amount), what, gs.building_label(b)], "negocio")
++
++
++static func _run_own(gs, ins: Dictionary) -> void:
++	var o := own_state(gs, ins)
++	o["last"] = o.get("month", {})
++	o["month"] = {}
++	var oc := own_cfg()
++	var rate := float(o.get("rate", 1.2))
++	var share := demand_share(rate)
++	var cap := capacity(gs, ins)
++	# Clientes locales: se mantienen los actuales que sigan siendo candidatos y se suman nuevos.
++	var cands := _local_candidates(gs)
++	var taken := {}
++	for key in st(gs).get("own", {}):
++		if key != str(int(ins["id"])):
++			for id in st(gs)["own"][key].get("clients", []):
++				taken[int(id)] = true
++	var cand_ids := {}
++	for b in cands:
++		if not taken.has(int(b["id"])):
++			cand_ids[int(b["id"])] = b
++	var want := mini(cap, int(round(float(cand_ids.size()) * share)))
++	var clients: Array = []
++	for id in o.get("clients", []):
++		if cand_ids.has(int(id)) and clients.size() < want:
++			clients.append(int(id))
++	var ids := cand_ids.keys()
++	ids.sort()
++	for id in ids:
++		if clients.size() >= want:
++			break
++		if not clients.has(int(id)):
++			clients.append(int(id))
++	# Primas locales: cada cliente paga (si no puede, cancela la póliza).
++	var income := 0.0
++	var kept: Array = []
++	for id in clients:
++		var b: Dictionary = cand_ids[int(id)]
++		var p := fair_local(gs, b) * rate
++		var paid := 0.0
++		if NpcBusinessSim.is_npc(b):
++			paid = NpcBusinessSim._spend(gs, b, p, "seguros", false)
++		else:
++			var owner: Citizen = gs.citizens.get(int(b.get("owner_id", -1)))
++			if owner != null and owner.money >= p:
++				owner.money -= p
++				paid = p
++		if paid >= p - 0.01:
++			kept.append(int(id))
++			income += paid
++		elif paid > 0.0:
++			income += paid
++	o["clients"] = kept
++	# Negocios de los pueblos conectados (resumidos).
++	var left := maxi(0, cap - kept.size())
++	var towns := {}
++	var fair_t := fair_town(gs) * rate
++	for c in TradeSim.connected_towns(gs):
++		if left <= 0:
++			break
++		var tid := str(c.get("town_id", c.get("id", "")))
++		var t := TradeSim.town(gs, tid)
++		if t.is_empty():
++			continue
++		var n := mini(left, int(round(float(TownEconomySim.total_businesses(t)) * share * float(oc.get("town_share", 0.5)))))
++		n = mini(n, int(floorf(maxf(0.0, float(t.get("cash", 0.0))) * 0.05 / maxf(0.01, fair_t))))
++		if n <= 0:
++			continue
++		var p := n * fair_t
++		t["cash"] = float(t.get("cash", 0.0)) - p
++		income += p
++		towns[tid] = n
++		left -= n
++	o["towns"] = towns
++	if income > 0.0:
++		BusinessSim.earn(gs, ins, income, "ventas")
++		_own_stat(o, "premiums", income)
++	# Siniestros estadísticos: robos en empresas NPC clientes y siniestros en los pueblos.
++	var crime := float(gs.problems.get("crime", 0.0))
++	var ded := float(type_def("robo").get("deductible", 0.15))
++	for id in kept:
++		var b: Dictionary = gs.get_building(int(id))
++		if b.is_empty() or not NpcBusinessSim.is_npc(b):
++			continue
++		if GlobalEconSim.rf(gs) < float(oc.get("npc_theft_chance", 0.08)) * (0.3 + crime / 40.0):
++			var loss := (5.0 + GlobalEconSim.rf(gs) * 25.0) * gs.price_level()
++			_own_claim(gs, ins, b, loss * (1.0 - ded), "un robo")
++	var fire_p := float(GameData.events.get("fire", {}).get("base_monthly", 0.004)) * 1.2
++	var value_t := float(oc.get("town_business_value", 900)) * gs.price_mult()
++	for tid in towns:
++		var t := TradeSim.town(gs, str(tid))
++		var claims := 0.0
++		for i in range(mini(int(towns[tid]), 400)):
++			if GlobalEconSim.rf(gs) >= fire_p:
++				continue
++			var ratio := 1.0 if GlobalEconSim.rf(gs) < float(oc.get("total_loss_chance", 0.2)) else 0.1 + GlobalEconSim.rf(gs) * 0.2
++			claims += value_t * ratio * (1.0 - float(type_def("incendio").get("deductible", 0.1)))
++		if claims > 0.0:
++			BusinessSim.pay(gs, ins, claims, "siniestros")
++			_own_stat(o, "claims", claims)
++			t["cash"] = float(t.get("cash", 0.0)) + claims
++			gs.notify("Tu aseguradora pagó %s por incendios en %s." % [Fmt.money(claims), str(t.get("name", ""))], "negocio")
++
++
++static func own_clients(gs, b: Dictionary) -> int:
++	var o := own_state(gs, b)
++	var n: int = (o.get("clients", []) as Array).size()
++	for t in o.get("towns", {}):
++		n += int(o["towns"][t])
++	return n
++
++
++# --- Interfaz --------------------------------------------------------------------------------------------
++
++static func panel_lines(gs, b: Dictionary) -> String:
++	if not gs.owned_by_player(b):
++		var ins := insurer_of(gs, b)
++		return "Asegurado por tu aseguradora %s\n" % gs.building_label(ins) if not ins.is_empty() else ""
++	var s := ""
++	if is_insurer(gs, b):
++		var o := own_state(gs, b)
++		var last: Dictionary = o.get("last", {})
++		s += "Aseguradora: %d clientes (cupo %d) · tarifa ×%.2f · mes anterior: primas %s, siniestros %s\n" % [own_clients(gs, b), capacity(gs, b), float(o.get("rate", 1.2)),
++			Fmt.money(float(last.get("premiums", 0.0))), Fmt.money(float(last.get("claims", 0.0)))]
++	var pol := policies_of(gs, b)
++	if not pol.is_empty():
++		var parts := []
++		var total := 0.0
++		for t in pol:
++			parts.append(type_label(str(t)).to_lower())
++			total += premium(gs, b, str(t))
++		s += "Seguros: %s (prima %s/mes)\n" % [", ".join(parts), Fmt.money2(total)]
++	elif eligible(gs, b, "incendio"):
++		s += "[color=#aaa]Sin seguro (ver Economía mundial → Seguros)[/color]\n"
++	return s
+diff --git a/scripts/sim/loan_contract.gd b/scripts/sim/loan_contract.gd
+index bedf0ab..36afd82 100644
+--- a/scripts/sim/loan_contract.gd
++++ b/scripts/sim/loan_contract.gd
+@@ -28,7 +28,7 @@ static func type_desc(t: String) -> String:
+ 
+ 
+ static func era_rate_add(gs) -> float:
+-	return float(cfg().get("era_rate_add", {}).get(str(gs.era()), 0.0))
++	return float(cfg().get("era_rate_add", {}).get(str(gs.era()), 0.0)) + GlobalEconSim.credit_rate_add(gs)   # Ciclo económico.
+ 
+ 
+ # --- Tabla de amortización ------------------------------------------------------------------
+diff --git a/scripts/sim/market_sim.gd b/scripts/sim/market_sim.gd
+index 6092dd6..313d8cb 100644
+--- a/scripts/sim/market_sim.gd
++++ b/scripts/sim/market_sim.gd
+@@ -51,11 +51,12 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
+ 		if left <= 0.0001:
+ 			break
+ 		var price := float(b["price"])
+-		if price > willing:
++		var am := QualitySim.accept_mult(gs, b)   # Economía global: calidad y marca suben el precio aceptado.
++		if price > willing * am:
+ 			continue
+ 		# Demanda elástica: por encima del precio de referencia compran menos (la publicidad ayuda).
+ 		var ad := AdvertisingSim.demand_mult(gs, b)
+-		if price > ref_price and gs.rng.randf() < (price / ref_price - 1.0) / (willing / ref_price - 1.0) / ad:
++		if price > ref_price * am and gs.rng.randf() < (price / (ref_price * am) - 1.0) / (willing / ref_price - 1.0) / ad:
+ 			continue
+ 		var inv: Dictionary = b["inventory"]
+ 		var stock := float(inv.get(good, 0.0))
+@@ -77,7 +78,7 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
+ 	var quality := 1.0
+ 	var g: Dictionary = GameData.goods.get(good, {})
+ 	if left > 0.0001:
+-		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs)
++		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs) * GlobalEconSim.import_fx_mult(gs)   # Tipo de cambio.
+ 		var well := good == WaterSim.GOOD   # Redes: el agua del pozo comunitario es gratis (no se importa).
+ 		if employed and imp > 0.0 and not well and PopulationSim.pay_with(gs, payers, left * imp):
+ 			imported = left  # El dinero sale del pueblo.
+@@ -101,7 +102,7 @@ static func discretionary(gs) -> void:
+ 	ShopSim.weekly(gs)   # Economía real: deseos de los vecinos en tus comercios especializados.
+ 	var cfg: Dictionary = GameData.citizens.get("discretionary", {})
+ 	var buffer_days := float(cfg.get("buffer_days", 45))
+-	var share := float(cfg.get("weekly_share", 0.06)) * EventsSim.mult(gs, "discretionary")
++	var share := float(cfg.get("weekly_share", 0.06)) * EventsSim.mult(gs, "discretionary") * GlobalEconSim.demand_mult(gs)   # Ciclo económico.
+ 	var need_day := 0.0
+ 	for n in GameData.citizens.get("needs", {}).values():
+ 		need_day += float(n.get("cost", 0.1))
+diff --git a/scripts/sim/quality_sim.gd b/scripts/sim/quality_sim.gd
+new file mode 100644
+index 0000000..52ce1d1
+--- /dev/null
++++ b/scripts/sim/quality_sim.gd
+@@ -0,0 +1,271 @@
++class_name QualitySim
++extends RefCounted
++## Economía global — calidad de producto y reputación de marca (ver docs/ECONOMIA_GLOBAL.md).
++##
++## Calidad (0,4–1,8; 1 = normal) = media geométrica ponderada de cinco factores:
++##   Q = L^0,30 × T^0,20 × M^0,15 × S^0,25 × I^0,10
++##   L  nivel del edificio      = (0,85 + 0,15 × (nivel − 1)) × calidad del nivel (datos)
++##   T  tecnología              = 0,85 + 0,10 × (época − 1) + 0,6 × (bono de producción del bien − 1)
++##   M  maquinaria y mejoras    = (1 + 0,10 × mejoras de calidad compradas) × 1,10 si el nivel usa maquinaria o
++##                                electricidad (× cobertura eléctrica)
++##   S  personal                = productividad media de los empleados (habilidad, experiencia, estudios, salud)
++##   I  insumos                 = calidad media de lo que produces de cada insumo de la receta (1 si se compra fuera)
++## Marca (0–100, empieza en 50), una por empresa (edificio productor, tuyo o NPC). Cada mes:
++##   marca += 6 × (Q − 1) + 0,3 si vendió (−0,5 si no vendió) − 5 por cada incumplimiento de contrato del bien
++##   y se acerca un 3 % a 50 (hay que sostener la calidad).
++## Precio aceptado: los clientes toleran hasta × accept_mult = 1 + 0,3 × (Q − 1) + 0,2 × (marca − 50) / 50
++##   (entre 0,85 y 1,3). Gancho en MarketSim.purchase y ShopSim._buy.
++## Estado: gs.world_econ["brand"] = {id: {q, rep, am, upg, parts}}, ["q_by_good"], ["breach_seen"].
++
++const NON_GOODS := ["", "construccion", "credito", "servicio", "investigacion", "educacion", "transporte", "entrada", "alojamiento", "publicidad", "comercio"]
++
++
++static func cfg() -> Dictionary:
++	return GlobalEconSim.cfg().get("quality", {})
++
++
++static func init_state(gs) -> void:
++	var w: Dictionary = gs.world_econ
++	for k in ["brand", "q_by_good", "breach_seen"]:
++		if not w.has(k) or not (w[k] is Dictionary):
++			w[k] = {}
++
++
++static func _entry(gs, b: Dictionary) -> Dictionary:
++	var br: Dictionary = gs.world_econ.get("brand", {})
++	var key := str(int(b.get("id", -1)))
++	if not br.has(key):
++		br[key] = {"q": 1.0, "rep": float(cfg().get("brand", {}).get("start", 50.0)), "am": 1.0, "upg": 0, "parts": {}}
++		gs.world_econ["brand"] = br
++	return br[key]
++
++
++## Negocios que fabrican o venden algo con marca: tuyos o de empresarios NPC.
++static func is_producer(gs, b: Dictionary) -> bool:
++	if not (gs.owned_by_player(b) or NpcBusinessSim.is_npc(b)):
++		return false
++	var def: Dictionary = gs.building_def(b)
++	if str(def.get("category", "")) != "negocio":
++		return false
++	return not (str(def.get("product", "")) in NON_GOODS) or bool(def.get("shop", false))
++
++
++static func _mechanized(def: Dictionary, ld: Dictionary) -> bool:
++	var ins: Dictionary = ld.get("inputs", def.get("inputs", {}))
++	for g in ["maquinaria", "motor", "herramientas"]:
++		if ins.has(g):
++			return true
++	return EnergySim.level_power(def, ld) > 0.0 or bool(ld.get("requires_power", false))
++
++
++## Factores de la calidad de un negocio: {level, tech, machines, staff, inputs, q}.
++static func components(gs, b: Dictionary) -> Dictionary:
++	var def: Dictionary = gs.building_def(b)
++	var ld: Dictionary = gs.level_def(b)
++	var product := str(def.get("product", ""))
++	var lvl := int(b.get("level", 1))
++	var L := clampf((0.85 + 0.15 * float(lvl - 1)) * float(ld.get("quality", 1.0)), 0.5, 2.0)
++	var T := clampf(0.85 + 0.1 * float(gs.era() - 1) + 0.6 * (TechSim.mult(gs, "production", product) - 1.0), 0.7, 1.5)
++	var upg := int(_entry(gs, b).get("upg", 0)) if gs.world_econ is Dictionary and gs.world_econ.has("brand") else 0
++	var M := 1.0 + float(cfg().get("upgrade_step", 0.1)) * float(upg)
++	if _mechanized(def, ld):
++		M *= 1.1 * (0.85 + 0.15 * clampf(EnergySim.factor(gs, b), 0.0, 1.0))
++	var skill := str(def.get("skill", ""))
++	var total := 0.0
++	var n := 0
++	for c in gs.employees_of(int(b["id"])):
++		if c.job_kind == "empleo" or c.job_kind == "dueño":
++			total += BusinessSim.productivity(c, skill)
++			n += 1
++	var S := clampf(total / float(n), 0.5, 1.5) if n > 0 else 0.8
++	var ins: Dictionary = ld.get("inputs", def.get("inputs", {}))
++	var I := 1.0
++	if not ins.is_empty():
++		var qg: Dictionary = gs.world_econ.get("q_by_good", {}) if gs.world_econ is Dictionary else {}
++		var s := 0.0
++		for g in ins:
++			s += float(qg.get(str(g), 1.0)) if gs.owned_by_player(b) else 1.0
++		I = clampf(s / float(ins.size()), 0.5, 1.6)
++	var w: Dictionary = cfg().get("weights", {})
++	var lq := float(w.get("level", 0.3)) * log(L) + float(w.get("tech", 0.2)) * log(T) + float(w.get("machines", 0.15)) * log(M) \
++		+ float(w.get("staff", 0.25)) * log(S) + float(w.get("inputs", 0.1)) * log(I)
++	var q := clampf(exp(lq), 0.4, 1.8)
++	return {"level": L, "tech": T, "machines": M, "staff": S, "inputs": I, "q": q}
++
++
++## Calidad actual (calculada al cierre de mes; si aún no hay, se calcula ahora).
++static func quality(gs, b: Dictionary) -> float:
++	if not GlobalEconSim.ready(gs):
++		return 1.0
++	var br: Dictionary = gs.world_econ.get("brand", {})
++	var e: Dictionary = br.get(str(int(b.get("id", -1))), {})
++	if e.has("parts") and not (e["parts"] as Dictionary).is_empty():
++		return float(e.get("q", 1.0))
++	return float(components(gs, b)["q"])
++
++
++static func brand(gs, b: Dictionary) -> float:
++	if not GlobalEconSim.ready(gs):
++		return 50.0
++	var e: Dictionary = gs.world_econ.get("brand", {}).get(str(int(b.get("id", -1))), {})
++	return float(e.get("rep", cfg().get("brand", {}).get("start", 50.0)))
++
++
++static func compute_accept(q: float, rep: float) -> float:
++	var ac: Dictionary = cfg().get("accept", {})
++	return clampf(1.0 + float(ac.get("quality_weight", 0.3)) * (q - 1.0) + float(ac.get("brand_weight", 0.2)) * (rep - 50.0) / 50.0,
++		float(ac.get("min", 0.85)), float(ac.get("max", 1.3)))
++
++
++## Cuánto más (o menos) aceptan pagar los clientes a este negocio por su calidad y marca (1 = igual).
++## Rápido: usa el valor guardado al cierre de mes (se llama en cada compra).
++static func accept_mult(gs, b: Dictionary) -> float:
++	var w = gs.world_econ
++	if not (w is Dictionary) or not w.has("brand"):
++		return 1.0
++	var e = w["brand"].get(str(int(b.get("id", -1))))
++	if e == null:
++		return 1.0
++	return float(e.get("am", 1.0))
++
++
++## Recalcula la calidad y la marca de un negocio (y su precio aceptado).
++static func refresh(gs, b: Dictionary) -> Dictionary:
++	var e := _entry(gs, b)
++	var parts := components(gs, b)
++	e["q"] = float(parts["q"])
++	e["parts"] = parts
++	e["am"] = compute_accept(float(e["q"]), float(e.get("rep", 50.0)))
++	return e
++
++
++# --- Mejoras de calidad (control de calidad, maquinaria fina) ------------------------------------------
++
++static func upgrade_cost(gs, b: Dictionary) -> float:
++	return float(gs.level_def(b).get("cost", 300)) * gs.price_mult() * float(cfg().get("upgrade_cost_ratio", 0.2)) * (1.0 + 0.5 * float(int(_entry(gs, b).get("upg", 0))))
++
++
++static func upgrade_block_reason(gs, b: Dictionary) -> String:
++	if not gs.owned_by_player(b) or not is_producer(gs, b):
++		return "Solo en tus negocios que producen o venden."
++	if int(_entry(gs, b).get("upg", 0)) >= int(cfg().get("max_upgrades", 3)):
++		return "Ya tiene todas las mejoras de calidad."
++	var cost := upgrade_cost(gs, b)
++	if gs.money < cost:
++		return "Necesitas %s." % Fmt.money(cost)
++	return ""
++
++
++## Compra una mejora de calidad (maquinaria fina y control de calidad). El dinero va a proveedores
++## del pueblo (artesanos desempleados) si los hay; si no, sale del pueblo como una importación.
++static func buy_upgrade(gs, b: Dictionary) -> String:
++	var why := upgrade_block_reason(gs, b)
++	if why != "":
++		return why
++	var cost := upgrade_cost(gs, b)
++	gs.add_money(-cost)
++	BusinessSim.ledger_add(b, "obras", cost)
++	GlobalEconSim.pay_local(gs, cost)
++	var e := _entry(gs, b)
++	e["upg"] = int(e.get("upg", 0)) + 1
++	refresh(gs, b)
++	gs.notify("Mejoraste la calidad de %s (maquinaria fina y control de calidad): calidad %.2f." % [gs.building_label(b), float(e["q"])], "negocio")
++	return ""
++
++
++# --- Cierre mensual --------------------------------------------------------------------------------------
++
++static func monthly(gs) -> void:
++	init_state(gs)
++	var bc: Dictionary = cfg().get("brand", {})
++	var breaches := _breaches_by_good(gs)
++	var sums := {}
++	var alive := {}
++	for b in gs.buildings:
++		if not is_producer(gs, b) or str(b.get("status", "")) == "construccion":
++			continue
++		alive[str(int(b["id"]))] = true
++		var e := _entry(gs, b)
++		var parts := components(gs, b)
++		var q := float(parts["q"])
++		e["q"] = q
++		e["parts"] = parts
++		var rep := float(e.get("rep", 50.0))
++		var sold := BusinessSim.period_value(b, "last_month", "ventas") > 0.0
++		rep += float(bc.get("quality_weight", 6.0)) * (q - 1.0)
++		rep += float(bc.get("sales_bonus", 0.3)) if sold else float(bc.get("no_sales", -0.5))
++		var product := str(gs.building_def(b).get("product", ""))
++		if gs.owned_by_player(b):
++			rep += float(bc.get("breach", -5.0)) * float(breaches.get(product, 0))
++			var sm: Array = sums.get(product, [0.0, 0])
++			sums[product] = [float(sm[0]) + q, int(sm[1]) + 1]
++		rep += (50.0 - rep) * float(bc.get("drift", 0.03))
++		e["rep"] = clampf(rep, 0.0, 100.0)
++		e["am"] = compute_accept(q, float(e["rep"]))
++	var qg := {}
++	for g in sums:
++		qg[g] = float(sums[g][0]) / maxf(1.0, float(sums[g][1]))
++	gs.world_econ["q_by_good"] = qg
++	var br: Dictionary = gs.world_econ["brand"]
++	for k in br.keys():
++		if not alive.has(k) and gs.get_building(int(k)).is_empty():
++			br.erase(k)
++
++
++## Incumplimientos NUEVOS del jugador en contratos, por bien (desde el último cierre).
++static func _breaches_by_good(gs) -> Dictionary:
++	var out := {}
++	var seen: Dictionary = gs.world_econ.get("breach_seen", {})
++	var now := {}
++	for k in gs.market.get("contracts", []):
++		if not (k is Dictionary) or not k.has("id"):
++			continue
++		var key := str(k["id"])
++		var failed := int(k.get("failed", 0))
++		now[key] = failed
++		var delta := failed - int(seen.get(key, 0))
++		if delta > 0:
++			var g := str(k.get("good", ""))
++			out[g] = int(out.get(g, 0)) + delta
++	gs.world_econ["breach_seen"] = now
++	return out
++
++
++# --- Interfaz --------------------------------------------------------------------------------------------
++
++static func quality_label(q: float) -> String:
++	if q >= 1.3:
++		return "excelente"
++	if q >= 1.1:
++		return "buena"
++	if q >= 0.9:
++		return "normal"
++	if q >= 0.7:
++		return "regular"
++	return "mala"
++
++
++static func brand_label(rep: float) -> String:
++	if rep >= 80.0:
++		return "marca prestigiosa"
++	if rep >= 60.0:
++		return "marca conocida"
++	if rep >= 40.0:
++		return "marca corriente"
++	return "marca desprestigiada"
++
++
++static func panel_lines(gs, b: Dictionary) -> String:
++	if not is_producer(gs, b):
++		return ""
++	var e := _entry(gs, b)
++	var p: Dictionary = e.get("parts", {})
++	if p.is_empty():
++		p = components(gs, b)
++	var q := float(p["q"])
++	var rep := float(e.get("rep", 50.0))
++	var am := compute_accept(q, rep)
++	var s := "Calidad: [b]%.2f[/b] (%s) · Marca: %d/100 (%s) · Precio aceptado ×%.2f\n" % [q, quality_label(q), int(rep), brand_label(rep), am]
++	s += "[color=#aaa]Calidad = nivel %.2f^0,30 × tecnología %.2f^0,20 × maquinaria/mejoras %.2f^0,15 × personal %.2f^0,25 × insumos %.2f^0,10[/color]\n" % [
++		float(p["level"]), float(p["tech"]), float(p["machines"]), float(p["staff"]), float(p["inputs"])]
++	return s
+diff --git a/scripts/sim/realestate_sim.gd b/scripts/sim/realestate_sim.gd
+index d743f62..fbd8ffe 100644
+--- a/scripts/sim/realestate_sim.gd
++++ b/scripts/sim/realestate_sim.gd
+@@ -127,7 +127,7 @@ static func cap_rate(gs) -> float:
+ static func value_total(gs, level: int, tier: String) -> float:
+ 	var pc := pricing_cfg()
+ 	return replacement_cost(gs, level, tier) * (1.0 + float(pc.get("developer_margin", 0.24))) * demand(gs) \
+-		* float(pc.get("era_value_mult", {}).get(str(gs.era()), 1.0))
++		* float(pc.get("era_value_mult", {}).get(str(gs.era()), 1.0)) * GlobalEconSim.property_mult(gs)   # Ciclo económico.
+ 
+ 
+ static func _floor_factor(floor: int) -> float:
+diff --git a/scripts/sim/shop_sim.gd b/scripts/sim/shop_sim.gd
+index 8c9e801..53120ef 100644
+--- a/scripts/sim/shop_sim.gd
++++ b/scripts/sim/shop_sim.gd
+@@ -220,7 +220,7 @@ static func _buy(gs, c, w: Dictionary, qty: float, ctx: Dictionary, nd: float, s
+ 		var b: Dictionary = opt[1]
+ 		var price: float = opt[2]
+ 		var q: float = opt[3]
+-		var mkt := EconomySim.market_price(gs, g)
++		var mkt := EconomySim.market_price(gs, g) * QualitySim.accept_mult(gs, b)   # Economía global: calidad y marca.
+ 		if mkt <= 0.0 or price > mkt * willing:
+ 			continue
+ 		# Demanda elástica: por encima del mercado compran menos (la publicidad ayuda).
+diff --git a/scripts/sim/stock_sim.gd b/scripts/sim/stock_sim.gd
+new file mode 100644
+index 0000000..0f74be1
+--- /dev/null
++++ b/scripts/sim/stock_sim.gd
+@@ -0,0 +1,1020 @@
++class_name StockSim
++extends RefCounted
++## Economía global — bolsa de valores mundial (ver docs/ECONOMIA_GLOBAL.md).
++##
++## - Se desbloquea en la Revolución industrial (época 2) y cuando el gobierno aprueba la Ley de Mercado
++##   de Valores (la propone el jugador o la crea el propio gobierno; GovSim.monthly → review_law).
++## - Tu empresa (todos tus negocios con fines de lucro) puede convertirse en S.A. con acciones. Emitir
++##   acciones trae capital: lo pagan ciudadanos con ahorros y las cajas de los pueblos vecinos
++##   (economía cerrada: el dinero cambia de manos, no aparece).
++## - Empresas NPC grandes salen a bolsa (el fundador vende parte a los ahorradores) y hay empresas de
++##   otros países, resumidas, que cotizan en su moneda (se muestran convertidas a la tuya).
++## - Precio: se acerca al valor fundamental (ganancias × P/G del ciclo, con piso en el patrimonio) más
++##   la presión de compras y ventas y un ruido moderado (tope ±15 %/mes).
++## - Dividendos mensuales. Compra hostil: si otro acumula más del 50 % de tu S.A., pierdes el control
++##   (reparte el 70 % de las ganancias y no puedes emitir). Defensa: recomprar acciones (se retiran).
++## Titulares: "p" jugador, "c:<id>" ciudadano, "t:<id>" pueblo vecino, "g" Estado, "w" inversores del
++## resto del mundo (solo empresas extranjeras). Estado: gs.world_econ["stock"].
++
++const PLAYER := "p"
++const WORLD := "w"
++const STATE := "g"
++
++
++static func cfg() -> Dictionary:
++	return GlobalEconSim.cfg().get("stock", {})
++
++
++static func init_state(gs) -> void:
++	var w: Dictionary = gs.world_econ
++	if not w.has("stock") or not (w["stock"] is Dictionary):
++		w["stock"] = {}
++	var s: Dictionary = w["stock"]
++	if not s.has("law"):
++		s["law"] = {"status": "none", "decide_day": -1, "retry_day": -1, "approved_day": -1, "by": ""}
++	if not s.has("companies"):
++		s["companies"] = {}
++	if not s.has("next_id"):
++		s["next_id"] = 1
++	if not s.has("world_cash"):
++		s["world_cash"] = float(cfg().get("world_cash", 1000000.0))
++	if not s.has("log"):
++		s["log"] = []
++
++
++static func st(gs) -> Dictionary:
++	return gs.world_econ.get("stock", {})
++
++
++static func companies(gs) -> Dictionary:
++	return st(gs).get("companies", {})
++
++
++static func company(gs, cid: String) -> Dictionary:
++	return companies(gs).get(cid, {})
++
++
++static func world_cash(gs) -> float:
++	return float(st(gs).get("world_cash", 0.0))
++
++
++static func _log(gs, text: String) -> void:
++	var l: Array = st(gs).get("log", [])
++	l.append({"date": TimeManager.date_string(false), "text": text})
++	while l.size() > 40:
++		l.pop_front()
++	st(gs)["log"] = l
++
++
++# --- Ley y desbloqueo -------------------------------------------------------------------------------
++
++static func law(gs) -> Dictionary:
++	return st(gs).get("law", {})
++
++
++static func law_approved(gs) -> bool:
++	return str(law(gs).get("status", "none")) == "approved"
++
++
++static func era_ok(gs) -> bool:
++	return gs.era() >= int(cfg().get("unlock_era", 2))
++
++
++static func unlocked(gs) -> bool:
++	return GlobalEconSim.ready(gs) and era_ok(gs) and law_approved(gs)
++
++
++static func block_reason(gs) -> String:
++	if not GlobalEconSim.ready(gs):
++		return "La economía global no está iniciada."
++	if not era_ok(gs):
++		return "La bolsa de valores llega con la Revolución industrial."
++	match str(law(gs).get("status", "none")):
++		"approved":
++			return ""
++		"study":
++			return "El gobierno estudia la Ley de Mercado de Valores (decide hacia el %s)." % TimeManager.date_from_day(int(law(gs)["decide_day"]), TimeManager.start_year())
++	return "El gobierno aún no autoriza la bolsa: propón la Ley de Mercado de Valores."
++
++
++static func law_cost(gs) -> float:
++	return float(cfg().get("law", {}).get("propose_cost", 350)) * gs.price_mult()
++
++
++## Probabilidad de que el gobierno actual apruebe la ley (liberales sí, gobiernos sociales menos).
++static func approval_chance(gs) -> float:
++	var lc: Dictionary = cfg().get("law", {})
++	var social := float(GovSim.policy(gs).get("social", 0.5))
++	var ch := float(lc.get("base_chance", 0.5)) + (0.2 - social) * float(lc.get("social_weight", 0.5))
++	ch += minf(0.3, PoliticsSim.influence(gs) * float(lc.get("influence_weight", 0.1)))
++	return clampf(ch, float(lc.get("min_chance", 0.15)), float(lc.get("max_chance", 0.9)))
++
++
++static func propose_block_reason(gs) -> String:
++	if not era_ok(gs):
++		return "Solo desde la Revolución industrial."
++	var l := law(gs)
++	match str(l.get("status", "none")):
++		"approved":
++			return "La ley ya está aprobada."
++		"study":
++			return "El gobierno ya la está estudiando."
++	if gs.today() < int(l.get("retry_day", -1)):
++		return "El gobierno la rechazó hace poco: podrás volver a proponerla el %s." % TimeManager.date_from_day(int(l["retry_day"]), TimeManager.start_year())
++	if gs.money < law_cost(gs):
++		return "Necesitas %s para los estudios y el trámite." % Fmt.money(law_cost(gs))
++	return ""
++
++
++## El jugador propone la Ley de Mercado de Valores: paga los estudios (al tesoro) y el gobierno decide.
++static func propose_law(gs) -> String:
++	var why := propose_block_reason(gs)
++	if why != "":
++		return why
++	var cost := law_cost(gs)
++	gs.add_money(-cost)
++	GovSim.add_treasury(gs, cost)
++	var days: Array = cfg().get("law", {}).get("review_days", [30, 60])
++	var l := law(gs)
++	l["status"] = "study"
++	l["decide_day"] = gs.today() + GlobalEconSim.ri(gs, int(days[0]), int(days[1]))
++	l["by"] = "jugador"
++	gs.notify("Propusiste la Ley de Mercado de Valores. El gobierno (%s) la estudia; probabilidad de aprobarla: %d %%." % [str(GovSim.policy(gs).get("label", "")), int(approval_chance(gs) * 100.0)], "jugador")
++	return ""
++
++
++static func approve_law(gs, by := "gobierno") -> void:
++	var l := law(gs)
++	l["status"] = "approved"
++	l["approved_day"] = gs.today()
++	l["by"] = by
++	_ensure_foreign(gs)
++	gs.notify("El gobierno aprobó la Ley de Mercado de Valores: abre la BOLSA DE VALORES. Puedes convertir tu empresa en S.A., emitir acciones y comprar acciones de empresas del país y del mundo.", "importante")
++
++
++## GovSim.monthly: decide la ley en estudio; en la época industrial el gobierno también puede crearla solo.
++static func review_law(gs) -> void:
++	var l := law(gs)
++	var status := str(l.get("status", "none"))
++	if status == "study" and gs.today() >= int(l.get("decide_day", 0)):
++		if GlobalEconSim.rf(gs) < approval_chance(gs):
++			approve_law(gs, "jugador")
++		else:
++			l["status"] = "rejected"
++			l["retry_day"] = gs.today() + int(cfg().get("law", {}).get("retry_days", 180))
++			gs.notify("El gobierno rechazó la Ley de Mercado de Valores. Podrás proponerla de nuevo más adelante (o esperar otro gobierno).", "jugador")
++	elif status != "approved" and status != "study" and era_ok(gs):
++		var ch := float(cfg().get("law", {}).get("gov_monthly_chance", {}).get(str(gs.era()), 0.0))
++		if ch > 0.0 and GlobalEconSim.rf(gs) < ch:
++			approve_law(gs, "gobierno")
++
++
++# --- Titulares y dinero ------------------------------------------------------------------------------
++
++static func holding(co: Dictionary, key: String) -> int:
++	return int(co.get("holders", {}).get(key, 0))
++
++
++static func stake(co: Dictionary, key: String) -> float:
++	return float(holding(co, key)) / maxf(1.0, float(co.get("shares", 1)))
++
++
++static func _add_holding(co: Dictionary, key: String, n: int) -> void:
++	var h: Dictionary = co.get("holders", {})
++	var v := int(h.get(key, 0)) + n
++	if v <= 0:
++		h.erase(key)
++	else:
++		h[key] = v
++	co["holders"] = h
++
++
++static func holder_label(gs, key: String) -> String:
++	if key == PLAYER:
++		return "Tú"
++	if key == STATE:
++		return "el Estado"
++	if key == WORLD:
++		return "inversores extranjeros"
++	if key.begins_with("c:"):
++		return gs.person_name(int(key.substr(2)))
++	if key.begins_with("t:"):
++		return "inversores de %s" % str(TradeSim.town(gs, key.substr(2)).get("name", "otro pueblo"))
++	return key
++
++
++## Cobra a un titular. Devuelve lo cobrado (lo que tenga).
++static func _debit(gs, key: String, amount: float) -> float:
++	if amount <= 0.0:
++		return 0.0
++	if key == PLAYER:
++		gs.add_money(-amount)
++		return amount
++	if key == WORLD:
++		st(gs)["world_cash"] = world_cash(gs) - amount
++		return amount
++	if key == STATE:
++		return GovSim.treasury_pay(gs, amount)
++	if key.begins_with("c:"):
++		var c: Citizen = gs.citizens.get(int(key.substr(2)))
++		if c == null:
++			return 0.0
++		var take := minf(maxf(0.0, c.money), amount)
++		c.money -= take
++		return take
++	if key.begins_with("t:"):
++		var t := TradeSim.town(gs, key.substr(2))
++		if t.is_empty():
++			return 0.0
++		var take := minf(maxf(0.0, float(t.get("cash", 0.0))), amount)
++		t["cash"] = float(t.get("cash", 0.0)) - take
++		return take
++	return 0.0
++
++
++static func _credit(gs, key: String, amount: float) -> void:
++	if amount <= 0.0:
++		return
++	if key == PLAYER:
++		gs.add_money(amount)
++	elif key == WORLD:
++		st(gs)["world_cash"] = world_cash(gs) + amount
++	elif key.begins_with("c:") and gs.citizens.has(int(key.substr(2))):
++		gs.citizens[int(key.substr(2))].money += amount
++	elif key.begins_with("t:") and not TradeSim.town(gs, key.substr(2)).is_empty():
++		var t := TradeSim.town(gs, key.substr(2))
++		t["cash"] = float(t.get("cash", 0.0)) + amount
++	else:
++		GovSim.add_treasury(gs, amount)
++
++
++## Ahorradores dispuestos a invertir: [{key, cap}] (ciudadanos con ahorros de sobra y pueblos vecinos).
++static func investors(gs, exclude: Dictionary = {}) -> Array:
++	var out := []
++	var nd := ShopSim.need_day(gs)
++	var buffer := nd * float(cfg().get("investor_buffer_days", 60))
++	var share := float(cfg().get("investor_share", 0.25))
++	var today: int = gs.today()
++	var adult := int(GameData.citizens.get("adult_age", 16))
++	var ids: Array = gs.citizens.keys()
++	ids.sort()
++	for id in ids:
++		var c: Citizen = gs.citizens[id]
++		var key := "c:%d" % c.id
++		if exclude.has(key) or gs.is_player(c.id) or c.age_years(today) < adult or c.prison_until >= 0:
++			continue
++		if NpcBusinessSim._player_family(gs, c):
++			continue
++		var cap: float = (c.money - buffer) * share
++		if cap > 1.0:
++			out.append({"key": key, "cap": cap})
++	for t in TradeSim.towns(gs):
++		var key := "t:%s" % str(t["id"])
++		if exclude.has(key):
++			continue
++		var cap := maxf(0.0, float(t.get("cash", 0.0))) * float(cfg().get("town_invest_share", 0.04))
++		if cap > 1.0:
++			out.append({"key": key, "cap": cap})
++	return out
++
++
++static func investor_capacity(gs, exclude: Dictionary = {}) -> float:
++	var total := 0.0
++	for inv in investors(gs, exclude):
++		total += float(inv["cap"])
++	return total
++
++
++## Reparte hasta `qty` acciones entre los inversionistas al precio `unit`. Cobra a cada uno.
++## Devuelve {shares, money, buyers: {key: n}}.
++static func _place(gs, qty: int, unit: float, exclude: Dictionary) -> Dictionary:
++	var invs := investors(gs, exclude)
++	var total_cap := 0.0
++	for inv in invs:
++		total_cap += float(inv["cap"])
++	var out := {"shares": 0, "money": 0.0, "buyers": {}}
++	if qty <= 0 or unit <= 0.0 or total_cap < unit:
++		return out
++	var want := mini(qty, int(floorf(total_cap / unit)))
++	invs.sort_custom(func(a, b): return float(a["cap"]) > float(b["cap"]))
++	var left := want
++	for inv in invs:
++		if left <= 0:
++			break
++		var n := mini(left, int(floorf(float(inv["cap"]) / unit)))
++		n = mini(n, maxi(1, int(ceilf(float(want) * float(inv["cap"]) / total_cap))))
++		if n <= 0:
++			continue
++		var paid := _debit(gs, str(inv["key"]), n * unit)
++		var got := int(floorf(paid / unit + 0.0001))
++		if got < n:
++			_credit(gs, str(inv["key"]), paid - got * unit)   # Devuelve lo que no alcanzó.
++		if got <= 0:
++			continue
++		out["buyers"][str(inv["key"])] = got
++		out["shares"] = int(out["shares"]) + got
++		out["money"] = float(out["money"]) + got * unit
++		left -= got
++	return out
++
++
++## Compra `qty` acciones a los titulares (salvo los excluidos), a prorrata. Paga `buyer_key`.
++## Devuelve {shares, money, sellers: {key: n}}.
++static func _take_from_holders(gs, co: Dictionary, qty: int, unit: float, exclude: Dictionary, buyer_key: String) -> Dictionary:
++	var out := {"shares": 0, "money": 0.0, "sellers": {}}
++	var h: Dictionary = co.get("holders", {})
++	var keys := h.keys().filter(func(k): return not exclude.has(str(k)))
++	keys.sort_custom(func(a, b): return int(h[a]) > int(h[b]) if int(h[a]) != int(h[b]) else str(a) < str(b))
++	var avail := 0
++	for k in keys:
++		avail += int(h[k])
++	qty = mini(qty, avail)
++	if qty <= 0:
++		return out
++	var left := qty
++	for k in keys:
++		if left <= 0:
++			break
++		var n := mini(left, maxi(1, int(ceilf(float(qty) * float(h[k]) / float(avail)))))
++		n = mini(n, int(h[k]))
++		out["sellers"][str(k)] = n
++		left -= n
++	var total := 0
++	for k in out["sellers"]:
++		total += int(out["sellers"][k])
++	var cost := total * unit
++	var paid := _debit(gs, buyer_key, cost)
++	if paid < cost - 0.01:
++		_credit(gs, buyer_key, paid)
++		return {"shares": 0, "money": 0.0, "sellers": {}}
++	for k in out["sellers"]:
++		var n := int(out["sellers"][k])
++		_add_holding(co, str(k), -n)
++		_credit(gs, str(k), n * unit)
++	out["shares"] = total
++	out["money"] = cost
++	return out
++
++
++# --- Valoración -------------------------------------------------------------------------------------
++
++## Ganancia anual estimada (promedio de los últimos meses × 12), en la moneda de la empresa.
++static func annual_profit(co: Dictionary) -> float:
++	var p: Array = co.get("profits", [])
++	if p.is_empty():
++		return 0.0
++	var s := 0.0
++	for v in p:
++		s += float(v)
++	return s / float(p.size()) * 12.0
++
++
++static func player_company_profit(gs) -> float:
++	var total := 0.0
++	for b in gs.player_buildings():
++		if BusinessSim.is_business(b) and not BusinessSim.is_nonprofit(b):
++			total += BusinessSim.period_profit(b, "last_month")
++	return total
++
++
++static func _book(gs, co: Dictionary) -> float:
++	match str(co.get("kind", "")):
++		"jugador":
++			return maxf(0.0, EconomySim.player_assets(gs) + maxf(0.0, gs.money) * 0.5 - EconomySim.player_debt(gs))
++		"npc":
++			var b: Dictionary = gs.get_building(int(co.get("building", -1)))
++			return NpcBusinessSim.valuation(gs, b) if not b.is_empty() else 0.0
++	return float(co.get("eps", 1.0)) * float(co.get("shares", 1)) * 4.0
++
++
++## Precio fundamental por acción: máx(patrimonio × piso, ganancia anual × P/G del ciclo) / acciones.
++static func fundamental(gs, co: Dictionary) -> float:
++	var shares := maxf(1.0, float(co.get("shares", 1)))
++	var country := str(co.get("country", GlobalEconSim.home_id(gs)))
++	var pe := GlobalEconSim.eff(gs, "pe", 10.0, country)
++	if str(co.get("kind", "")) == "extranjera":
++		return maxf(0.01, float(co.get("eps", 1.0)) * pe)
++	var earn := annual_profit(co) * pe
++	return maxf(0.01, maxf(_book(gs, co) * float(cfg().get("book_floor", 0.6)), earn) / shares)
++
++
++static func market_cap(gs, co: Dictionary) -> float:
++	return float(co.get("price", 0.0)) * float(co.get("shares", 0))
++
++
++## Valor en TU moneda de las acciones de `key` en la empresa.
++static func holding_value(gs, co: Dictionary, key := PLAYER) -> float:
++	return GlobalEconSim.to_home(gs, float(holding(co, key)) * float(co.get("price", 0.0)), str(co.get("country", GlobalEconSim.home_id(gs))))
++
++
++static func portfolio_value(gs) -> float:
++	var v := 0.0
++	for cid in companies(gs):
++		var co: Dictionary = companies(gs)[cid]
++		if str(co.get("kind", "")) != "jugador":
++			v += holding_value(gs, co)
++	return v
++
++
++## Quien controla la empresa: el titular con más del 50 % (o el jugador si nadie lo tiene).
++static func controller(co: Dictionary) -> String:
++	var h: Dictionary = co.get("holders", {})
++	var total := float(co.get("shares", 1))
++	for k in h:
++		if float(h[k]) > total * 0.5:
++			return str(k)
++	return PLAYER if str(co.get("kind", "")) == "jugador" else str(co.get("founder_key", ""))
++
++
++static func player_in_control(gs) -> bool:
++	var co := player_company(gs)
++	return co.is_empty() or controller(co) == PLAYER
++
++
++static func _update_control(gs, co: Dictionary) -> void:
++	var now := controller(co)
++	var before := str(co.get("controller", PLAYER))
++	co["controller"] = now
++	if str(co.get("kind", "")) != "jugador" or now == before:
++		return
++	if now != PLAYER:
++		gs.notify("¡COMPRA HOSTIL! %s acumuló el %d %% de %s y tomó el control: reparte el %d %% de las ganancias y ya no puedes emitir acciones. Recompra acciones para recuperarla." % [
++			holder_label(gs, now), int(stake(co, now) * 100.0), str(co["name"]), int(float(cfg().get("payout_raider", 0.7)) * 100.0)], "jugador")
++		_log(gs, "%s tomó el control de %s." % [holder_label(gs, now), str(co["name"])])
++	else:
++		gs.notify("Recuperaste el control de %s." % str(co["name"]), "jugador")
++		_log(gs, "Recuperaste el control de %s." % str(co["name"]))
++
++
++# --- Tu empresa como S.A. ------------------------------------------------------------------------------
++
++static func player_company(gs) -> Dictionary:
++	return company(gs, PLAYER)
++
++
++static func convert_block_reason(gs) -> String:
++	var why := block_reason(gs)
++	if why != "":
++		return why
++	if not player_company(gs).is_empty():
++		return "Tu empresa ya es una S.A."
++	var any := false
++	for b in gs.player_buildings():
++		if BusinessSim.is_business(b) and not BusinessSim.is_nonprofit(b):
++			any = true
++			break
++	if not any:
++		return "Necesitas al menos un negocio con fines de lucro."
++	var fee := float(cfg().get("listing_fee", 250)) * gs.price_mult()
++	if gs.money < fee:
++		return "Necesitas %s para la inscripción en bolsa." % Fmt.money(fee)
++	return ""
++
++
++## Convierte tu empresa (todos tus negocios con fines de lucro) en S.A. con acciones. Todas son tuyas.
++static func convert_to_sa(gs, company_name := "") -> String:
++	var why := convert_block_reason(gs)
++	if why != "":
++		return why
++	var fee := float(cfg().get("listing_fee", 250)) * gs.price_mult()
++	gs.add_money(-fee)
++	GovSim.add_treasury(gs, fee)
++	var shares := int(cfg().get("company_shares", 1000))
++	var name := company_name.strip_edges()
++	if name == "":
++		name = "%s S.A." % str(gs.settings.get("player_surname", "Mi empresa"))
++	var co := {"id": PLAYER, "kind": "jugador", "name": name, "country": GlobalEconSim.home_id(gs), "shares": shares,
++		"holders": {PLAYER: shares}, "price": 0.0, "profits": [player_company_profit(gs)], "payout": float(cfg().get("payout_default", 0.3)),
++		"pressure": 0.0, "hist": [], "listed_day": gs.today(), "last_issue_day": -9999, "raider": -1, "controller": PLAYER, "div_last": 0.0}
++	companies(gs)[PLAYER] = co
++	co["price"] = snappedf(fundamental(gs, co), 0.01)
++	gs.notify("%s ya es una sociedad anónima: %d acciones a %s cada una (todas tuyas)." % [name, shares, Fmt.money2(float(co["price"]))], "jugador")
++	_log(gs, "%s salió a bolsa." % name)
++	return ""
++
++
++static func issue_block_reason(gs, qty: int) -> String:
++	var co := player_company(gs)
++	if co.is_empty():
++		return "Primero convierte tu empresa en S.A."
++	if not unlocked(gs):
++		return block_reason(gs)
++	if controller(co) != PLAYER:
++		return "Perdiste el control de tu S.A.: el nuevo controlador no aprueba emisiones."
++	if gs.today() < int(co.get("last_issue_day", -9999)) + int(cfg().get("issue_cooldown_days", 90)):
++		return "Solo una emisión cada %d días." % int(cfg().get("issue_cooldown_days", 90))
++	var max_q := int(float(co["shares"]) * float(cfg().get("max_issue_ratio", 0.35)))
++	if qty <= 0 or qty > max_q:
++		return "Puedes emitir entre 1 y %d acciones." % max_q
++	return ""
++
++
++## Emite `qty` acciones nuevas. Las compran ciudadanos con ahorros y pueblos vecinos; el capital entra a tu caja.
++## Devuelve {error, sold, raised}.
++static func issue(gs, qty: int) -> Dictionary:
++	var why := issue_block_reason(gs, qty)
++	if why != "":
++		return {"error": why, "sold": 0, "raised": 0.0}
++	var co := player_company(gs)
++	var unit := float(co["price"]) * (1.0 - float(cfg().get("issue_discount", 0.05)))
++	var placed := _place(gs, qty, unit, {})
++	var sold := int(placed["shares"])
++	if sold <= 0:
++		return {"error": "No hay ahorradores con dinero suficiente para comprar acciones ahora.", "sold": 0, "raised": 0.0}
++	co["shares"] = int(co["shares"]) + sold
++	for k in placed["buyers"]:
++		_add_holding(co, str(k), int(placed["buyers"][k]))
++	var raised := float(placed["money"])
++	gs.add_money(raised)
++	gs.add_counter("stock_issue", raised)
++	co["last_issue_day"] = gs.today()
++	co["pressure"] = float(co.get("pressure", 0.0)) - float(cfg().get("impact", 0.15)) * float(sold) / float(co["shares"])
++	gs.notify("Emitiste %d acciones de %s a %s: entraron %s de capital. Ahora tienes el %d %%." % [sold, str(co["name"]), Fmt.money2(unit), Fmt.money(raised), int(stake(co, PLAYER) * 100.0)], "jugador")
++	if stake(co, PLAYER) < 0.5:
++		gs.notify("Cuidado: tienes menos del 50 %% de %s. Un inversionista podría comprar acciones y quitarte el control." % str(co["name"]), "jugador")
++	_log(gs, "Emisión: %d acciones de %s (%s)." % [sold, str(co["name"]), Fmt.money(raised)])
++	_update_control(gs, co)
++	return {"error": "" if sold >= qty else "Solo se colocaron %d de %d acciones (faltan ahorradores)." % [sold, qty], "sold": sold, "raised": raised}
++
++
++## Recompra de acciones propias (se retiran): sube tu participación. Primero a los accionistas
++## dispersos; si no alcanza, al que acumuló (compra hostil) con prima.
++static func buyback(gs, qty: int) -> Dictionary:
++	var co := player_company(gs)
++	if co.is_empty():
++		return {"error": "Tu empresa no es una S.A.", "bought": 0, "cost": 0.0}
++	if qty <= 0:
++		return {"error": "Cantidad inválida.", "bought": 0, "cost": 0.0}
++	var raider_key := "c:%d" % int(co.get("raider", -1))
++	var exclude := {PLAYER: true, raider_key: true}
++	var float_n := int(co["shares"]) - holding(co, PLAYER) - holding(co, raider_key)
++	var unit := float(co["price"]) * (1.0 + float(cfg().get("impact", 0.15)) * float(mini(qty, maxi(1, float_n))) / maxf(1.0, float(co["shares"])))
++	var need_float := mini(qty, float_n)
++	var need_raider := mini(qty - need_float, holding(co, raider_key))
++	var premium := float(co["price"]) * (1.0 + float(cfg().get("greenmail_premium", 0.25)))
++	var est := need_float * unit + need_raider * premium
++	if gs.money < est:
++		return {"error": "Necesitas %s." % Fmt.money(est), "bought": 0, "cost": 0.0}
++	var got := 0
++	var cost := 0.0
++	if need_float > 0:
++		var r := _take_from_holders(gs, co, need_float, unit, exclude, PLAYER)
++		got += int(r["shares"])
++		cost += float(r["money"])
++	if need_raider > 0:
++		var r2 := _take_from_holders(gs, co, need_raider, premium, {PLAYER: true}, PLAYER) if holding(co, raider_key) > 0 and _only_raider_left(co, raider_key) else {"shares": 0, "money": 0.0}
++		got += int(r2["shares"])
++		cost += float(r2["money"])
++	if got <= 0:
++		return {"error": "No hay acciones disponibles para recomprar.", "bought": 0, "cost": 0.0}
++	co["shares"] = int(co["shares"]) - got   # Se retiran.
++	co["pressure"] = float(co.get("pressure", 0.0)) + float(cfg().get("impact", 0.15)) * float(got) / maxf(1.0, float(co["shares"]))
++	gs.add_counter("stock_buyback", cost)
++	gs.notify("Recompraste %d acciones de %s por %s. Ahora tienes el %d %%." % [got, str(co["name"]), Fmt.money(cost), int(stake(co, PLAYER) * 100.0)], "jugador")
++	_log(gs, "Recompra: %d acciones de %s." % [got, str(co["name"])])
++	_update_control(gs, co)
++	return {"error": "", "bought": got, "cost": cost}
++
++
++static func _only_raider_left(co: Dictionary, raider_key: String) -> bool:
++	for k in co.get("holders", {}):
++		if str(k) != PLAYER and str(k) != raider_key:
++			return false
++	return true
++
++
++static func set_payout(gs, ratio: float) -> String:
++	var co := player_company(gs)
++	if co.is_empty():
++		return "Tu empresa no es una S.A."
++	if controller(co) != PLAYER:
++		return "El controlador decide los dividendos."
++	co["payout"] = clampf(ratio, 0.0, float(cfg().get("payout_max", 0.8)))
++	return ""
++
++
++static func payout_of(co: Dictionary) -> float:
++	if str(co.get("kind", "")) == "jugador":
++		if controller(co) != PLAYER:
++			return float(GlobalEconSim.cfg().get("stock", {}).get("payout_raider", 0.7))
++		return float(co.get("payout", 0.3))
++	if str(co.get("kind", "")) == "npc":
++		return float(GlobalEconSim.cfg().get("stock", {}).get("npc_payout", 0.35))
++	return float(GlobalEconSim.cfg().get("stock", {}).get("foreign_payout", 0.4))
++
++
++# --- Comprar y vender acciones de otras empresas -----------------------------------------------------------
++
++static func quote_buy(gs, cid: String, qty: int) -> Dictionary:
++	var co := company(gs, cid)
++	if co.is_empty() or qty <= 0:
++		return {"unit": 0.0, "total": 0.0, "fee": 0.0, "available": 0}
++	var fee_r := float(cfg().get("trade_fee", 0.01))
++	if str(co["kind"]) == "extranjera":
++		var unit_h := GlobalEconSim.to_home(gs, float(co["price"]), str(co["country"]))
++		var avail := holding(co, WORLD)
++		return {"unit": unit_h, "total": unit_h * qty * (1.0 + fee_r), "fee": unit_h * qty * fee_r, "available": avail, "unit_local": float(co["price"])}
++	var avail2 := _float_for_player(co)
++	var unit := float(co["price"]) * (1.0 + float(cfg().get("impact", 0.15)) * float(qty) / maxf(1.0, float(co["shares"])))
++	return {"unit": unit, "total": unit * qty * (1.0 + fee_r), "fee": unit * qty * fee_r, "available": avail2, "unit_local": unit}
++
++
++static func _float_for_player(co: Dictionary) -> int:
++	var n := 0
++	var founder := str(co.get("founder_key", ""))
++	for k in co.get("holders", {}):
++		if str(k) != PLAYER and str(k) != founder:
++			n += int(co["holders"][k])
++	return n
++
++
++## Compra acciones de una empresa NPC o extranjera. Devuelve {error, bought, cost}.
++static func buy(gs, cid: String, qty: int) -> Dictionary:
++	if not unlocked(gs):
++		return {"error": block_reason(gs), "bought": 0, "cost": 0.0}
++	var co := company(gs, cid)
++	if co.is_empty():
++		return {"error": "Empresa no encontrada.", "bought": 0, "cost": 0.0}
++	if str(co["kind"]) == "jugador":
++		return {"error": "Para tu propia S.A. usa la recompra.", "bought": 0, "cost": 0.0}
++	var q := quote_buy(gs, cid, qty)
++	qty = mini(qty, int(q["available"]))
++	if qty <= 0:
++		return {"error": "No hay acciones a la venta.", "bought": 0, "cost": 0.0}
++	q = quote_buy(gs, cid, qty)
++	if gs.money < float(q["total"]):
++		return {"error": "Necesitas %s." % Fmt.money(float(q["total"])), "bought": 0, "cost": 0.0}
++	var fee := float(q["fee"])
++	var cost := 0.0
++	if str(co["kind"]) == "extranjera":
++		cost = float(q["unit"]) * qty
++		gs.add_money(-cost)
++		st(gs)["world_cash"] = world_cash(gs) + cost   # El dinero sale del pueblo hacia el vendedor extranjero.
++		_add_holding(co, WORLD, -qty)
++		_add_holding(co, PLAYER, qty)
++	else:
++		var r := _take_from_holders(gs, co, qty, float(q["unit"]), {PLAYER: true, str(co.get("founder_key", "")): true}, PLAYER)
++		qty = int(r["shares"])
++		cost = float(r["money"])
++		if qty <= 0:
++			return {"error": "No se pudo completar la compra.", "bought": 0, "cost": 0.0}
++		_add_holding(co, PLAYER, qty)
++		fee = cost * float(cfg().get("trade_fee", 0.01))
++	gs.add_money(-fee)
++	GovSim.add_treasury(gs, fee)   # Comisión de bolsa.
++	co["pressure"] = float(co.get("pressure", 0.0)) + float(cfg().get("impact", 0.15)) * float(qty) / maxf(1.0, float(co["shares"]))
++	gs.add_counter("stock_bought", cost + fee)
++	_log(gs, "Compraste %d acciones de %s por %s." % [qty, str(co["name"]), Fmt.money(cost + fee)])
++	return {"error": "", "bought": qty, "cost": cost + fee}
++
++
++## Vende acciones tuyas de una empresa NPC o extranjera. Devuelve {error, sold, received}.
++static func sell(gs, cid: String, qty: int) -> Dictionary:
++	var co := company(gs, cid)
++	if co.is_empty():
++		return {"error": "Empresa no encontrada.", "sold": 0, "received": 0.0}
++	if str(co["kind"]) == "jugador":
++		return {"error": "Para conseguir capital con tu S.A. emite acciones.", "sold": 0, "received": 0.0}
++	qty = mini(qty, holding(co, PLAYER))
++	if qty <= 0:
++		return {"error": "No tienes acciones de esa empresa.", "sold": 0, "received": 0.0}
++	var fee_r := float(cfg().get("trade_fee", 0.01))
++	var got := 0.0
++	if str(co["kind"]) == "extranjera":
++		var unit_h := GlobalEconSim.to_home(gs, float(co["price"]), str(co["country"]))
++		got = unit_h * qty
++		st(gs)["world_cash"] = world_cash(gs) - got
++		gs.add_money(got)
++		_add_holding(co, PLAYER, -qty)
++		_add_holding(co, WORLD, qty)
++	else:
++		var unit := float(co["price"]) * (1.0 - float(cfg().get("impact", 0.15)) * float(qty) / maxf(1.0, float(co["shares"])))
++		var placed := _place(gs, qty, unit, {PLAYER: true})
++		qty = int(placed["shares"])
++		if qty <= 0:
++			return {"error": "No hay compradores con ahorros suficientes ahora.", "sold": 0, "received": 0.0}
++		got = float(placed["money"])
++		gs.add_money(got)
++		_add_holding(co, PLAYER, -qty)
++		for k in placed["buyers"]:
++			_add_holding(co, str(k), int(placed["buyers"][k]))
++	var fee := got * fee_r
++	gs.add_money(-fee)
++	GovSim.add_treasury(gs, fee)
++	co["pressure"] = float(co.get("pressure", 0.0)) - float(cfg().get("impact", 0.15)) * float(qty) / maxf(1.0, float(co["shares"]))
++	gs.add_counter("stock_sold", got - fee)
++	_log(gs, "Vendiste %d acciones de %s por %s." % [qty, str(co["name"]), Fmt.money(got - fee)])
++	return {"error": "", "sold": qty, "received": got - fee}
++
++
++# --- Empresas NPC y extranjeras ---------------------------------------------------------------------------
++
++static func _ensure_foreign(gs) -> void:
++	var home := GlobalEconSim.home_id(gs)
++	var cos := companies(gs)
++	var have := 0
++	for cid in cos:
++		if str(cos[cid].get("kind", "")) == "extranjera":
++			have += 1
++	var max_f := int(cfg().get("foreign_max", 8))
++	if have >= max_f:
++		return
++	var names: Array = cfg().get("foreign_names", ["Industrias"])
++	var i := 0
++	for id in GlobalEconSim.country_ids():
++		if str(id) == home:
++			continue
++		var cid := "f:%s" % str(id)
++		if cos.has(cid):
++			continue
++		if have >= max_f:
++			break
++		var sector := str(names[(i + str(id).length()) % names.size()])
++		var eps := snappedf(1.5 + GlobalEconSim.rf(gs) * 3.0, 0.01) * GlobalEconSim.rate(gs, str(id))
++		var shares := 100000
++		var co := {"id": cid, "kind": "extranjera", "name": "%s de %s" % [sector, GlobalEconSim.country_label(str(id))], "country": str(id),
++			"sector": sector, "shares": shares, "holders": {WORLD: shares}, "eps": eps, "price": 0.0, "pressure": 0.0, "hist": [], "div_last": 0.0,
++			"listed_day": gs.today()}
++		co["price"] = snappedf(fundamental(gs, co), 0.01)
++		cos[cid] = co
++		have += 1
++		i += 1
++
++
++static func _npc_listings(gs) -> void:
++	var cos := companies(gs)
++	var listed := 0
++	for cid in cos.keys():
++		var co: Dictionary = cos[cid]
++		if str(co.get("kind", "")) != "npc":
++			continue
++		var b: Dictionary = gs.get_building(int(co.get("building", -1)))
++		if b.is_empty() or not NpcBusinessSim.is_npc(b) or str(b.get("status", "")) != "activo" or str(b.get("npc_state", "")) != NpcBusinessSim.STATE_OPEN:
++			_delist(gs, co, "quebró, cerró o cambió de dueño")
++			cos.erase(cid)
++			continue
++		listed += 1
++	if listed >= int(cfg().get("npc_max_listed", 6)):
++		return
++	var min_value := float(cfg().get("npc_list_min_value", 1500)) * gs.price_mult()
++	for b in NpcBusinessSim.npc_buildings(gs):
++		if listed >= int(cfg().get("npc_max_listed", 6)):
++			break
++		var cid := "n:%d" % int(b["id"])
++		if cos.has(cid) or str(b.get("status", "")) != "activo" or str(b.get("npc_state", "")) != NpcBusinessSim.STATE_OPEN:
++			continue
++		if gs.today() - int(b.get("founded_day", gs.today())) < int(cfg().get("npc_list_min_months", 6)) * 30:
++			continue
++		if NpcBusinessSim.valuation(gs, b) < min_value or GlobalEconSim.rf(gs) >= float(cfg().get("npc_list_chance", 0.12)):
++			continue
++		if list_npc(gs, b):
++			listed += 1
++
++
++## Salida a bolsa de una empresa NPC: el fundador vende parte a los ahorradores (el dinero va a él).
++static func list_npc(gs, b: Dictionary) -> bool:
++	var owner_id := int(b.get("owner_id", -1))
++	if owner_id < 0 or not gs.citizens.has(owner_id):
++		return false
++	var cid := "n:%d" % int(b["id"])
++	var shares := int(cfg().get("company_shares", 1000))
++	var fkey := "c:%d" % owner_id
++	var co := {"id": cid, "kind": "npc", "name": gs.building_label(b), "country": GlobalEconSim.home_id(gs), "building": int(b["id"]),
++		"founder_key": fkey, "shares": shares, "holders": {fkey: shares}, "price": 0.0, "profits": [BusinessSim.period_profit(b, "last_month")],
++		"pressure": 0.0, "hist": [], "div_last": 0.0, "listed_day": gs.today()}
++	co["price"] = snappedf(fundamental(gs, co), 0.01)
++	var float_n := int(float(shares) * float(cfg().get("npc_float", 0.4)))
++	var placed := _place(gs, float_n, float(co["price"]), {fkey: true})
++	if int(placed["shares"]) <= 0:
++		return false
++	_add_holding(co, fkey, -int(placed["shares"]))
++	for k in placed["buyers"]:
++		_add_holding(co, str(k), int(placed["buyers"][k]))
++	_credit(gs, fkey, float(placed["money"]))
++	companies(gs)[cid] = co
++	gs.notify("%s (de %s) salió a la bolsa: vendió %d acciones a %s." % [str(co["name"]), gs.person_name(owner_id), int(placed["shares"]), Fmt.money2(float(co["price"]))], "negocio")
++	_log(gs, "%s salió a bolsa." % str(co["name"]))
++	return true
++
++
++static func _delist(gs, co: Dictionary, why: String) -> void:
++	var mine := holding(co, PLAYER)
++	if mine > 0:
++		gs.notify("%s salió de la bolsa (%s): tus %d acciones ya no cotizan." % [str(co.get("name", "")), why, mine], "jugador")
++	_log(gs, "%s salió de la bolsa (%s)." % [str(co.get("name", "")), why])
++
++
++## Titulares que murieron: sus acciones pasan al cónyuge o a un hijo; si no hay, al Estado.
++## Si el titular es ahora el jugador (herencia de la dinastía), se suman a las del jugador.
++static func _cleanup_holders(gs, co: Dictionary) -> void:
++	var h: Dictionary = co.get("holders", {})
++	for k in h.keys():
++		var key := str(k)
++		if not key.begins_with("c:"):
++			continue
++		var id := int(key.substr(2))
++		if gs.is_player(id):
++			_add_holding(co, PLAYER, int(h[k]))
++			h.erase(k)
++			continue
++		if gs.citizens.has(id):
++			continue
++		var heir := _heir_key(gs, id)
++		var n := int(h[k])
++		h.erase(k)
++		_add_holding(co, heir, n)
++		if str(co.get("founder_key", "")) == key:
++			co["founder_key"] = heir
++		if int(co.get("raider", -1)) == id:
++			co["raider"] = -1
++
++
++static func _heir_key(gs, dead_id: int) -> String:
++	for c in gs.citizens.values():
++		if c.spouse_id == dead_id or c.parent_ids.has(dead_id):
++			return PLAYER if gs.is_player(c.id) else "c:%d" % c.id
++	return STATE
++
++
++# --- Cierre mensual ----------------------------------------------------------------------------------------
++
++static func monthly(gs) -> void:
++	init_state(gs)
++	if not unlocked(gs):
++		return
++	_ensure_foreign(gs)
++	_npc_listings(gs)
++	var sc := cfg()
++	for cid in companies(gs).keys():
++		var co: Dictionary = companies(gs)[cid]
++		_cleanup_holders(gs, co)
++		var kind := str(co.get("kind", ""))
++		var profit_m := 0.0
++		if kind == "jugador":
++			profit_m = player_company_profit(gs)
++		elif kind == "npc":
++			var nb: Dictionary = gs.get_building(int(co.get("building", -1)))
++			profit_m = BusinessSim.period_profit(nb, "last_month") if not nb.is_empty() else 0.0
++		if kind != "extranjera":
++			var p: Array = co.get("profits", [])
++			p.append(profit_m)
++			while p.size() > 12:
++				p.pop_front()
++			co["profits"] = p
++		else:
++			var country := str(co["country"])
++			var cst := GlobalEconSim.country(gs, country)
++			var g := float(cst.get("infl", 0.03)) + GlobalEconSim.eff(gs, "growth", 0.02, country)
++			co["eps"] = maxf(0.01, float(co.get("eps", 1.0)) * (1.0 + g / 12.0 + GlobalEconSim.rn(gs, 0.02)))
++		_update_price(gs, co)
++		_pay_dividends(gs, co, profit_m)
++		if kind == "jugador":
++			_raider(gs, co)
++			_update_control(gs, co)
++		var h: Array = co.get("hist", [])
++		h.append({"day": gs.today(), "price": float(co["price"])})
++		while h.size() > int(sc.get("history", 36)):
++			h.pop_front()
++		co["hist"] = h
++
++
++static func _update_price(gs, co: Dictionary) -> void:
++	var sc := cfg()
++	var old := maxf(0.01, float(co.get("price", 0.01)))
++	var target := fundamental(gs, co)
++	var p := old + (target - old) * float(sc.get("price_revert", 0.3))
++	p *= 1.0 + GlobalEconSim.rn(gs, float(sc.get("price_vol", 0.03))) + float(co.get("pressure", 0.0))
++	var mv := float(sc.get("max_move", 0.15))
++	co["price"] = snappedf(clampf(p, old * (1.0 - mv), old * (1.0 + mv)), 0.01)
++	co["price"] = maxf(0.01, float(co["price"]))
++	co["pressure"] = float(co.get("pressure", 0.0)) * float(sc.get("pressure_decay", 0.5))
++
++
++static func _pay_dividends(gs, co: Dictionary, profit_m: float) -> void:
++	var kind := str(co.get("kind", ""))
++	var shares := maxf(1.0, float(co.get("shares", 1)))
++	co["div_last"] = 0.0
++	if kind == "extranjera":
++		var dps := float(co.get("eps", 0.0)) * payout_of(co) / 12.0
++		co["div_last"] = dps
++		var mine := holding(co, PLAYER)
++		if mine > 0:
++			var amount := GlobalEconSim.to_home(gs, dps * mine, str(co["country"]))
++			st(gs)["world_cash"] = world_cash(gs) - amount
++			gs.add_money(amount)
++			gs.add_counter("dividends_in", amount)
++		return
++	if profit_m <= 0.0:
++		return
++	var total := profit_m * payout_of(co)
++	if kind == "jugador":
++		if gs.money <= 0.0:
++			return   # Sin caja no hay reparto.
++		total = minf(total, gs.money)
++		var external := total * (1.0 - stake(co, PLAYER))
++		if external <= 0.0:
++			co["div_last"] = total / shares
++			return
++		gs.add_money(-external)
++		gs.add_counter("dividends_out", external)
++		for k in co["holders"]:
++			if str(k) != PLAYER:
++				_credit(gs, str(k), total * float(co["holders"][k]) / shares)
++		co["div_last"] = total / shares
++	elif kind == "npc":
++		var b: Dictionary = gs.get_building(int(co.get("building", -1)))
++		if b.is_empty():
++			return
++		# El fundador ya cobra sus dividendos de la caja (NpcBusinessSim); aquí cobran los demás.
++		var founder := str(co.get("founder_key", ""))
++		var minority := total * (1.0 - stake(co, founder))
++		minority = minf(minority, maxf(0.0, float(b.get("reserve", 0.0))) * 0.5)
++		if minority <= 0.0:
++			return
++		b["reserve"] = float(b["reserve"]) - minority
++		var others := shares - float(holding(co, founder))
++		for k in co["holders"]:
++			if str(k) != founder:
++				var part := minority * float(co["holders"][k]) / maxf(1.0, others)
++				_credit(gs, str(k), part)
++				if str(k) == PLAYER:
++					gs.add_counter("dividends_in", part)
++		co["div_last"] = minority / maxf(1.0, others)
++
++
++## Compra hostil: con menos del 50 % en manos del jugador, un inversionista rico puede acumular acciones.
++static func _raider(gs, co: Dictionary, force := false) -> void:
++	var sc := cfg()
++	if stake(co, PLAYER) >= 0.5:
++		return
++	var rid := int(co.get("raider", -1))
++	if rid >= 0 and not gs.citizens.has(rid):
++		rid = -1
++		co["raider"] = -1
++	if rid < 0:
++		if not force and GlobalEconSim.rf(gs) >= float(sc.get("raider_start_chance", 0.3)):
++			return
++		var best: Citizen = null
++		for c in gs.citizens.values():
++			if gs.is_player(c.id) or NpcBusinessSim._player_family(gs, c) or c.prison_until >= 0:
++				continue
++			if best == null or c.money > best.money:
++				best = c
++		if best == null or best.money < float(sc.get("raider_min_money", 2000)) * gs.price_level():
++			return
++		rid = best.id
++		co["raider"] = rid
++		gs.notify("%s está comprando acciones de %s. Si llega al 50 %%, perderás el control." % [best.full_name(), str(co["name"])], "jugador")
++	var raider: Citizen = gs.citizens[rid]
++	var rkey := "c:%d" % rid
++	var qty := int(ceilf(float(co["shares"]) * float(sc.get("raider_monthly_buy", 0.08))))
++	var unit := float(co["price"]) * 1.05
++	var budget: float = maxf(0.0, raider.money) * float(sc.get("raider_spend_share", 0.6))
++	qty = mini(qty, int(floorf(budget / maxf(0.01, unit))))
++	if qty <= 0:
++		return
++	var r := _take_from_holders(gs, co, qty, unit, {PLAYER: true, rkey: true}, rkey)
++	if int(r["shares"]) > 0:
++		_add_holding(co, rkey, int(r["shares"]))
++		co["pressure"] = float(co.get("pressure", 0.0)) + float(sc.get("impact", 0.15)) * float(r["shares"]) / maxf(1.0, float(co["shares"]))
++		_log(gs, "%s compró %d acciones de %s (ya tiene el %d %%)." % [raider.full_name(), int(r["shares"]), str(co["name"]), int(stake(co, rkey) * 100.0)])
++
++
++## Una ronda del inversionista hostil (pruebas y escenarios).
++static func raider_tick(gs, force := true) -> void:
++	var co := player_company(gs)
++	if co.is_empty():
++		return
++	_raider(gs, co, force)
++	_update_control(gs, co)
++
++
++# --- Interfaz ------------------------------------------------------------------------------------------------
++
++## Filas para la tabla de la bolsa (precios en su moneda y convertidos a la tuya).
++static func rows(gs) -> Array:
++	var out := []
++	for cid in companies(gs):
++		var co: Dictionary = companies(gs)[cid]
++		var h: Array = co.get("hist", [])
++		var ch := 0.0
++		if h.size() >= 2:
++			ch = float(h[h.size() - 1]["price"]) / maxf(0.01, float(h[maxi(0, h.size() - 13)]["price"])) - 1.0
++		out.append({"id": str(cid), "name": str(co["name"]), "kind": str(co["kind"]), "country": str(co.get("country", "")),
++			"price": float(co["price"]), "price_home": GlobalEconSim.to_home(gs, float(co["price"]), str(co.get("country", GlobalEconSim.home_id(gs)))),
++			"change": ch, "mine": holding(co, PLAYER), "stake": stake(co, PLAYER), "div": float(co.get("div_last", 0.0)),
++			"controller": controller(co)})
++	var order := {"jugador": 0, "npc": 1, "extranjera": 2}
++	out.sort_custom(func(a, b): return int(order.get(a["kind"], 3)) < int(order.get(b["kind"], 3)) if a["kind"] != b["kind"] else str(a["name"]) < str(b["name"]))
++	return out
++
++
++## Principales accionistas de una empresa: [[etiqueta, %]].
++static func top_holders(gs, co: Dictionary, n := 5) -> Array:
++	var h: Dictionary = co.get("holders", {})
++	var keys := h.keys()
++	keys.sort_custom(func(a, b): return int(h[a]) > int(h[b]))
++	var out := []
++	for k in keys.slice(0, n):
++		out.append([holder_label(gs, str(k)), stake(co, str(k))])
++	return out
+diff --git a/scripts/sim/trade_sim.gd b/scripts/sim/trade_sim.gd
+index 02b2d53..601afdb 100644
+--- a/scripts/sim/trade_sim.gd
++++ b/scripts/sim/trade_sim.gd
+@@ -507,7 +507,7 @@ static func export_price(gs, town_id: String, good: String, extra := 0.0) -> flo
+ 	var sat := float(row.get("sat", 0.0)) + maxf(0.0, extra)
+ 	var sat_f := maxf(float(pc.get("min_factor", 0.35)), 1.0 / (1.0 + float(pc.get("saturation_weight", 0.6)) * sat / month_demand))
+ 	var p := base_price(good) * float(row.get("buy_mult", 1.0)) * float(row.get("fluct", 1.0)) * sat_f
+-	p *= _event_mult(t, good, gs.today()) * gs.price_mult() * _diff_trade(gs, "export")
++	p *= _event_mult(t, good, gs.today()) * gs.price_mult() * _diff_trade(gs, "export") * GlobalEconSim.trade_fx_mult(gs, town_id)   # Tipo de cambio.
+ 	return p
+ 
+ 
+@@ -523,7 +523,7 @@ static func import_price(gs, town_id: String, good: String, extra := 0.0) -> flo
+ 	var scar_f := minf(float(pc.get("max_factor", 2.2)), 1.0 + float(pc.get("scarcity_weight", 0.5)) * scar / supply)
+ 	var p := base_price(good) * float(row.get("sell_mult", 1.0)) * float(row.get("fluct", 1.0)) * scar_f
+ 	p /= _event_mult(t, good, gs.today())  # Un auge de demanda allá encarece; una bonanza abarata.
+-	p *= gs.price_mult() * _diff_trade(gs, "import") * GovSim.import_mult(gs)
++	p *= gs.price_mult() * _diff_trade(gs, "import") * GovSim.import_mult(gs) * GlobalEconSim.trade_fx_mult(gs, town_id)   # Tipo de cambio.
+ 	return p
+ 
+ 
+diff --git a/scripts/ui/building_panel.gd b/scripts/ui/building_panel.gd
+index 2d5d368..5c5f8f7 100644
+--- a/scripts/ui/building_panel.gd
++++ b/scripts/ui/building_panel.gd
+@@ -206,6 +206,7 @@ func _summary_text(b: Dictionary) -> String:
+ 		s += WarehouseTab.summary_line(GameState, b)   # Almacén vinculado (verde) / ninguno (rojo).
+ 	s += TransitSim.panel_lines(GameState, b)   # Transporte: acceso por carretera, llegada de trabajadores.
+ 	s += GridSim.panel_lines(GameState, b)   # Redes: "Electricidad: conectado / sin conexión" y "Agua: …".
++	s += GlobalEconSim.panel_lines(GameState, b)   # Economía global: calidad, marca y seguros.
+ 	var site_crew := 0
+ 	for c in GameState.employees_of(bid):
+ 		if c.job_kind == "obra":
+diff --git a/scripts/ui/cycle_indicator.gd b/scripts/ui/cycle_indicator.gd
+new file mode 100644
+index 0000000..3f82d82
+--- /dev/null
++++ b/scripts/ui/cycle_indicator.gd
+@@ -0,0 +1,44 @@
++class_name CycleIndicator
++extends Button
++## Indicador del ciclo económico de tu país para la barra superior: fase (color) y riesgo según los
++## indicadores adelantados. El tooltip muestra las señales. Al pulsarlo abre Economía mundial.
++## Uso en el HUD:  var ci := CycleIndicator.new(); row.add_child(ci); ci.pressed.connect(...)
++
++var _t := 0.0
++
++
++func _ready() -> void:
++	flat = true
++	focus_mode = Control.FOCUS_NONE
++	add_theme_font_size_override("font_size", 14)
++	refresh()
++
++
++func _process(delta: float) -> void:
++	_t += delta
++	if _t >= 1.0:
++		_t = 0.0
++		refresh()
++
++
++func refresh() -> void:
++	var gs := GameState
++	if not GlobalEconSim.ready(gs) or GlobalEconSim.home(gs).is_empty():
++		text = ""
++		visible = false
++		return
++	visible = true
++	var st := GlobalEconSim.home(gs)
++	var phase := str(st["phase"])
++	var c: Array = GlobalEconSim.phase_def(phase).get("color", [0.8, 0.8, 0.8])
++	var col := Color(float(c[0]), float(c[1]), float(c[2]))
++	var r := GlobalEconSim.risk(gs, GlobalEconSim.home_id(gs))
++	text = "%s%s" % [GlobalEconSim.bar_text(gs), "  ⚠" if r >= 40.0 and phase != "crisis" else ""]
++	add_theme_color_override("font_color", col)
++	add_theme_color_override("font_hover_color", col.lightened(0.2))
++	var sig := GlobalEconSim.signals(gs, GlobalEconSim.home_id(gs))
++	var tip := "Ciclo económico de %s: %s. Riesgo según indicadores: %d/100." % [GlobalEconSim.country_label(GlobalEconSim.home_id(gs)), GlobalEconSim.phase_label(phase), int(r)]
++	for s in sig:
++		tip += "\n• " + str(s)
++	tip += "\nClic: Economía mundial (ciclos, monedas, bolsa y seguros)."
++	tooltip_text = tip
+diff --git a/scripts/ui/global_econ_window.gd b/scripts/ui/global_econ_window.gd
+new file mode 100644
+index 0000000..c07f2f3
+--- /dev/null
++++ b/scripts/ui/global_econ_window.gd
+@@ -0,0 +1,132 @@
++class_name GlobalEconWindow
++extends Control
++## Economía mundial: pantalla completa con pestañas Ciclos y monedas, Bolsa (StockPanel) y Seguros
++## (InsurancePanel). Se cierra con Esc o con ✕.
++## Uso desde el HUD:  var w := GlobalEconWindow.new(); root.add_child(w); w.setup(); … w.open()
++
++signal message(text: String, category: String)
++
++var tabs: TabContainer
++var cycle_text: RichTextLabel
++var stock_panel: StockPanel
++var insurance_panel: InsurancePanel
++var _built := false
++
++
++func setup() -> void:
++	if _built:
++		return
++	_built = true
++	visible = false
++	set_anchors_preset(Control.PRESET_FULL_RECT)
++	mouse_filter = Control.MOUSE_FILTER_STOP
++	var bg := ColorRect.new()
++	bg.color = Color(0, 0, 0, 0.55)
++	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
++	add_child(bg)
++	var panel := PanelContainer.new()
++	panel.add_theme_stylebox_override("panel", UIKit.panel_style(UIKit.BG, 10, 14))
++	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
++	panel.offset_left = 60
++	panel.offset_right = -60
++	panel.offset_top = 64
++	panel.offset_bottom = -30
++	add_child(panel)
++	var v := VBoxContainer.new()
++	v.add_theme_constant_override("separation", 8)
++	panel.add_child(v)
++	var head := HBoxContainer.new()
++	var t := UIKit.label("Economía mundial", 22, UIKit.ACCENT)
++	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	head.add_child(t)
++	head.add_child(UIKit.button("✕", close, 32))
++	v.add_child(head)
++	tabs = TabContainer.new()
++	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
++	v.add_child(tabs)
++	cycle_text = UIKit.rich()
++	_add_tab("Ciclos y monedas", cycle_text)
++	stock_panel = StockPanel.new()
++	stock_panel.setup()
++	stock_panel.message.connect(func(a, b): message.emit(a, b))
++	_add_tab("Bolsa de valores", stock_panel)
++	insurance_panel = InsurancePanel.new()
++	insurance_panel.setup()
++	insurance_panel.message.connect(func(a, b): message.emit(a, b))
++	_add_tab("Seguros", insurance_panel)
++	tabs.tab_changed.connect(func(_i): refresh())
++
++
++func _add_tab(name: String, content: Control) -> void:
++	var sc := ScrollContainer.new()
++	sc.name = name
++	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
++	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	sc.add_child(content)
++	tabs.add_child(sc)
++
++
++func open(tab := -1) -> void:
++	setup()
++	visible = true
++	if tab >= 0 and tab < tabs.get_tab_count():
++		tabs.current_tab = tab
++	refresh()
++
++
++func close() -> void:
++	visible = false
++
++
++func refresh() -> void:
++	if not visible:
++		return
++	match tabs.current_tab:
++		0:
++			cycle_text.text = cycles_text(GameState)
++		1:
++			stock_panel.refresh()
++		2:
++			insurance_panel.refresh()
++
++
++func _unhandled_input(event: InputEvent) -> void:
++	if visible and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
++		close()
++		get_viewport().set_input_as_handled()
++
++
++## Texto de la pestaña de ciclos y monedas (estático: también sirve sin interfaz).
++static func cycles_text(gs) -> String:
++	if not GlobalEconSim.ready(gs):
++		return ""
++	var home := GlobalEconSim.home_id(gs)
++	var st := GlobalEconSim.home(gs)
++	var ind: Dictionary = st.get("ind", {})
++	var s := "[b]%s[/b] — moneda: %s (%s) · fase: [b]%s[/b]%s\n" % [GlobalEconSim.country_label(home), GlobalEconSim.currency_name(home), GlobalEconSim.currency_symbol(home),
++		GlobalEconSim.phase_label(str(st["phase"])), " (%s)" % GlobalEconSim.kind_label(str(st.get("kind", ""))) if str(st.get("kind", "")) != "" else ""]
++	s += "Indicadores adelantados: confianza %d/100 · crédito %+.1f %%/año · vivienda %+.1f %%/año · bolsa %d · desempleo %.1f %%\n" % [
++		int(float(ind.get("confianza", 55.0))), float(ind.get("credito", 0.0)), float(ind.get("vivienda", 0.0)), int(float(ind.get("bolsa", 100.0))), float(ind.get("desempleo", 0.0))]
++	s += "Riesgo de recesión o crisis según los indicadores: [b]%d/100[/b]\n" % int(GlobalEconSim.risk(gs, home))
++	var sig := GlobalEconSim.signals(gs, home)
++	for x in sig:
++		s += "[color=#e9b949]• Señal: %s[/color]\n" % str(x)
++	if sig.is_empty():
++		s += "[color=#aaa]Sin señales de alarma.[/color]\n"
++	s += "Efectos hoy: consumo ×%.2f · tasa de crédito %+.1f pts · cupo de crédito ×%.2f · propiedades ×%.2f · P/G de la bolsa %.1f\n" % [
++		GlobalEconSim.demand_mult(gs), GlobalEconSim.credit_rate_add(gs) * 100.0, GlobalEconSim.credit_limit_mult(gs), GlobalEconSim.property_mult(gs), GlobalEconSim.eff(gs, "pe", 10.0)]
++	s += "Tu moneda: desvío real ×%.3f → importar ×%.3f y exportar ×%.3f (comercio con pueblos de tu país). Inflación anual %.1f %%.\n\n" % [
++		GlobalEconSim.real_index(gs), GlobalEconSim.import_fx_mult(gs), GlobalEconSim.import_fx_mult(gs), float(st.get("infl", 0.0)) * 100.0]
++	s += "[b]Países[/b] (tipo de cambio = unidades por 1 %s)\n" % GlobalEconSim.currency_symbol(home)
++	for id in GlobalEconSim.country_ids():
++		var c := GlobalEconSim.country(gs, str(id))
++		if c.is_empty():
++			continue
++		var ph := str(c["phase"])
++		var col: Array = GlobalEconSim.phase_def(ph).get("color", [0.8, 0.8, 0.8])
++		s += "• %s%s — %s: [color=#%s]%s[/color] · 1 %s = %.3f %s (%+.1f %% en 12 meses) · inflación %.1f %%\n" % [
++			GlobalEconSim.country_label(str(id)), " (tu país)" if str(id) == home else "", GlobalEconSim.currency_name(str(id)),
++			Color(float(col[0]), float(col[1]), float(col[2])).to_html(false), GlobalEconSim.phase_label(ph),
++			GlobalEconSim.currency_symbol(home), GlobalEconSim.fx(gs, home, str(id)), GlobalEconSim.currency_symbol(str(id)),
++			GlobalEconSim.rate_change(gs, str(id)) * 100.0, float(c.get("infl", 0.0)) * 100.0]
++	return s
+diff --git a/scripts/ui/hud.gd b/scripts/ui/hud.gd
+index 513e905..b75c09a 100644
+--- a/scripts/ui/hud.gd
++++ b/scripts/ui/hud.gd
+@@ -36,6 +36,7 @@ var finance_panel: FinancePanel
+ var stats_panel: StatsPanel
+ var research_screen: ResearchScreen
+ var goods_catalog: GoodsCatalog
++var global_econ: GlobalEconWindow   # Economía global: ciclos, monedas, bolsa y seguros.
+ var government_panel: GovernmentPanel
+ var logistics_panel: LogisticsPanel
+ var trade_panel: TradePanel
+@@ -98,6 +99,10 @@ func _ready() -> void:
+ 	goods_catalog = GoodsCatalog.new()
+ 	root.add_child(goods_catalog)
+ 	goods_catalog.setup()
++	global_econ = GlobalEconWindow.new()
++	root.add_child(global_econ)
++	global_econ.setup()
++	global_econ.message.connect(toast)
+ 	hint_lbl = UIKit.label("", 15, UIKit.ACCENT)
+ 	hint_lbl.anchor_left = 0.5
+ 	hint_lbl.anchor_right = 0.5
+@@ -179,6 +184,9 @@ func _build_top_bar() -> void:
+ 	var spacer := Control.new()
+ 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+ 	row.add_child(spacer)
++	var cycle := CycleIndicator.new()   # Economía global: fase del ciclo y señales.
++	row.add_child(cycle)
++	cycle.pressed.connect(func(): global_econ.open(0))
+ 	weather_lbl = _stat(row)
+ 	date_lbl = _stat(row)
+ 	date_lbl.custom_minimum_size.x = 225
+@@ -265,6 +273,7 @@ func _build_side_menu() -> void:
+ 	box.add_child(UIKit.button("Servicios públicos", func(): _show_dock("utilities"), 160))
+ 	box.add_child(UIKit.button("Transporte público", func(): _show_dock("transit"), 160))
+ 	box.add_child(UIKit.button("Catálogo de bienes", func(): goods_catalog.open(), 160))
++	box.add_child(UIKit.button("Economía mundial", func(): global_econ.open(), 160))
+ 
+ 
+ # --- Notificaciones -----------------------------------------------------------------
+diff --git a/scripts/ui/insurance_panel.gd b/scripts/ui/insurance_panel.gd
+new file mode 100644
+index 0000000..50ff5ed
+--- /dev/null
++++ b/scripts/ui/insurance_panel.gd
+@@ -0,0 +1,107 @@
++class_name InsurancePanel
++extends VBoxContainer
++## Seguros (InsuranceSim): tus pólizas por edificio con la aseguradora externa, seguro de carga y
++## la gestión de tu propia aseguradora (tarifa, clientes, primas y siniestros).
++
++signal message(text: String, category: String)
++
++var head: RichTextLabel
++var own_box: VBoxContainer
++var list: VBoxContainer
++var log_text: RichTextLabel
++
++
++func setup() -> void:
++	add_theme_constant_override("separation", 8)
++	head = UIKit.rich()
++	add_child(head)
++	own_box = VBoxContainer.new()
++	own_box.add_theme_constant_override("separation", 6)
++	add_child(own_box)
++	add_child(HSeparator.new())
++	list = VBoxContainer.new()
++	list.add_theme_constant_override("separation", 4)
++	add_child(list)
++	add_child(HSeparator.new())
++	add_child(UIKit.label("Siniestros recientes", 15, UIKit.ACCENT))
++	log_text = UIKit.rich()
++	add_child(log_text)
++
++
++func refresh() -> void:
++	var gs := GameState
++	if head == null or not GlobalEconSim.ready(gs):
++		return
++	UIKit.clear(own_box)
++	UIKit.clear(list)
++	var s := InsuranceSim.st(gs)
++	var lm: Dictionary = s.get("last_month", {})
++	var txt := "[b]Seguros[/b] con %s (caja %s)\n" % [InsuranceSim.external_label(), Fmt.money(InsuranceSim.external_cash(gs))]
++	txt += "Primas este mes: [b]%s[/b] · Mes anterior: primas %s, indemnizaciones %s\n" % [Fmt.money2(InsuranceSim.total_premiums(gs)),
++		Fmt.money(float(lm.get("premiums", 0.0))), Fmt.money(float(lm.get("claims", 0.0)))]
++	for t in InsuranceSim.TYPES:
++		var td := InsuranceSim.type_def(t)
++		txt += "[color=#aaa]• %s: %s Deducible %d %%.[/color]\n" % [InsuranceSim.type_label(t), str(td.get("description", "")), int(float(td.get("deductible", 0.1)) * 100.0)]
++	head.text = txt
++	var cargo := CheckBox.new()
++	cargo.text = "Seguro de carga del comercio exterior (%s/mes)" % Fmt.money2(InsuranceSim.cargo_premium(gs))
++	cargo.button_pressed = bool(s.get("cargo", false))
++	cargo.toggled.connect(func(on): InsuranceSim.set_cargo(GameState, on))
++	own_box.add_child(cargo)
++	for b in gs.player_buildings():
++		if InsuranceSim.is_insurer(gs, b):
++			own_box.add_child(_insurer_row(gs, b))
++	for b in gs.player_buildings():
++		if InsuranceSim.eligible(gs, b, "incendio"):
++			list.add_child(_building_row(gs, b))
++	var l: Array = s.get("log", [])
++	var out := ""
++	for i in range(l.size() - 1, maxi(-1, l.size() - 11), -1):
++		out += "[color=#aaa]%s[/color] %s\n" % [l[i]["date"], l[i]["text"]]
++	log_text.text = out if out != "" else "[color=#aaa]Sin siniestros.[/color]"
++
++
++func _building_row(gs, b: Dictionary) -> Control:
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", 6)
++	var name := UIKit.label(gs.building_label(b), 14)
++	name.custom_minimum_size.x = 170
++	name.clip_text = true
++	row.add_child(name)
++	var bid := int(b["id"])
++	for t in ["incendio", "robo", "cosecha"]:
++		if not InsuranceSim.eligible(gs, b, t):
++			continue
++		var cb := CheckBox.new()
++		cb.text = "%s %s" % [InsuranceSim.type_label(t), Fmt.money2(InsuranceSim.premium(gs, b, t))]
++		cb.button_pressed = InsuranceSim.has_policy(gs, b, t)
++		var tt: String = t
++		cb.toggled.connect(func(on):
++			var err := InsuranceSim.set_policy(GameState, GameState.get_building(bid), tt, on)
++			if err != "":
++				message.emit(err, "jugador"))
++		row.add_child(cb)
++	return row
++
++
++func _insurer_row(gs, b: Dictionary) -> Control:
++	var panel := PanelContainer.new()
++	panel.add_theme_stylebox_override("panel", UIKit.panel_style(UIKit.BG_LIGHT, 6, 6))
++	var v := VBoxContainer.new()
++	panel.add_child(v)
++	var o := InsuranceSim.own_state(gs, b)
++	var last: Dictionary = o.get("last", {})
++	var tot: Dictionary = o.get("total", {})
++	var t := UIKit.rich()
++	t.text = "[b]Tu aseguradora: %s[/b]\nClientes %d de %d posibles · %d %% de los interesados compra con tu tarifa\nMes anterior: primas %s · siniestros %s · Total: primas %s, siniestros %s" % [
++		gs.building_label(b), InsuranceSim.own_clients(gs, b), InsuranceSim.capacity(gs, b), int(InsuranceSim.demand_share(float(o.get("rate", 1.2))) * 100.0),
++		Fmt.money(float(last.get("premiums", 0.0))), Fmt.money(float(last.get("claims", 0.0))), Fmt.money(float(tot.get("premiums", 0.0))), Fmt.money(float(tot.get("claims", 0.0)))]
++	v.add_child(t)
++	var row := HBoxContainer.new()
++	row.add_child(UIKit.label("Tarifa (× prima justa):", 14, UIKit.TEXT_DIM))
++	var bid := int(b["id"])
++	var oc := InsuranceSim.own_cfg()
++	var on_rate := func(val): InsuranceSim.set_rate(GameState, GameState.get_building(bid), float(val))
++	row.add_child(UIKit.spin(float(oc.get("min_rate", 0.5)), float(oc.get("max_rate", 2.5)), 0.05, float(o.get("rate", 1.2)), on_rate, 90))
++	v.add_child(row)
++	return panel
+diff --git a/scripts/ui/stock_panel.gd b/scripts/ui/stock_panel.gd
+new file mode 100644
+index 0000000..3f7a3fe
+--- /dev/null
++++ b/scripts/ui/stock_panel.gd
+@@ -0,0 +1,168 @@
++class_name StockPanel
++extends VBoxContainer
++## Bolsa de valores mundial (StockSim): ley, tu S.A. (convertir, emitir, recomprar, dividendos),
++## tabla de empresas del país y del mundo con precios en su moneda y convertidos, comprar y vender.
++
++signal message(text: String, category: String)
++
++var head: RichTextLabel
++var own_box: VBoxContainer
++var list: VBoxContainer
++var log_text: RichTextLabel
++var _qty := 10
++
++
++func setup() -> void:
++	add_theme_constant_override("separation", 8)
++	head = UIKit.rich()
++	add_child(head)
++	own_box = VBoxContainer.new()
++	own_box.add_theme_constant_override("separation", 6)
++	add_child(own_box)
++	add_child(HSeparator.new())
++	var row := HBoxContainer.new()
++	row.add_child(UIKit.label("Acciones por operación:", 14, UIKit.TEXT_DIM))
++	row.add_child(UIKit.spin(1, 100000, 1, _qty, func(v): _qty = int(v), 100))
++	add_child(row)
++	list = VBoxContainer.new()
++	list.add_theme_constant_override("separation", 4)
++	add_child(list)
++	add_child(HSeparator.new())
++	add_child(UIKit.label("Movimientos", 15, UIKit.ACCENT))
++	log_text = UIKit.rich()
++	add_child(log_text)
++
++
++func _msg(err: String, ok: String) -> void:
++	message.emit(err if err != "" else ok, "jugador" if err != "" else "negocio")
++	refresh()
++
++
++func refresh() -> void:
++	var gs := GameState
++	if head == null:
++		return
++	UIKit.clear(own_box)
++	UIKit.clear(list)
++	var why := StockSim.block_reason(gs)
++	var l := StockSim.law(gs)
++	var s := "[b]Bolsa de valores mundial[/b]\n"
++	if why != "":
++		s += "[color=#e9b949]%s[/color]\n" % why
++		if StockSim.era_ok(gs):
++			s += "Probabilidad de que el gobierno actual (%s) la apruebe: %d %%.\n" % [str(GovSim.policy(gs).get("label", "")), int(StockSim.approval_chance(gs) * 100.0)]
++			var pw := StockSim.propose_block_reason(gs)
++			var b := UIKit.button("Proponer la Ley de Mercado de Valores (%s)" % Fmt.money(StockSim.law_cost(gs)), func():
++				_msg(StockSim.propose_law(GameState), "Propuesta enviada al gobierno."))
++			b.disabled = pw != ""
++			b.tooltip_text = pw
++			own_box.add_child(b)
++		head.text = s
++		log_text.text = _log_text(gs)
++		return
++	s += "Aprobada el %s (%s). Índice de %s: %d · P/G del ciclo: %.1f\n" % [TimeManager.date_from_day(int(l.get("approved_day", 0)), TimeManager.start_year()),
++		"a propuesta tuya" if str(l.get("by", "")) == "jugador" else "por iniciativa del gobierno", GlobalEconSim.country_label(GlobalEconSim.home_id(gs)),
++		int(float(GlobalEconSim.home(gs).get("ind", {}).get("bolsa", 100.0))), GlobalEconSim.eff(gs, "pe", 10.0)]
++	s += "Tu cartera (otras empresas): [b]%s[/b]\n" % Fmt.money(StockSim.portfolio_value(gs))
++	head.text = s
++	_own_section(gs)
++	for r in StockSim.rows(gs):
++		if str(r["kind"]) != "jugador":
++			list.add_child(_company_row(gs, r))
++	log_text.text = _log_text(gs)
++
++
++func _own_section(gs) -> void:
++	var co := StockSim.player_company(gs)
++	if co.is_empty():
++		var why := StockSim.convert_block_reason(gs)
++		var b := UIKit.button("Convertir tu empresa en S.A. (inscripción %s)" % Fmt.money(float(StockSim.cfg().get("listing_fee", 250)) * gs.price_mult()), func():
++			_msg(StockSim.convert_to_sa(GameState), "Tu empresa ya es una S.A."))
++		b.disabled = why != ""
++		b.tooltip_text = why if why != "" else "Todas tus empresas con fines de lucro pasan a ser una sociedad anónima con %d acciones (todas tuyas)." % int(StockSim.cfg().get("company_shares", 1000))
++		own_box.add_child(b)
++		return
++	var ctrl := StockSim.controller(co)
++	var t := UIKit.rich()
++	var txt := "[b]%s[/b] · %d acciones a %s · valor de mercado %s\n" % [str(co["name"]), int(co["shares"]), Fmt.money2(float(co["price"])), Fmt.money(StockSim.market_cap(gs, co))]
++	txt += "Tu participación: [b]%d %%[/b] · Ganancia anual estimada %s · Precio fundamental %s\n" % [int(StockSim.stake(co, StockSim.PLAYER) * 100.0), Fmt.money(StockSim.annual_profit(co)), Fmt.money2(StockSim.fundamental(gs, co))]
++	txt += "Dividendos: reparte el %d %% de la ganancia (último: %s por acción)\n" % [int(StockSim.payout_of(co) * 100.0), Fmt.money2(float(co.get("div_last", 0.0)))]
++	if ctrl != StockSim.PLAYER:
++		txt += "[color=#e55]Perdiste el control: %s tiene el %d %%. Recompra acciones para recuperarlo.[/color]\n" % [StockSim.holder_label(gs, ctrl), int(StockSim.stake(co, ctrl) * 100.0)]
++	elif StockSim.stake(co, StockSim.PLAYER) < 0.5:
++		txt += "[color=#e9b949]Tienes menos del 50 %: riesgo de compra hostil.[/color]\n"
++	var tops := []
++	for h in StockSim.top_holders(gs, co, 4):
++		tops.append("%s %d %%" % [h[0], int(float(h[1]) * 100.0)])
++	txt += "[color=#aaa]Accionistas: %s[/color]\n" % ", ".join(tops)
++	txt += "[color=#aaa]Ahorradores dispuestos a invertir: %s[/color]" % Fmt.money(StockSim.investor_capacity(gs))
++	t.text = txt
++	own_box.add_child(t)
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", 6)
++	var max_q := int(float(co["shares"]) * float(StockSim.cfg().get("max_issue_ratio", 0.35)))
++	var issue_spin := UIKit.spin(1, maxi(1, max_q), 1, maxi(1, max_q / 3), func(_v): pass, 90)
++	row.add_child(issue_spin)
++	var ib := UIKit.button("Emitir acciones", func():
++		var r := StockSim.issue(GameState, int(issue_spin.value))
++		_msg(str(r["error"]), "Capital obtenido: %s." % Fmt.money(float(r["raised"]))))
++	ib.tooltip_text = StockSim.issue_block_reason(gs, int(issue_spin.value))
++	row.add_child(ib)
++	var bb_spin := UIKit.spin(1, maxi(1, int(co["shares"])), 1, 50, func(_v): pass, 90)
++	row.add_child(bb_spin)
++	row.add_child(UIKit.button("Recomprar", func():
++		var r := StockSim.buyback(GameState, int(bb_spin.value))
++		_msg(str(r["error"]), "Recompraste %d acciones." % int(r["bought"]))))
++	own_box.add_child(row)
++	var row2 := HBoxContainer.new()
++	row2.add_child(UIKit.label("Reparto de dividendos (%):", 14, UIKit.TEXT_DIM))
++	var on_payout := func(v):
++		var err := StockSim.set_payout(GameState, float(v) / 100.0)
++		if err != "":
++			message.emit(err, "jugador")
++	var ps := UIKit.spin(0, float(StockSim.cfg().get("payout_max", 0.8)) * 100.0, 5, float(co.get("payout", 0.3)) * 100.0, on_payout, 80)
++	ps.editable = ctrl == StockSim.PLAYER
++	row2.add_child(ps)
++	own_box.add_child(row2)
++
++
++func _company_row(gs, r: Dictionary) -> Control:
++	var panel := PanelContainer.new()
++	panel.add_theme_stylebox_override("panel", UIKit.panel_style(UIKit.BG_LIGHT, 6, 6))
++	var v := VBoxContainer.new()
++	panel.add_child(v)
++	var co := StockSim.company(gs, str(r["id"]))
++	var foreign := str(r["kind"]) == "extranjera"
++	var price_txt := GlobalEconSim.fmt_foreign(gs, float(r["price"]), str(r["country"])) if foreign else Fmt.money2(float(r["price"]))
++	var col := "#6c6" if float(r["change"]) >= 0.0 else "#e66"
++	var t := UIKit.rich()
++	var where := GlobalEconSim.country_label(str(r["country"])) if foreign else "tu país (empresa NPC)"
++	t.text = "[b]%s[/b] · %s\nPrecio %s · [color=%s]%+d %% en 12 meses[/color] · dividendo %s\nTienes %d (%s)" % [
++		str(r["name"]), where, price_txt, col, int(round(float(r["change"]) * 100.0)),
++		GlobalEconSim.fmt_foreign(gs, float(r["div"]), str(r["country"])) if foreign else Fmt.money2(float(r["div"])),
++		int(r["mine"]), Fmt.money(StockSim.holding_value(gs, co))]
++	v.add_child(t)
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", 6)
++	var cid := str(r["id"])
++	var q := StockSim.quote_buy(gs, cid, _qty)
++	var b := UIKit.button("Comprar (%s)" % Fmt.money(float(q["total"])), func():
++		var res := StockSim.buy(GameState, cid, _qty)
++		_msg(str(res["error"]), "Compraste %d acciones por %s." % [int(res["bought"]), Fmt.money(float(res["cost"]))]))
++	b.disabled = int(q["available"]) <= 0
++	row.add_child(b)
++	var s := UIKit.button("Vender", func():
++		var res := StockSim.sell(GameState, cid, _qty)
++		_msg(str(res["error"]), "Vendiste %d acciones por %s." % [int(res["sold"]), Fmt.money(float(res["received"]))]))
++	s.disabled = int(r["mine"]) <= 0
++	row.add_child(s)
++	v.add_child(row)
++	return panel
++
++
++func _log_text(gs) -> String:
++	var l: Array = StockSim.st(gs).get("log", [])
++	var out := ""
++	for i in range(l.size() - 1, maxi(-1, l.size() - 11), -1):
++		out += "[color=#aaa]%s[/color] %s\n" % [l[i]["date"], l[i]["text"]]
++	return out if out != "" else "[color=#aaa]Sin movimientos.[/color]"

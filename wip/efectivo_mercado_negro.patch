@@ -1,0 +1,1921 @@
+diff --git a/data/eras.json b/data/eras.json
+index 3eb6719..f9478ed 100644
+--- a/data/eras.json
++++ b/data/eras.json
+@@ -57,6 +57,10 @@
+   [
+    "educacion",
+    "Educación y ciencia"
++  ],
++  [
++   "informal",
++   "Economía informal"
+   ]
+  ]
+ }
+diff --git a/data/mercado_negro.json b/data/mercado_negro.json
+new file mode 100644
+index 0000000..9109b63
+--- /dev/null
++++ b/data/mercado_negro.json
+@@ -0,0 +1,178 @@
++{
++ "_nota": "Sección E — impuesto a la venta, efectivo/banco, ventas no declaradas, mercado negro, inspecciones y soborno (MoneySim). Montos nominales × dificultad × inflación (price_mult). Ver docs/EFECTIVO_MERCADO_NEGRO.md.",
++ "sales_tax": {
++  "_nota": "Tasa sobre cada venta declarada de tus negocios (y cobros de contratos). Se causa al vender y se paga al tesoro con los demás impuestos del mes. La tasa del gobierno (government.json → sales_tax, si existe) o by_gov; si no, by_era. Se multiplica por era_mult.",
++  "labels": {
++   "1": "Alcabala",
++   "2": "Impuesto a las ventas",
++   "3": "IVA"
++  },
++  "by_era": {
++   "1": 0.02,
++   "2": 0.03,
++   "3": 0.05
++  },
++  "era_mult": {
++   "1": 1.0,
++   "2": 1.0,
++   "3": 1.3
++  },
++  "by_gov": {
++   "virrey_austero": 0.02,
++   "virrey_mercantil": 0.03,
++   "virrey_reformista": 0.025,
++   "liberal": 0.02,
++   "conservador": 0.035,
++   "social": 0.05,
++   "verde": 0.04
++  }
++ },
++ "undeclared": {
++  "_nota": "Ventas sin declarar: en tus negocios, una parte de las ventas al público (la de tus personas de confianza) se cobra en efectivo; en contratos, solo con contrapartes de reputación alta.",
++  "trust_affinity": 55,
++  "share_per_trusted": 0.05,
++  "max_share": 0.5,
++  "contract_min_reputation": 70,
++  "risk_per_1000": 4.0,
++  "black_wage_discount": 0.15,
++  "black_wage_risk_per_1000": 5.0
++ },
++ "deposit": {
++  "_nota": "Depositar efectivo: cada mes hay un margen libre (free_monthly) más lo que se puede 'lavar' por tus negocios legales (launder_share de sus ventas del mes anterior). Lo que exceda suma riesgo.",
++  "free_monthly": 200,
++  "launder_share": 0.25,
++  "launder_share_tech": 0.5,
++  "launder_tech": "contabilidad_paralela",
++  "risk_per_1000_excess": 5.0
++ },
++ "risk": {
++  "max": 100,
++  "monthly_decay": 3.0,
++  "monthly_decay_share": 0.08
++ },
++ "inspection": {
++  "_nota": "Probabilidad mensual = riesgo/100 × (base + police_weight × cobertura policial) × gov_mult (tope max_chance). Si hay inspección, encuentra con find_base + find_risk × riesgo/100 + find_police × cobertura.",
++  "min_risk": 5,
++  "base": 0.35,
++  "police_weight": 0.5,
++  "max_chance": 0.7,
++  "gov_mult": {
++   "virrey_austero": 0.8,
++   "virrey_mercantil": 1.0,
++   "virrey_reformista": 1.1,
++   "liberal": 0.85,
++   "conservador": 1.3,
++   "social": 1.1,
++   "verde": 1.0
++  },
++  "find_base": 0.3,
++  "find_risk": 0.5,
++  "find_police": 0.25,
++  "clean_risk_mult": 0.7
++ },
++ "case": {
++  "_nota": "Hallazgo: multa (al tesoro), decomiso de efectivo no declarado y de la mercancía oculta, cierre de los negocios ocultos, baja de reputación y, si es grave, cárcel del jefe o de un familiar. Hay bribe_days para intentar un soborno.",
++  "bribe_days": 10,
++  "fine_base": 150,
++  "fine_per_risk": 10,
++  "fine_undeclared_share": 0.3,
++  "seize_cash_share": 0.5,
++  "seize_cash_share_grave": 1.0,
++  "reputation_loss": 8,
++  "grave_risk": 70,
++  "grave_repeat": 3,
++  "prison_days": [
++   60,
++   180
++  ],
++  "risk_after": 0.3
++ },
++ "bribe": {
++  "_nota": "Probabilidad = base + per_fine_ratio × (monto / multa) + corruption_weight × corrupción de la familia − police_penalty × cobertura policial, entre min y max. Aceptado: se archiva el caso (el dinero va a un funcionario) y sube la corrupción (PoliticsSim). Rechazado: no se cobra el soborno pero la multa sube (rejected_fine_mult) y el caso se resuelve ya.",
++  "base": 0.2,
++  "per_fine_ratio": 0.45,
++  "corruption_weight": 0.003,
++  "police_penalty": 0.2,
++  "min": 0.05,
++  "max": 0.9,
++  "corruption_add": 15,
++  "corruption_add_rejected": 5,
++  "rejected_fine_mult": 1.5
++ },
++ "hidden_demand": {
++  "_nota": "Demanda propia de los negocios ocultos: cada semana, adultos con ahorros de sobra (buffer_days de necesidades) compran hasta per_adult × demand del tipo, gastando como mucho max_share de su excedente.",
++  "buffer_days": 30,
++  "max_share": 0.08,
++  "buy_chance": 0.5
++ },
++ "hidden_types": {
++  "cultivo_ilicito": {
++   "label": "Cultivo ilícito",
++   "product": "Cosecha ilícita",
++   "tech": "cultivo_ilicito",
++   "order": 1,
++   "setup_cost": 300,
++   "daily_output": 3.0,
++   "unit_cost": 0.3,
++   "cost_to": "citizens",
++   "daily_wages": 2.5,
++   "workers": 3,
++   "price": 6.0,
++   "demand": 0.6,
++   "max_stock": 120,
++   "risk_per_day": 0.08,
++   "description": "Parcela escondida en el monte. Poca inversión, jornaleros pagados en efectivo."
++  },
++  "destileria_clandestina": {
++   "label": "Destilería clandestina",
++   "product": "Aguardiente clandestino",
++   "tech": "destileria_clandestina",
++   "order": 2,
++   "setup_cost": 450,
++   "daily_output": 4.0,
++   "unit_cost": 0.5,
++   "cost_to": "citizens",
++   "daily_wages": 3.0,
++   "workers": 3,
++   "price": 5.0,
++   "demand": 1.0,
++   "max_stock": 150,
++   "risk_per_day": 0.1,
++   "description": "Alambique sin licencia: aguardiente sin alcabala, vendido de puerta en puerta."
++  },
++  "bodega_contrabando": {
++   "label": "Bodega de contrabando",
++   "product": "Mercancía de contrabando",
++   "tech": "rutas_contrabando",
++   "order": 3,
++   "setup_cost": 600,
++   "daily_output": 3.0,
++   "unit_cost": 3.0,
++   "cost_to": "outside",
++   "daily_wages": 3.0,
++   "workers": 2,
++   "price": 11.0,
++   "demand": 0.5,
++   "max_stock": 100,
++   "risk_per_day": 0.12,
++   "description": "Bienes importados que entran sin arancel por caminos de herradura. El pago al proveedor sale del pueblo."
++  },
++  "fabrica_contrabando": {
++   "label": "Fábrica de contrabando",
++   "product": "Tabaco de contrabando",
++   "tech": "fabrica_contrabando",
++   "order": 4,
++   "setup_cost": 2000,
++   "daily_output": 10.0,
++   "unit_cost": 0.8,
++   "cost_to": "citizens",
++   "daily_wages": 8.0,
++   "workers": 6,
++   "price": 7.0,
++   "demand": 1.2,
++   "max_stock": 300,
++   "risk_per_day": 0.2,
++   "description": "Taller oculto que enrolla tabaco sin estanco ni impuestos."
++  }
++ }
++}
+diff --git a/data/technologies_negro.json b/data/technologies_negro.json
+new file mode 100644
+index 0000000..e66d358
+--- /dev/null
++++ b/data/technologies_negro.json
+@@ -0,0 +1,57 @@
++{
++ "_nota": "Sección E — mercado negro (MoneySim). Rama propia 'informal' (fila aparte en el árbol, sin superponerse). Las tecnologías habilitan los negocios ocultos de data/mercado_negro.json (campo 'tech').",
++ "economia_informal": {
++  "label": "Economía informal",
++  "era": 1,
++  "branch": "informal",
++  "cost": 300,
++  "requires": ["contabilidad"],
++  "effects": [],
++  "description": "Redes de confianza, pagos en efectivo y sueldos en negro. Base para los negocios ocultos."
++ },
++ "cultivo_ilicito": {
++  "label": "Cultivo ilícito",
++  "era": 1,
++  "branch": "informal",
++  "cost": 400,
++  "requires": ["economia_informal", "herbolaria"],
++  "effects": [],
++  "description": "Parcelas escondidas: cosecha ilícita que se vende solo en efectivo. Riesgo de inspección."
++ },
++ "destileria_clandestina": {
++  "label": "Destilería clandestina",
++  "era": 1,
++  "branch": "informal",
++  "cost": 500,
++  "requires": ["economia_informal"],
++  "effects": [],
++  "description": "Alambiques sin licencia: aguardiente clandestino sin alcabala."
++ },
++ "rutas_contrabando": {
++  "label": "Rutas de contrabando",
++  "era": 1,
++  "branch": "informal",
++  "cost": 700,
++  "requires": ["economia_informal", "navegacion"],
++  "effects": [],
++  "description": "Caminos que evitan la aduana: mercancía importada sin arancel."
++ },
++ "contabilidad_paralela": {
++  "label": "Contabilidad paralela",
++  "era": 2,
++  "branch": "informal",
++  "cost": 1500,
++  "requires": ["economia_informal", "banca_moderna"],
++  "effects": [],
++  "description": "Libros dobles: permite depositar más efectivo a través de tus negocios legales sin levantar sospechas."
++ },
++ "fabrica_contrabando": {
++  "label": "Fábrica de contrabando",
++  "era": 2,
++  "branch": "informal",
++  "cost": 2000,
++  "requires": ["rutas_contrabando", "fabricas"],
++  "effects": [],
++  "description": "Talleres ocultos de tabaco de contrabando: más producción, más riesgo."
++ }
++}
+diff --git a/docs/EFECTIVO_MERCADO_NEGRO.md b/docs/EFECTIVO_MERCADO_NEGRO.md
+new file mode 100644
+index 0000000..c714bd6
+--- /dev/null
++++ b/docs/EFECTIVO_MERCADO_NEGRO.md
+@@ -0,0 +1,111 @@
++# Sección E — Impuestos, efectivo y mercado negro
++
++Pedido de Sebastián: impuesto a la venta además del impuesto a la ganancia; dos tipos de dinero
++(efectivo y banco); ventas sin declarar solo con gente de confianza; mercado negro con investigación;
++inspecciones, multas, cárcel y la opción de soborno. Todo llega a Notificaciones.
++
++Código: `scripts/sim/money_sim.gd` (MoneySim). Datos: `data/mercado_negro.json` y
++`data/technologies_negro.json`. Interfaz: `scripts/ui/cash_panel.gd` (botón **Efectivo y riesgo**).
++Pruebas: `tests/test_efectivo.tscn`.
++
++## 1. Impuesto a la venta
++
++| Época | Nombre | Tasa base |
++|---|---|---|
++| Colonial | Alcabala | 2 % |
++| Industrial | Impuesto a las ventas | 3 % |
++| Moderna | IVA | 5 % (× 1,3 sobre la tasa del gobierno) |
++
++- Cada gobierno tiene su tasa en `mercado_negro.json → sales_tax.by_gov` (virrey austero 2 %, mercantilista 3 %, reformista 2,5 %, liberal 2 %, conservador 3,5 %, social 5 %, verde 4 %). Si `government.json` define `sales_tax` para un gobierno, esa manda.
++- Se **causa en cada venta declarada** de tus negocios (`BusinessSim.earn` con clave `ventas`) y en cada cobro de un contrato de venta declarado (`ContractSim._collect`). El dinero entra completo a tu banco; el impuesto queda pendiente (`b["iva_due"]` por negocio y `informal["iva_due"]` para contratos).
++- Se **paga al tesoro cada mes** junto con los demás impuestos (`GovSim._collect_taxes` → `MoneySim.collect_sales_tax`). Aparece en el libro contable del negocio como `iva`, en `government.taxes_last["iva"]` y en Finanzas (pagado y causado).
++- No causan IVA: alquileres, intereses, subsidios, venta de viviendas y las fundaciones sin fines de lucro.
++- **Balance**: la tasa inicial es baja (2 % en la Colonia) y se descuenta de la ganancia del mes siguiente, así que el impuesto a la ganancia baja un poco. No se cambiaron las demás tasas. Las pruebas existentes pasan sin ajustes.
++
++## 2. Efectivo y banco
++
++- `gs.money` sigue siendo el **total** del jugador: nada de lo existente cambia.
++- `gs.cash` es la parte en efectivo. `MoneySim.bank(gs) = gs.money − gs.cash`.
++- API: `MoneySim.cash(gs)`, `bank(gs)`, `deposit(gs, monto)`, `withdraw(gs, monto)`, `pay_cash(gs, monto)`. Las acciones devuelven `""` si salen bien o el motivo si no.
++- **Por el banco** (como siempre, con `gs.add_money`): gobierno, impuestos, créditos, empresas formales y contratos declarados.
++- **En efectivo**: sueldos en negro, jornaleros y proveedores informales de los negocios ocultos, y sobornos.
++- **Depósitos**: cada mes se puede depositar sin sospechas un margen libre (200 × precios) más el 25 % de las ventas legales del mes anterior (el "lavado" por tus negocios). Con *Contabilidad paralela* sube al 50 %. Lo que exceda suma riesgo (5 puntos por cada 1.000).
++- Si el banco queda en rojo y tienes efectivo, el efectivo lo cubre al final del día. Eso cuenta como depósito.
++
++## 3. Ventas no declaradas
++
++- **Negocios**: casilla *No declarar* por negocio. Solo funciona con **personas de confianza**: familiares adultos y conocidos con relación ≥ 55 (se sube conversando). Cada una permite cobrar el 5 % de las ventas al público sin factura, hasta un máximo del 50 %. Esa parte entra en **efectivo**, no causa IVA y no aparece en el libro oficial, así que tampoco paga impuesto a la ganancia. Queda en `b["cash_ledger"]`.
++- **Contratos de venta**: casilla *No declarar* si la contraparte lo acepta. Solo aceptan empresas NPC o pueblos con reputación ≥ 70 (de `ContractSim.reputation`). El gobierno y la importación nunca aceptan. El cobro entra en efectivo y sin IVA.
++- **Sueldos en negro**: casilla por negocio. El sueldo se paga en efectivo con un 15 % de descuento y sin impuesto de nómina. Si falta efectivo, se paga normal por el banco. En el libro aparece como `salarios_negro`.
++- Cada operación no declarada suma riesgo: 4 puntos por cada 1.000 vendidos y 5 por cada 1.000 en sueldos, a precios ajustados.
++
++## 4. Mercado negro
++
++Rama propia del árbol, **Economía informal**, en una fila nueva de `eras.json`, así que no se superpone con otras ramas:
++
++| Tecnología | Época | Requiere | Habilita |
++|---|---|---|---|
++| Economía informal | 1 | Contabilidad | base de la rama |
++| Cultivo ilícito | 1 | Economía informal, Herbolaria | Cultivo ilícito (cosecha ilícita) |
++| Destilería clandestina | 1 | Economía informal | Destilería clandestina (aguardiente clandestino) |
++| Rutas de contrabando | 1 | Economía informal, Navegación | Bodega de contrabando (mercancía de contrabando, importada sin arancel) |
++| Contabilidad paralela | 2 | Economía informal, Banca moderna | más margen de depósito |
++| Fábrica de contrabando | 2 | Rutas de contrabando, Fábricas | Fábrica de contrabando (tabaco de contrabando) |
++
++**Negocios ocultos.** No aparecen en el mapa y se guardan en `informal["hidden"]`. Se montan desde el panel pagando en efectivo; el montaje se reparte entre ciudadanos.
++
++- **Cada día**: producen y pagan jornaleros e insumos en efectivo, que se reparten entre los vecinos más pobres. Si falta efectivo, se paran y te llega un aviso. Los insumos de la bodega de contrabando se pagan afuera, como una importación.
++- **Cada semana**: venden solo en efectivo, con **demanda propia** (`demand` unidades por adulto a la semana) y **precios altos**. Solo compran los vecinos con ahorros de sobra (30 días de necesidades), y gastan como mucho el 8 % de su excedente.
++- **Riesgo**: cada día suman riesgo, más los de mayor escala.
++
++## 5. Riesgo, inspección y consecuencias
++
++- **Riesgo** de 0 a 100. Cada mes baja un 8 % y 3 puntos más.
++- **Inspección mensual**: probabilidad = riesgo/100 × (0,35 + 0,5 × cobertura policial) × dureza del gobierno. La dureza va de 0,8 (virrey austero) a 1,3 (conservador). El tope es 70 %.
++- **Hallazgo**, si hay algo que encontrar: probabilidad = 0,3 + 0,5 × riesgo/100 + 0,25 × policía. Si no encuentran nada, el riesgo baja un 30 %.
++- **Caso abierto**: multa de (150 + 10 × riesgo) × precios, más el 30 % de lo no declarado el mes anterior. Tienes **10 días** para responder:
++  - **Soborno**: probabilidad = 0,2 + 0,45 × (monto / multa) + 0,003 × corrupción de la familia − 0,2 × policía, dividida por la dureza del gobierno. Queda entre 5 % y 90 %.
++    - **Aceptado**: el caso se archiva, el dinero va a un funcionario (`PoliticsSim._pay_official`), la corrupción de la familia sube 15 (con más riesgo de escándalo en `PoliticsSim`) y el riesgo baja.
++    - **Rechazado**: no te cobran el soborno, pero la corrupción sube 5 y la multa sube × 1,5. El caso se resuelve en el acto.
++  - **Aceptar la sanción**, o dejar vencer el plazo.
++- **Sanción**:
++  - Multa al tesoro, del banco primero.
++  - Decomiso del 50 % del efectivo (100 % si es grave).
++  - Cierre de todos los negocios ocultos y decomiso de su mercancía.
++  - Tus negocios vuelven a declarar todo.
++  - La reputación pública baja 8 puntos (16 si es grave).
++- **Caso grave** (riesgo ≥ 70 o tercera falta): cárcel de 60 a 180 días para el jefe o para un familiar adulto que asume la culpa.
++- **Notificaciones** en la categoría *jugador*: inspección, hallazgo, sanción y decomiso, soborno aceptado o rechazado, depósitos sospechosos y negocios parados. También quedan en el historial del panel.
++
++## 6. Economía cerrada
++
++| Movimiento | Destino |
++|---|---|
++| IVA, multas y decomisos de efectivo | Tesoro |
++| Sobornos | Un funcionario del pueblo |
++| Montaje, sueldos e insumos informales | Ciudadanos |
++| Ventas ocultas | Salen del dinero de los vecinos y entran en tu efectivo |
++| Insumos de la mercancía de contrabando | Afuera (como una importación) |
++| Mercancía decomisada | Se destruye (no es dinero) |
++
++## 7. Estado y guardado
++
++- En `GameState`:
++  - `cash`: 0 por defecto.
++  - `informal`: `risk`, `log`, `hidden`, `next_hidden_id`, `iva_due`, `deposited_month`, `case`, `offenses`, `month`, `last_month`, `totals`, `trusted`, `rng_state`.
++- En cada edificio: `iva_due`, `undeclared`, `black_wages` y `cash_ledger`.
++- En cada contrato: `undeclared`.
++- Las partidas antiguas cargan con valores por defecto (`MoneySim.init_state`, llamado en `_init_expansions`).
++- MoneySim usa su propio generador aleatorio (`informal.rng_state`), así que no altera la secuencia de `gs.rng` del resto de la simulación.
++
++## 8. Enganches en archivos compartidos
++
++| Archivo | Cambio |
++|---|---|
++| `game_state.gd` | Variables `cash` e `informal`, limpieza, guardado y carga, `MoneySim.init_state`, `MoneySim.daily` y `MoneySim.monthly` |
++| `business_sim.gd` | Claves `iva` y `salarios_negro` en `LEDGER_KEYS`; `earn` → `MoneySim.on_sale`; sueldos → `MoneySim.pay_wage_black` |
++| `gov_sim.gd` | `_collect_taxes` → `MoneySim.collect_sales_tax` |
++| `contract_sim.gd` | `_collect` → `MoneySim.on_contract_income` |
++| `hud.gd` | Botón, variable y visibilidad del panel `cash` |
++| `finance_panel.gd` | Dos líneas: efectivo/banco e IVA |
++| `eras.json` | Rama `informal` |
+diff --git a/docs/PENDIENTES.md b/docs/PENDIENTES.md
+index 0a2f502..b34ad57 100644
+--- a/docs/PENDIENTES.md
++++ b/docs/PENDIENTES.md
+@@ -27,7 +27,7 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
+ 13. **Contaminación**: enferma a los vecinos y trae multas. Se reduce con maquinaria especializada (filtros, depuradoras) y con energías renovables.
+ 15. **Guerras entre países sin combate** (moderadas): cortan rutas y cambian la demanda.
+ 
+-## E. Impuestos, efectivo y mercado negro
++## E. Impuestos, efectivo y mercado negro (hecho — ver docs/EFECTIVO_MERCADO_NEGRO.md)
+ 14. **Impuesto a la venta** (IVA) además del impuesto a la ganancia.
+ - **Dos tipos de dinero: efectivo y banco.** Las ventas no declaradas solo se hacen con personas de confianza y cobran en efectivo. Con efectivo se paga a quien lo acepte; con banco, las operaciones declaradas.
+ - **Mercado negro**, con investigación: cultivos, fábricas o mercancía sin impuestos.
+diff --git a/scripts/autoload/game_state.gd b/scripts/autoload/game_state.gd
+index ea6d575..65b1346 100644
+--- a/scripts/autoload/game_state.gd
++++ b/scripts/autoload/game_state.gd
+@@ -14,6 +14,7 @@ const MAX_HISTORY := 12 * 400
+ var running := false
+ var settings: Dictionary = {}
+ var money: float = 0.0
++var cash: float = 0.0                  # Sección E: parte de money en efectivo (banco = money - cash). MoneySim
+ var citizens: Dictionary = {}          # id (int) -> Citizen
+ var next_citizen_id: int = 1
+ var buildings: Array = []              # Array[Dictionary]
+@@ -32,6 +33,7 @@ var market: Dictionary = {}            # Libre mercado: empresas NPC, contratos,
+ var realestate: Dictionary = {}        # Bienes raíces: demanda de vivienda y contadores (RealEstateSim)
+ var economy: Dictionary = {}           # nivel de precios, inflación, oferta/demanda por bien
+ var map: Dictionary = {}               # Fase 9A: país por chunks, revelado y expediciones (MapSim)
++var informal: Dictionary = {}          # Sección E: IVA causado, riesgo, caso abierto, negocios ocultos (MoneySim)
+ var transit: Dictionary = {}           # Transporte: carreteras por puntos, buses, paraderos, parqueaderos (TransitSim)
+ var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, acometidas, tarifas y facturas (GridSim/WaterSim)
+ var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
+@@ -110,6 +112,8 @@ func _clear() -> void:
+ 	running = false
+ 	settings = {}
+ 	money = 0.0
++	cash = 0.0
++	informal = {}
+ 	citizens = {}
+ 	next_citizen_id = 1
+ 	buildings = []
+@@ -153,6 +157,7 @@ func _init_expansions() -> void:
+ 	RealEstateSim.init_state(self)
+ 	GridSim.init_state(self)
+ 	TransitSim.init_state(self)
++	MoneySim.init_state(self)   # Sección E: efectivo y mercado negro.
+ 
+ 
+ # --- Simulación diaria -----------------------------------------------------
+@@ -180,6 +185,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
+ 	FreeMarketSim.daily(self)     # Empresas NPC, contratos y planes del gobierno.
+ 	TechSim.end_day(self)
+ 	PlayerSim.daily(self)
++	MoneySim.daily(self)   # Sección E: negocios ocultos, banco en rojo y plazo del caso.
+ 	if new_month and running:
+ 		RealEstateSim.monthly(self)   # Bienes raíces: unidades, preventas, arriendo y venta.
+ 		GridSim.monthly(self)   # Redes: facturas de luz y agua, mantenimiento, inquilinos sin servicios.
+@@ -197,6 +203,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
+ 		AdvertisingSim.monthly(self)
+ 		EconomySim.monthly(self)
+ 		PlayerSim.monthly(self)
++		MoneySim.monthly(self)   # Sección E: inspecciones y cierre del mes.
+ 		_record_month()
+ 
+ 
+@@ -449,6 +456,8 @@ func to_dict() -> Dictionary:
+ 	return {
+ 		"settings": settings,
+ 		"money": money,
++		"cash": cash,
++		"informal": informal,
+ 		"citizens": cit,
+ 		"next_citizen_id": next_citizen_id,
+ 		"buildings": buildings,
+@@ -488,6 +497,8 @@ func load_dict(d: Dictionary) -> void:
+ 	settings = d.get("settings", {})
+ 	settings["seed"] = int(settings.get("seed", 0))
+ 	money = float(d.get("money", 0.0))
++	cash = float(d.get("cash", 0.0))
++	informal = d.get("informal", {})
+ 	for cd in d.get("citizens", []):
+ 		var c := Citizen.from_dict(cd)
+ 		citizens[c.id] = c
+diff --git a/scripts/sim/business_sim.gd b/scripts/sim/business_sim.gd
+index d17c8bb..800bae5 100644
+--- a/scripts/sim/business_sim.gd
++++ b/scripts/sim/business_sim.gd
+@@ -3,7 +3,7 @@ extends RefCounted
+ ## Negocios del jugador: producción, salarios, mantenimiento, contabilidad,
+ ## contratación manual y renuncias. Parámetros en data/businesses.json.
+ 
+-const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "subsidios", "salarios", "mantenimiento", "insumos", "impuestos", "multas", "reparaciones", "robos", "incobrables", "obras"]
++const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "subsidios", "salarios", "mantenimiento", "insumos", "impuestos", "iva", "salarios_negro", "multas", "reparaciones", "robos", "incobrables", "obras"]
+ const INCOME_KEYS := ["ventas", "alquileres", "intereses", "subsidios"]
+ ## Movimientos que no son ingreso ni gasto (inversión y capital prestado).
+ const NON_PNL_KEYS := ["obras", "prestado"]
+@@ -136,6 +136,10 @@ static func is_nonprofit(b: Dictionary) -> bool:
+ static func earn(gs, b: Dictionary, amount: float, key := "ventas") -> void:
+ 	if NpcBusinessSim.book(gs, b, amount, key, true):
+ 		return  # Libre mercado: empresa NPC (caja propia) u obra del gobierno (tesoro).
++	if key == "ventas":
++		amount = MoneySim.on_sale(gs, b, amount)   # Sección E: IVA causado y parte no declarada (en efectivo).
++		if amount <= 0.0:
++			return
+ 	ledger_add(b, key, amount)
+ 	if is_nonprofit(b):
+ 		b["reserve"] = float(b["reserve"]) + amount
+@@ -175,8 +179,9 @@ static func produce(gs) -> void:
+ 		for c in gs.employees_of(int(b["id"])):
+ 			if c.job_kind != "empleo":
+ 				continue
+-			c.money += c.wage
+-			pay(gs, b, c.wage, "salarios")
++			if not MoneySim.pay_wage_black(gs, b, c):   # Sección E: sueldo en negro (efectivo) si está activado.
++				c.money += c.wage
++				pay(gs, b, c.wage, "salarios")
+ 			c.experience += 1.0 / 365.0
+ 			c.skills[skill] = minf(100.0, float(c.skills.get(skill, 0.0)) + 0.02)
+ 		if b["status"] != "activo":
+diff --git a/scripts/sim/contract_sim.gd b/scripts/sim/contract_sim.gd
+index 19d2f12..9a344e0 100644
+--- a/scripts/sim/contract_sim.gd
++++ b/scripts/sim/contract_sim.gd
+@@ -1028,6 +1028,7 @@ static func _collect(gs, k: Dictionary, value: float) -> void:
+ 	if paid > 0.0:
+ 		gs.add_money(paid)
+ 		gs.add_counter("contract_sales", paid)
++		MoneySim.on_contract_income(gs, k, paid)   # Sección E: IVA o cobro en efectivo sin declarar.
+ 	k["paid"] = float(k.get("paid", 0.0)) + paid
+ 	k["owed"] = float(k.get("owed", 0.0)) + value - paid
+ 
+diff --git a/scripts/sim/gov_sim.gd b/scripts/sim/gov_sim.gd
+index a0eb4df..2c622c7 100644
+--- a/scripts/sim/gov_sim.gd
++++ b/scripts/sim/gov_sim.gd
+@@ -106,6 +106,7 @@ static func _collect_taxes(gs) -> void:
+ 			var fine: float = pol * float(p.get("env_fine", 0.0)) * gs.price_level() * 10.0
+ 			BusinessSim.pay(gs, b, fine, "multas")
+ 			totals["multas"] += fine
++	MoneySim.collect_sales_tax(gs, totals)   # Sección E: impuesto a la venta causado en el mes.
+ 	var total := 0.0
+ 	for k in totals:
+ 		total += float(totals[k])
+diff --git a/scripts/sim/money_sim.gd b/scripts/sim/money_sim.gd
+new file mode 100644
+index 0000000..2cc4829
+--- /dev/null
++++ b/scripts/sim/money_sim.gd
+@@ -0,0 +1,729 @@
++class_name MoneySim
++extends RefCounted
++## Sección E — impuesto a la venta (alcabala / impuesto a las ventas / IVA según la época),
++## dinero del jugador en EFECTIVO y en BANCO, ventas sin declarar con gente de confianza,
++## sueldos en negro, negocios ocultos del mercado negro, riesgo, inspecciones, hallazgos y soborno.
++## Ver docs/EFECTIVO_MERCADO_NEGRO.md. Parámetros en data/mercado_negro.json.
++##
++## Modelo del dinero: gs.money sigue siendo el TOTAL del jugador (nada existente cambia).
++## gs.cash es la parte en efectivo; el banco es gs.money - gs.cash. Todo lo que ya existía
++## (impuestos, créditos, empresas formales, gobierno) se mueve por el banco a través de
++## gs.add_money(). El efectivo solo entra por ventas no declaradas, retiros y negocios ocultos,
++## y sale por pagos a quien acepta efectivo (sueldos en negro, jornaleros y proveedores
++## informales, sobornos) o por depósitos. Si el banco queda en rojo, el efectivo lo cubre
++## (cuenta como depósito).
++## Economía cerrada: IVA, multas y decomisos van al tesoro; sobornos a un funcionario; sueldos,
++## insumos informales y montaje de negocios ocultos a ciudadanos; solo la mercancía de
++## contrabando se paga afuera (como una importación).
++## Estado en GameState.informal (ver init_state) y GameState.cash.
++
++const MAX_LOG := 40
++
++
++static func cfg() -> Dictionary:
++	return GameData.extra("mercado_negro")
++
++
++static func init_state(gs) -> void:
++	var s: Dictionary = gs.informal
++	var defaults := {"risk": 0.0, "log": [], "hidden": [], "next_hidden_id": 1, "iva_due": 0.0,
++		"deposited_month": 0.0, "case": {}, "offenses": 0, "month": {}, "last_month": {}, "totals": {},
++		"trusted": 0, "trusted_day": -1, "rng_state": "", "idle_warned": {}}
++	for k in defaults:
++		if not s.has(k):
++			s[k] = defaults[k]
++	if str(s["rng_state"]) == "":
++		s["rng_state"] = str(int(gs.settings.get("seed", 1)) * 7919 + 17)
++	gs.informal = s
++	gs.cash = maxf(0.0, float(gs.cash))
++
++
++static func st(gs) -> Dictionary:
++	if gs.informal.is_empty():
++		init_state(gs)
++	return gs.informal
++
++
++# --- Aleatoriedad propia (no altera la secuencia de gs.rng) ----------------------------------------
++
++static func rf(gs) -> float:
++	var r := RandomNumberGenerator.new()
++	r.state = int(str(st(gs).get("rng_state", "1")))
++	var v := r.randf()
++	st(gs)["rng_state"] = str(r.state)
++	return v
++
++
++static func _roll(gs, roll: float) -> float:
++	return roll if roll >= 0.0 else rf(gs)
++
++
++# --- Registro y estadísticas -----------------------------------------------------------------------
++
++static func _log(gs, text: String, category := "jugador") -> void:
++	var l: Array = st(gs)["log"]
++	l.append({"day": gs.today(), "date": TimeManager.date_string(false), "text": text})
++	while l.size() > MAX_LOG:
++		l.pop_front()
++	if category != "":
++		gs.notify(text, category)
++
++
++static func _stat(gs, key: String, amount: float) -> void:
++	var m: Dictionary = st(gs)["month"]
++	m[key] = float(m.get(key, 0.0)) + amount
++	var t: Dictionary = st(gs)["totals"]
++	t[key] = float(t.get(key, 0.0)) + amount
++
++
++static func stat(gs, period: String, key: String) -> float:
++	return float(st(gs).get(period, {}).get(key, 0.0))
++
++
++# --- Efectivo y banco --------------------------------------------------------------------------------
++
++static func cash(gs) -> float:
++	return float(gs.cash)
++
++
++static func bank(gs) -> float:
++	return float(gs.money) - float(gs.cash)
++
++
++## Ingreso en efectivo (sube el total y el efectivo).
++static func _earn_cash(gs, amount: float) -> void:
++	if amount <= 0.0:
++		return
++	gs.add_money(amount)
++	gs.cash = float(gs.cash) + amount
++
++
++## Paga en efectivo a quien lo acepta. false si no alcanza (no paga nada).
++static func pay_cash(gs, amount: float) -> bool:
++	if amount <= 0.0:
++		return true
++	if float(gs.cash) + 0.0001 < amount:
++		return false
++	gs.cash = maxf(0.0, float(gs.cash) - amount)
++	gs.add_money(-amount)
++	return true
++
++
++## Paga lo que alcance del total (>= 0), primero de la fuente preferida. Devuelve lo pagado.
++static func _take(gs, amount: float, cash_first: bool) -> float:
++	var paid := clampf(amount, 0.0, maxf(0.0, float(gs.money)))
++	if paid <= 0.0:
++		return 0.0
++	var from_cash: float
++	if cash_first:
++		from_cash = minf(paid, float(gs.cash))
++	else:
++		from_cash = clampf(paid - maxf(0.0, bank(gs)), 0.0, float(gs.cash))
++	gs.cash = maxf(0.0, float(gs.cash) - from_cash)
++	gs.add_money(-paid)
++	return paid
++
++
++## Margen de depósito del mes sin levantar sospechas: libre + parte de las ventas de tus negocios legales.
++static func deposit_allowance(gs) -> float:
++	var dc: Dictionary = cfg().get("deposit", {})
++	var share := float(dc.get("launder_share", 0.25))
++	if gs.has_tech(str(dc.get("launder_tech", "contabilidad_paralela"))):
++		share = float(dc.get("launder_share_tech", 0.5))
++	var legal := 0.0
++	for b in gs.buildings:
++		if gs.owned_by_player(b) and BusinessSim.is_business(b) and not BusinessSim.is_nonprofit(b):
++			legal += BusinessSim.period_value(b, "last_month", "ventas")
++	var total: float = float(dc.get("free_monthly", 200)) * gs.price_mult() + legal * share
++	return maxf(0.0, total - float(st(gs).get("deposited_month", 0.0)))
++
++
++static func deposit(gs, amount: float) -> String:
++	amount = minf(amount, float(gs.cash))
++	if amount <= 0.0:
++		return "No tienes efectivo para depositar."
++	var allowance := deposit_allowance(gs)
++	gs.cash = maxf(0.0, float(gs.cash) - amount)
++	_register_deposit(gs, amount, allowance, "Depositaste %s en el banco." % Fmt.money(amount))
++	return ""
++
++
++static func _register_deposit(gs, amount: float, allowance: float, text: String) -> void:
++	st(gs)["deposited_month"] = float(st(gs).get("deposited_month", 0.0)) + amount
++	_stat(gs, "deposits", amount)
++	var excess := maxf(0.0, amount - allowance)
++	if excess > 0.0:
++		var r: float = excess / (1000.0 * gs.price_mult()) * float(cfg().get("deposit", {}).get("risk_per_1000_excess", 10.0))
++		add_risk(gs, r)
++		_log(gs, "%s El banco reporta un depósito grande en efectivo (%s sin justificar): sube el riesgo (+%.1f)." % [text, Fmt.money(excess), r])
++	else:
++		_log(gs, text, "")
++
++
++static func withdraw(gs, amount: float) -> String:
++	if amount <= 0.0:
++		return "Monto inválido."
++	if bank(gs) + 0.0001 < amount:
++		return "Saldo en banco insuficiente (%s)." % Fmt.money(maxf(0.0, bank(gs)))
++	gs.cash = float(gs.cash) + amount
++	_stat(gs, "withdrawals", amount)
++	_log(gs, "Retiraste %s del banco en efectivo." % Fmt.money(amount), "")
++	return ""
++
++
++# --- Impuesto a la venta ---------------------------------------------------------------------------------
++
++static func sales_tax_rate(gs) -> float:
++	var sc: Dictionary = cfg().get("sales_tax", {})
++	var era := str(gs.era())
++	var p := GovSim.policy(gs)
++	var r: float
++	if p.has("sales_tax"):
++		r = float(p["sales_tax"])
++	else:
++		r = float(sc.get("by_gov", {}).get(str(gs.government.get("gov_id", "")), sc.get("by_era", {}).get(era, 0.02)))
++	return maxf(0.0, r * float(sc.get("era_mult", {}).get(era, 1.0)))
++
++
++static func sales_tax_label(gs) -> String:
++	return str(cfg().get("sales_tax", {}).get("labels", {}).get(str(gs.era()), "IVA"))
++
++
++## Llamado por BusinessSim.earn en cada venta de un negocio tuyo. Separa la parte no declarada
++## (se cobra en efectivo, sin IVA) y causa el IVA de la parte declarada. Devuelve lo declarado.
++static func on_sale(gs, b: Dictionary, amount: float) -> float:
++	if amount <= 0.0 or not gs.owned_by_player(b) or not BusinessSim.is_business(b) or BusinessSim.is_nonprofit(b):
++		return amount
++	var undeclared := 0.0
++	if bool(b.get("undeclared", false)):
++		undeclared = amount * undeclared_share(gs)
++		if undeclared > 0.0:
++			_earn_cash(gs, undeclared)
++			_cash_ledger(b, "ventas_efectivo", undeclared)
++			_stat(gs, "undeclared", undeclared)
++			add_risk(gs, undeclared / (1000.0 * gs.price_mult()) * float(cfg().get("undeclared", {}).get("risk_per_1000", 4.0)))
++	var declared := amount - undeclared
++	var rate := sales_tax_rate(gs)
++	if declared > 0.0 and rate > 0.0:
++		b["iva_due"] = float(b.get("iva_due", 0.0)) + declared * rate
++	return declared
++
++
++## Cobro de un contrato de venta (ContractSim._collect, el dinero ya entró al total).
++static func on_contract_income(gs, k: Dictionary, paid: float) -> void:
++	if paid <= 0.0:
++		return
++	if bool(k.get("undeclared", false)):
++		gs.cash = float(gs.cash) + paid
++		_stat(gs, "undeclared", paid)
++		add_risk(gs, paid / (1000.0 * gs.price_mult()) * float(cfg().get("undeclared", {}).get("risk_per_1000", 4.0)))
++		return
++	st(gs)["iva_due"] = float(st(gs).get("iva_due", 0.0)) + paid * sales_tax_rate(gs)
++
++
++## Paga al tesoro el IVA causado del mes (llamado desde GovSim._collect_taxes).
++static func collect_sales_tax(gs, totals: Dictionary) -> void:
++	var total := 0.0
++	for b in gs.buildings:
++		var due := float(b.get("iva_due", 0.0))
++		if due <= 0.0:
++			continue
++		b["iva_due"] = 0.0
++		if gs.owned_by_player(b):
++			BusinessSim.pay(gs, b, due, "iva")
++			total += due
++	var cdue := float(st(gs).get("iva_due", 0.0))
++	if cdue > 0.0:
++		st(gs)["iva_due"] = 0.0
++		gs.add_money(-cdue)
++		total += cdue
++	totals["iva"] = total
++	_stat(gs, "iva", total)
++
++
++static func iva_pending(gs) -> float:
++	var t := float(st(gs).get("iva_due", 0.0))
++	for b in gs.buildings:
++		t += float(b.get("iva_due", 0.0))
++	return t
++
++
++static func _cash_ledger(b: Dictionary, key: String, amount: float) -> void:
++	var cl: Dictionary = b.get("cash_ledger", {})
++	for period in ["month", "total"]:
++		var p: Dictionary = cl.get(period, {})
++		p[key] = float(p.get(key, 0.0)) + amount
++		cl[period] = p
++	b["cash_ledger"] = cl
++
++
++# --- Confianza, ventas sin declarar y sueldos en negro -----------------------------------------------------
++
++## Personas de confianza: familiares adultos y conocidos con relación alta.
++static func trusted_count(gs) -> int:
++	var s := st(gs)
++	if int(s.get("trusted_day", -1)) == gs.today():
++		return int(s.get("trusted", 0))
++	var min_aff := float(cfg().get("undeclared", {}).get("trust_affinity", 55))
++	var n := 0
++	for k in gs.player.get("relations", {}):
++		if float(gs.player["relations"][k]) >= min_aff and gs.citizens.has(int(k)):
++			n += 1
++	var adult := int(GameData.citizens.get("adult_age", 16))
++	for c in HeirsSim.family_members(gs):
++		if c.age_years(gs.today()) >= adult and PlayerSim.affinity(gs, c.id) < min_aff:
++			n += 1
++	s["trusted"] = n
++	s["trusted_day"] = gs.today()
++	return n
++
++
++## Fracción de las ventas al público que se puede cobrar sin declarar.
++static func undeclared_share(gs) -> float:
++	var uc: Dictionary = cfg().get("undeclared", {})
++	return minf(float(uc.get("max_share", 0.5)), trusted_count(gs) * float(uc.get("share_per_trusted", 0.05)))
++
++
++static func set_undeclared(gs, b: Dictionary, on: bool) -> String:
++	if not gs.owned_by_player(b) or not BusinessSim.is_business(b):
++		return "Solo en tus negocios."
++	if BusinessSim.is_nonprofit(b):
++		return "Una fundación no puede vender sin declarar."
++	if on and undeclared_share(gs) <= 0.0:
++		return "No tienes personas de confianza (familia o relación ≥ %d): nadie te compra sin factura." % int(cfg().get("undeclared", {}).get("trust_affinity", 55))
++	b["undeclared"] = on
++	return ""
++
++
++static func set_black_wages(gs, b: Dictionary, on: bool) -> String:
++	if not gs.owned_by_player(b) or not BusinessSim.is_business(b):
++		return "Solo en tus negocios."
++	b["black_wages"] = on
++	return ""
++
++
++## Sueldo en negro: se paga en efectivo, con descuento y sin impuesto de nómina. false si no aplica
++## (negocio sin la opción o sin efectivo): entonces se paga normal por el banco.
++static func pay_wage_black(gs, b: Dictionary, c) -> bool:
++	if not bool(b.get("black_wages", false)):
++		return false
++	var uc: Dictionary = cfg().get("undeclared", {})
++	var w := float(c.wage) * (1.0 - float(uc.get("black_wage_discount", 0.15)))
++	if not pay_cash(gs, w):
++		return false
++	c.money += w
++	BusinessSim.ledger_add(b, "salarios_negro", w)
++	_cash_ledger(b, "salarios_negro", w)
++	_stat(gs, "black_wages", w)
++	add_risk(gs, w / (1000.0 * gs.price_mult()) * float(uc.get("black_wage_risk_per_1000", 5.0)))
++	return true
++
++
++## "" si la contraparte acepta cobrar el contrato sin declarar.
++static func contract_undeclared_block(gs, k: Dictionary) -> String:
++	var key := str(k.get("client", ""))
++	var kind := ContractSim.client_kind(key)
++	if kind != "npc" and kind != "town":
++		return "El gobierno y la importación solo operan con factura."
++	if ContractSim.dir_of(k) != ContractSim.DIR_SELL:
++		return "Solo en contratos de venta."
++	var need := float(cfg().get("undeclared", {}).get("contract_min_reputation", 70))
++	if ContractSim.reputation(gs, key) < need:
++		return "%s no confía lo bastante en ti (reputación %d/%d)." % [ContractSim.client_name(gs, key), int(ContractSim.reputation(gs, key)), int(need)]
++	return ""
++
++
++static func set_contract_undeclared(gs, k: Dictionary, on: bool) -> String:
++	if on:
++		var why := contract_undeclared_block(gs, k)
++		if why != "":
++			return why
++	k["undeclared"] = on
++	return ""
++
++
++# --- Riesgo ------------------------------------------------------------------------------------------------
++
++static func risk(gs) -> float:
++	return float(st(gs).get("risk", 0.0))
++
++
++static func add_risk(gs, amount: float) -> void:
++	st(gs)["risk"] = clampf(risk(gs) + amount, 0.0, float(cfg().get("risk", {}).get("max", 100)))
++
++
++static func risk_label(gs) -> String:
++	var r := risk(gs)
++	if r < 10.0:
++		return "bajo"
++	if r < 30.0:
++		return "moderado"
++	if r < 60.0:
++		return "alto"
++	return "muy alto"
++
++
++static func _gov_mult(gs) -> float:
++	return float(cfg().get("inspection", {}).get("gov_mult", {}).get(str(gs.government.get("gov_id", "")), 1.0))
++
++
++static func inspection_chance(gs) -> float:
++	var ic: Dictionary = cfg().get("inspection", {})
++	if risk(gs) < float(ic.get("min_risk", 5)):
++		return 0.0
++	var police := EventsSim.coverage(gs, "policia")
++	var p := risk(gs) / 100.0 * (float(ic.get("base", 0.35)) + float(ic.get("police_weight", 0.5)) * police) * _gov_mult(gs)
++	return clampf(p, 0.0, float(ic.get("max_chance", 0.7)))
++
++
++static func find_chance(gs) -> float:
++	var ic: Dictionary = cfg().get("inspection", {})
++	var police := EventsSim.coverage(gs, "policia")
++	return clampf(float(ic.get("find_base", 0.3)) + float(ic.get("find_risk", 0.5)) * risk(gs) / 100.0 + float(ic.get("find_police", 0.25)) * police, 0.0, 0.95)
++
++
++## ¿Hay algo que encontrar? (efectivo, negocios ocultos u operaciones en curso)
++static func has_exposure(gs) -> bool:
++	if float(gs.cash) > 1.0 or not active_hidden(gs).is_empty():
++		return true
++	for b in gs.buildings:
++		if gs.owned_by_player(b) and (bool(b.get("undeclared", false)) or bool(b.get("black_wages", false))):
++			return true
++	return false
++
++
++## Inspección de la autoridad. roll_* < 0 = aleatorio. Devuelve el texto del resultado.
++static func inspect(gs, roll_find := -1.0) -> String:
++	if not case_of(gs).is_empty():
++		return ""
++	_stat(gs, "inspections", 1.0)
++	if not has_exposure(gs) or _roll(gs, roll_find) >= find_chance(gs):
++		st(gs)["risk"] = risk(gs) * float(cfg().get("inspection", {}).get("clean_risk_mult", 0.7))
++		var t := "Inspección de la autoridad en tus negocios: no encontraron irregularidades."
++		_log(gs, t)
++		return t
++	return _open_case(gs)
++
++
++static func case_of(gs) -> Dictionary:
++	return st(gs).get("case", {})
++
++
++static func _open_case(gs) -> String:
++	var cc: Dictionary = cfg().get("case", {})
++	var pm: float = gs.price_mult()
++	var r := risk(gs)
++	var fine := (float(cc.get("fine_base", 150)) + float(cc.get("fine_per_risk", 10)) * r) * pm + stat(gs, "last_month", "undeclared") * float(cc.get("fine_undeclared_share", 0.3))
++	var grave := r >= float(cc.get("grave_risk", 70)) or int(st(gs).get("offenses", 0)) + 1 >= int(cc.get("grave_repeat", 3))
++	var found := []
++	if float(gs.cash) > 1.0:
++		found.append("efectivo sin declarar (%s)" % Fmt.money(gs.cash))
++	var hidden := active_hidden(gs)
++	if not hidden.is_empty():
++		found.append("%d negocio(s) oculto(s)" % hidden.size())
++	for b in gs.buildings:
++		if gs.owned_by_player(b) and (bool(b.get("undeclared", false)) or bool(b.get("black_wages", false))):
++			found.append("ventas o sueldos sin declarar en %s" % gs.building_label(b))
++			break
++	var c := {"day": gs.today(), "due": gs.today() + int(cc.get("bribe_days", 10)), "fine": snappedf(fine, 0.01),
++		"grave": grave, "found": ", ".join(found), "bribe_tried": false}
++	st(gs)["case"] = c
++	var t := "¡Hallazgo en una inspección! Encontraron %s. Multa prevista %s%s. Tienes %d días para responder (pagar o intentar un soborno)." % [c["found"], Fmt.money(fine), " y posible cárcel (caso grave)" if grave else "", int(cc.get("bribe_days", 10))]
++	_log(gs, t)
++	return t
++
++
++static func bribe_chance(gs, amount: float) -> float:
++	var c := case_of(gs)
++	if c.is_empty():
++		return 0.0
++	var bc: Dictionary = cfg().get("bribe", {})
++	var ratio := amount / maxf(1.0, float(c.get("fine", 1.0)))
++	var p := float(bc.get("base", 0.2)) + float(bc.get("per_fine_ratio", 0.45)) * ratio + float(bc.get("corruption_weight", 0.003)) * PoliticsSim.corruption(gs) - float(bc.get("police_penalty", 0.2)) * EventsSim.coverage(gs, "policia")
++	p *= 1.0 / maxf(0.5, _gov_mult(gs))
++	return clampf(p, float(bc.get("min", 0.05)), float(bc.get("max", 0.9)))
++
++
++## Soborno al ser descubierto: se paga (efectivo primero). Aceptado: se archiva el caso.
++## Rechazado: no se cobra, la multa sube y el caso se resuelve ya.
++static func bribe(gs, amount: float, roll := -1.0) -> String:
++	var c := case_of(gs)
++	if c.is_empty():
++		return "No hay ningún caso abierto."
++	if amount <= 0.0:
++		return "Monto inválido."
++	if float(gs.money) < amount:
++		return "No tienes %s." % Fmt.money(amount)
++	var bc: Dictionary = cfg().get("bribe", {})
++	var p := bribe_chance(gs, amount)
++	var ps: Dictionary = PoliticsSim.state(gs)
++	if _roll(gs, roll) < p:
++		var paid := _take(gs, amount, true)
++		PoliticsSim._pay_official(gs, paid)
++		ps["corruption"] = minf(100.0, PoliticsSim.corruption(gs) + float(bc.get("corruption_add", 15)))
++		PoliticsSim._log(gs, "Soborno a un inspector (%s)." % Fmt.money(paid))
++		_stat(gs, "bribes", paid)
++		st(gs)["case"] = {}
++		st(gs)["risk"] = risk(gs) * 0.6
++		var t := "Soborno ACEPTADO: el inspector archivó el caso a cambio de %s. Sube la corrupción de la familia (%d)." % [Fmt.money(paid), int(PoliticsSim.corruption(gs))]
++		_log(gs, t)
++		return t
++	ps["corruption"] = minf(100.0, PoliticsSim.corruption(gs) + float(bc.get("corruption_add_rejected", 5)))
++	var t2 := "Soborno RECHAZADO: el inspector no aceptó %s y agrava el caso." % Fmt.money(amount)
++	_log(gs, t2)
++	resolve_case(gs, float(bc.get("rejected_fine_mult", 1.5)))
++	return t2
++
++
++## Aplica las consecuencias del hallazgo: multa, decomiso, cierre de negocios ocultos, reputación y cárcel.
++static func resolve_case(gs, fine_mult := 1.0) -> String:
++	var c := case_of(gs)
++	if c.is_empty():
++		return ""
++	var cc: Dictionary = cfg().get("case", {})
++	var grave := bool(c.get("grave", false))
++	var treasury := 0.0
++	# Decomiso de efectivo.
++	var seized := float(gs.cash) * float(cc.get("seize_cash_share_grave" if grave else "seize_cash_share", 0.5))
++	if seized > 0.0:
++		pay_cash(gs, seized)
++		treasury += seized
++	# Multa (banco primero).
++	var fine := _take(gs, float(c.get("fine", 0.0)) * fine_mult, false)
++	treasury += fine
++	GovSim.add_treasury(gs, treasury)
++	gs.add_counter("taxes_paid", treasury)
++	# Cierre de los negocios ocultos y decomiso de su mercancía.
++	var goods := 0.0
++	var closed := []
++	for h in active_hidden(gs):
++		goods += float(h.get("stock", 0.0))
++		closed.append(str(hidden_type(str(h["type"])).get("label", h["type"])))
++	st(gs)["hidden"] = []
++	# Tus negocios vuelven a declarar todo.
++	for b in gs.buildings:
++		if gs.owned_by_player(b):
++			b["undeclared"] = false
++			b["black_wages"] = false
++	PoliticsSim.add_reputation(gs, -float(cc.get("reputation_loss", 8)) * (2.0 if grave else 1.0))
++	_stat(gs, "fines", fine)
++	_stat(gs, "seized", seized)
++	st(gs)["offenses"] = int(st(gs).get("offenses", 0)) + 1
++	st(gs)["case"] = {}
++	st(gs)["risk"] = risk(gs) * float(cc.get("risk_after", 0.3))
++	var t := "Sanción: multa de %s y decomiso de %s en efectivo" % [Fmt.money(fine), Fmt.money(seized)]
++	if not closed.is_empty():
++		t += "; cierran tus negocios ocultos (%s) y decomisan %d unidades" % [", ".join(closed), int(goods)]
++	t += ". Baja tu reputación."
++	if grave:
++		var who := _jail(gs)
++		if who != "":
++			t += " " + who
++	_log(gs, t)
++	return t
++
++
++## Caso grave: cárcel para el jefe o un familiar adulto que asume la culpa.
++static func _jail(gs) -> String:
++	var days: Array = cfg().get("case", {}).get("prison_days", [60, 180])
++	var adult := 18
++	var pool := HeirsSim.family_members(gs).filter(func(x): return x.age_years(gs.today()) >= adult and x.prison_until < 0)
++	var target: Citizen = gs.player_citizen()
++	if not pool.is_empty() and rf(gs) < 0.5:
++		target = pool[int(rf(gs) * pool.size()) % pool.size()]
++	if target == null:
++		return ""
++	var n := int(days[0]) + int(rf(gs) * float(int(days[1]) - int(days[0]) + 1))
++	target.prison_until = gs.today() + n
++	target.prison_id = -1
++	if not gs.is_player(target.id) and target.job_id >= 0:
++		target.job_id = -1
++		target.job_kind = ""
++		target.wage = 0.0
++	return "%s va a la cárcel por %d días." % ["Tu personaje" if gs.is_player(target.id) else target.full_name(), n]
++
++
++# --- Negocios ocultos ---------------------------------------------------------------------------------------
++
++static func hidden_types() -> Dictionary:
++	return cfg().get("hidden_types", {})
++
++
++static func hidden_type(id: String) -> Dictionary:
++	return hidden_types().get(id, {})
++
++
++static func hidden_ids() -> Array:
++	var d := hidden_types()
++	var ids := d.keys()
++	ids.sort_custom(func(a, b): return int(d[a].get("order", 0)) < int(d[b].get("order", 0)))
++	return ids
++
++
++static func active_hidden(gs) -> Array:
++	return st(gs).get("hidden", []).filter(func(h): return str(h.get("status", "activo")) == "activo")
++
++
++static func hidden_price(gs, type_id: String) -> float:
++	return float(hidden_type(type_id).get("price", 1.0)) * gs.price_mult()
++
++
++static func setup_cost(gs, type_id: String) -> float:
++	return float(hidden_type(type_id).get("setup_cost", 0.0)) * gs.price_mult()
++
++
++static func hidden_block_reason(gs, type_id: String) -> String:
++	var t := hidden_type(type_id)
++	if t.is_empty():
++		return "Tipo desconocido."
++	var tech := str(t.get("tech", ""))
++	if not gs.has_tech(tech):
++		return "Requiere investigar %s." % GameData.tech_label(tech)
++	if not case_of(gs).is_empty():
++		return "Tienes un caso abierto con la autoridad."
++	var p: Citizen = gs.player_citizen()
++	if p != null and p.prison_until >= 0:
++		return "Estás en la cárcel."
++	if float(gs.cash) < setup_cost(gs, type_id):
++		return "El montaje se paga en efectivo: necesitas %s (tienes %s)." % [Fmt.money(setup_cost(gs, type_id)), Fmt.money(gs.cash)]
++	return ""
++
++
++static func open_hidden(gs, type_id: String) -> String:
++	var why := hidden_block_reason(gs, type_id)
++	if why != "":
++		return why
++	var cost := setup_cost(gs, type_id)
++	pay_cash(gs, cost)
++	PoliticsSim.spread_to_citizens(gs, cost, 6)   # Jornaleros y proveedores informales.
++	var s := st(gs)
++	var h := {"id": int(s["next_hidden_id"]), "type": type_id, "status": "activo", "stock": 0.0,
++		"opened_day": gs.today(), "sold_month": 0.0, "sold_total": 0.0, "units_total": 0.0, "idle": false}
++	s["next_hidden_id"] = int(s["next_hidden_id"]) + 1
++	s["hidden"].append(h)
++	add_risk(gs, 2.0)
++	_log(gs, "Montaste un negocio oculto: %s (%s en efectivo). Produce %s y vende solo en efectivo." % [hidden_type(type_id).get("label", type_id), Fmt.money(cost), str(hidden_type(type_id).get("product", "")).to_lower()], "negocio")
++	return ""
++
++
++## Desmontar voluntariamente un negocio oculto (se pierde la mercancía).
++static func close_hidden(gs, hid: int) -> String:
++	for h in st(gs)["hidden"]:
++		if int(h["id"]) == hid:
++			st(gs)["hidden"].erase(h)
++			_log(gs, "Desmontaste %s." % hidden_type(str(h["type"])).get("label", h["type"]), "negocio")
++			return ""
++	return "No existe."
++
++
++static func _hidden_daily(gs) -> void:
++	var pm: float = gs.price_mult()
++	for h in active_hidden(gs):
++		var t := hidden_type(str(h["type"]))
++		var out := minf(float(t.get("daily_output", 0.0)), maxf(0.0, float(t.get("max_stock", 100)) - float(h["stock"])))
++		var wages := float(t.get("daily_wages", 0.0)) * pm
++		var inputs := out * float(t.get("unit_cost", 0.0)) * pm
++		if not pay_cash(gs, wages + inputs):
++			if not bool(h.get("idle", false)):
++				_log(gs, "%s está parado: no hay efectivo para jornaleros e insumos." % t.get("label", h["type"]), "negocio")
++			h["idle"] = true
++			continue
++		h["idle"] = false
++		PoliticsSim.spread_to_citizens(gs, wages, maxi(1, int(t.get("workers", 2))))
++		if str(t.get("cost_to", "citizens")) == "outside":
++			gs.add_counter("imports", inputs)   # Mercancía sin arancel: el pago sale del pueblo.
++		else:
++			PoliticsSim.spread_to_citizens(gs, inputs, 4)
++		h["stock"] = float(h["stock"]) + out
++		_stat(gs, "hidden_costs", wages + inputs)
++		add_risk(gs, float(t.get("risk_per_day", 0.1)))
++
++
++## Venta semanal de los negocios ocultos: demanda propia, solo en efectivo.
++static func _hidden_sales(gs) -> void:
++	var hidden := active_hidden(gs)
++	if hidden.is_empty():
++		return
++	var hc: Dictionary = cfg().get("hidden_demand", {})
++	var need_day := 0.0
++	for n in GameData.citizens.get("needs", {}).values():
++		need_day += float(n.get("cost", 0.1))
++	need_day *= gs.price_mult()
++	var buffer := need_day * float(hc.get("buffer_days", 30))
++	var adult := int(GameData.citizens.get("adult_age", 16))
++	var today: int = gs.today()
++	var buyers := []
++	var adults := 0
++	for c in gs.citizens.values():
++		if gs.is_player(c.id) or c.age_years(today) < adult or c.prison_until >= 0:
++			continue
++		adults += 1
++		if c.money > buffer:
++			buyers.append(c)
++	buyers.sort_custom(func(a, b): return a.id < b.id)
++	for h in hidden:
++		var t := hidden_type(str(h["type"]))
++		var price := hidden_price(gs, str(h["type"]))
++		var want := adults * float(t.get("demand", 0.1))
++		var sold := 0.0
++		var income := 0.0
++		for c in buyers:
++			if sold >= want - 0.01 or float(h["stock"]) <= 0.01:
++				break
++			if rf(gs) > float(hc.get("buy_chance", 0.5)):
++				continue
++			var budget: float = (c.money - buffer) * float(hc.get("max_share", 0.08))
++			var qty := minf(minf(float(h["stock"]), want - sold), minf(3.0, budget / price))
++			if qty < 0.2:
++				continue
++			var cost := qty * price
++			c.money -= cost
++			h["stock"] = float(h["stock"]) - qty
++			sold += qty
++			income += cost
++		if income > 0.0:
++			_earn_cash(gs, income)
++			h["sold_month"] = float(h.get("sold_month", 0.0)) + income
++			h["sold_total"] = float(h.get("sold_total", 0.0)) + income
++			h["units_total"] = float(h.get("units_total", 0.0)) + sold
++			_stat(gs, "hidden_sales", income)
++
++
++# --- Ciclos ---------------------------------------------------------------------------------------------------
++
++static func daily(gs) -> void:
++	if gs.informal.is_empty():
++		init_state(gs)
++	_hidden_daily(gs)
++	if gs.today() % 7 == 0:
++		_hidden_sales(gs)
++	# Banco en rojo: el efectivo lo cubre (cuenta como depósito).
++	var b := bank(gs)
++	if b < 0.0 and float(gs.cash) > 0.0:
++		var cover := minf(float(gs.cash), -b)
++		var allowance := deposit_allowance(gs)
++		gs.cash = maxf(0.0, float(gs.cash) - cover)
++		_register_deposit(gs, cover, allowance, "Tu cuenta quedó en rojo: cubriste %s con efectivo." % Fmt.money(cover))
++	# Plazo del caso vencido: se aplica la sanción.
++	var c := case_of(gs)
++	if not c.is_empty() and gs.today() >= int(c.get("due", 0)):
++		resolve_case(gs)
++
++
++static func monthly(gs) -> void:
++	var s := st(gs)
++	var rc: Dictionary = cfg().get("risk", {})
++	# Inspección según el riesgo acumulado, la policía y el gobierno.
++	if case_of(gs).is_empty() and rf(gs) < inspection_chance(gs):
++		inspect(gs)
++	s["risk"] = maxf(0.0, risk(gs) * (1.0 - float(rc.get("monthly_decay_share", 0.08))) - float(rc.get("monthly_decay", 3.0)))
++	s["last_month"] = s["month"]
++	s["month"] = {}
++	s["deposited_month"] = 0.0
++	for h in s["hidden"]:
++		h["sold_month"] = 0.0
++	for b in gs.buildings:
++		if b.has("cash_ledger"):
++			var cl: Dictionary = b["cash_ledger"]
++			cl["last_month"] = cl.get("month", {})
++			cl["month"] = {}
+diff --git a/scripts/ui/cash_panel.gd b/scripts/ui/cash_panel.gd
+new file mode 100644
+index 0000000..bf71a10
+--- /dev/null
++++ b/scripts/ui/cash_panel.gd
+@@ -0,0 +1,192 @@
++class_name CashPanel
++extends VBoxContainer
++## Sección E — panel "Efectivo y riesgo": efectivo y banco (depósito y retiro), impuesto a la venta,
++## riesgo e inspecciones, caso abierto con soborno, casillas "no declarar" y "sueldos en negro" de
++## tus negocios y contratos, negocios ocultos del mercado negro e historial. Lógica en MoneySim.
++
++signal closed
++signal message(text: String, category: String)
++
++var hud: Hud
++var body: VBoxContainer
++var amount_spin: SpinBox
++var bribe_spin: SpinBox
++
++
++func setup(p_hud: Hud) -> void:
++	hud = p_hud
++	add_theme_constant_override("separation", 8)
++	var head := HBoxContainer.new()
++	add_child(head)
++	var t := UIKit.label("Efectivo y riesgo", 20, UIKit.ACCENT)
++	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	head.add_child(t)
++	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	var sb := UIKit.scroll_box(Vector2(0, 200))
++	sb["scroll"].size_flags_vertical = Control.SIZE_EXPAND_FILL
++	add_child(sb["scroll"])
++	body = sb["box"]
++
++
++func _act(text: String, ok_text := "") -> void:
++	if text != "":
++		message.emit(text, "jugador")
++	elif ok_text != "":
++		message.emit(ok_text, "negocio")
++	refresh()
++
++
++func _title(text: String) -> void:
++	body.add_child(UIKit.label(text, 16, UIKit.ACCENT))
++
++
++func _note(text: String) -> Label:
++	var l := UIKit.label(text, 12, UIKit.TEXT_DIM)
++	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	body.add_child(l)
++	return l
++
++
++func refresh() -> void:
++	if body == null:
++		return
++	UIKit.clear(body)
++	var gs := GameState
++	var s := "[b]Dinero[/b]\n"
++	s += "Efectivo: %s · Banco: %s · Total: %s\n" % [Fmt.money(MoneySim.cash(gs)), _col(MoneySim.bank(gs)), Fmt.money(gs.money)]
++	s += "%s: %.1f%% de cada venta declarada · causado este mes: %s\n" % [MoneySim.sales_tax_label(gs), MoneySim.sales_tax_rate(gs) * 100.0, Fmt.money(MoneySim.iva_pending(gs))]
++	s += "Depósito sin sospechas este mes: %s\n" % Fmt.money(MoneySim.deposit_allowance(gs))
++	s += "\n[b]Riesgo[/b]: %.0f/100 (%s) · inspección: %d%%/mes · hallazgo si inspeccionan: %d%%\n" % [MoneySim.risk(gs), MoneySim.risk_label(gs), int(MoneySim.inspection_chance(gs) * 100.0), int(MoneySim.find_chance(gs) * 100.0)]
++	s += "Personas de confianza: %d → hasta %d%% de las ventas sin declarar\n" % [MoneySim.trusted_count(gs), int(MoneySim.undeclared_share(gs) * 100.0)]
++	s += "Mes anterior: sin declarar %s · sueldos en negro %s · ventas ocultas %s · sobornos %s · multas %s" % [Fmt.money(MoneySim.stat(gs, "last_month", "undeclared")), Fmt.money(MoneySim.stat(gs, "last_month", "black_wages")), Fmt.money(MoneySim.stat(gs, "last_month", "hidden_sales")), Fmt.money(MoneySim.stat(gs, "last_month", "bribes")), Fmt.money(MoneySim.stat(gs, "last_month", "fines"))]
++	var rl := UIKit.rich()
++	rl.text = s
++	body.add_child(rl)
++	_money_section()
++	_case_section()
++	_business_section()
++	_contract_section()
++	_hidden_section()
++	_log_section()
++
++
++func _col(v: float) -> String:
++	return "[color=%s]%s[/color]" % ["#6c6" if v >= 0 else "#e66", Fmt.money(v)]
++
++
++func _money_section() -> void:
++	_title("Depositar o retirar")
++	var row := HBoxContainer.new()
++	var gs := GameState
++	amount_spin = UIKit.spin(0, 1000000, 10, snappedf(maxf(10.0, minf(MoneySim.cash(gs), 500.0)), 10.0), func(_v): pass, 120)
++	row.add_child(amount_spin)
++	row.add_child(UIKit.button("Depositar", func(): _act(MoneySim.deposit(GameState, amount_spin.value), "Depósito hecho.")))
++	row.add_child(UIKit.button("Retirar", func(): _act(MoneySim.withdraw(GameState, amount_spin.value), "Retiro hecho.")))
++	body.add_child(row)
++	_note("El efectivo paga a quien lo acepta: jornaleros, proveedores informales, sueldos en negro y sobornos. El gobierno, los créditos y las empresas formales cobran por el banco. Depositar más de lo que justifican tus negocios legales levanta sospechas.")
++
++
++func _case_section() -> void:
++	var gs := GameState
++	var c := MoneySim.case_of(gs)
++	if c.is_empty():
++		return
++	_title("Caso abierto con la autoridad")
++	var l := UIKit.label("Encontraron: %s.\nMulta prevista: %s%s. Plazo: %d días." % [str(c.get("found", "")), Fmt.money(float(c.get("fine", 0.0))), " · CASO GRAVE (cárcel)" if bool(c.get("grave", false)) else "", maxi(0, int(c.get("due", 0)) - gs.today())], 13, Color(1.0, 0.6, 0.55))
++	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	body.add_child(l)
++	var row := HBoxContainer.new()
++	bribe_spin = UIKit.spin(0, 1000000, 10, snappedf(float(c.get("fine", 0.0)) * 0.5, 10.0), func(_v): pass, 120)
++	row.add_child(bribe_spin)
++	var chance := MoneySim.bribe_chance(gs, bribe_spin.value)
++	row.add_child(UIKit.button("Sobornar (%d%%)" % int(chance * 100.0), func(): _act(MoneySim.bribe(GameState, bribe_spin.value))))
++	row.add_child(UIKit.button("Aceptar la sanción", func(): _act(MoneySim.resolve_case(GameState))))
++	body.add_child(row)
++	_note("Si el inspector rechaza el soborno, la multa sube. Si lo acepta, el caso se archiva pero sube la corrupción de la familia (riesgo de escándalo).")
++
++
++func _business_section() -> void:
++	var gs := GameState
++	var biz := gs.player_buildings("negocio").filter(func(b): return not BusinessSim.is_nonprofit(b) and str(gs.building_def(b).get("service", "")) == "")
++	if biz.is_empty():
++		return
++	_title("Tus negocios")
++	for b in biz:
++		var row := HBoxContainer.new()
++		var name_l := UIKit.label(gs.building_label(b), 13)
++		name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		name_l.clip_text = true
++		row.add_child(name_l)
++		var und := CheckBox.new()
++		und.text = "No declarar"
++		und.button_pressed = bool(b.get("undeclared", false))
++		und.tooltip_text = "Parte de las ventas (la de tus personas de confianza) se cobra en efectivo, sin %s ni impuesto a la ganancia. Suma riesgo." % MoneySim.sales_tax_label(gs)
++		var bid := int(b["id"])
++		und.toggled.connect(func(on): _act(MoneySim.set_undeclared(GameState, GameState.get_building(bid), on)))
++		row.add_child(und)
++		var bw := CheckBox.new()
++		bw.text = "Sueldos en negro"
++		bw.button_pressed = bool(b.get("black_wages", false))
++		bw.tooltip_text = "Paga los sueldos en efectivo, con descuento y sin impuesto de nómina. Si falta efectivo, se paga por el banco. Suma riesgo."
++		bw.toggled.connect(func(on): _act(MoneySim.set_black_wages(GameState, GameState.get_building(bid), on)))
++		row.add_child(bw)
++		body.add_child(row)
++
++
++func _contract_section() -> void:
++	var gs := GameState
++	var sales := ContractSim.active_contracts(gs).filter(func(k): return ContractSim.dir_of(k) == ContractSim.DIR_SELL)
++	if sales.is_empty():
++		return
++	_title("Contratos de venta")
++	for k in sales:
++		var cb := CheckBox.new()
++		cb.text = "No declarar: %s · %s" % [str(k.get("client_name", "")), TradeSim.good_label(str(k.get("good", "")))]
++		cb.button_pressed = bool(k.get("undeclared", false))
++		var why := MoneySim.contract_undeclared_block(gs, k)
++		cb.disabled = why != "" and not cb.button_pressed
++		cb.tooltip_text = why if why != "" else "La contraparte acepta pagar en efectivo sin factura."
++		var kid := int(k["id"])
++		cb.toggled.connect(func(on): _act(MoneySim.set_contract_undeclared(GameState, ContractSim.find(ContractSim.contracts(GameState), kid), on)))
++		body.add_child(cb)
++
++
++func _hidden_section() -> void:
++	var gs := GameState
++	_title("Negocios ocultos")
++	var list := MoneySim.active_hidden(gs)
++	if list.is_empty():
++		_note("No tienes negocios ocultos.")
++	for h in list:
++		var t := MoneySim.hidden_type(str(h["type"]))
++		var row := HBoxContainer.new()
++		var l := UIKit.label("%s · %s: %d u. · precio %s · vendido %s%s" % [t.get("label", h["type"]), t.get("product", ""), int(float(h.get("stock", 0.0))), Fmt.money2(MoneySim.hidden_price(gs, str(h["type"]))), Fmt.money(float(h.get("sold_total", 0.0))), " · PARADO (sin efectivo)" if bool(h.get("idle", false)) else ""], 13)
++		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		row.add_child(l)
++		var hid := int(h["id"])
++		row.add_child(UIKit.button("Desmontar", func(): _act(MoneySim.close_hidden(GameState, hid))))
++		body.add_child(row)
++	for tid in MoneySim.hidden_ids():
++		var t := MoneySim.hidden_type(tid)
++		var why := MoneySim.hidden_block_reason(gs, tid)
++		var btn := UIKit.button("Montar %s (%s en efectivo)" % [str(t.get("label", tid)).to_lower(), Fmt.money(MoneySim.setup_cost(gs, tid))], func(): _act(MoneySim.open_hidden(GameState, tid)))
++		btn.disabled = why != ""
++		btn.tooltip_text = why if why != "" else str(t.get("description", ""))
++		body.add_child(btn)
++		if why.begins_with("Requiere"):
++			_note(why)
++	_note("Producen y venden solo en efectivo, con demanda propia y precios altos. Pagan jornaleros e insumos en efectivo; si falta, se paran. Cada día suman riesgo de inspección.")
++
++
++func _log_section() -> void:
++	var l: Array = MoneySim.st(GameState).get("log", [])
++	if l.is_empty():
++		return
++	_title("Historial")
++	var s := ""
++	for i in range(l.size() - 1, maxi(-1, l.size() - 16), -1):
++		s += "[color=#aaa]%s[/color] %s\n" % [str(l[i].get("date", "")), str(l[i].get("text", ""))]
++	var rl := UIKit.rich()
++	rl.text = s
++	body.add_child(rl)
+diff --git a/scripts/ui/finance_panel.gd b/scripts/ui/finance_panel.gd
+index 6700328..bc7c93b 100644
+--- a/scripts/ui/finance_panel.gd
++++ b/scripts/ui/finance_panel.gd
+@@ -36,6 +36,7 @@ func refresh() -> void:
+ 	var last: Dictionary = gs.history[-1] if not gs.history.is_empty() else {}
+ 	var s := "[b]Balance[/b]\n"
+ 	s += "Dinero: %s\n" % _col(gs.money)
++	s += "  Efectivo %s · Banco %s (Sección E: ver «Efectivo y riesgo»)\n" % [Fmt.money(MoneySim.cash(gs)), _col(MoneySim.bank(gs))]
+ 	s += "Propiedades (valor): %s\n" % Fmt.money(EconomySim.player_assets(gs))
+ 	s += "Préstamos otorgados (cartera): %s\n" % Fmt.money(EconomySim.loans_granted(gs))
+ 	s += "Deudas: [color=#e88]%s[/color]\n" % Fmt.money(EconomySim.player_debt(gs))
+@@ -44,6 +45,7 @@ func refresh() -> void:
+ 	s += "Ingresos: %s · Gastos: %s\n" % [Fmt.money(float(last.get("income", 0))), Fmt.money(float(last.get("expenses", 0)))]
+ 	s += "Intereses pagados: %s · cobrados: %s\n" % [Fmt.money(float(last.get("interest_paid", 0))), Fmt.money(float(last.get("interest_earned", 0)))]
+ 	s += "Impuestos pagados: %s · Subsidios y pagos del gobierno: %s\n\n" % [Fmt.money(float(last.get("taxes_paid", 0))), Fmt.money(float(last.get("subsidies", 0)))]
++	s = s.trim_suffix("\n") + "%s (%.1f%%) pagado: %s · causado este mes: %s\n\n" % [MoneySim.sales_tax_label(gs), MoneySim.sales_tax_rate(gs) * 100.0, Fmt.money(float(gs.government.get("taxes_last", {}).get("iva", 0.0))), Fmt.money(MoneySim.iva_pending(gs))]
+ 	s += "[b]Economía del pueblo[/b]\n"
+ 	s += "Nivel de precios: %.2f · Inflación anual: %s\n" % [gs.price_level(), _pct(EconomySim.annual_inflation(gs))]
+ 	s += "Desempleo: %s · Dinero en circulación: %s\n" % [Fmt.pct(EconomySim.unemployment(gs) * 100.0), Fmt.money(EconomySim.total_money(gs))]
+diff --git a/scripts/ui/hud.gd b/scripts/ui/hud.gd
+index 513e905..87421c1 100644
+--- a/scripts/ui/hud.gd
++++ b/scripts/ui/hud.gd
+@@ -44,6 +44,7 @@ var tourism_panel: TourismPanel
+ var realestate_panel: RealEstatePanel   # Bienes raíces
+ var utilities_panel: UtilitiesPanel
+ var transit_panel: TransitPanel
++var cash_panel: CashPanel   # Sección E: efectivo y riesgo
+ var era_lbl: Label
+ 
+ # Interior
+@@ -251,6 +252,7 @@ func _build_side_menu() -> void:
+ 	box.add_child(UIKit.button("Mis Empresas", func(): _show_dock("companies"), 160))
+ 	box.add_child(UIKit.button("Bienes raíces", func(): _show_dock("realestate"), 160))
+ 	box.add_child(UIKit.button("Finanzas", func(): _show_dock("finance"), 160))
++	box.add_child(UIKit.button("Efectivo y riesgo", func(): _show_dock("cash"), 160))
+ 	box.add_child(UIKit.button("Estadísticas", func(): _show_dock("stats"), 160))
+ 	box.add_child(UIKit.button("Población", _open_population, 160))
+ 	box.add_child(UIKit.button("Notificaciones", _open_log, 160))
+@@ -373,7 +375,8 @@ func _build_dock() -> void:
+ 	utilities_panel = UtilitiesPanel.new()
+ 	contracts_panel = ContractsPanel.new()
+ 	transit_panel = TransitPanel.new()
+-	for panel in [logistics_panel, trade_panel, tourism_panel, realestate_panel, utilities_panel, contracts_panel, transit_panel]:
++	cash_panel = CashPanel.new()
++	for panel in [logistics_panel, trade_panel, tourism_panel, realestate_panel, utilities_panel, contracts_panel, transit_panel, cash_panel]:
+ 		panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+ 		stack.add_child(panel)
+ 		panel.setup(self)
+@@ -402,7 +405,10 @@ func _show_dock(mode: String) -> void:
+ 	realestate_panel.visible = mode == "realestate"
+ 	utilities_panel.visible = mode == "utilities"
+ 	transit_panel.visible = mode == "transit"
++	cash_panel.visible = mode == "cash"
+ 	match mode:
++		"cash":
++			cash_panel.refresh()
+ 		"transit":
+ 			transit_panel.refresh()
+ 		"realestate":
+diff --git a/tests/test_efectivo.gd b/tests/test_efectivo.gd
+new file mode 100644
+index 0000000..745199e
+--- /dev/null
++++ b/tests/test_efectivo.gd
+@@ -0,0 +1,386 @@
++extends Node
++## Pruebas de la sección E (impuestos, efectivo y mercado negro): IVA, efectivo/banco, ventas no
++## declaradas con gente de confianza, sueldos en negro, negocios ocultos con investigación,
++## inspecciones, decomiso, soborno, guardado y panel "Efectivo y riesgo".
++## godot --headless res://tests/test_efectivo.tscn
++
++var failures := 0
++
++
++func check(cond: bool, msg: String) -> void:
++	if cond:
++		print("  OK   ", msg)
++	else:
++		failures += 1
++		print("  FAIL ", msg)
++
++
++func _ready() -> void:
++	print("== Sección E: efectivo, IVA y mercado negro ==")
++	_test_sales_tax()
++	_test_cash_bank()
++	_test_undeclared_trust()
++	_test_contract_undeclared()
++	_test_black_wages()
++	_test_hidden_blocked()
++	_test_hidden_production_sales()
++	_test_inspection_seizure()
++	_test_bribe()
++	_test_save_load()
++	await _test_ui()
++	print("== %s (%d fallos) ==" % ["TODO OK" if failures == 0 else "CON FALLOS", failures])
++	get_tree().quit(1 if failures > 0 else 0)
++
++
++# --- Utilidades ----------------------------------------------------------------------------------
++
++func _new_town(seed_v: int) -> void:
++	GameState.new_game({"seed": seed_v, "difficulty": "normal"})
++	GameState.money = 20000.0
++
++
++func _total() -> float:
++	var gs := GameState
++	var m := gs.money + float(gs.government.get("treasury", 0.0))
++	for c in gs.citizens.values():
++		m += c.money
++	for b in gs.buildings:
++		m += float(b.get("reserve", 0.0))
++	return m
++
++
++func _farm() -> Dictionary:
++	var b := ConstructionSim.make_building(GameState, "granja", 1, 40.0, -30.0, 0.0, "jugador")
++	GameState.add_building(b)
++	return b
++
++
++func _befriend(n: int) -> void:
++	var added := 0
++	for c in GameState.citizens.values():
++		if added >= n:
++			break
++		if GameState.is_player(c.id):
++			continue
++		PlayerSim._add_affinity(GameState, c.id, 80.0)
++		added += 1
++	GameState.informal["trusted_day"] = -1
++
++
++# --- 1. Impuesto a la venta ------------------------------------------------------------------------
++
++func _test_sales_tax() -> void:
++	_new_town(501)
++	var gs := GameState
++	var b := _farm()
++	var rate := MoneySim.sales_tax_rate(gs)
++	check(rate > 0.0 and rate < 0.1, "tasa de %s de la época y el gobierno: %.1f%%" % [MoneySim.sales_tax_label(gs), rate * 100.0])
++	var m0 := gs.money
++	BusinessSim.earn(gs, b, 1000.0, "ventas")
++	check(is_equal_approx(gs.money, m0 + 1000.0), "la venta declarada entra completa al banco")
++	check(is_equal_approx(float(b.get("iva_due", 0.0)), 1000.0 * rate), "IVA causado por la venta: %s" % Fmt.money2(float(b.get("iva_due", 0.0))))
++	BusinessSim.earn(gs, b, 100.0, "alquileres")
++	check(is_equal_approx(float(b.get("iva_due", 0.0)), 1000.0 * rate), "los alquileres no causan IVA")
++	var t0 := float(gs.government["treasury"])
++	var totals := {}
++	MoneySim.collect_sales_tax(gs, totals)
++	GovSim.add_treasury(gs, float(totals["iva"]))
++	t0 += float(totals["iva"])
++	check(is_equal_approx(float(totals["iva"]), 1000.0 * rate) and is_equal_approx(float(gs.government["treasury"]) - t0, 0.0), "collect_sales_tax devuelve el total (GovSim lo suma al tesoro)")
++	check(is_equal_approx(BusinessSim.period_value(b, "month", "iva"), 1000.0 * rate), "el IVA aparece en el libro contable del negocio")
++	# Ciclo completo por el gobierno.
++	BusinessSim.earn(gs, b, 500.0, "ventas")
++	var total0 := _total()
++	var tr0 := float(gs.government["treasury"])
++	GovSim._collect_taxes(gs)
++	check(float(gs.government["taxes_last"].get("iva", 0.0)) > 0.0 and float(gs.government["treasury"]) > tr0, "el gobierno cobra el IVA con los demás impuestos (%s)" % Fmt.money2(float(gs.government["taxes_last"].get("iva", 0.0))))
++	check(absf(_total() - total0) < 0.05, "IVA: dinero conservado (va al tesoro)")
++
++
++# --- 2. Efectivo y banco -----------------------------------------------------------------------------
++
++func _test_cash_bank() -> void:
++	_new_town(502)
++	var gs := GameState
++	var total0 := _total()
++	check(is_equal_approx(MoneySim.cash(gs), 0.0) and is_equal_approx(MoneySim.bank(gs), gs.money), "al empezar todo está en el banco")
++	check(MoneySim.withdraw(gs, 1000.0) == "" and is_equal_approx(MoneySim.cash(gs), 1000.0) and is_equal_approx(gs.money, 20000.0), "retiro: pasa al efectivo, el total no cambia")
++	check(MoneySim.withdraw(gs, 999999.0) != "", "no se retira más de lo que hay en el banco")
++	var r0 := MoneySim.risk(gs)
++	check(MoneySim.deposit(gs, 100.0) == "" and is_equal_approx(MoneySim.risk(gs), r0), "depósito pequeño: sin sospecha")
++	MoneySim.withdraw(gs, 8000.0)
++	check(MoneySim.deposit(gs, 8000.0) == "" and MoneySim.risk(gs) > r0, "depositar mucho efectivo levanta sospechas (riesgo %.1f)" % MoneySim.risk(gs))
++	# Pagos en efectivo (proveedores informales, sueldos en negro).
++	var c0 := MoneySim.cash(gs)
++	check(MoneySim.pay_cash(gs, 50.0) and is_equal_approx(MoneySim.cash(gs), c0 - 50.0), "efectivo usado para pagar")
++	check(not MoneySim.pay_cash(gs, 1e9), "sin efectivo suficiente no se paga en efectivo")
++	PoliticsSim.spread_to_citizens(gs, 50.0)
++	check(absf(_total() - total0) < 0.01, "dinero total conservado entre efectivo y banco")
++	# Banco en rojo: el efectivo lo cubre.
++	gs.add_money(-(MoneySim.bank(gs) + 100.0))
++	MoneySim.daily(gs)
++	check(MoneySim.bank(gs) >= -0.01 and MoneySim.cash(gs) >= 0.0, "si el banco queda en rojo, el efectivo lo cubre")
++
++
++# --- 3. Ventas no declaradas: solo con confianza ----------------------------------------------------------
++
++func _test_undeclared_trust() -> void:
++	_new_town(503)
++	var gs := GameState
++	var b := _farm()
++	gs.player["relations"] = {}
++	gs.informal["trusted_day"] = -1
++	var fam := HeirsSim.family_members(gs).size()
++	if fam == 0:
++		check(MoneySim.set_undeclared(gs, b, true) != "" and not bool(b.get("undeclared", false)), "sin personas de confianza no se puede vender sin declarar")
++	_befriend(4)
++	check(MoneySim.undeclared_share(gs) > 0.0, "con 4 amigos de confianza hay ventas sin factura (%d%%)" % int(MoneySim.undeclared_share(gs) * 100.0))
++	check(MoneySim.set_undeclared(gs, b, true) == "" and bool(b["undeclared"]), "casilla 'no declarar' activada")
++	var total0 := _total()
++	var share := MoneySim.undeclared_share(gs)
++	var cash0 := MoneySim.cash(gs)
++	var r0 := MoneySim.risk(gs)
++	BusinessSim.earn(gs, b, 1000.0, "ventas")
++	check(is_equal_approx(MoneySim.cash(gs) - cash0, 1000.0 * share), "la parte no declarada entra en efectivo (%s)" % Fmt.money(MoneySim.cash(gs) - cash0))
++	check(is_equal_approx(float(b.get("iva_due", 0.0)), 1000.0 * (1.0 - share) * MoneySim.sales_tax_rate(gs)), "sin IVA sobre lo no declarado")
++	check(is_equal_approx(BusinessSim.period_value(b, "month", "ventas"), 1000.0 * (1.0 - share)), "el libro oficial solo muestra lo declarado (sin impuesto a la ganancia sobre el resto)")
++	check(MoneySim.risk(gs) > r0, "cada venta no declarada suma riesgo")
++	check(absf(_total() - total0 - 1000.0) < 0.01, "venta no declarada: el total del jugador sube exactamente lo vendido")
++
++
++func _test_contract_undeclared() -> void:
++	_new_town(504)
++	var gs := GameState
++	var npc := ConstructionSim.make_building(gs, "lenador", 1, -40.0, 30.0, 0.0, "ciudadano")
++	npc["npc"] = true
++	npc["reserve"] = 5000.0
++	gs.add_building(npc)
++	var key := "npc:%d" % int(npc["id"])
++	var k := {"id": 999, "dir": "venta", "client": key, "client_name": "Leñador", "paid": 0.0, "owed": 0.0}
++	gs.market["reputation"][key] = 40.0
++	check(MoneySim.set_contract_undeclared(gs, k, true) != "" and not bool(k.get("undeclared", false)), "contrato: con reputación baja la contraparte exige factura")
++	check(MoneySim.set_contract_undeclared(gs, {"client": "gov", "dir": "venta"}, true) != "", "el gobierno nunca acepta sin factura")
++	gs.market["reputation"][key] = 85.0
++	check(MoneySim.set_contract_undeclared(gs, k, true) == "", "contrato: con reputación alta acepta no declarar")
++	var total0 := _total()
++	var cash0 := MoneySim.cash(gs)
++	var iva0 := MoneySim.iva_pending(gs)
++	ContractSim._collect(gs, k, 300.0)
++	check(is_equal_approx(MoneySim.cash(gs) - cash0, 300.0) and is_equal_approx(MoneySim.iva_pending(gs), iva0), "cobro del contrato en efectivo y sin IVA")
++	check(absf(_total() - total0) < 0.01, "contrato no declarado: dinero conservado")
++	k["undeclared"] = false
++	ContractSim._collect(gs, k, 300.0)
++	check(MoneySim.iva_pending(gs) > iva0, "contrato declarado: causa IVA")
++
++
++func _test_black_wages() -> void:
++	_new_town(505)
++	var gs := GameState
++	var b := _farm()
++	b["status"] = "activo"
++	var c: Citizen = null
++	for x in gs.citizens.values():
++		if not gs.is_player(x.id) and x.age_years(gs.today()) >= 18 and x.job_id < 0:
++			c = x
++			break
++	c.job_id = int(b["id"])
++	c.job_kind = "empleo"
++	c.wage = 10.0
++	MoneySim.withdraw(gs, 500.0)
++	MoneySim.set_black_wages(gs, b, true)
++	var money0 := c.money
++	var cash0 := MoneySim.cash(gs)
++	BusinessSim.produce(gs)
++	check(MoneySim.cash(gs) < cash0 and c.money - money0 < 10.0 and c.money - money0 > 0.0, "sueldo en negro pagado en efectivo y con descuento (%s)" % Fmt.money2(c.money - money0))
++	check(is_equal_approx(BusinessSim.period_value(b, "month", "salarios"), 0.0), "no entra en la nómina (sin impuesto de nómina)")
++
++
++# --- 4. Mercado negro ------------------------------------------------------------------------------------
++
++func _test_hidden_blocked() -> void:
++	_new_town(506)
++	var gs := GameState
++	MoneySim.withdraw(gs, 5000.0)
++	var why := MoneySim.open_hidden(gs, "destileria_clandestina")
++	check(why != "" and MoneySim.active_hidden(gs).is_empty(), "negocio oculto bloqueado sin tecnología (%s)" % why)
++	check(GameData.technologies.has("destileria_clandestina") and str(GameData.technologies["destileria_clandestina"].get("branch", "")) == "informal", "tecnologías del mercado negro en su propia rama del árbol")
++	var branches: Array = GameData.eras.get("branches", []).map(func(x): return str(x[0]))
++	var ok := true
++	for id in GameData.extra("technologies_negro"):
++		if str(id).begins_with("_"):
++			continue
++		var t: Dictionary = GameData.technologies.get(id, {})
++		ok = ok and branches.has(str(t.get("branch", "")))
++		for r in t.get("requires", []):
++			ok = ok and GameData.technologies.has(r) and int(GameData.technologies[r].get("era", 1)) <= int(t.get("era", 1))
++	check(ok, "tecnologías del mercado negro con prerrequisitos válidos")
++	for tid in MoneySim.hidden_ids():
++		check(GameData.technologies.has(str(MoneySim.hidden_type(tid).get("tech", ""))), "%s requiere una tecnología existente" % tid)
++
++
++func _test_hidden_production_sales() -> void:
++	_new_town(507)
++	var gs := GameState
++	gs.techs.append("economia_informal")
++	gs.techs.append("destileria_clandestina")
++	for c in gs.citizens.values():
++		if not gs.is_player(c.id):
++			c.money += 300.0   # Vecinos con ahorros de sobra: demanda.
++	check(MoneySim.open_hidden(gs, "destileria_clandestina") != "", "el montaje exige efectivo")
++	MoneySim.withdraw(gs, 3000.0)
++	var total0 := _total()
++	check(MoneySim.open_hidden(gs, "destileria_clandestina") == "" and MoneySim.active_hidden(gs).size() == 1, "con la tecnología y efectivo se monta la destilería clandestina")
++	var h: Dictionary = MoneySim.active_hidden(gs)[0]
++	var cash_after_setup := MoneySim.cash(gs)
++	for i in range(6):
++		MoneySim._hidden_daily(gs)
++	check(float(h["stock"]) > 0.0 and MoneySim.cash(gs) < cash_after_setup, "produce aguardiente clandestino pagando jornaleros e insumos en efectivo (%d u.)" % int(h["stock"]))
++	var cash0 := MoneySim.cash(gs)
++	var bank0 := MoneySim.bank(gs)
++	MoneySim._hidden_sales(gs)
++	check(float(h["sold_total"]) > 0.0 and MoneySim.cash(gs) > cash0, "vende solo en efectivo con demanda propia (%s)" % Fmt.money(float(h["sold_total"])))
++	check(is_equal_approx(MoneySim.bank(gs), bank0), "la venta oculta no pasa por el banco")
++	check(MoneySim.hidden_price(gs, "destileria_clandestina") > float(GameData.goods.get("comida", {}).get("base_price", 1.0)) * gs.price_mult(), "precios altos")
++	check(absf(_total() - total0) < 0.01, "negocio oculto: dinero total conservado (montaje, sueldos, insumos y ventas quedan en el pueblo)")
++	check(MoneySim.risk(gs) > 0.0, "el negocio oculto suma riesgo (%.1f)" % MoneySim.risk(gs))
++	# En la simulación diaria.
++	TimeManager.advance_days(14)
++	check(float(h["sold_total"]) > 0.0 and gs.running, "la simulación diaria mueve el negocio oculto")
++
++
++# --- 5. Riesgo, inspección, hallazgo y soborno -------------------------------------------------------------
++
++func _setup_offense(seed_v: int) -> Dictionary:
++	_new_town(seed_v)
++	var gs := GameState
++	gs.techs.append("economia_informal")
++	gs.techs.append("cultivo_ilicito")
++	MoneySim.withdraw(gs, 2000.0)
++	MoneySim.open_hidden(gs, "cultivo_ilicito")
++	var h: Dictionary = MoneySim.active_hidden(gs)[0]
++	h["stock"] = 50.0
++	MoneySim.add_risk(gs, 40.0)
++	return h
++
++
++func _test_inspection_seizure() -> void:
++	_setup_offense(508)
++	var gs := GameState
++	check(MoneySim.inspection_chance(gs) > 0.0, "el riesgo acumulado da probabilidad de inspección (%.0f%%/mes)" % (MoneySim.inspection_chance(gs) * 100.0))
++	var t := MoneySim.inspect(gs, 0.99)
++	check(MoneySim.case_of(gs).is_empty() and t.contains("no encontraron"), "inspección sin hallazgo")
++	var total0 := _total()
++	var cash0 := MoneySim.cash(gs)
++	var treasury0 := float(gs.government["treasury"])
++	var rep0 := PoliticsSim.reputation(gs)
++	MoneySim.inspect(gs, 0.0)
++	var c := MoneySim.case_of(gs)
++	check(not c.is_empty() and float(c["fine"]) > 0.0, "la inspección descubre: caso abierto con multa %s" % Fmt.money(float(c.get("fine", 0.0))))
++	check(MoneySim.hidden_block_reason(gs, "cultivo_ilicito") != "", "con un caso abierto no se montan negocios ocultos")
++	var logs: Array = gs.notifications_log.map(func(e): return str(e["text"]))
++	check(logs.any(func(x): return x.contains("Hallazgo")), "notificación del hallazgo")
++	TimeManager.advance_days(12)
++	check(MoneySim.case_of(gs).is_empty(), "al vencer el plazo se aplica la sanción")
++	check(MoneySim.cash(gs) < cash0 * 0.6 and MoneySim.active_hidden(gs).is_empty(), "decomiso de efectivo y cierre del negocio oculto")
++	check(float(gs.government["treasury"]) > treasury0 and PoliticsSim.reputation(gs) < rep0, "multa al tesoro y baja de reputación")
++	logs = gs.notifications_log.map(func(e): return str(e["text"]))
++	check(logs.any(func(x): return x.contains("Sanción") and x.contains("decomis")), "notificación de multa y decomiso")
++	# Caso grave: cárcel.
++	_setup_offense(509)
++	MoneySim.add_risk(gs, 60.0)
++	MoneySim.inspect(gs, 0.0)
++	check(bool(MoneySim.case_of(gs).get("grave", false)), "riesgo muy alto: caso grave")
++	MoneySim.resolve_case(gs)
++	var jailed := gs.citizens.values().filter(func(x): return x.prison_until > gs.today())
++	check(not jailed.is_empty(), "caso grave: el personaje o un familiar va a la cárcel (%d)" % jailed.size())
++
++
++func _test_bribe() -> void:
++	_setup_offense(510)
++	var gs := GameState
++	MoneySim.inspect(gs, 0.0)
++	var fine := float(MoneySim.case_of(gs)["fine"])
++	check(MoneySim.bribe_chance(gs, fine) > MoneySim.bribe_chance(gs, fine * 0.1), "más dinero, más probabilidad de soborno")
++	PoliticsSim.state(gs)["corruption"] = 50.0
++	var hi := MoneySim.bribe_chance(gs, fine * 0.5)
++	PoliticsSim.state(gs)["corruption"] = 0.0
++	check(hi > MoneySim.bribe_chance(gs, fine * 0.5), "la corrupción (contactos) sube la probabilidad")
++	var total0 := _total()
++	var corr0 := PoliticsSim.corruption(gs)
++	var hidden_n := MoneySim.active_hidden(gs).size()
++	var t := MoneySim.bribe(gs, fine * 0.5, 0.0)
++	check(t.contains("ACEPTADO") and MoneySim.case_of(gs).is_empty(), "soborno aceptado: se archiva el caso")
++	check(MoneySim.active_hidden(gs).size() == hidden_n, "sin decomiso ni cierre")
++	check(PoliticsSim.corruption(gs) > corr0, "el soborno suma corrupción en la política de la familia")
++	check(absf(_total() - total0) < 0.01, "el soborno queda en el pueblo (un funcionario)")
++	# Rechazado.
++	MoneySim.add_risk(gs, 40.0)
++	MoneySim.inspect(gs, 0.0)
++	fine = float(MoneySim.case_of(gs)["fine"])
++	var money0 := gs.money
++	var tr0 := float(gs.government["treasury"])
++	t = MoneySim.bribe(gs, fine * 0.2, 0.999)
++	check(t.contains("RECHAZADO") and MoneySim.case_of(gs).is_empty(), "soborno rechazado: el caso se resuelve ya")
++	check(float(gs.government["treasury"]) - tr0 >= fine * 1.5 - 0.01 or gs.money <= 0.01, "rechazado: multa agravada (%s)" % Fmt.money(float(gs.government["treasury"]) - tr0))
++	check(MoneySim.active_hidden(gs).is_empty(), "rechazado: cierre del negocio oculto")
++	var logs: Array = gs.notifications_log.map(func(e): return str(e["text"]))
++	check(logs.any(func(x): return x.contains("Soborno ACEPTADO")) and logs.any(func(x): return x.contains("Soborno RECHAZADO")), "notificaciones de soborno aceptado y rechazado")
++	check(gs.money < money0, "la sanción se paga")
++
++
++# --- 6. Guardado ----------------------------------------------------------------------------------------------
++
++func _test_save_load() -> void:
++	_new_town(511)
++	var gs := GameState
++	gs.techs.append("economia_informal")
++	gs.techs.append("destileria_clandestina")
++	MoneySim.withdraw(gs, 2500.0)
++	MoneySim.open_hidden(gs, "destileria_clandestina")
++	MoneySim.add_risk(gs, 12.0)
++	var b := _farm()
++	_befriend(3)
++	MoneySim.set_undeclared(gs, b, true)
++	var cash0 := MoneySim.cash(gs)
++	var risk0 := MoneySim.risk(gs)
++	gs.load_dict(JSON.parse_string(JSON.stringify(gs.to_dict())))
++	check(is_equal_approx(MoneySim.cash(gs), cash0) and is_equal_approx(MoneySim.risk(gs), risk0), "efectivo y riesgo se guardan (JSON)")
++	check(MoneySim.active_hidden(gs).size() == 1 and bool(gs.get_building(int(b["id"])).get("undeclared", false)), "negocios ocultos y casillas 'no declarar' se guardan")
++	SaveManager.save_game("test_efectivo")
++	gs.cash = 0.0
++	SaveManager.load_game("test_efectivo")
++	check(is_equal_approx(MoneySim.cash(gs), cash0), "guardar y cargar (binario)")
++	SaveManager.delete_save("test_efectivo")
++	var d := gs.to_dict()
++	d.erase("cash")
++	d.erase("informal")
++	gs.load_dict(d)
++	check(is_equal_approx(MoneySim.cash(gs), 0.0) and MoneySim.active_hidden(gs).is_empty() and MoneySim.risk(gs) == 0.0, "partidas antiguas cargan con valores por defecto")
++	TimeManager.advance_days(35)
++	check(gs.running, "la simulación sigue tras cargar")
++
++
++# --- 7. Interfaz ----------------------------------------------------------------------------------------------
++
++func _test_ui() -> void:
++	_setup_offense(512)
++	var gs := GameState
++	_farm()
++	var world: Node3D = load("res://scenes/main.tscn").instantiate()
++	add_child(world)
++	await get_tree().process_frame
++	var hud: Hud = world.hud
++	MoneySim.inspect(gs, 0.0)
++	hud._show_dock("cash")
++	await get_tree().process_frame
++	var panel: CashPanel = hud.cash_panel
++	check(panel.visible, "panel 'Efectivo y riesgo' abierto desde el HUD")
++	var texts := []
++	for n in panel.find_children("*", "Button", true, false):
++		texts.append((n as Button).text)
++	var checks := panel.find_children("*", "CheckBox", true, false).size()
++	check(texts.any(func(x): return x.begins_with("Depositar")) and texts.any(func(x): return x.begins_with("Retirar")), "panel: depósito y retiro")
++	check(texts.any(func(x): return x.begins_with("Sobornar")), "panel: opción de soborno con el caso abierto")
++	check(checks >= 1, "panel: casillas 'no declarar' / sueldos en negro (%d)" % checks)
++	check(texts.any(func(x): return x.begins_with("Montar")), "panel: negocios ocultos")
++	hud.close_dock()
+diff --git a/tests/test_efectivo.tscn b/tests/test_efectivo.tscn
+new file mode 100644
+index 0000000..509bb6b
+--- /dev/null
++++ b/tests/test_efectivo.tscn
+@@ -0,0 +1,6 @@
++[gd_scene load_steps=2 format=3]
++
++[ext_resource type="Script" path="res://tests/test_efectivo.gd" id="1"]
++
++[node name="TestEfectivo" type="Node"]
++script = ExtResource("1")

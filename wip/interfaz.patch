@@ -1,9 +1,9 @@
 diff --git a/scripts/ui/bar_chart.gd b/scripts/ui/bar_chart.gd
 new file mode 100644
-index 0000000..cea0afb
+index 0000000..31886ec
 --- /dev/null
 +++ b/scripts/ui/bar_chart.gd
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,100 @@
 +class_name BarChart
 +extends Control
 +## Barras horizontales (una o dos series por categoría) con animación de crecimiento y valor al
@@ -90,6 +90,8 @@ index 0000000..cea0afb
 +		for s in range(vals.size()):
 +			var v := float(vals[s])
 +			var col: Color = legend[s]["color"] if s < legend.size() else UIKit.SERIES[s % UIKit.SERIES.size()]
++			if r.has("color"):
++				col = r["color"]
 +			var by := y + (3.0 if nser == 1 else s * (bh + 2.0))
 +			var bw := maxf(2.0, w * absf(v) / mx * _progress)
 +			draw_style_box(UIKit._flat(col if i == _hover else col.darkened(0.12), 3, 0, 0), Rect2(Vector2(x0, by), Vector2(bw, bh)))
@@ -102,6 +104,352 @@ index 0000000..cea0afb
 +			draw_circle(Vector2(lx + 4, size.y - 9.5), 3.5, l["color"])
 +			draw_string(font, Vector2(lx + 12, size.y - 6), str(l["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, UIKit.TEXT_DIM)
 +			lx += 24 + font.get_string_size(str(l["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+diff --git a/scripts/ui/build_menu.gd b/scripts/ui/build_menu.gd
+index e0dcb48..2b9d38b 100644
+--- a/scripts/ui/build_menu.gd
++++ b/scripts/ui/build_menu.gd
+@@ -11,12 +11,7 @@ var list: VBoxContainer
+ 
+ func setup() -> void:
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Construir", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "build", "Construir", func(): closed.emit(), [])
+ 	var row := HBoxContainer.new()
+ 	row.add_child(UIKit.label("Calidad de vivienda:"))
+ 	tier_opt = OptionButton.new()
+diff --git a/scripts/ui/building_panel.gd b/scripts/ui/building_panel.gd
+index 2d5d368..9874565 100644
+--- a/scripts/ui/building_panel.gd
++++ b/scripts/ui/building_panel.gd
+@@ -14,18 +14,23 @@ var summary: RichTextLabel
+ var hire_modal: Dictionary
+ var hire_box: VBoxContainer
+ var _name_edit: LineEdit
++var overview: VBoxContainer
++var _status_chip: Control
++var _head_icon: TextureRect
++var _ov_timer := 0.0
++
++const CAT_ICONS := {"negocio": "companies", "vivienda": "realestate", "gobierno": "government", "servicio": "utilities",
++	"logistica": "logistics", "transporte": "transit", "redes": "utilities", "publico": "government"}
+ 
+ 
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	title = UIKit.label("", 20, UIKit.ACCENT)
+-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	title.clip_text = true
+-	head.add_child(title)
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	title = UIKit.header(self, "companies", "", func(): closed.emit())
++	_head_icon = title.get_parent().get_child(0).get_child(0)
++	overview = VBoxContainer.new()
++	overview.add_theme_constant_override("separation", 6)
++	add_child(overview)
+ 	tabs = TabContainer.new()
+ 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	add_child(tabs)
+@@ -55,6 +60,8 @@ func rebuild() -> void:
+ 	var def: Dictionary = GameState.building_def(b)
+ 	var mine := GameState.owned_by_player(b)
+ 	var cat := str(def.get("category", ""))
++	_head_icon.texture = UIIcons.tex(str(CAT_ICONS.get(cat, "town")), 20)
++	_build_overview(b)
+ 	_add_tab("Resumen", _summary_tab(b, mine))
+ 	if mine and cat == "negocio":
+ 		_add_tab("Empleados", _employees_tab(b))
+@@ -103,9 +110,12 @@ func _msg(text: String, cat := "info") -> void:
+ 
+ func _summary_tab(b: Dictionary, mine: bool) -> Control:
+ 	var v := VBoxContainer.new()
++	v.add_theme_constant_override("separation", 6)
+ 	summary = UIKit.rich()
+ 	summary.meta_clicked.connect(hud.on_meta_clicked)
+ 	v.add_child(summary)
++	if mine and not b["ledger"].get("last_month", {}).is_empty():
++		v.add_child(_ledger_chart(b))
+ 	if mine:
+ 		var row := HBoxContainer.new()
+ 		_name_edit = LineEdit.new()
+@@ -172,6 +182,79 @@ func refresh() -> void:
+ 	if b.is_empty() or summary == null:
+ 		return
+ 	summary.text = _summary_text(b)
++	_ov_timer += 1.0
++	if _ov_timer >= 12.0:   # refresh() llega cada 0,25 s: la cabecera se renueva cada ~3 s
++		_ov_timer = 0.0
++		_build_overview(b)
++
++
++## Cabecera compacta: estado, resultado con mini-gráfica de ingresos diarios, empleados y producción.
++func _build_overview(b: Dictionary) -> void:
++	UIKit.clear(overview)
++	var gs := GameState
++	var def: Dictionary = gs.building_def(b)
++	var ld: Dictionary = gs.level_def(b)
++	var chips := UIKit.flow(4, 4)
++	overview.add_child(chips)
++	var st := str(b["status"])
++	var st_col: Color = {"activo": UIKit.GOOD, "construccion": UIKit.WARN, "mejorando": UIKit.WARN, "cerrado": UIKit.BAD}.get(st, UIKit.NEUTRAL)
++	var st_txt: String = {"activo": "Activo", "construccion": "En construcción", "mejorando": "Mejorando", "cerrado": "Cerrado"}.get(st, st)
++	if st in ["construccion", "mejorando"]:
++		st_txt += " %d%%" % int(100.0 * float(b["work_done"]) / maxf(1.0, float(b["work_needed"])))
++	chips.add_child(UIKit.chip(st_txt, st_col, "check" if st == "activo" else "build"))
++	chips.add_child(UIKit.chip("%s · Nv %d/%d" % [ld.get("label", ""), int(b["level"]), GameData.max_level(b["type"])], UIKit.ACCENT, "star"))
++	if NpcBusinessSim.is_npc(b):
++		chips.add_child(UIKit.chip("Empresa NPC", UIKit.INFO, "companies"))
++	elif gs.owned_by_player(b):
++		chips.add_child(UIKit.chip("Tuyo", UIKit.ACCENT_2, "character"))
++	if BusinessSim.is_business(b) and st == "activo" and gs.owned_by_player(b):
++		var cls := EconomySim.classify(b)
++		chips.add_child(UIKit.chip(cls, {"rentable": UIKit.GOOD, "equilibrio": UIKit.WARN, "deficitaria": UIKit.BAD}.get(cls, UIKit.NEUTRAL), "trend_up" if cls == "rentable" else "info"))
++	if not gs.owned_by_player(b) and not NpcBusinessSim.is_npc(b):
++		return
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", 6)
++	overview.add_child(row)
++	var h := UIHistory.building(bid)
++	var profit := BusinessSim.period_profit(b, "last_month")
++	var card := UIKit.kpi_card("money", "Resultado mes ant.", Fmt.money_compact(profit), "", h["income"], UIKit.sign_color(profit) if profit != 0.0 else UIKit.ACCENT, "Mini-gráfica: ingresos por día (últimos %d días)" % (h["income"] as Array).size(), 0.0)
++	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	row.add_child(card)
++	if def.get("category", "") == "negocio":
++		var emp := 0
++		for c in gs.employees_of(bid):
++			if c.job_kind == "empleo":
++				emp += 1
++		var jobs := MineSim.jobs(gs, b)
++		var product := str(def.get("product", ""))
++		var prod_txt := "—"
++		if product != "" and product != "construccion":
++			prod_txt = "%s/día" % String.num(BusinessSim.expected_output(gs, b), 1).replace(".", ",")
++		var card2 := UIKit.kpi_card("gdp", "Producción" if product != "" else "Empleados", prod_txt if product != "" else "%d/%d" % [emp, jobs], "", h["output"], UIKit.ACCENT_2,
++			"%s · mini-gráfica: inventario por día" % (GameData.good_label(product) if product != "" else ""), 0.0)
++		card2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		row.add_child(card2)
++		if jobs > 0:
++			overview.add_child(UIKit.meter_row("population", "Empleados", float(emp) / float(jobs), "%d/%d" % [emp, jobs]))
++		var cap := BusinessSim.storage_cap(gs, b)
++		if product != "" and product != "construccion" and cap > 0.0:
++			var inv := float(b["inventory"].get(product, 0.0))
++			overview.add_child(UIKit.meter_row("catalog", "Inventario", inv / cap, Fmt.compact(inv), false, UIKit.ACCENT_2))
++
++
++## Barras de ingresos y gastos del mes anterior por concepto.
++func _ledger_chart(b: Dictionary) -> Control:
++	var m: Dictionary = b["ledger"].get("last_month", {})
++	if m.is_empty():
++		m = b["ledger"].get("month", {})
++	var rows := []
++	for k in BusinessSim.LEDGER_KEYS:
++		if m.has(k) and absf(float(m[k])) > 0.01 and not k in BusinessSim.NON_PNL_KEYS:
++			rows.append({"label": str(k).capitalize(), "values": [float(m[k])], "inc": k in BusinessSim.INCOME_KEYS, "color": UIKit.GOOD if k in BusinessSim.INCOME_KEYS else UIKit.BAD})
++	rows.sort_custom(func(a, c): return (1 if a["inc"] else 0) > (1 if c["inc"] else 0))
++	var bc := BarChart.new()
++	bc.set_data("Ingresos y gastos por concepto (mes anterior)", rows, [], true)
++	return bc
+ 
+ 
+ func _summary_text(b: Dictionary) -> String:
+diff --git a/scripts/ui/companies_panel.gd b/scripts/ui/companies_panel.gd
+index 92f42dc..27e5bd6 100644
+--- a/scripts/ui/companies_panel.gd
++++ b/scripts/ui/companies_panel.gd
+@@ -12,12 +12,7 @@ var totals: Label
+ 
+ func setup() -> void:
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Mis Empresas y Propiedades", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "companies", "Mis Empresas y Propiedades", func(): closed.emit(), [])
+ 	totals = UIKit.label("", 13, UIKit.TEXT_DIM)
+ 	totals.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ 	add_child(totals)
+@@ -29,36 +24,125 @@ func setup() -> void:
+ 
+ func refresh() -> void:
+ 	UIKit.clear(list)
++	var gs := GameState
+ 	var total_profit := 0.0
+-	var owned := GameState.player_buildings()
+-	owned.sort_custom(func(a, b): return str(GameState.building_def(a).get("category", "")) < str(GameState.building_def(b).get("category", "")))
++	var total_income := 0.0
++	var owned := gs.player_buildings()
++	owned.sort_custom(func(a, b): return str(gs.building_def(a).get("category", "")) < str(gs.building_def(b).get("category", "")))
++	var counts := {"ok": 0, "warn": 0, "bad": 0}
++	var cards := []
+ 	for b in owned:
+-		var def: Dictionary = GameState.building_def(b)
+ 		var profit := BusinessSim.period_profit(b, "last_month")
++		var inc := BusinessSim.period_value(b, "last_month", "ventas") + BusinessSim.period_value(b, "last_month", "alquileres") + BusinessSim.period_value(b, "last_month", "intereses")
+ 		total_profit += profit
+-		var panel := PanelContainer.new()
+-		panel.add_theme_stylebox_override("panel", UIKit.panel_style(UIKit.BG_LIGHT, 6, 8))
+-		var row := HBoxContainer.new()
+-		panel.add_child(row)
+-		var swatch := ColorRect.new()
+-		swatch.custom_minimum_size = Vector2(10, 40)
+-		var parts: Array = GameState.level_def(b).get("model", [])
+-		swatch.color = MeshLib.arr_color(parts[0].get("c") if not parts.is_empty() else null, Color.GRAY)
+-		row.add_child(swatch)
+-		var v := VBoxContainer.new()
+-		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-		row.add_child(v)
+-		v.add_child(UIKit.label("%s  · Nv %d" % [GameState.building_label(b), int(b["level"])], 15))
+-		var status: String = {"activo": "activo", "construccion": "en construcción", "mejorando": "mejorando (no factura)", "cerrado": "CERRADO"}.get(str(b["status"]), "")
+-		if BusinessSim.is_business(b) and b["status"] == "activo":
+-			status += " · " + EconomySim.classify(b)
+-		var legal := str(GameData.legal_types.get(str(b.get("legal", "sas")), {}).get("label", "")) if def.get("category", "") == "negocio" else str(def.get("label", ""))
+-		var col := Color(0.5, 0.85, 0.5) if profit >= 0 else Color(0.95, 0.45, 0.45)
+-		v.add_child(UIKit.label("%s · %s" % [legal, status], 12, UIKit.TEXT_DIM))
+-		v.add_child(UIKit.label("Resultado mes anterior: %s · este mes: %s" % [Fmt.money(profit), Fmt.money(BusinessSim.period_profit(b, "month"))], 12, col))
+-		var id := int(b["id"])
+-		row.add_child(UIKit.button("Abrir", func(): open_building.emit(id)))
+-		list.add_child(panel)
++		total_income += inc
++		cards.append(_card(b, profit, inc, counts))
++	# Resumen en tarjetas
++	var g := GridContainer.new()
++	g.columns = 3
++	g.add_theme_constant_override("h_separation", 6)
++	g.add_theme_constant_override("v_separation", 6)
++	list.add_child(g)
++	for spec in [["companies", "Negocios", "%d/%d" % [BusinessSim.business_count(gs), BusinessSim.max_businesses(gs)], UIKit.ACCENT_2],
++			["money", "Ingresos mes ant.", Fmt.money_compact(total_income), UIKit.ACCENT],
++			["trend_up" if total_profit >= 0.0 else "trend_down", "Resultado mes ant.", Fmt.money_compact(total_profit), UIKit.sign_color(total_profit)]]:
++		var k := UIKit.kpi_card(spec[0], spec[1], spec[2], "", [], spec[3], "", 0.0)
++		k.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		g.add_child(k)
++	var chips := UIKit.flow(6, 6)
++	list.add_child(chips)
++	chips.add_child(UIKit.chip("%d rentables" % counts["ok"], UIKit.GOOD, "check"))
++	chips.add_child(UIKit.chip("%d en equilibrio o en obra" % counts["warn"], UIKit.WARN, "alert"))
++	chips.add_child(UIKit.chip("%d con pérdidas o cerradas" % counts["bad"], UIKit.BAD, "trend_down"))
++	for c in cards:
++		list.add_child(c)
+ 	if owned.is_empty():
+-		list.add_child(UIKit.label("Aún no tienes propiedades. Usa «Construir»."))
+-	totals.text = "Negocios: %d/%d · Propiedades: %d · Resultado total mes anterior: %s" % [BusinessSim.business_count(GameState), BusinessSim.max_businesses(GameState), owned.size(), Fmt.money(total_profit)]
++		list.add_child(UIKit.label("Aún no tienes propiedades. Usa «Construir» (B).", 14, UIKit.TEXT_DIM))
++	totals.text = "Negocios: %d/%d · Propiedades: %d · Resultado total mes anterior: %s" % [BusinessSim.business_count(gs), BusinessSim.max_businesses(gs), owned.size(), Fmt.money(total_profit)]
++
++
++## Tarjeta por negocio: franja de color por estado, margen, empleados y alertas.
++func _card(b: Dictionary, profit: float, inc: float, counts: Dictionary) -> Control:
++	var gs := GameState
++	var def: Dictionary = gs.building_def(b)
++	var status := str(b["status"])
++	var is_biz := BusinessSim.is_business(b)
++	var cls := EconomySim.classify(b) if is_biz and status == "activo" else ""
++	var col := UIKit.GOOD
++	if status == "cerrado" or cls == "deficitaria":
++		col = UIKit.BAD
++		counts["bad"] += 1
++	elif status != "activo" or cls == "equilibrio":
++		col = UIKit.WARN
++		counts["warn"] += 1
++	elif cls == "sin datos":
++		col = UIKit.NEUTRAL
++		counts["ok"] += 1
++	else:
++		counts["ok"] += 1
++	var c := UIKit.card(col, 8)
++	var p: PanelContainer = c["panel"]
++	var v: VBoxContainer = c["box"]
++	var head := HBoxContainer.new()
++	head.add_theme_constant_override("separation", 6)
++	v.add_child(head)
++	var swatch := ColorRect.new()
++	swatch.custom_minimum_size = Vector2(12, 12)
++	swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++	var parts: Array = gs.level_def(b).get("model", [])
++	swatch.color = MeshLib.arr_color(parts[0].get("c") if not parts.is_empty() else null, Color.GRAY)
++	head.add_child(swatch)
++	var name_l := UIKit.label(gs.building_label(b), 15, UIKit.TEXT)
++	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	name_l.clip_text = true
++	name_l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
++	head.add_child(name_l)
++	head.add_child(UIKit.chip("Nv %d" % int(b["level"]), UIKit.ACCENT))
++	var st_txt: String = {"activo": "activo", "construccion": "en obra", "mejorando": "mejorando", "cerrado": "CERRADO"}.get(status, status)
++	head.add_child(UIKit.chip(cls if cls != "" else st_txt, col))
++	var id := int(b["id"])
++	var open_b := UIKit.icon_button("chevron_right", func(): open_building.emit(id), "Abrir el panel del edificio", "", 16)
++	head.add_child(open_b)
++	var legal := str(GameData.legal_types.get(str(b.get("legal", "sas")), {}).get("label", "")) if def.get("category", "") == "negocio" else str(def.get("label", ""))
++	v.add_child(UIKit.label(legal, 11, UIKit.TEXT_FAINT))
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", 10)
++	v.add_child(row)
++	row.add_child(_stat("Resultado", Fmt.money(profit), UIKit.sign_color(profit)))
++	if inc > 0.0:
++		var margin := profit / inc
++		row.add_child(_stat("Margen", Fmt.pct(margin * 100.0), UIKit.sign_color(margin)))
++	row.add_child(_stat("Este mes", Fmt.money(BusinessSim.period_profit(b, "month")), UIKit.sign_color(BusinessSim.period_profit(b, "month"))))
++	if def.get("category", "") == "negocio":
++		var emp := 0
++		for e in gs.employees_of(id):
++			if e.job_kind == "empleo":
++				emp += 1
++		var jobs := MineSim.jobs(gs, b)
++		if jobs > 0:
++			v.add_child(UIKit.meter_row("population", "Empleados", float(emp) / float(jobs), "%d/%d" % [emp, jobs]))
++		# Alertas
++		var alerts := []
++		if emp < jobs and status == "activo":
++			alerts.append("%d vacantes" % (jobs - emp))
++		if int(b.get("loss_months", 0)) > 0:
++			alerts.append("%d meses con pérdidas" % int(b["loss_months"]))
++		if status == "activo" and gs.owned_by_player(b) and WarehouseTab.summary_line(gs, b).contains("ninguno"):
++			alerts.append("sin almacén")
++		if not alerts.is_empty():
++			var af := UIKit.flow(4, 4)
++			v.add_child(af)
++			for a in alerts:
++				af.add_child(UIKit.chip(a, UIKit.WARN, "alert", 11))
++	p.mouse_filter = Control.MOUSE_FILTER_STOP
++	p.gui_input.connect(func(e): if e is InputEventMouseButton and e.pressed and e.double_click: open_building.emit(id))
++	p.tooltip_text = "Doble clic para abrir"
++	return p
++
++
++func _stat(title: String, value: String, color: Color) -> VBoxContainer:
++	var v := VBoxContainer.new()
++	v.add_theme_constant_override("separation", 0)
++	v.add_child(UIKit.label(title, 10, UIKit.TEXT_FAINT))
++	v.add_child(UIKit.label(value, 14, color))
++	return v
+diff --git a/scripts/ui/contracts_panel.gd b/scripts/ui/contracts_panel.gd
+index 0bd1fc6..87a9542 100644
+--- a/scripts/ui/contracts_panel.gd
++++ b/scripts/ui/contracts_panel.gd
+@@ -45,13 +45,7 @@ var counter_prices: Dictionary = {}   # id de solicitud -> precio de contraofert
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Contratos", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("↻", refresh, 32))
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "contracts", "Contratos", func(): closed.emit(), [UIKit.icon_button("refresh", refresh, "Actualizar", "", 16)])
+ 	tab_bar = HBoxContainer.new()
+ 	add_child(tab_bar)
+ 	var sb := UIKit.scroll_box(Vector2(0, 200))
 diff --git a/scripts/ui/data_table.gd b/scripts/ui/data_table.gd
 new file mode 100644
 index 0000000..f9137a6
@@ -592,6 +940,24 @@ index 0000000..f6737c5
 +			var p: Vector2 = _pos[int(m["id"])]
 +			draw_line(Vector2(src.x, yk), Vector2(p.x, yk), col, 1.5)
 +			draw_line(Vector2(p.x, yk), p - Vector2(0, 20), col, 1.5)
+diff --git a/scripts/ui/finance_panel.gd b/scripts/ui/finance_panel.gd
+index 6700328..727af8a 100644
+--- a/scripts/ui/finance_panel.gd
++++ b/scripts/ui/finance_panel.gd
+@@ -17,12 +17,7 @@ var charts: Array[LineChart] = []
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Finanzas", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "finance", "Finanzas", func(): closed.emit(), [])
+ 	var sb := UIKit.scroll_box(Vector2(0, 200))
+ 	sb["scroll"].size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	add_child(sb["scroll"])
 diff --git a/scripts/ui/fmt.gd b/scripts/ui/fmt.gd
 index 795445b..6960918 100644
 --- a/scripts/ui/fmt.gd
@@ -693,8 +1059,26 @@ index 0000000..9e61d8c
 +	if label_text != "":
 +		var w2 := font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
 +		draw_string(font, Vector2(c.x - w2 * 0.5, c.y + 32), label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, UIKit.TEXT_DIM)
+diff --git a/scripts/ui/government_panel.gd b/scripts/ui/government_panel.gd
+index 6eb8805..df6d0c1 100644
+--- a/scripts/ui/government_panel.gd
++++ b/scripts/ui/government_panel.gd
+@@ -13,12 +13,7 @@ var bid_spin: SpinBox
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Gobierno", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "government", "Gobierno", func(): closed.emit(), [])
+ 	var sb := UIKit.scroll_box(Vector2(0, 200))
+ 	sb["scroll"].size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	add_child(sb["scroll"])
 diff --git a/scripts/ui/hud.gd b/scripts/ui/hud.gd
-index 513e905..6057d05 100644
+index 513e905..42e9330 100644
 --- a/scripts/ui/hud.gd
 +++ b/scripts/ui/hud.gd
 @@ -1,12 +1,38 @@
@@ -1121,9 +1505,9 @@ index 513e905..6057d05 100644
 +			_player_portrait.set_citizen(p, true)
 +		_player_chip.tooltip_text = ("Si mueres sin heredero, termina la dinastía. Ten hijos, adopta o define tu orden de herederos (Mi personaje)." if no_heir else "Mi personaje (P)")
 +		var inc := float(last.get("income", 0.0))
-+		var exp := float(last.get("expenses", 0.0))
++		var exp_m := float(last.get("expenses", 0.0))
 +		_chips["money"]["panel"].tooltip_text = "Dinero: %s\nPatrimonio neto: %s · Deudas: %s\nMes anterior: ingresos %s · gastos %s\n▲▼ = cambio desde el cierre del mes anterior" % [
-+			Fmt.money(gs.money), Fmt.money(EconomySim.net_worth(gs)), Fmt.money(EconomySim.player_debt(gs)), Fmt.money(inc), Fmt.money(exp)]
++			Fmt.money(gs.money), Fmt.money(EconomySim.net_worth(gs)), Fmt.money(EconomySim.player_debt(gs)), Fmt.money(inc), Fmt.money(exp_m)]
 +		var pop := StatsSim.population(gs)
 +		_chips["pop"]["panel"].tooltip_text = "Población: %d\nNiños %d · Adultos %d · Mayores %d\nÚltimos 12 meses: %d nacimientos, %d muertes\nClic: tabla de población (Z)" % [
 +			gs.citizens.size(), int(pop["children"]), int(pop["adults"]), int(pop["elderly"]), int(pop["births_year"]), int(pop["deaths_year"])]
@@ -2618,6 +3002,146 @@ index 21cb8b0..91a5319 100644
 +		draw_style_box(UIKit._flat(Color(0.05, 0.055, 0.07, 0.95), 6, 0, 0, Color(1, 1, 1, 0.15), 1), box)
 +		for i in range(lines.size()):
 +			draw_string(font, box.position + Vector2(7, 16 + 15 * i), lines[i][0], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, (lines[i][1] as Color).lightened(0.15))
+diff --git a/scripts/ui/logistics_panel.gd b/scripts/ui/logistics_panel.gd
+index a105399..eec74dd 100644
+--- a/scripts/ui/logistics_panel.gd
++++ b/scripts/ui/logistics_panel.gd
+@@ -27,12 +27,7 @@ var _f_max := 0.0
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Logística", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "logistics", "Logística", func(): closed.emit(), [])
+ 	tabs = TabContainer.new()
+ 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	add_child(tabs)
+diff --git a/scripts/ui/player_panel.gd b/scripts/ui/player_panel.gd
+index 8054abf..a14bf7b 100644
+--- a/scripts/ui/player_panel.gd
++++ b/scripts/ui/player_panel.gd
+@@ -9,20 +9,22 @@ signal message(text: String, category: String)
+ var hud: Hud
+ var info: RichTextLabel
+ var actions: VBoxContainer
++var profile: VBoxContainer
++var _scroll: ScrollContainer
++var _family_title: Control
+ 
+ 
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Mi Personaje", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "dynasty", "Mi personaje y dinastía", func(): closed.emit())
+ 	var sb := UIKit.scroll_box(Vector2(0, 200))
+ 	sb["scroll"].size_flags_vertical = Control.SIZE_EXPAND_FILL
++	_scroll = sb["scroll"]
+ 	add_child(sb["scroll"])
++	profile = VBoxContainer.new()
++	profile.add_theme_constant_override("separation", 6)
++	sb["box"].add_child(profile)
+ 	info = UIKit.rich()
+ 	info.meta_clicked.connect(hud.on_meta_clicked)
+ 	sb["box"].add_child(info)
+@@ -36,10 +38,8 @@ func refresh() -> void:
+ 		info.text = "Sin personaje."
+ 		return
+ 	var today := GameState.today()
+-	var s := "[font_size=20][color=#edc259]%s[/color][/font_size]\n" % p.full_name()
+-	s += "%s · %d años\n" % ["Mujer" if p.gender == "F" else "Hombre", p.age_years(today)]
+-	s += "Salud: %s%s · Felicidad: %s\n" % [hud.bar(p.health), "  [color=#e88](enfermo/a)[/color]" if p.sick else "", hud.bar(p.happiness)]
+-	s += "Dinero: %s\n" % Fmt.money(GameState.money)
++	_build_profile(p)
++	var s := ""
+ 	var home := PlayerSim.player_home(GameState)
+ 	s += "Hogar: %s\n\n" % ("Sin hogar" if home.is_empty() else "%s (%s)" % [GameState.building_label(home), Housing.tier_label(str(home.get("tier", "normal")))])
+ 	s += "[b]Familia[/b]\n"
+@@ -130,7 +130,74 @@ func _do(text: String) -> void:
+ 
+ func _title(text: String) -> void:
+ 	actions.add_child(HSeparator.new())
+-	actions.add_child(UIKit.label(text, 17, UIKit.ACCENT))
++	var l := UIKit.label(text, 17, UIKit.ACCENT)
++	actions.add_child(l)
++	if text.begins_with("Familia"):
++		_family_title = l
++
++
++## Desplaza la vista hasta la sección de familia (menú Mi dinastía → Familia y herederos).
++func scroll_to_family() -> void:
++	if _scroll == null:
++		return
++	await get_tree().process_frame
++	if is_instance_valid(_family_title):
++		_scroll.ensure_control_visible(_family_title)
++		_scroll.scroll_vertical = int(_family_title.position.y + actions.position.y) - 8
++
++
++## Ficha visual: retrato, indicadores, patrimonio, talentos y árbol familiar.
++func _build_profile(p: Citizen) -> void:
++	UIKit.clear(profile)
++	var gs := GameState
++	var head := HBoxContainer.new()
++	head.add_theme_constant_override("separation", 10)
++	profile.add_child(head)
++	var por := Portrait.new()
++	por.custom_minimum_size = Vector2(72, 72)
++	por.set_citizen(p, true)
++	head.add_child(por)
++	var nv := VBoxContainer.new()
++	nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	nv.add_theme_constant_override("separation", 3)
++	head.add_child(nv)
++	nv.add_child(UIKit.label(p.full_name(), 19, UIKit.ACCENT))
++	var chips := UIKit.flow(4, 4)
++	nv.add_child(chips)
++	chips.add_child(UIKit.chip("%s · %d años" % ["Mujer" if p.gender == "F" else "Hombre", p.age_years(gs.today())], UIKit.TEXT_DIM, "character"))
++	chips.add_child(UIKit.chip("Generación %d" % DynastySim.generation(gs), UIKit.ACCENT, "dynasty"))
++	if p.sick:
++		chips.add_child(UIKit.chip("Enfermo/a", UIKit.BAD, "health"))
++	if not DynastySim.has_heir(gs):
++		chips.add_child(UIKit.chip("Sin heredero", UIKit.BAD, "alert"))
++	profile.add_child(UIKit.meter_row("health", "Salud", p.health / 100.0))
++	profile.add_child(UIKit.meter_row("happiness", "Felicidad", p.happiness / 100.0))
++	var money_row := HBoxContainer.new()
++	money_row.add_theme_constant_override("separation", 6)
++	profile.add_child(money_row)
++	for spec in [["money", "Dinero", Fmt.money(gs.money), UIKit.ACCENT], ["finance", "Deudas", Fmt.money(EconomySim.player_debt(gs)), UIKit.BAD if EconomySim.player_debt(gs) > 0 else UIKit.NEUTRAL],
++			["treasury", "Patrimonio", Fmt.money_compact(EconomySim.net_worth(gs)), UIKit.GOOD]]:
++		var c := UIKit.card(Color(0, 0, 0, 0), 6)
++		c["panel"].size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		var h := HBoxContainer.new()
++		h.add_theme_constant_override("separation", 4)
++		h.add_child(UIKit.icon(spec[0], 14, spec[3]))
++		h.add_child(UIKit.label(spec[1], 11, UIKit.TEXT_DIM))
++		c["box"].add_child(h)
++		c["box"].add_child(UIKit.label(spec[2], 15, (spec[3] as Color).lerp(UIKit.TEXT, 0.3)))
++		money_row.add_child(c["panel"])
++	var tal := HeirsSim.talents(gs, p)
++	if not tal.is_empty():
++		var ts := UIKit.section(profile, "Talentos del jefe de familia", "dynasty", true, "pp_talents")
++		for k in HeirsSim.TALENTS:
++			if tal.has(k):
++				ts.add_child(UIKit.meter_row("dynasty", HeirsSim.talent_label(k), float(tal[k]) / 100.0, str(int(tal[k])), false, UIKit.ACCENT))
++	var fs := UIKit.section(profile, "Árbol familiar", "family", true, "pp_tree")
++	var tree := FamilyTree.new()
++	tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	fs.add_child(tree)
++	tree.set_person(p)
++	tree.person_clicked.connect(func(pid): hud.on_meta_clicked(pid))
+ 
+ 
+ func _rich(text: String) -> void:
 diff --git a/scripts/ui/portrait.gd b/scripts/ui/portrait.gd
 new file mode 100644
 index 0000000..9cb1e68
@@ -2849,6 +3373,25 @@ index 0000000..357b179
 +	var w2 := font.get_string_size(t2, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
 +	draw_circle(Vector2(size.x - w2 - 20, size.y - 10), 4, WOMEN)
 +	draw_string(font, Vector2(size.x - w2 - 12, size.y - 6), t2, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, UIKit.TEXT_DIM)
+diff --git a/scripts/ui/realestate_panel.gd b/scripts/ui/realestate_panel.gd
+index 32a4636..83400ce 100644
+--- a/scripts/ui/realestate_panel.gd
++++ b/scripts/ui/realestate_panel.gd
+@@ -22,13 +22,7 @@ var _credit: Dictionary = {}
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Bienes raíces", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("↻", func(): refresh(), 32))
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "realestate", "Bienes raíces", func(): closed.emit(), [UIKit.icon_button("refresh", func(): refresh(), "Actualizar", "", 16)])
+ 	tabs = TabContainer.new()
+ 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	add_child(tabs)
 diff --git a/scripts/ui/sparkline.gd b/scripts/ui/sparkline.gd
 new file mode 100644
 index 0000000..d676d27
@@ -2903,6 +3446,716 @@ index 0000000..d676d27
 +		draw_polygon(poly, cols)
 +	draw_polyline(c, color, 1.6, true)
 +	draw_circle(pts[pts.size() - 1], 2.4, color)
+diff --git a/scripts/ui/stats_panel.gd b/scripts/ui/stats_panel.gd
+index 1e7d786..89a67fe 100644
+--- a/scripts/ui/stats_panel.gd
++++ b/scripts/ui/stats_panel.gd
+@@ -1,134 +1,487 @@
+ class_name StatsPanel
+ extends VBoxContainer
+-## Estadísticas: comercio por bien, necesidades, empleo, vivienda, población y recomendaciones.
++## Estadísticas del pueblo en pestañas:
++## Resumen (tarjetas de indicadores con tendencia y sparkline + recomendaciones), Población
++## (pirámide, empleo por sector, necesidades, vivienda), Mercado (tabla ordenable de bienes y
++## precios), Comercio (barras), Pueblos vecinos (tarjetas) y Empresas de otros ciudadanos.
++## Se reconstruye al abrir, al cambiar de pestaña o con ↻ (nunca cada frame).
+ 
+ signal closed
+ 
++const TABS := [["resumen", "Resumen", "grid"], ["poblacion", "Población", "population"], ["mercado", "Mercado", "economy"],
++	["comercio", "Comercio", "trade"], ["pueblos", "Pueblos", "town"], ["empresas", "Empresas", "companies"]]
++
+ var body: VBoxContainer
++var tab_bar: HBoxContainer
++var current_tab := "resumen"
++var _scroll: ScrollContainer
+ 
+ 
+ func setup() -> void:
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Estadísticas del pueblo", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	var refresh_btn := UIKit.icon_button("refresh", refresh, "Actualizar", "", 16)
++	UIKit.header(self, "stats", "Estadísticas del pueblo", func(): closed.emit(), [refresh_btn])
++	tab_bar = HBoxContainer.new()
++	tab_bar.add_theme_constant_override("separation", 2)
++	add_child(tab_bar)
++	for t in TABS:
++		var id := str(t[0])
++		var b := Button.new()
++		b.icon = UIIcons.tex(str(t[2]), 16)
++		b.tooltip_text = str(t[1])
++		b.text = str(t[1]) if id in ["resumen"] else ""
++		b.toggle_mode = true
++		b.name = id
++		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		b.custom_minimum_size.y = 32
++		b.add_theme_stylebox_override("normal", UIKit._flat(Color(0, 0, 0, 0), 6, 6, 4))
++		b.add_theme_stylebox_override("pressed", UIKit._flat(Color(UIKit.ACCENT, 0.18), 6, 6, 4, Color(UIKit.ACCENT, 0.6), 1))
++		b.add_theme_stylebox_override("hover_pressed", UIKit._flat(Color(UIKit.ACCENT, 0.24), 6, 6, 4, UIKit.ACCENT, 1))
++		b.pressed.connect(func(): show_tab(id))
++		tab_bar.add_child(b)
+ 	var sb := UIKit.scroll_box(Vector2(0, 200))
+-	sb["scroll"].size_flags_vertical = Control.SIZE_EXPAND_FILL
+-	add_child(sb["scroll"])
++	_scroll = sb["scroll"]
++	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
++	add_child(_scroll)
+ 	body = sb["box"]
++	body.add_theme_constant_override("separation", 10)
+ 
+ 
+-func _arrow(v: float) -> String:
+-	if v > 0.02:
+-		return "[color=#e88]▲ %d%%[/color]" % int(round(v * 100.0))
+-	if v < -0.02:
+-		return "[color=#8e8]▼ %d%%[/color]" % int(round(-v * 100.0))
+-	return "[color=#aaa]=[/color]"
+-
+-
+-func _section(title: String, text: String) -> void:
+-	body.add_child(UIKit.label(title, 16, UIKit.ACCENT))
+-	var rl := UIKit.rich()
+-	rl.text = text
+-	body.add_child(rl)
++func show_tab(id: String) -> void:
++	current_tab = id
++	refresh()
++	_scroll.scroll_vertical = 0
+ 
+ 
+ func refresh() -> void:
++	if body == null:
++		return
++	for b in tab_bar.get_children():
++		var on: bool = b.name == current_tab
++		(b as Button).set_pressed_no_signal(on)
++		for t in TABS:
++			if t[0] == b.name:
++				(b as Button).text = str(t[1]) if on else ""
+ 	UIKit.clear(body)
++	match current_tab:
++		"poblacion":
++			_population_tab()
++		"mercado":
++			_market_tab()
++		"comercio":
++			_trade_tab()
++		"pueblos":
++			_towns_tab()
++		"empresas":
++			_companies_tab()
++		_:
++			_summary_tab()
++
++
++# --- Utilidades -------------------------------------------------------------------------------------
++
++func _hist(key: String) -> Array:
++	return GameState.history.slice(maxi(0, GameState.history.size() - 24)).map(func(e): return float(e.get(key, 0.0)))
++
++
++func _hist_dates() -> Array:
++	return GameState.history.slice(maxi(0, GameState.history.size() - 24)).map(func(e): return Fmt.short_date(int(e.get("day", 0))))
++
++
++func _delta(arr: Array) -> float:
++	if arr.size() < 2:
++		return 0.0
++	return (float(arr[-1]) - float(arr[-2])) / maxf(0.0001, absf(float(arr[-2])))
++
++
++func _note(text: String, parent: Control = null) -> void:
++	var l := UIKit.label(text, 12, UIKit.TEXT_FAINT)
++	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++	l.custom_minimum_size.x = 360
++	(parent if parent != null else body).add_child(l)
++
++
++func _grid() -> GridContainer:
++	var g := GridContainer.new()
++	g.columns = 2
++	g.add_theme_constant_override("h_separation", 8)
++	g.add_theme_constant_override("v_separation", 8)
++	g.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	body.add_child(g)
++	return g
++
++
++func _kpi(g: GridContainer, icon_name: String, title: String, value: String, arr: Array, color: Color, tip: String, invert := false, pts := false) -> void:
++	var trend := ""
++	if arr.size() >= 2:
++		if pts:
++			var d := float(arr[-1]) - float(arr[-2])
++			trend = "[color=#8a8f99]＝[/color]" if absf(d) < 0.5 else "[color=#%s]%s %d[/color]" % [(UIKit.GOOD if (d > 0.0) != invert else UIKit.BAD).to_html(false), "▲" if d > 0.0 else "▼", int(roundf(absf(d)))]
++		else:
++			trend = UIKit.trend_bbcode(_delta(arr), invert)
++	var card := UIKit.kpi_card(icon_name, title, value, trend, arr, color, tip, 0.0)
++	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	g.add_child(card)
++
++
++## PIB aproximado del pueblo: valor de las ventas locales de bienes por mes.
++static func gdp_series(gs) -> Array:
++	var out := []
++	for e in gs.economy.get("stats_hist", []):
++		var tot := 0.0
++		var goods: Dictionary = e.get("goods", {})
++		for g in goods:
++			tot += float(goods[g].get("revenue", 0.0))
++		out.append(tot)
++	return out
++
++
++# --- Resumen --------------------------------------------------------------------------------------
++
++func _summary_tab() -> void:
+ 	var gs := GameState
+-	var tips := StatsSim.advice(gs)
+-	_section("Recomendaciones", "\n".join(tips.map(func(t): return "• " + t)))
++	var g := _grid()
++	var pop := _hist("population")
++	pop.append(float(gs.citizens.size()))
++	_kpi(g, "population", "Población", Fmt.thousands(gs.citizens.size()), pop, UIKit.ACCENT_2, "Habitantes del pueblo (serie mensual)")
++	var unemp := EconomySim.unemployment(gs)
++	var emp := _hist("unemployment").map(func(v): return (1.0 - float(v)) * 100.0)
++	emp.append((1.0 - unemp) * 100.0)
++	_kpi(g, "employment", "Empleo", Fmt.pct((1.0 - unemp) * 100.0), emp, UIKit.GOOD, "Adultos en edad de trabajar con trabajo (desempleo %s)" % Fmt.pct(unemp * 100.0), false, true)
++	var hap := _hist("happiness")
++	hap.append(gs.avg_happiness())
++	_kpi(g, "happiness", "Felicidad", Fmt.pct(gs.avg_happiness()), hap, UIKit.level_color(gs.avg_happiness() / 100.0), "Felicidad promedio", false, true)
++	var hea := _hist("health")
++	hea.append(gs.avg_health())
++	_kpi(g, "health", "Salud", Fmt.pct(gs.avg_health()), hea, Color(0.95, 0.5, 0.55), "Salud promedio", false, true)
++	var crime := float(gs.problems.get("crime", 0.0))
++	var cr := _hist("crime")
++	_kpi(g, "crime", "Crimen", "%d/100" % int(crime), cr, UIKit.level_color(1.0 - crime / 100.0), "Índice de crimen (sube con pobreza, desempleo e infelicidad; baja con policía)", true, true)
++	var infl := EconomySim.annual_inflation(gs)
++	var inf := _hist("inflation").map(func(v): return float(v) * 100.0)
++	_kpi(g, "inflation", "Inflación anual", Fmt.pct_1(infl * 100.0), inf, UIKit.WARN, "Inflación anualizada · nivel de precios ×%s" % String.num(gs.price_level(), 2), true, true)
++	var gdp := gdp_series(gs)
++	_kpi(g, "gdp", "PIB del pueblo (mes)", Fmt.money_compact(gdp[-1] if not gdp.is_empty() else 0.0), gdp, UIKit.ACCENT, "Valor de las ventas locales de bienes en el mes (aproximación del PIB)")
++	var tre := float(gs.government.get("treasury", 0.0))
++	var tr_arr := UIHistory.treasury.duplicate()
++	_kpi(g, "treasury", "Tesoro público", Fmt.money_compact(tre), tr_arr, Color(0.7, 0.6, 0.95), "Caja del gobierno (impuestos, subsidios, obras)")
++	# Medidores
++	var gauges := HBoxContainer.new()
++	gauges.add_theme_constant_override("separation", 4)
++	body.add_child(gauges)
++	var needs := StatsSim.needs_table(gs)
++	var met := 0.0
++	for r in needs:
++		met += float(r["met"]) + float(r["partial"]) * 0.5
++	met /= maxf(1.0, needs.size())
++	for spec in [[met, "Necesidades", false], [1.0 - unemp, "Empleo", false], [crime / 100.0, "Crimen", true], [float(gs.problems.get("pollution", 0.0)) / 100.0, "Contaminación", true]]:
++		var ga := Gauge.new()
++		ga.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		ga.custom_minimum_size = Vector2(92, 78)
++		gauges.add_child(ga)
++		ga.set_value(float(spec[0]), str(spec[1]), "", bool(spec[2]))
++	# Evolución
++	if gs.history.size() >= 2:
++		var ch := LineChart.new()
++		ch.custom_minimum_size = Vector2(0, 170)
++		ch.suffix = "%"
++		ch.set_data("Felicidad y salud (%)", [{"label": "Felicidad", "color": UIKit.GOOD, "values": _hist("happiness")}, {"label": "Salud", "color": Color(0.95, 0.5, 0.55), "values": _hist("health")}], false, _hist_dates())
++		body.add_child(ch)
++	var rec := UIKit.section(body, "Recomendaciones", "info", true, "stats_rec")
++	for t in StatsSim.advice(gs):
++		var row := HBoxContainer.new()
++		row.add_theme_constant_override("separation", 6)
++		var ic := UIKit.icon("alert" if str(t).contains("escas") or str(t).contains("pérdid") else "info", 14, UIKit.WARN if str(t).contains("escas") else UIKit.INFO)
++		ic.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
++		row.add_child(ic)
++		var l := UIKit.label(str(t), 12, UIKit.TEXT)
++		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
++		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		row.add_child(l)
++		rec.add_child(row)
+ 
+-	var goods := StatsSim.goods_table(gs)
+-	var s := "[table=5][cell][b]Bien[/b][/cell][cell][b]Precio[/b][/cell][cell][b]Pedido/mes[/b][/cell][cell][b]Tus ventas[/b][/cell][cell][b]Sin cubrir[/b][/cell]"
+-	for r in goods:
+-		s += "[cell]%s[/cell][cell]%s %s[/cell][cell]%d %s[/cell][cell]%d%%[/cell][cell]%d[/cell]" % [
+-			r["label"], Fmt.money2(r["price"]), _arrow(r["price_change"]), int(r["demand"]), _arrow(r["demand_change"]),
+-			int(r["local_share"] * 100.0), int(r["uncovered"])]
+-	s += "[/table]\n[color=#999]Tus ventas = % de lo pedido que compraron a tus negocios. Sin cubrir = unidades que se autoabastecieron o importaron (demanda que podrías captar).[/color]\n"
+-	var by_demand := goods.duplicate()
+-	by_demand.sort_custom(func(a, b): return a["demand"] > b["demand"])
+-	var active := by_demand.filter(func(r): return r["demand"] > 0.0)
+-	if not active.is_empty():
+-		s += "Más pedido: [b]%s[/b] · Menos pedido: [b]%s[/b]\n" % [active[0]["label"], active[-1]["label"]]
+-	var ups := goods.filter(func(r): return r["price_change"] > 0.02).map(func(r): return r["label"])
+-	var downs := goods.filter(func(r): return r["price_change"] < -0.02).map(func(r): return r["label"])
+-	s += "Suben de precio: %s · Bajan: %s\n" % [", ".join(ups) if not ups.is_empty() else "—", ", ".join(downs) if not downs.is_empty() else "—"]
+-	var rev := 0.0
+-	for r in goods:
+-		rev += float(r["revenue"])
+-	s += "Ventas totales de tus negocios en el mes: %s" % Fmt.money(rev)
+-	_section("Comercio (último mes)", s)
+ 
+-	var n := "[table=4][cell][b]Necesidad[/b][/cell][cell][b]Cubierta[/b][/cell][cell][b]A medias[/b][/cell][cell][b]Sin cubrir[/b][/cell]"
+-	for r in StatsSim.needs_table(gs):
+-		n += "[cell]%s[/cell][cell]%d%%[/cell][cell]%d%%[/cell][cell]%s[/cell]" % [r["label"], int(r["met"] * 100), int(r["partial"] * 100),
+-			("[color=#e66]%d%%[/color]" % int(r["unmet"] * 100)) if r["unmet"] > 0.05 else "%d%%" % int(r["unmet"] * 100)]
+-	n += "[/table]\n[color=#999]A medias = autoabastecimiento (cultivar, buscar agua y leña): peor calidad de vida. Lo que la gente necesita comprar y no encuentra es tu oportunidad.[/color]"
+-	_section("¿Qué necesita la gente?", n)
++# --- Población ------------------------------------------------------------------------------------
+ 
++func _population_tab() -> void:
++	var gs := GameState
++	var pyr := PyramidChart.new()
++	pyr.custom_minimum_size = Vector2(0, 230)
++	body.add_child(pyr)
++	pyr.set_citizens(gs.citizens, gs.today())
++	var p := StatsSim.population(gs)
++	_note("Últimos 12 meses: %d nacimientos · %d muertes · niños %d · adultos %d · mayores %d" % [p["births_year"], p["deaths_year"], p["children"], p["adults"], p["elderly"]])
++	# Empleo por sector
++	var sectors := {}
++	var today := gs.today()
++	var adult := int(GameData.citizens.get("adult_age", 16))
++	var retire := int(GameData.citizens.get("retirement_age", 65))
++	for c in gs.citizens.values():
++		var age: int = c.age_years(today)
++		if age < adult or age >= retire or gs.is_player(c.id):
++			continue
++		var key := "Sin empleo"
++		if c.job_kind == "obra":
++			key = "Construcción"
++		elif c.job_kind == "empleo":
++			var b := gs.get_building(c.job_id)
++			key = str(gs.building_def(b).get("sector", "")).capitalize() if not b.is_empty() else "Otros"
++			if key == "":
++				key = str(gs.building_def(b).get("label", "Otros"))
++		sectors[key] = int(sectors.get(key, 0)) + 1
++	var keys := sectors.keys()
++	keys.sort_custom(func(a, b): return int(sectors[a]) > int(sectors[b]))
++	var slices := []
++	var i := 0
++	for k in keys:
++		var col: Color = UIKit.SERIES[i % UIKit.SERIES.size()]
++		if k == "Sin empleo":
++			col = Color(0.45, 0.47, 0.52)
++		slices.append({"label": k, "value": float(sectors[k]), "color": col})
++		i += 1
++	var donut := DonutChart.new()
++	donut.custom_minimum_size = Vector2(0, 180)
++	body.add_child(donut)
+ 	var e := StatsSim.employment(gs)
+-	var sk: Dictionary = e["by_skill"]
+-	var skills := sk.keys()
+-	skills.sort_custom(func(a, b): return sk[a] > sk[b])
+-	var es := "Fuerza laboral: %d · Con empleo: %d · Jornaleros: %d · [b]Buscan empleo: %d (%s)[/b]\n" % [e["workforce"], e["employed"], e["day_laborers"], e["unemployed"], Fmt.pct(100.0 * e["unemployed"] / maxf(1.0, e["workforce"]))]
+-	es += "Vacantes en tus negocios: %d · Salario promedio: %s/día\n" % [e["vacancies"], Fmt.money2(e["avg_wage"])]
+-	es += "Desempleados por habilidad: %s\n" % ", ".join(skills.slice(0, 6).map(func(k): return "%s %d" % [GameData.skill_label(k), sk[k]]))
+-	var edu: Dictionary = e["education"]
+-	es += "Educación (adultos): %s\n" % ", ".join([0, 1, 2, 3].map(func(l): return "%s %d" % [GameData.education_label(l), int(edu.get(l, 0))]))
+-	var pr: Dictionary = e["professions"]
+-	es += "Profesionales: %s" % (", ".join(pr.keys().map(func(k): return "%s %d" % [GameData.profession_label(k), pr[k]])) if not pr.is_empty() else "ninguno (se forman en la universidad)")
+-	_section("Empleo", es)
+-
++	donut.set_data("Empleo por sector", slices, str(e["workforce"]), "trabajadores")
++	_note("Con empleo %d · jornaleros %d · buscan empleo %d · vacantes en tus negocios %d · salario promedio %s/día" % [e["employed"], e["day_laborers"], e["unemployed"], e["vacancies"], Fmt.money2(e["avg_wage"])])
++	# Necesidades
++	var ns := UIKit.section(body, "¿Qué necesita la gente?", "sprout", true, "stats_needs")
++	var nrows := StatsSim.needs_table(gs).map(func(r): return {"label": r["label"], "met": r["met"], "partial": r["partial"], "unmet": r["unmet"]})
++	var nt := DataTable.new()
++	nt.set_data([{"title": "Necesidad", "key": "label", "w": 1.4}, {"title": "Cubierta", "key": "met", "w": 1.5, "fmt": "bar"},
++		{"title": "A medias", "key": "partial", "w": 0.9, "fmt": "pct"}, {"title": "Sin cubrir", "key": "unmet", "w": 0.9, "fmt": "pct"}], nrows, 10)
++	ns.add_child(nt)
++	_note("A medias = autoabastecimiento (cultivar, buscar agua y leña). Lo que la gente necesita comprar y no encuentra es tu oportunidad.", ns)
++	# Vivienda
++	var vs := UIKit.section(body, "Vivienda", "realestate", true, "stats_housing")
+ 	var h := StatsSim.housing(gs)
+-	var hs := "Familias: %d · Sin hogar: [b]%d[/b] · Hacinadas: [b]%d[/b] · Quieren mudarse: %d\n" % [h["households"], h["homeless"], h["crowded"], h["wants_move"]]
+-	hs += "En chozas del pueblo: %d · Alquilan tus casas: %d · Propietarias: %d\n" % [h["in_town_huts"], h["renting"], h["owners"]]
+-	hs += "[table=3][cell][b]Calidad[/b][/cell][cell][b]Familias que pueden pagarla[/b][/cell][cell][b]Cupos libres en tus casas[/b][/cell]"
++	var hf := UIKit.flow(6, 6)
++	vs.add_child(hf)
++	hf.add_child(UIKit.chip("Familias %d" % h["households"], UIKit.TEXT_DIM, "family"))
++	hf.add_child(UIKit.chip("Sin hogar %d" % h["homeless"], UIKit.BAD if int(h["homeless"]) > 0 else UIKit.GOOD, "alert"))
++	hf.add_child(UIKit.chip("Hacinadas %d" % h["crowded"], UIKit.WARN if int(h["crowded"]) > 0 else UIKit.GOOD, "population"))
++	hf.add_child(UIKit.chip("Alquilan tus casas %d" % h["renting"], UIKit.ACCENT, "key"))
++	var hrows := []
+ 	for tier in Housing.TIERS:
+-		hs += "[cell]%s[/cell][cell]%d[/cell][cell]%d[/cell]" % [Housing.tier_label(tier), int(h["can_afford"].get(tier, 0)), int(h["vacant"].get(tier, 0))]
+-	hs += "[/table]"
+-	_section("Vivienda", hs)
++		hrows.append({"tier": Housing.tier_label(tier), "afford": int(h["can_afford"].get(tier, 0)), "vacant": int(h["vacant"].get(tier, 0))})
++	var ht := DataTable.new()
++	ht.set_data([{"title": "Calidad", "key": "tier", "w": 1.2}, {"title": "Pueden pagarla", "key": "afford", "w": 1.2, "fmt": "int"}, {"title": "Cupos libres tuyos", "key": "vacant", "w": 1.2, "fmt": "int"}], hrows, 6)
++	vs.add_child(ht)
++	if gs.history.size() >= 2:
++		var ch := LineChart.new()
++		ch.custom_minimum_size = Vector2(0, 160)
++		ch.set_data("Población", [{"label": "Habitantes", "color": UIKit.ACCENT_2, "values": _hist("population")}], false, _hist_dates())
++		body.add_child(ch)
+ 
+-	var p := StatsSim.population(gs)
+-	_section("Población", "Habitantes: %d · Niños: %d · Adultos: %d · Mayores: %d\nÚltimos 12 meses: %d nacimientos, %d muertes · Felicidad: %s · Salud: %s\n[color=#999]La población solo crece por nacimientos. Con caminos a otros pueblos (Fase 6) llegarán inmigrantes y comercio.[/color]" % [
+-		gs.citizens.size(), p["children"], p["adults"], p["elderly"], p["births_year"], p["deaths_year"], Fmt.pct(gs.avg_happiness()), Fmt.pct(gs.avg_health())])
+ 
+-	# Libre mercado: empresas de otros ciudadanos y pueblos vecinos.
+-	var rows := NpcBusinessSim.summary_rows(gs)
+-	var ns := ""
+-	for r in rows:
+-		var st := "en obra" if r["state"] == NpcBusinessSim.STATE_BUILDING else ("en venta" if r["state"] == NpcBusinessSim.STATE_FOR_SALE else "%d/%d empleados · %s · resultado %s" % [r["staff"], r["jobs"], Fmt.money2(float(r["price"])), Fmt.money(float(r["profit"]))])
+-		ns += "• [b]%s[/b] (%s) — %s\n" % [r["name"], r["owner"], st]
+-	if rows.is_empty():
+-		ns = "[color=#999]Aún no hay. Los ciudadanos con ahorros abren negocios donde nadie vende lo que se pide.[/color]"
+-	_section("Empresas de otros ciudadanos (%d)" % rows.size(), ns)
+-	var ts := ""
+-	for t in TradeSim.towns(gs):
+-		ts += "• %s: %d hab. · %d negocios · crece %.1f%%/año · ayuda del gobierno %d%%\n" % [t["name"], int(t["population"]), TownEconomySim.total_businesses(t), TownEconomySim.growth_rate(gs, t) * 100.0, int(float(t.get("gov_aid", 0.0)) * 100.0)]
+-	if ts != "":
+-		_section("Pueblos vecinos", ts)
++# --- Mercado --------------------------------------------------------------------------------------
+ 
++func _market_tab() -> void:
++	var gs := GameState
++	var goods := StatsSim.goods_table(gs)
++	var rows := goods.map(func(r): return {"label": r["label"], "price": r["price"], "pchg": r["price_change"], "demand": r["demand"], "share": r["local_share"], "uncovered": r["uncovered"]})
++	var t := DataTable.new()
++	t.sort_col = 3
++	t.set_data([{"title": "Bien", "key": "label", "w": 1.5}, {"title": "Precio", "key": "price", "w": 0.9, "fmt": "money2"},
++		{"title": "Var.", "key": "pchg", "w": 0.8, "fmt": "trend", "invert": true}, {"title": "Pedido", "key": "demand", "w": 0.8, "fmt": "int"},
++		{"title": "Tus ventas", "key": "share", "w": 1.4, "fmt": "bar"}, {"title": "Sin cubrir", "key": "uncovered", "w": 0.9, "fmt": "int"}], rows, 12)
++	body.add_child(t)
++	_note("Clic en un encabezado para ordenar. Tus ventas = % de lo pedido que compraron a tus negocios. Sin cubrir = demanda que podrías captar.")
++	var rev := 0.0
++	for r in goods:
++		rev += float(r["revenue"])
++	var hf := UIKit.flow(6, 6)
++	body.add_child(hf)
++	hf.add_child(UIKit.chip("Ventas del mes %s" % Fmt.money(rev), UIKit.GOOD, "money"))
++	var ups := goods.filter(func(r): return r["price_change"] > 0.02).size()
++	var downs := goods.filter(func(r): return r["price_change"] < -0.02).size()
++	hf.add_child(UIKit.chip("Suben %d" % ups, UIKit.BAD, "trend_up"))
++	hf.add_child(UIKit.chip("Bajan %d" % downs, UIKit.GOOD, "trend_down"))
+ 	var hist: Array = gs.economy.get("stats_hist", [])
+ 	if hist.size() >= 2:
+-		var series := []
+-		var colors := [Color(0.95, 0.8, 0.3), Color(0.5, 0.7, 0.95), Color(0.6, 0.45, 0.3), Color(0.8, 0.5, 0.9)]
+-		var i := 0
+-		for g in ["comida", "agua", "lena", "ocio"]:
+-			series.append({"label": GameData.good_label(g), "color": colors[i], "values": hist.map(func(e): return float(e["goods"].get(g, {}).get("demand", 0.0)) + float(e["goods"].get(g, {}).get("extra", 0.0)))})
+-			i += 1
++		var by_demand := goods.duplicate()
++		by_demand.sort_custom(func(a, b): return a["demand"] > b["demand"])
++		var top := by_demand.slice(0, 4).map(func(r): return str(r["good"]))
++		var dates := hist.map(func(e): return Fmt.short_date(int(e.get("day", 0))))
++		var ps := []
++		var ds := []
++		for i in range(top.size()):
++			var g: String = top[i]
++			ps.append({"label": GameData.good_label(g), "color": UIKit.SERIES[i], "values": hist.map(func(e): return float(e.get("prices", {}).get(g, 0.0)))})
++			ds.append({"label": GameData.good_label(g), "color": UIKit.SERIES[i], "values": hist.map(func(e): return float(e["goods"].get(g, {}).get("demand", 0.0)) + float(e["goods"].get(g, {}).get("extra", 0.0)))})
+ 		var c1 := LineChart.new()
+-		c1.custom_minimum_size = Vector2(390, 160)
+-		c1.set_data("Demanda mensual por bien (unidades)", series, false)
++		c1.custom_minimum_size = Vector2(0, 180)
++		c1.fill = false
++		c1.set_data("Precios de los bienes más pedidos", ps, true, dates)
+ 		body.add_child(c1)
+-		var ps := []
+-		i = 0
+-		for g in ["comida", "agua", "lena", "ocio"]:
+-			ps.append({"label": GameData.good_label(g), "color": colors[i], "values": hist.map(func(e): return float(e.get("prices", {}).get(g, 0.0)))})
+-			i += 1
+ 		var c2 := LineChart.new()
+-		c2.custom_minimum_size = Vector2(390, 160)
+-		c2.set_data("Precio de mercado por bien", ps, true)
++		c2.custom_minimum_size = Vector2(0, 170)
++		c2.fill = false
++		c2.set_data("Demanda mensual (unidades)", ds, false, dates)
+ 		body.add_child(c2)
++	else:
++		_note("Las gráficas de precios aparecen tras el primer mes.")
++
++
++# --- Comercio -------------------------------------------------------------------------------------
++
++func _trade_tab() -> void:
++	var gs := GameState
++	var goods := StatsSim.goods_table(gs).filter(func(r): return float(r["demand"]) > 0.0)
++	goods.sort_custom(func(a, b): return a["demand"] > b["demand"])
++	var rows := goods.slice(0, 10).map(func(r): return {"label": r["label"], "values": [float(r["local"]), float(r["imported"]), float(r["self"])]})
++	var bc := BarChart.new()
++	bc.set_data("Abastecimiento por bien (unidades/mes)", rows, [{"label": "Negocios locales", "color": UIKit.GOOD}, {"label": "Importado", "color": UIKit.ACCENT_2}, {"label": "Autoabastecido", "color": Color(0.55, 0.57, 0.62)}], false)
++	body.add_child(bc)
++	var m: Dictionary = gs.trade.get("last_month", {})
++	var hf := UIKit.flow(6, 6)
++	body.add_child(hf)
++	hf.add_child(UIKit.chip("Exportaciones %s" % Fmt.money(float(m.get("exports", 0.0))), UIKit.GOOD, "trend_up"))
++	hf.add_child(UIKit.chip("Importaciones %s" % Fmt.money(float(m.get("imports", 0.0))), UIKit.BAD, "trend_down"))
++	hf.add_child(UIKit.chip("Fletes %s" % Fmt.money(float(m.get("transport", 0.0))), UIKit.TEXT_DIM, "logistics"))
++	var trows := []
++	for t in TradeSim.towns(gs):
++		var conn := TradeSim.connection(gs, str(t["id"]))
++		if not conn.is_empty():
++			trows.append({"label": str(t["name"]), "values": [float(conn.get("exported", 0.0)), float(conn.get("imported", 0.0))]})
++	if not trows.is_empty():
++		var tc := BarChart.new()
++		tc.set_data("Tu comercio por pueblo (total)", trows, [{"label": "Exportado", "color": UIKit.GOOD}, {"label": "Importado", "color": UIKit.BAD}], true)
++		body.add_child(tc)
++	else:
++		_note("Aún no hay rutas con otros pueblos. Ábrelas en Comercio exterior (X) para exportar e importar.")
++	var b := UIKit.button("Abrir Comercio exterior", func(): _open_dock("trade"))
++	b.icon = UIIcons.tex("trade", 16)
++	body.add_child(b)
++
++
++func _open_dock(mode: String) -> void:
++	var hud := get_parent()
++	while hud != null and not hud is Hud:
++		hud = hud.get_parent()
++	if hud != null:
++		(hud as Hud)._show_dock(mode)
++
++
++# --- Pueblos vecinos ------------------------------------------------------------------------------
++
++func _towns_tab() -> void:
++	var gs := GameState
++	var towns := TradeSim.towns(gs)
++	if towns.is_empty():
++		_note("No se conocen otros pueblos.")
++		return
++	_note("Pueblos de la región: población, sectores, precios, relación contigo y tu reputación. Comercia desde Comercio exterior (X).")
++	for t in towns:
++		_town_card(gs, t)
++
++
++func _town_card(gs, t: Dictionary) -> void:
++	var tid := str(t["id"])
++	var conn := TradeSim.connection(gs, tid)
++	var proj := TradeSim.project(gs, tid)
++	var rel_txt := "Sin ruta"
++	var rel_col := UIKit.NEUTRAL
++	if not proj.is_empty():
++		rel_txt = "Camino en obra"
++		rel_col = UIKit.WARN
++	elif not conn.is_empty():
++		rel_txt = "Ruta: " + TradeSim.road_label(int(conn.get("road", 1)))
++		rel_col = UIKit.GOOD
++	var c := UIKit.card(rel_col, 8)
++	body.add_child(c["panel"])
++	var v: VBoxContainer = c["box"]
++	var head := HBoxContainer.new()
++	head.add_theme_constant_override("separation", 6)
++	v.add_child(head)
++	head.add_child(UIKit.icon("town", 20, UIKit.ACCENT))
++	var n := UIKit.label(str(t["name"]), 16, UIKit.ACCENT)
++	n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	head.add_child(n)
++	head.add_child(UIKit.chip(rel_txt, rel_col))
++	var info := UIKit.flow(5, 4)
++	v.add_child(info)
++	info.add_child(UIKit.chip(TradeSim.archetype_label(t), UIKit.ACCENT_2))
++	info.add_child(UIKit.chip("%s hab." % Fmt.thousands(float(t["population"])), UIKit.TEXT_DIM, "population"))
++	info.add_child(UIKit.chip("%d km" % int(t["distance"]), UIKit.TEXT_DIM, "road"))
++	info.add_child(UIKit.chip("crece %s/año" % Fmt.pct_1(TownEconomySim.growth_rate(gs, t) * 100.0), UIKit.GOOD, "trend_up"))
++	if bool(t.get("water", false)):
++		info.add_child(UIKit.chip("puerto", UIKit.INFO, "anchor"))
++	# Reputación y sectores
++	var rep := ContractSim.reputation(gs, "town:" + tid)
++	v.add_child(UIKit.meter_row("trophy", "Reputación", rep / 100.0, "%d" % int(rep)))
++	var sectors: Dictionary = t.get("sectors", {})
++	if not sectors.is_empty():
++		var keys := sectors.keys()
++		keys.sort_custom(func(a, b): return int(sectors[a]) > int(sectors[b]))
++		var mx := float(sectors[keys[0]])
++		var total := TownEconomySim.total_businesses(t)
++		var sl := UIKit.label("Sectores (%d negocios)" % total, 11, UIKit.TEXT_DIM)
++		v.add_child(sl)
++		for k in keys.slice(0, 3):
++			v.add_child(UIKit.meter_row("companies", TradeSim.good_label(str(k)), float(sectors[k]) / maxf(1.0, mx), str(int(sectors[k])), false, UIKit.ACCENT_2))
++	# Precios: lo que vende (compras) y lo que pide (ventas)
++	var prices := HBoxContainer.new()
++	prices.add_theme_constant_override("separation", 8)
++	v.add_child(prices)
++	var sells := VBoxContainer.new()
++	sells.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	prices.add_child(sells)
++	sells.add_child(UIKit.label("Vende (tú compras)", 11, UIKit.GOOD))
++	for g in t.get("produces", []).slice(0, 3):
++		sells.add_child(_price_line(TradeSim.good_label(str(g)), TradeSim.import_price(gs, tid, str(g))))
++	var buys := VBoxContainer.new()
++	buys.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	prices.add_child(buys)
++	buys.add_child(UIKit.label("Pide (tú vendes)", 11, UIKit.WARN))
++	for g in t.get("demands", []).slice(0, 3):
++		buys.add_child(_price_line(TradeSim.good_label(str(g)), TradeSim.export_price(gs, tid, str(g))))
++
++
++func _price_line(label_text: String, price: float) -> HBoxContainer:
++	var h := HBoxContainer.new()
++	var l := UIKit.label(label_text, 12, UIKit.TEXT)
++	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	l.clip_text = true
++	h.add_child(l)
++	h.add_child(UIKit.label(Fmt.money2(price), 12, UIKit.ACCENT))
++	return h
++
++
++# --- Empresas de otros ciudadanos -------------------------------------------------------------------
++
++func _companies_tab() -> void:
++	var gs := GameState
++	var rows := NpcBusinessSim.summary_rows(gs)
++	var data := []
++	var states := {"obra": 0, "venta": 0, "activas": 0}
++	for r in rows:
++		var st := "activa"
++		var col := UIKit.GOOD if float(r["profit"]) >= 0.0 else UIKit.BAD
++		if r["state"] == NpcBusinessSim.STATE_BUILDING:
++			st = "en obra"
++			col = UIKit.WARN
++			states["obra"] += 1
++		elif r["state"] == NpcBusinessSim.STATE_FOR_SALE:
++			st = "en venta"
++			col = UIKit.INFO
++			states["venta"] += 1
++		else:
++			states["activas"] += 1
++		data.append({"name": r["name"], "owner": r["owner"], "state": st, "staff": float(r["staff"]) / maxf(1.0, float(r["jobs"])), "profit": r["profit"], "_color": col, "id": r["id"]})
++	var hf := UIKit.flow(6, 6)
++	body.add_child(hf)
++	hf.add_child(UIKit.chip("Activas %d" % states["activas"], UIKit.GOOD, "companies"))
++	hf.add_child(UIKit.chip("En obra %d" % states["obra"], UIKit.WARN, "build"))
++	hf.add_child(UIKit.chip("En venta %d" % states["venta"], UIKit.INFO, "key"))
++	var t := DataTable.new()
++	t.sort_col = 4
++	t.set_data([{"title": "Empresa", "key": "name", "w": 1.8}, {"title": "Dueño", "key": "owner", "w": 1.3}, {"title": "Estado", "key": "state", "w": 0.8},
++		{"title": "Personal", "key": "staff", "w": 1.3, "fmt": "bar"}, {"title": "Resultado", "key": "profit", "w": 1.0, "fmt": "money"}], data, 14)
++	t.row_clicked.connect(func(r): EventBus.building_selected.emit(int(r["id"])))
++	body.add_child(t)
++	if rows.is_empty():
++		_note("Aún no hay. Los ciudadanos con ahorros abren negocios donde nadie vende lo que se pide.")
++	else:
++		_note("Clic en una empresa para ver su ficha.")
+diff --git a/scripts/ui/tourism_panel.gd b/scripts/ui/tourism_panel.gd
+index 448aa52..f0dce56 100644
+--- a/scripts/ui/tourism_panel.gd
++++ b/scripts/ui/tourism_panel.gd
+@@ -20,13 +20,7 @@ var _estimate: RichTextLabel
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Turismo y publicidad", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("↻", func(): refresh(), 32))
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "tourism", "Turismo y publicidad", func(): closed.emit(), [UIKit.icon_button("refresh", func(): refresh(), "Actualizar", "", 16)])
+ 	tabs = TabContainer.new()
+ 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	add_child(tabs)
+diff --git a/scripts/ui/trade_panel.gd b/scripts/ui/trade_panel.gd
+index 05dd87e..c071c2a 100644
+--- a/scripts/ui/trade_panel.gd
++++ b/scripts/ui/trade_panel.gd
+@@ -17,13 +17,7 @@ var limit := 0.0
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Comercio exterior", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("↻", refresh, 32))
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "trade", "Comercio exterior", func(): closed.emit(), [UIKit.icon_button("refresh", refresh, "Actualizar", "", 16)])
+ 	var sb := UIKit.scroll_box(Vector2(0, 200))
+ 	sb["scroll"].size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	add_child(sb["scroll"])
+diff --git a/scripts/ui/transit_panel.gd b/scripts/ui/transit_panel.gd
+index 1528061..519abe7 100644
+--- a/scripts/ui/transit_panel.gd
++++ b/scripts/ui/transit_panel.gd
+@@ -19,12 +19,7 @@ var _new_depot := -1
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Transporte público", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "transit", "Transporte público", func(): closed.emit(), [])
+ 	var sc := ScrollContainer.new()
+ 	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+diff --git a/scripts/ui/ui_history.gd b/scripts/ui/ui_history.gd
+new file mode 100644
+index 0000000..e6b2375
+--- /dev/null
++++ b/scripts/ui/ui_history.gd
+@@ -0,0 +1,56 @@
++class_name UIHistory
++extends RefCounted
++## Muestras que solo usa la interfaz (no se guardan en la partida): ingresos diarios y producción
++## por edificio (mini-gráficas del panel de edificio) y tesoro del gobierno por mes.
++## Se toma una muestra por día (EventBus.day_passed); con la partida recién cargada las series
++## empiezan vacías y se van llenando.
++
++const MAX_DAYS := 60
++const MAX_MONTHS := 36
++
++static var buildings := {}    # id -> {income: [], output: [], last_total: float}
++static var treasury: Array = []
++static var _last_day := -1
++static var _last_month := -1
++
++
++static func sample(gs) -> void:
++	var day: int = gs.today()
++	if day == _last_day:
++		return
++	if day < _last_day:
++		reset()
++	_last_day = day
++	for b in gs.buildings:
++		if not gs.owned_by_player(b) or str(b.get("status", "")) == "construccion":
++			continue
++		var id := int(b["id"])
++		var h: Dictionary = buildings.get(id, {"income": [], "output": [], "last_total": -1.0})
++		var tot := BusinessSim.period_value(b, "total", "ventas") + BusinessSim.period_value(b, "total", "alquileres")
++		if float(h["last_total"]) >= 0.0:
++			_push(h["income"], maxf(0.0, tot - float(h["last_total"])), MAX_DAYS)
++			var product := str(gs.building_def(b).get("product", ""))
++			_push(h["output"], float(b.get("inventory", {}).get(product, 0.0)) if product != "" else 0.0, MAX_DAYS)
++		h["last_total"] = tot
++		buildings[id] = h
++	var m := TimeManager.month()
++	if m != _last_month:
++		_last_month = m
++		_push(treasury, float(gs.government.get("treasury", 0.0)), MAX_MONTHS)
++
++
++static func reset() -> void:
++	buildings.clear()
++	treasury.clear()
++	_last_day = -1
++	_last_month = -1
++
++
++static func _push(arr: Array, v: float, cap: int) -> void:
++	arr.append(v)
++	while arr.size() > cap:
++		arr.pop_front()
++
++
++static func building(id: int) -> Dictionary:
++	return buildings.get(id, {"income": [], "output": []})
 diff --git a/scripts/ui/ui_icons.gd b/scripts/ui/ui_icons.gd
 new file mode 100644
 index 0000000..7ee527e
@@ -3839,6 +5092,24 @@ index fb4a496..5f3d024 100644
 +	p.offset_bottom = -10
  	p.visible = false
  	return p
+diff --git a/scripts/ui/utilities_panel.gd b/scripts/ui/utilities_panel.gd
+index 757a99f..22d34b4 100644
+--- a/scripts/ui/utilities_panel.gd
++++ b/scripts/ui/utilities_panel.gd
+@@ -17,12 +17,7 @@ var _timer := 0.0
+ func setup(p_hud: Hud) -> void:
+ 	hud = p_hud
+ 	add_theme_constant_override("separation", 8)
+-	var head := HBoxContainer.new()
+-	add_child(head)
+-	var t := UIKit.label("Servicios públicos", 20, UIKit.ACCENT)
+-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+-	head.add_child(t)
+-	head.add_child(UIKit.button("✕", func(): closed.emit(), 32))
++	UIKit.header(self, "utilities", "Servicios públicos", func(): closed.emit(), [])
+ 	tabs = TabContainer.new()
+ 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	add_child(tabs)
 diff --git a/tests/screenshot_ui.gd b/tests/screenshot_ui.gd
 new file mode 100644
 index 0000000..607359b
