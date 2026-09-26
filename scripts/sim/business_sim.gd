@@ -70,6 +70,7 @@ static func productivity(c: Citizen, skill: String) -> float:
 		p *= 1.3
 	p *= clampf(c.health / 100.0, 0.3, 1.0)
 	p *= 0.75 + c.happiness / 100.0 * 0.5
+	p *= LaborSim.exp_mult(c, skill)   # Trabajo: experiencia en el oficio (veterano hasta +20 %).
 	return p
 
 
@@ -77,6 +78,7 @@ static func asked_wage(gs, c: Citizen, type_id: String) -> float:
 	var def := GameData.building_def(type_id)
 	var s := float(c.skills.get(str(def.get("skill", "")), 0.0))
 	var w := float(def.get("base_wage", 2.0)) * (0.8 + s / 200.0 + minf(c.experience, 30.0) * 0.01 + c.education * 0.1 + (0.4 if c.profession != "" else 0.0))
+	w *= LaborSim.wage_mult(c, str(def.get("skill", "")))   # Trabajo: el veterano pide algo más.
 	return snappedf(w * gs.price_mult(), 0.05)
 
 
@@ -96,6 +98,7 @@ static func expected_output(gs, b: Dictionary) -> float:
 	total *= RegionSim.region_mult(gs, b)   # Fase 6: recursos de la región.
 	total *= TechSim.mult(gs, "production", str(def.get("product", "")))
 	total *= MineSim.yield_mult(gs, b)   # Minas: ley × reserva restante × escombrera.
+	total *= LaborSim.strike_mult(gs, b) * ClimateSim.output_mult(gs, b)   # Trabajo: huelga · Mundo: clima de la zona.
 	return total
 
 

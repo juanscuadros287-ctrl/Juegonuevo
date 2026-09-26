@@ -78,7 +78,7 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 	var quality := 1.0
 	var g: Dictionary = GameData.goods.get(good, {})
 	if left > 0.0001:
-		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs) * GlobalEconSim.import_fx_mult(gs)   # Tipo de cambio.
+		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs) * GlobalEconSim.import_fx_mult(gs) * WarSim.import_mult(gs, good)   # Tipo de cambio · Mundo: guerra.
 		var well := good == WaterSim.GOOD   # Redes: el agua del pozo comunitario es gratis (no se importa).
 		if employed and imp > 0.0 and not well and PopulationSim.pay_with(gs, payers, left * imp):
 			imported = left  # El dinero sale del pueblo.

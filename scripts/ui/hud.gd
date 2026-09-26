@@ -1075,6 +1075,11 @@ func _build_citizen_sheet(c: Citizen) -> void:
 	var sk := UIKit.section(_cit_meters, "Educación y habilidades", "education", true, "cit_skills")
 	var edu := "%s%s · %.1f años de experiencia" % [GameData.education_label(c.education), " · %s" % GameData.profession_label(c.profession) if c.profession != "" else "", c.experience]
 	sk.add_child(UIKit.label(edu, 12, UIKit.TEXT_DIM))
+	var trades := LaborSim.trades_text(c)   # Trabajo: experiencia por oficio.
+	if trades != "":
+		var tl := UIKit.label("Oficios: " + trades, 12, UIKit.TEXT_DIM)
+		tl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		sk.add_child(tl)
 	if c.school_id >= 0:
 		sk.add_child(UIKit.label("Estudia en %s (%.1f años)%s" % [GameState.building_label(GameState.get_building(c.school_id)), c.school_years + c.uni_years, " · " + GameData.career_label(c.career) if c.career != "" else ""], 12, UIKit.ACCENT_2))
 	var keys := c.skills.keys()

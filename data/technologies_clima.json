@@ -1,0 +1,71 @@
+{
+ "_nota": "Trabajo y mundo (docs/TRABAJO_MUNDO.md): mitigación del clima y de la contaminación. Efecto 'clima' (key = evento) multiplica el daño de ese evento climático. El árbol ubica cada tecnología por época y rama; ninguna comparte celda: canales de riego (colonial, agricultura, tras rotación de cultivos, columna libre), diques (industrial, construcción, tras arquitectura urbana), filtros (industrial, industria, tras química), invernaderos (moderna, agricultura, tras refrigeración) y precipitadores (moderna, industria, tras filtros).",
+ "canales_riego": {
+  "label": "Canales de riego",
+  "era": 1,
+  "branch": "agricultura",
+  "cost": 540,
+  "requires": [
+   "rotacion_cultivos"
+  ],
+  "effects": [
+   {"type": "clima", "key": "sequia", "value": 0.5},
+   {"type": "clima", "key": "ola_calor", "value": 0.7},
+   {"type": "clima", "key": "mala_cosecha", "value": 0.85}
+  ],
+  "description": "Acequias y norias llevan agua a los campos: las sequías y las olas de calor dañan mucho menos las cosechas."
+ },
+ "diques": {
+  "label": "Diques y encauzamiento",
+  "era": 2,
+  "branch": "construccion",
+  "cost": 2700,
+  "requires": [
+   "arquitectura_urbana"
+  ],
+  "effects": [
+   {"type": "clima", "key": "inundacion", "value": 0.35}
+  ],
+  "description": "Muros de contención y canales de alivio: las crecidas del río casi no afectan campos ni edificios ribereños."
+ },
+ "filtros_industriales": {
+  "label": "Filtros industriales",
+  "era": 2,
+  "branch": "industria",
+  "cost": 3000,
+  "requires": [
+   "quimica"
+  ],
+  "effects": [],
+  "description": "Filtros de humo, lavadores de gases y depuradoras de agua: cada fábrica, mina o central puede instalarlos (−50 % de contaminación) con costo y mantenimiento.",
+  "future": "Mejora «Filtros y depuradoras» en el panel de cada negocio contaminante"
+ },
+ "invernaderos": {
+  "label": "Invernaderos",
+  "era": 3,
+  "branch": "agricultura",
+  "cost": 8000,
+  "requires": [
+   "refrigeracion"
+  ],
+  "effects": [
+   {"type": "clima", "key": "helada", "value": 0.35},
+   {"type": "clima", "key": "mala_cosecha", "value": 0.7},
+   {"type": "clima", "key": "sequia", "value": 0.8}
+  ],
+  "description": "Vidrio, calefacción y riego controlado: las heladas y las plagas ya no arruinan la cosecha."
+ },
+ "precipitadores": {
+  "label": "Precipitadores electrostáticos",
+  "era": 3,
+  "branch": "industria",
+  "cost": 9000,
+  "requires": [
+   "filtros_industriales",
+   "electricidad"
+  ],
+  "effects": [],
+  "description": "Captura eléctrica del hollín y depuradoras modernas: la mejora de filtros reduce la contaminación un 80 %.",
+  "future": "Mejora de filtros de segunda generación"
+ }
+}
