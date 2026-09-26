@@ -23,7 +23,8 @@ func set_data(p_title: String, p_rows: Array, p_legend: Array, money := true) ->
 	legend = p_legend
 	format_money = money
 	var nser := maxi(1, legend.size())
-	custom_minimum_size.y = 34.0 + rows.size() * (row_h + 2.0 * (nser - 1) + 4.0) + 18.0
+	row_h = 20.0 if nser == 1 else 9.0 * nser + 6.0
+	custom_minimum_size.y = 34.0 + rows.size() * (row_h + 6.0) + (18.0 if nser > 1 else 4.0)
 	_progress = 0.0
 	if is_inside_tree():
 		create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT).tween_method(func(v: float): _progress = v; queue_redraw(), 0.0, 1.0, 0.55)
@@ -37,8 +38,7 @@ func _fmt(v: float) -> String:
 
 
 func _row_y(i: int) -> float:
-	var nser := maxi(1, legend.size())
-	return 28.0 + i * (row_h + 2.0 * (nser - 1) + 4.0)
+	return 28.0 + i * (row_h + 6.0)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -78,7 +78,7 @@ func _draw() -> void:
 		var r: Dictionary = rows[i]
 		var y := _row_y(i)
 		if i == _hover:
-			draw_rect(Rect2(Vector2(4, y - 2), Vector2(size.x - 8, row_h + 2.0 * (nser - 1) + 2)), Color(1, 1, 1, 0.05))
+			draw_rect(Rect2(Vector2(4, y - 2), Vector2(size.x - 8, row_h + 4.0)), Color(1, 1, 1, 0.05))
 		draw_string(font, Vector2(10, y + row_h * 0.5 + 4), str(r["label"]), HORIZONTAL_ALIGNMENT_LEFT, label_w, 11, UIKit.TEXT_DIM)
 		var vals: Array = r["values"]
 		for s in range(vals.size()):

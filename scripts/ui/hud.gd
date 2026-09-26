@@ -236,7 +236,7 @@ func _build_top_bar() -> void:
 	era_lbl = UIKit.label("", 15, UIKit.ACCENT)
 	era_lbl.clip_text = true
 	era_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	era_lbl.custom_minimum_size.x = 170
+	era_lbl.custom_minimum_size.x = 150
 	town.add_child(era_lbl)
 	row.add_child(town)
 	row.add_child(_vsep())
@@ -271,6 +271,9 @@ func _build_top_bar() -> void:
 	row.add_child(spacer)
 	cycle_indicator = CycleIndicator.new()   # Economía global: fase del ciclo y señales.
 	cycle_indicator.icon = UIIcons.tex("economy", 16)
+	cycle_indicator.clip_text = true
+	cycle_indicator.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	cycle_indicator.custom_minimum_size.x = 140
 	row.add_child(cycle_indicator)
 	cycle_indicator.pressed.connect(func(): global_econ.open(0))
 	# Clima y fecha
@@ -286,7 +289,7 @@ func _build_top_bar() -> void:
 	dbox.add_theme_constant_override("separation", 4)
 	dbox.add_child(UIKit.icon("calendar", 16, UIKit.TEXT_DIM))
 	date_lbl = UIKit.label("", 14)
-	date_lbl.custom_minimum_size.x = 176
+	date_lbl.custom_minimum_size.x = 128
 	date_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	dbox.add_child(date_lbl)
 	row.add_child(dbox)
@@ -402,7 +405,9 @@ func _update_top_bar() -> void:
 	var season_label := str(WeatherSim.season_data(gs).get("label", ""))
 	var w := WeatherSim.weather_data(gs)
 	weather_lbl.text = "%d°C" % int(gs.weather.get("temp", 0))
-	date_lbl.text = TimeManager.date_string(true)
+	date_lbl.text = _short_date()
+	date_lbl.tooltip_text = TimeManager.date_string(true)
+	_adapt_top_bar()
 	era_lbl.text = "%s · %s" % [gs.settings.get("town_name", ""), _era_short()]
 	if research_screen.visible and Engine.get_process_frames() % 20 == 0:
 		research_screen.refresh()
@@ -431,6 +436,28 @@ func _update_top_bar() -> void:
 			_chips["money"]["panel"].gui_input.connect(func(e): if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT: _show_dock("finance"))
 			_chips["happy"]["panel"].gui_input.connect(func(e): if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT: _show_dock("stats"))
 			_chips["health"]["panel"].gui_input.connect(func(e): if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT: _show_dock("stats"))
+
+
+## Fecha compacta para la barra: "19 jul 1701 · 10:00".
+func _short_date() -> String:
+	var md := TimeManager.month_day()
+	var full := TimeManager.date_string(true)
+	var hour_part := full.get_slice("  ", 1) if full.contains("  ") else ""
+	return "%d %s %d%s" % [md[1], str(TimeManager.MONTH_NAMES[md[0] - 1]).substr(0, 3), TimeManager.year(), " · " + hour_part if hour_part != "" else ""]
+
+
+## En ventanas estrechas (1280 px lógicos) se ocultan textos secundarios: quedan iconos y tooltips.
+func _adapt_top_bar() -> void:
+	var w := root.size.x
+	var compact := w < 1560.0
+	var tight := w < 1380.0
+	player_lbl.visible = not tight
+	cycle_indicator.custom_minimum_size.x = 34.0 if compact else 140.0
+	cycle_indicator.size.x = 0.0
+	weather_lbl.visible = not tight
+	era_lbl.custom_minimum_size.x = 110.0 if tight else 150.0
+	for id in ["money", "pop", "happy", "health"]:
+		(_chips[id]["trend"] as Label).visible = not tight or id == "money"
 
 
 func _on_speed_button(i: int) -> void:

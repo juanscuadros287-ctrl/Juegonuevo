@@ -117,6 +117,9 @@ func refresh() -> void:
 		var b := UIKit.button(label, func(): set_tab(id))
 		b.icon = UIIcons.tex(str(TAB_ICONS.get(id, "info")), 16)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.clip_text = true
+		b.add_theme_font_size_override("font_size", 13)
+		b.tooltip_text = label
 		b.toggle_mode = true
 		b.button_pressed = id == tab
 		tab_bar.add_child(b)
@@ -154,21 +157,36 @@ func _inbox(gs) -> void:
 		var period := int(r.get("period", 30))
 		var buy := ContractSim.is_buy(r)
 		var when := "entrega única, plazo %d días" % int(r["deadline_days"]) if inst <= 1 else _freq_text(inst, period)
-		var head := "[%s te vende]" % r["client_name"] if buy else "[%s te compra]" % r["client_name"]
-		var t := "%s %d de %s a %s c/u (total %s) · %s · penalidad %s · vence %s · tienes %d" % [head, int(r["qty"]), TradeSim.good_label(str(r["good"])),
-			Fmt.money2(float(r["unit_price"])), Fmt.money(float(r["unit_price"]) * float(r["qty"]) * inst), when, Fmt.money(float(r["penalty"])), _date(int(r["expires_day"])),
-			int(ContractSim.available(gs, str(r["good"])))]
-		body.add_child(_text(t))
+		var col := UIKit.INFO if buy else UIKit.GOOD
+		var card := UIKit.card(col, 8)
+		body.add_child(card["panel"])
+		var cv: VBoxContainer = card["box"]
+		var hh := HBoxContainer.new()
+		hh.add_theme_constant_override("separation", 6)
+		cv.add_child(hh)
+		hh.add_child(UIKit.chip("Te vende" if buy else "Te compra", col, "trend_down" if buy else "trend_up"))
+		var cn := UIKit.label(str(r["client_name"]), 14, UIKit.TEXT)
+		cn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cn.clip_text = true
+		hh.add_child(cn)
+		hh.add_child(UIKit.label(Fmt.money(float(r["unit_price"]) * float(r["qty"]) * inst), 15, UIKit.ACCENT))
+		cv.add_child(UIKit.label("%d × %s a %s c/u · %s" % [int(r["qty"]), TradeSim.good_label(str(r["good"])), Fmt.money2(float(r["unit_price"])), when], 13, UIKit.TEXT))
+		cv.add_child(_text("Penalidad %s · vence %s · tienes %d" % [Fmt.money(float(r["penalty"])), _date(int(r["expires_day"])), int(ContractSim.available(gs, str(r["good"])))], 11, UIKit.TEXT_FAINT))
 		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
 		var id := int(r["id"])
-		row.add_child(UIKit.button("Aceptar", func(): _result("", ContractSim.accept_request(GameState, id))))
-		row.add_child(UIKit.button("Rechazar", func(): _result("", ContractSim.reject_request(GameState, id))))
+		var ok_b := UIKit.primary(UIKit.button("Aceptar", func(): _result("", ContractSim.accept_request(GameState, id))))
+		ok_b.icon = UIIcons.tex("check", 16)
+		row.add_child(ok_b)
+		var no_b := UIKit.danger(UIKit.button("Rechazar", func(): _result("", ContractSim.reject_request(GameState, id))))
+		no_b.icon = UIIcons.tex("close", 16)
+		row.add_child(no_b)
 		if not counter_prices.has(id):
 			counter_prices[id] = float(r["unit_price"]) * (0.92 if buy else 1.08)
 		row.add_child(UIKit.spin(0.01, 100000, 0.01, float(counter_prices[id]), func(v): counter_prices[id] = v, 90))
 		row.add_child(UIKit.button("Contraofertar", func():
 			_result(ContractSim.counter_request(GameState, id, float(counter_prices[id])), "Contraoferta enviada: responderán en unos días.")))
-		body.add_child(row)
+		cv.add_child(row)
 
 
 func _counters(gs) -> void:

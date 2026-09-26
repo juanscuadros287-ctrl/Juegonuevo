@@ -47,7 +47,7 @@ func _ready() -> void:
 		hud.toast(t, ["negocio", "nacimiento", "jugador"][["La cosecha de trigo fue excelente este año.", "Nació Ana Cuadros, hija de Pedro y Lucía.", "Tu taberna tuvo pérdidas el mes pasado."].find(t)])
 	await _shot("hud", 45)
 	if hud.has_method("open_category"):
-		hud.open_category("empresas")
+		hud.open_category("economia")
 	await _shot("dock_desplegado")
 	if hud.has_method("close_category"):
 		hud.close_category()
