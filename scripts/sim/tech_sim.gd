@@ -191,6 +191,8 @@ static func effects_text(id: String) -> Array:
 				out.append("Felicidad +%d" % int(v))
 			"era":
 				out.append("Abre la %s" % GameData.era_label(int(v)))
+			"clima":   # Mundo: mitigación de eventos climáticos (ClimateSim).
+				out.append("Daño por %s −%d%%" % [str(ClimateSim.ev_def(str(e.get("key", ""))).get("label", e.get("key", ""))).to_lower(), int(round((1.0 - v) * 100.0))])
 	return out
 
 

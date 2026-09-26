@@ -28,7 +28,7 @@ static func type_desc(t: String) -> String:
 
 
 static func era_rate_add(gs) -> float:
-	return float(cfg().get("era_rate_add", {}).get(str(gs.era()), 0.0))
+	return float(cfg().get("era_rate_add", {}).get(str(gs.era()), 0.0)) + GlobalEconSim.credit_rate_add(gs)   # Ciclo económico.
 
 
 # --- Tabla de amortización ------------------------------------------------------------------

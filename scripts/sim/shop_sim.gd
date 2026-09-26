@@ -220,7 +220,7 @@ static func _buy(gs, c, w: Dictionary, qty: float, ctx: Dictionary, nd: float, s
 		var b: Dictionary = opt[1]
 		var price: float = opt[2]
 		var q: float = opt[3]
-		var mkt := EconomySim.market_price(gs, g)
+		var mkt := EconomySim.market_price(gs, g) * QualitySim.accept_mult(gs, b)   # Economía global: calidad y marca.
 		if mkt <= 0.0 or price > mkt * willing:
 			continue
 		# Demanda elástica: por encima del mercado compran menos (la publicidad ayuda).

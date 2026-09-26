@@ -3,7 +3,7 @@ extends RefCounted
 ## Negocios del jugador: producción, salarios, mantenimiento, contabilidad,
 ## contratación manual y renuncias. Parámetros en data/businesses.json.
 
-const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "subsidios", "salarios", "mantenimiento", "insumos", "impuestos", "multas", "reparaciones", "robos", "incobrables", "obras"]
+const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "subsidios", "salarios", "mantenimiento", "insumos", "impuestos", "iva", "salarios_negro", "multas", "reparaciones", "robos", "incobrables", "obras"]
 const INCOME_KEYS := ["ventas", "alquileres", "intereses", "subsidios"]
 ## Movimientos que no son ingreso ni gasto (inversión y capital prestado).
 const NON_PNL_KEYS := ["obras", "prestado"]
@@ -70,6 +70,7 @@ static func productivity(c: Citizen, skill: String) -> float:
 		p *= 1.3
 	p *= clampf(c.health / 100.0, 0.3, 1.0)
 	p *= 0.75 + c.happiness / 100.0 * 0.5
+	p *= LaborSim.exp_mult(c, skill)   # Trabajo: experiencia en el oficio (veterano hasta +20 %).
 	return p
 
 
@@ -77,6 +78,7 @@ static func asked_wage(gs, c: Citizen, type_id: String) -> float:
 	var def := GameData.building_def(type_id)
 	var s := float(c.skills.get(str(def.get("skill", "")), 0.0))
 	var w := float(def.get("base_wage", 2.0)) * (0.8 + s / 200.0 + minf(c.experience, 30.0) * 0.01 + c.education * 0.1 + (0.4 if c.profession != "" else 0.0))
+	w *= LaborSim.wage_mult(c, str(def.get("skill", "")))   # Trabajo: el veterano pide algo más.
 	return snappedf(w * gs.price_mult(), 0.05)
 
 
@@ -96,6 +98,7 @@ static func expected_output(gs, b: Dictionary) -> float:
 	total *= RegionSim.region_mult(gs, b)   # Fase 6: recursos de la región.
 	total *= TechSim.mult(gs, "production", str(def.get("product", "")))
 	total *= MineSim.yield_mult(gs, b)   # Minas: ley × reserva restante × escombrera.
+	total *= LaborSim.strike_mult(gs, b) * ClimateSim.output_mult(gs, b)   # Trabajo: huelga · Mundo: clima de la zona.
 	return total
 
 
@@ -136,6 +139,10 @@ static func is_nonprofit(b: Dictionary) -> bool:
 static func earn(gs, b: Dictionary, amount: float, key := "ventas") -> void:
 	if NpcBusinessSim.book(gs, b, amount, key, true):
 		return  # Libre mercado: empresa NPC (caja propia) u obra del gobierno (tesoro).
+	if key == "ventas":
+		amount = MoneySim.on_sale(gs, b, amount)   # Sección E: IVA causado y parte no declarada (en efectivo).
+		if amount <= 0.0:
+			return
 	ledger_add(b, key, amount)
 	if is_nonprofit(b):
 		b["reserve"] = float(b["reserve"]) + amount
@@ -175,8 +182,9 @@ static func produce(gs) -> void:
 		for c in gs.employees_of(int(b["id"])):
 			if c.job_kind != "empleo":
 				continue
-			c.money += c.wage
-			pay(gs, b, c.wage, "salarios")
+			if not MoneySim.pay_wage_black(gs, b, c):   # Sección E: sueldo en negro (efectivo) si está activado.
+				c.money += c.wage
+				pay(gs, b, c.wage, "salarios")
 			c.experience += 1.0 / 365.0
 			c.skills[skill] = minf(100.0, float(c.skills.get(skill, 0.0)) + 0.02)
 		if b["status"] != "activo":

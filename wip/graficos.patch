@@ -1,0 +1,3624 @@
+diff --git a/docs/capturas/graficos/antes_rendimiento.txt b/docs/capturas/graficos/antes_rendimiento.txt
+new file mode 100644
+index 0000000..a4bfb7e
+--- /dev/null
++++ b/docs/capturas/graficos/antes_rendimiento.txt
+@@ -0,0 +1,8 @@
++pueblo_dia: 462.5 ms/frame (~2 FPS) · 2570 draw calls · 4721 objetos · 2012438 primitivas · 4140 nodos
++pueblo_atardecer: 395.1 ms/frame (~3 FPS) · 1964 draw calls · 4115 objetos · 1792888 primitivas · 4140 nodos
++pueblo_noche: 417.4 ms/frame (~2 FPS) · 1684 draw calls · 3835 objetos · 2255242 primitivas · 4140 nodos
++industrial: 456.4 ms/frame (~2 FPS) · 1790 draw calls · 3941 objetos · 1896231 primitivas · 4149 nodos
++mina: 451.2 ms/frame (~2 FPS) · 954 draw calls · 3105 objetos · 2034470 primitivas · 4149 nodos
++rio_vegetacion: 401.1 ms/frame (~2 FPS) · 1898 draw calls · 4049 objetos · 1790348 primitivas · 4149 nodos
++rio_cerca: 377.4 ms/frame (~3 FPS) · 381 draw calls · 2532 objetos · 1935423 primitivas · 4149 nodos
++interior: 142.3 ms/frame (~7 FPS) · 697 draw calls · 3221 objetos · 916994 primitivas · 4305 nodos
+diff --git a/scripts/world/citizen_agent.gd b/scripts/world/citizen_agent.gd
+index c081283..e95ab52 100644
+--- a/scripts/world/citizen_agent.gd
++++ b/scripts/world/citizen_agent.gd
+@@ -6,6 +6,11 @@ extends Node3D
+ const SPEED_MULT := [0.0, 0.6, 1.0, 4.0, 10.0]
+ const CLOTH := [Color(0.55, 0.2, 0.18), Color(0.25, 0.35, 0.55), Color(0.35, 0.45, 0.25),
+ 		Color(0.6, 0.5, 0.3), Color(0.45, 0.3, 0.45), Color(0.7, 0.65, 0.55), Color(0.3, 0.3, 0.3)]
++const ERA_CLOTH := [
++	[Color(0.5, 0.36, 0.24), Color(0.62, 0.55, 0.42), Color(0.45, 0.2, 0.16), Color(0.35, 0.38, 0.3), Color(0.72, 0.66, 0.54), Color(0.3, 0.26, 0.22)],
++	[Color(0.18, 0.2, 0.3), Color(0.42, 0.14, 0.16), Color(0.35, 0.35, 0.36), Color(0.55, 0.48, 0.36), Color(0.24, 0.32, 0.26), Color(0.8, 0.76, 0.68)],
++	[Color(0.2, 0.36, 0.6), Color(0.8, 0.8, 0.78), Color(0.62, 0.2, 0.2), Color(0.3, 0.5, 0.35), Color(0.85, 0.65, 0.25), Color(0.25, 0.25, 0.28)],
++]
+ const SKIN := [Color(0.95, 0.8, 0.65), Color(0.85, 0.65, 0.48), Color(0.68, 0.48, 0.34), Color(0.5, 0.35, 0.25)]
+ const HAIR := [Color(0.1, 0.08, 0.06), Color(0.35, 0.22, 0.1), Color(0.6, 0.45, 0.25), Color(0.2, 0.15, 0.1)]
+ 
+@@ -50,6 +55,9 @@ static func make_model(c: Citizen) -> Node3D:
+ 	r.randf_range(1.8, 2.6)
+ 	var hair: Color = HAIR[r.randi() % HAIR.size()]
+ 	var cloth: Color = CLOTH[r.randi() % CLOTH.size()]
++	# Ropa según la época (docs/GRAFICOS.md): tonos terrosos al inicio, más vivos en la era moderna.
++	var pal: Array = ERA_CLOTH[clampi(GameState.era() - 1, 0, ERA_CLOTH.size() - 1)]
++	cloth = pal[int(c.visual_seed) % pal.size()]
+ 	var skin: Color = SKIN[r.randi() % SKIN.size()]
+ 	if GameState.is_player(c.id):
+ 		cloth = Color(0.85, 0.65, 0.2)
+@@ -70,7 +78,7 @@ func set_player_marker(on: bool) -> void:
+ 		t.outer_radius = 0.45
+ 		t.rings = 10
+ 		t.ring_segments = 4
+-		_marker = MeshLib.mesh_node(t, MeshLib.mat(Color(1.0, 0.8, 0.15)), Vector3(0, 1.45, 0))
++		_marker = MeshLib.mesh_node(t, MeshLib.mat(Color(1.0, 0.8, 0.15)), Vector3(0, 1.62, 0))
+ 		add_child(_marker)
+ 	elif not on and _marker != null:
+ 		_marker.queue_free()
+@@ -109,10 +117,12 @@ func _process(delta: float) -> void:
+ 		var dir := to / dist
+ 		position += dir * minf(step, dist)
+ 		rotation.y = atan2(dir.x, dir.z)
+-		_bob += delta * 10.0 * SPEED_MULT[s]
+-		_model.position.y = absf(sin(_bob)) * 0.06
+-	else:
++		_bob += minf(step, dist) * 5.5 / maxf(_model.scale.y, 0.4)
++		_model.position.y = absf(sin(_bob)) * 0.035
++		MeshLib.animate_person(_model, _bob, 1.0)
++	elif _model.position.y != 0.0:
+ 		_model.position.y = 0.0
++		MeshLib.animate_person(_model, 0.0, 0.0)
+ 	position.y = terrain.height_at(position.x, position.z) if terrain else 0.0
+ 	# Dentro de casa: invisible.
+ 	var going_home := target.distance_to(home_pos) < 0.5
+diff --git a/scripts/world/graphics_settings.gd b/scripts/world/graphics_settings.gd
+new file mode 100644
+index 0000000..2def0eb
+--- /dev/null
++++ b/scripts/world/graphics_settings.gd
+@@ -0,0 +1,95 @@
++class_name GraphicsSettings
++extends RefCounted
++## Calidad gráfica (Baja / Media / Alta), guardada en user://graficos.cfg (docs/GRAFICOS.md).
++##
++## API para la interfaz:
++##   GraphicsSettings.level()            -> int   nivel actual (LOW, MEDIUM, HIGH)
++##   GraphicsSettings.apply(nivel)               guarda el nivel y lo aplica al instante a la escena
++##   GraphicsSettings.make_selector()    -> Control  fila "Calidad gráfica: [Baja|Media|Alta]" lista para
++##                                               añadir a un menú de opciones (solo usa apply()).
++##   GraphicsSettings.profile()          -> Dictionary  valores efectivos del nivel (sombras, ssao, glow…)
++##
++## Quien dibuje algo afectado por la calidad entra al grupo GROUP e implementa
++## apply_graphics(profile: Dictionary). En Compatibility (OpenGL) SSAO/glow/SSR no existen: se
++## ignoran y se usan equivalentes baratos (ver SkyRig).
++
++const LOW := 0
++const MEDIUM := 1
++const HIGH := 2
++const LABELS := ["Baja", "Media", "Alta"]
++const GROUP := "graphics_listeners"
++const PATH := "user://graficos.cfg"
++
++static var _level := -1
++
++
++static func is_forward_plus() -> bool:
++	# En Compatibility (OpenGL) no hay RenderingDevice; Forward+ y Mobile sí (Metal/Vulkan).
++	return RenderingServer.get_rendering_device() != null
++
++
++static func level() -> int:
++	if _level < 0:
++		var cfg := ConfigFile.new()
++		var def := HIGH if is_forward_plus() else MEDIUM
++		if cfg.load(PATH) == OK:
++			_level = clampi(int(cfg.get_value("graficos", "calidad", def)), LOW, HIGH)
++		else:
++			_level = def
++	return _level
++
++
++## Guarda y aplica el nivel a todo lo que esté en el grupo GROUP.
++static func apply(new_level: int) -> void:
++	_level = clampi(new_level, LOW, HIGH)
++	var cfg := ConfigFile.new()
++	cfg.load(PATH)
++	cfg.set_value("graficos", "calidad", _level)
++	cfg.save(PATH)
++	var tree := Engine.get_main_loop() as SceneTree
++	if tree:
++		tree.call_group(GROUP, "apply_graphics", profile())
++
++
++## Valores efectivos del nivel actual. Las distancias son de dibujo (visibility range) en metros.
++static func profile(lv := -1) -> Dictionary:
++	var l := level() if lv < 0 else lv
++	var fp := is_forward_plus()
++	var p := {
++		"level": l,
++		"forward_plus": fp,
++		"shadows": l >= MEDIUM,
++		"shadow_distance": [0.0, 160.0, 260.0][l],
++		"shadow_atlas": [1024, 2048, 4096][l],
++		"soft_shadows": [0, 1, 2][l],
++		"ssao": fp and l >= HIGH,
++		"glow": fp and l >= MEDIUM,
++		"fog_depth": fp and l >= MEDIUM,
++		"msaa": [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X][l] if fp else [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_2X][l],
++		"fxaa": l == LOW,
++		"building_range": [260.0, 480.0, 900.0][l],
++		"detail_range": [60.0, 110.0, 180.0][l],
++		"tree_range": [240.0, 420.0, 800.0][l],
++		"grass": l >= MEDIUM,
++		"grass_range": [0.0, 55.0, 85.0][l],
++		"lamp_lights": fp and l >= HIGH,
++	}
++	return p
++
++
++## Selector compacto para un menú de opciones. Solo llama a apply().
++static func make_selector() -> Control:
++	var row := HBoxContainer.new()
++	row.add_theme_constant_override("separation", 10)
++	var lab := Label.new()
++	lab.text = "Calidad gráfica"
++	lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++	row.add_child(lab)
++	var ob := OptionButton.new()
++	for i in range(LABELS.size()):
++		ob.add_item(LABELS[i], i)
++	ob.selected = level()
++	ob.tooltip_text = "Baja: sin sombras ni efectos, menos distancia de dibujo.\nMedia: sombras suaves y brillo.\nAlta: sombras finas, oclusión ambiental (SSAO) y más distancia."
++	ob.item_selected.connect(func(i: int): apply(i))
++	row.add_child(ob)
++	return row
+diff --git a/scripts/world/logistics_visuals.gd b/scripts/world/logistics_visuals.gd
+index 1c5e111..90d0ba4 100644
+--- a/scripts/world/logistics_visuals.gd
++++ b/scripts/world/logistics_visuals.gd
+@@ -121,6 +121,7 @@ func _deposit_marker(type: String) -> Node3D:
+ 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ 	label.font_size = 48
+ 	label.pixel_size = 0.02
++	MeshLib.style_label(label, 220.0)
+ 	label.outline_size = 8
+ 	label.modulate = col.lightened(0.35)
+ 	label.position = Vector3(-1.6, 4.8, -0.4)
+@@ -157,29 +158,10 @@ func rebuild_roads() -> void:
+ 		_roads_root.add_child(_road_node(RoadSim.seg_a(r), RoadSim.seg_b(r), str(r["kind"])))
+ 
+ 
+-## Tramo de carretera siguiendo el terreno: tablones cortos inclinados según la pendiente.
++## Tramo de carretera siguiendo el terreno: franja continua con tapas redondas (RoadMesh).
+ func _road_node(a: Vector2, b: Vector2, kind: String, material: Material = null) -> Node3D:
+-	var root := Node3D.new()
+ 	var kd := RoadSim.kind_def(kind)
+-	var width := float(kd.get("width", 2.2))
+-	var mat: Material = material if material else MeshLib.mat(MeshLib.arr_color(kd.get("color"), Color(0.5, 0.4, 0.3)))
+-	var unit := MeshLib.cached("road_unit", func(): return MeshLib.box(Vector3.ONE))
+-	var length := a.distance_to(b)
+-	var n := maxi(1, int(ceil(length / PIECE)))
+-	var dir := (b - a) / maxf(0.001, length)
+-	for i in range(n):
+-		var p0 := a + dir * (length * i / n)
+-		var p1 := a + dir * (length * (i + 1) / n)
+-		var h0 := _h(p0.x, p0.y)
+-		var h1 := _h(p1.x, p1.y)
+-		var mid := (p0 + p1) * 0.5
+-		var seg_len := p0.distance_to(p1)
+-		var piece := MeshLib.mesh_node(unit, mat, Vector3(mid.x, maxf((h0 + h1) * 0.5, _h(mid.x, mid.y)) + 0.07, mid.y))
+-		piece.rotation = Vector3(-atan2(h1 - h0, seg_len), atan2(dir.x, dir.y), 0)
+-		piece.scale = Vector3(width, 0.1, seg_len + 0.35)
+-		piece.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+-		root.add_child(piece)
+-	return root
++	return RoadMesh.road_node(_terrain(), PackedVector2Array([a, b]), kind, float(kd.get("width", 2.2)), material)
+ 
+ 
+ func start_road_mode(kind: String) -> void:
+@@ -408,6 +390,7 @@ func rebuild_links() -> void:
+ 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ 		lab.font_size = 40
+ 		lab.pixel_size = 0.02
++		MeshLib.style_label(lab, 200.0)
+ 		lab.outline_size = 8
+ 		lab.modulate = Color(0.75, 1.0, 0.75)
+ 		lab.position = Vector3(wp.x, _h(wp.x, wp.y) + (5.5 if wid == WarehouseSim.PLAZA else 8.5), wp.y)
+@@ -537,7 +520,7 @@ func _carrier_model(mode: String) -> Node3D:
+ 			root.add_child(boiler)
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("steam_stack", func(): return MeshLib.cylinder(0.14, 0.14, 1.0, 6)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(0, 2.0, 1.6)))
+ 			for w in [Vector3(-0.75, 0.45, 1.2), Vector3(0.75, 0.45, 1.2), Vector3(-0.75, 0.45, -0.9), Vector3(0.75, 0.45, -0.9)]:
+-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_v", func(): return MeshLib.cylinder(0.45, 0.45, 0.14, 10)), MeshLib.mat(Color(0.35, 0.1, 0.08)), w)
++				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_v", func(): return MeshLib.wheel(0.45, 0.14)), MeshLib.mat(Color(0.35, 0.1, 0.08)), w)
+ 				wheel.rotation.z = PI * 0.5
+ 				root.add_child(wheel)
+ 		"trailer":
+@@ -545,14 +528,14 @@ func _carrier_model(mode: String) -> Node3D:
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("trailer_cab", func(): return MeshLib.box(Vector3(1.5, 1.3, 1.3))), MeshLib.mat(Color(0.15, 0.3, 0.65)), Vector3(0, 1.1, 1.6)))
+ 			for z in [1.5, -0.2, -2.6]:
+ 				for x in [-0.8, 0.8]:
+-					var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.cylinder(0.35, 0.35, 0.2, 8)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
++					var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
+ 					wheel.rotation.z = PI * 0.5
+ 					root.add_child(wheel)
+ 		"camion":
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("truck_cargo", func(): return MeshLib.box(Vector3(1.4, 1.2, 2.4))), MeshLib.mat(Color(0.3, 0.4, 0.3)), Vector3(0, 1.0, -0.4)))
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("truck_cab", func(): return MeshLib.box(Vector3(1.3, 1.0, 1.0))), MeshLib.mat(Color(0.7, 0.2, 0.15)), Vector3(0, 0.9, 1.4)))
+ 			for w in [Vector3(-0.7, 0.35, 1.2), Vector3(0.7, 0.35, 1.2), Vector3(-0.7, 0.35, -1.0), Vector3(0.7, 0.35, -1.0)]:
+-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.cylinder(0.35, 0.35, 0.2, 8)), MeshLib.mat(Color(0.1, 0.1, 0.1)), w)
++				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), w)
+ 				wheel.rotation.z = PI * 0.5
+ 				root.add_child(wheel)
+ 		_:
+@@ -566,7 +549,7 @@ func _carrier_model(mode: String) -> Node3D:
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("cart_bed", func(): return MeshLib.box(Vector3(1.3, 0.35, 1.6))), MeshLib.mat(Color(0.5, 0.36, 0.2)), Vector3(0, 0.75, -0.4)))
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("cart_load", func(): return MeshLib.box(Vector3(1.0, 0.5, 1.2))), MeshLib.mat(Color(0.62, 0.52, 0.34)), Vector3(0, 1.15, -0.4)))
+ 			for wx in [-0.72, 0.72]:
+-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_c", func(): return MeshLib.cylinder(0.45, 0.45, 0.1, 8)), MeshLib.mat(Color(0.3, 0.2, 0.12)), Vector3(wx, 0.45, -0.4))
++				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_c", func(): return MeshLib.wheel(0.45, 0.1)), MeshLib.mat(Color(0.3, 0.2, 0.12)), Vector3(wx, 0.45, -0.4))
+ 				wheel.rotation.z = PI * 0.5
+ 				root.add_child(wheel)
+ 	return root
+diff --git a/scripts/world/mesh_lib.gd b/scripts/world/mesh_lib.gd
+index d2aadda..a85c007 100644
+--- a/scripts/world/mesh_lib.gd
++++ b/scripts/world/mesh_lib.gd
+@@ -1,10 +1,41 @@
+ class_name MeshLib
+ extends RefCounted
+-## Fábrica de mallas y materiales low-poly compartidos (con caché).
++## Fábrica de mallas y materiales low-poly compartidos (con caché). docs/GRAFICOS.md
++##
++## - Primitivas con sombreado plano (normales por cara): caja, caja biselada, cilindro con tapas,
++##   esfera, prisma, tejado a cuatro aguas, arco, escalera y toro (ruedas).
++## - build_model() une todas las piezas de un modelo JSON en UNA malla (una llamada de dibujo) con
++##   un único material compartido (shaders/building.gdshader): el color va por vértice y el tipo
++##   de material (adobe, ladrillo, madera, piedra, teja, paja, concreto, metal, vidrio) por UV2.
++##   Añade detalles automáticos (marcos y alféizares de ventanas, marcos y escalón de puertas,
++##   cumbrera y aleros en techos, zócalo y cornisa) en una segunda malla con distancia de dibujo
++##   corta, y varía levemente el tono de cada edificio (parámetro variant) para que no se vean clonados.
++## - set_night(f) enciende ventanas y faroles (emisivos) de noche.
+ 
+ static var _materials := {}
+ static var _meshes := {}
+-
++static var _models := {}
++static var _building_mat: ShaderMaterial
++static var _emissive: Array = []      # [StandardMaterial3D, color base, energía de día, energía de noche]
++static var _night := 0.0
++
++const K_PLAIN := 0
++const K_PLASTER := 1
++const K_BRICK := 2
++const K_WOOD := 3
++const K_STONE := 4
++const K_TILE := 5
++const K_THATCH := 6
++const K_CONCRETE := 7
++const K_METAL := 8
++const K_GLASS := 9
++const K_GLOW := 10
++const K_SHUTTER := 11     # postigo de madera: de noche deja ver luz cálida
++const KIND_NAMES := {"liso": 0, "estuco": 1, "adobe": 1, "ladrillo": 2, "madera": 3, "piedra": 4, "teja": 5,
++		"paja": 6, "concreto": 7, "metal": 8, "vidrio": 9, "luz": 10}
++
++
++# --- Materiales -----------------------------------------------------------------------------
+ 
+ static func mat(color: Color, roughness := 0.9) -> StandardMaterial3D:
+ 	var key := "%s_%.2f" % [color.to_html(), roughness]
+@@ -17,16 +48,55 @@ static func mat(color: Color, roughness := 0.9) -> StandardMaterial3D:
+ 	return m
+ 
+ 
+-static func vertex_color_mat() -> StandardMaterial3D:
++## Material de vegetación y rocas con color por instancia (MultiMesh): sombreado plano y balanceo
++## leve con el viento en las piezas verdes (shaders/foliage.gdshader).
++static func vertex_color_mat() -> Material:
+ 	if _materials.has("__vc"):
+ 		return _materials["__vc"]
+-	var m := StandardMaterial3D.new()
+-	m.vertex_color_use_as_albedo = true
+-	m.roughness = 0.9
++	var m := ShaderMaterial.new()
++	m.shader = load("res://shaders/foliage.gdshader")
+ 	_materials["__vc"] = m
+ 	return m
+ 
+ 
++## Material único de los modelos unidos (color por vértice + tipo de material por UV2).
++static func building_mat() -> ShaderMaterial:
++	if _building_mat == null:
++		_building_mat = ShaderMaterial.new()
++		_building_mat.shader = load("res://shaders/building.gdshader")
++		_building_mat.set_shader_parameter("night", _night)
++	return _building_mat
++
++
++## Material emisivo que se enciende de noche (faroles, luces de vehículos).
++static func glow_mat(color: Color, day_energy := 0.15, night_energy := 2.2) -> StandardMaterial3D:
++	var key := "__glow_%s_%.2f_%.2f" % [color.to_html(), day_energy, night_energy]
++	if _materials.has(key):
++		return _materials[key]
++	var m := StandardMaterial3D.new()
++	m.albedo_color = color
++	m.emission_enabled = true
++	m.emission = color
++	m.emission_energy_multiplier = lerpf(day_energy, night_energy, _night)
++	m.roughness = 0.5
++	_materials[key] = m
++	_emissive.append([m, day_energy, night_energy])
++	return m
++
++
++## 0 = día, 1 = noche. Lo llama SkyRig cuando cambia la luz.
++static func set_night(f: float) -> void:
++	_night = clampf(f, 0.0, 1.0)
++	if _building_mat:
++		_building_mat.set_shader_parameter("night", _night)
++	for e in _emissive:
++		(e[0] as StandardMaterial3D).emission_energy_multiplier = lerpf(float(e[1]), float(e[2]), _night)
++
++
++static func night() -> float:
++	return _night
++
++
+ static func cached(key: String, builder: Callable) -> Mesh:
+ 	if not _meshes.has(key):
+ 		_meshes[key] = builder.call()
+@@ -41,117 +111,560 @@ static func mesh_node(mesh: Mesh, material: Material, pos := Vector3.ZERO) -> Me
+ 	return mi
+ 
+ 
++# --- Primitivas con sombreado plano -----------------------------------------------------------
++
+ static func box(size: Vector3) -> BoxMesh:
+ 	var b := BoxMesh.new()
+ 	b.size = size
+ 	return b
+ 
+ 
+-static func cylinder(top: float, bottom: float, height: float, segments := 6) -> CylinderMesh:
+-	var c := CylinderMesh.new()
+-	c.top_radius = top
+-	c.bottom_radius = bottom
+-	c.height = height
+-	c.radial_segments = segments
+-	c.rings = 1
+-	return c
+-
+-
+-static func sphere(radius: float, segments := 6, rings := 4) -> SphereMesh:
+-	var s := SphereMesh.new()
+-	s.radius = radius
+-	s.height = radius * 2.0
+-	s.radial_segments = segments
+-	s.rings = rings
+-	return s
+-
+-
+ static func prism(size: Vector3) -> PrismMesh:
+ 	var p := PrismMesh.new()
+ 	p.size = size
+ 	return p
+ 
+ 
++## Acumulador de triángulos con normal plana orientada hacia fuera (según un punto interior).
++static func _tri(v: PackedVector3Array, n: PackedVector3Array, a: Vector3, b: Vector3, c: Vector3, inside: Vector3) -> void:
++	var nrm := (c - a).cross(b - a)
++	if nrm.length_squared() < 1e-12:
++		return
++	nrm = nrm.normalized()
++	if nrm.dot((a + b + c) / 3.0 - inside) < 0.0:
++		var t := b
++		b = c
++		c = t
++		nrm = -nrm
++	v.append_array(PackedVector3Array([a, b, c]))
++	n.append_array(PackedVector3Array([nrm, nrm, nrm]))
++
++
++static func _quad(v: PackedVector3Array, n: PackedVector3Array, a: Vector3, b: Vector3, c: Vector3, d: Vector3, inside: Vector3) -> void:
++	_tri(v, n, a, b, c, inside)
++	_tri(v, n, a, c, d, inside)
++
++
++static func _commit(v: PackedVector3Array, n: PackedVector3Array) -> ArrayMesh:
++	var arrays := []
++	arrays.resize(Mesh.ARRAY_MAX)
++	arrays[Mesh.ARRAY_VERTEX] = v
++	arrays[Mesh.ARRAY_NORMAL] = n
++	var m := ArrayMesh.new()
++	if not v.is_empty():
++		m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
++	_flat_cache[m.get_instance_id()] = [v, n]   # sin leer de la GPU al unir modelos
++	return m
++
++
++## Cilindro (o cono si top = 0) con tapas y caras planas. Centrado en el origen.
++static func cylinder(top: float, bottom: float, height: float, segments := 6) -> Mesh:
++	var key := "__cyl_%.3f_%.3f_%.3f_%d" % [top, bottom, height, segments]
++	if _meshes.has(key):
++		return _meshes[key]
++	var v := PackedVector3Array()
++	var n := PackedVector3Array()
++	var hh := height * 0.5
++	var inside := Vector3.ZERO
++	for i in range(segments):
++		var a0 := TAU * i / segments
++		var a1 := TAU * (i + 1) / segments
++		var d0 := Vector3(sin(a0), 0, cos(a0))
++		var d1 := Vector3(sin(a1), 0, cos(a1))
++		var b0 := d0 * bottom + Vector3(0, -hh, 0)
++		var b1 := d1 * bottom + Vector3(0, -hh, 0)
++		var t0 := d0 * top + Vector3(0, hh, 0)
++		var t1 := d1 * top + Vector3(0, hh, 0)
++		if top <= 0.0001:
++			_tri(v, n, b0, b1, t0, inside)
++		elif bottom <= 0.0001:
++			_tri(v, n, t0, t1, b0, inside)
++		else:
++			_quad(v, n, b0, b1, t1, t0, inside)
++		if top > 0.0001:
++			_tri(v, n, Vector3(0, hh, 0), t0, t1, Vector3(0, hh - 1.0, 0))
++		if bottom > 0.0001:
++			_tri(v, n, Vector3(0, -hh, 0), b1, b0, Vector3(0, -hh + 1.0, 0))
++	var m := _commit(v, n)
++	_meshes[key] = m
++	return m
++
++
++## Esfera low-poly con caras planas.
++static func sphere(radius: float, segments := 6, rings := 4) -> Mesh:
++	var key := "__sph_%.3f_%d_%d" % [radius, segments, rings]
++	if _meshes.has(key):
++		return _meshes[key]
++	var v := PackedVector3Array()
++	var n := PackedVector3Array()
++	for r in range(rings):
++		var p0 := PI * r / rings
++		var p1 := PI * (r + 1) / rings
++		for s in range(segments):
++			var a0 := TAU * s / segments + (0.5 * TAU / segments if r % 2 == 1 else 0.0)
++			var a1 := a0 + TAU / segments
++			var q00 := Vector3(sin(p0) * sin(a0), cos(p0), sin(p0) * cos(a0)) * radius
++			var q01 := Vector3(sin(p0) * sin(a1), cos(p0), sin(p0) * cos(a1)) * radius
++			var q10 := Vector3(sin(p1) * sin(a0), cos(p1), sin(p1) * cos(a0)) * radius
++			var q11 := Vector3(sin(p1) * sin(a1), cos(p1), sin(p1) * cos(a1)) * radius
++			if r == 0:
++				_tri(v, n, q00, q10, q11, Vector3.ZERO)
++			elif r == rings - 1:
++				_tri(v, n, q00, q01, q10, Vector3.ZERO)
++			else:
++				_quad(v, n, q00, q01, q11, q10, Vector3.ZERO)
++	var m := _commit(v, n)
++	_meshes[key] = m
++	return m
++
++
++## Caja con chaflán en las aristas (bevel = tamaño del chaflán).
++static func bevel_box(size: Vector3, bevel := 0.06) -> Mesh:
++	var key := "__bev_%s_%.3f" % [str(size), bevel]
++	if _meshes.has(key):
++		return _meshes[key]
++	var h := size * 0.5
++	var b := minf(bevel, minf(h.x, minf(h.y, h.z)) * 0.9)
++	var v := PackedVector3Array()
++	var n := PackedVector3Array()
++	# 24 vértices: cada esquina se recorta en 3 puntos.
++	var pts := {}
++	for sx: int in [-1, 1]:
++		for sy: int in [-1, 1]:
++			for sz: int in [-1, 1]:
++				var c := Vector3(h.x * sx, h.y * sy, h.z * sz)
++				pts[Vector3i(sx, sy, sz)] = [c - Vector3(b * sx, 0, 0), c - Vector3(0, b * sy, 0), c - Vector3(0, 0, b * sz)]
++	var o := Vector3.ZERO
++	# Caras principales (reducidas).
++	for axis in range(3):
++		for s: int in [-1, 1]:
++			var quad := []
++			for u: int in [-1, 1]:
++				for w: int in [-1, 1]:
++					var k := Vector3i.ZERO
++					k[axis] = s
++					k[(axis + 1) % 3] = u
++					k[(axis + 2) % 3] = w
++					quad.append((pts[k] as Array)[axis])
++			_quad(v, n, quad[0], quad[1], quad[3], quad[2], o)
++	# Chaflanes de las aristas.
++	for axis in range(3):
++		var a1 := (axis + 1) % 3
++		var a2 := (axis + 2) % 3
++		for s1: int in [-1, 1]:
++			for s2: int in [-1, 1]:
++				var k0 := Vector3i.ZERO
++				k0[axis] = -1
++				k0[a1] = s1
++				k0[a2] = s2
++				var k1 := k0
++				k1[axis] = 1
++				_quad(v, n, (pts[k0] as Array)[a1], (pts[k1] as Array)[a1], (pts[k1] as Array)[a2], (pts[k0] as Array)[a2], o)
++	# Esquinas.
++	for k in pts:
++		var p: Array = pts[k]
++		_tri(v, n, p[0], p[1], p[2], o)
++	var m := _commit(v, n)
++	_meshes[key] = m
++	return m
++
++
++## Tejado a cuatro aguas: base size.x × size.z, alto size.y, cumbrera a lo largo del lado mayor.
++static func hip_roof(size: Vector3) -> Mesh:
++	var key := "__hip_%s" % str(size)
++	if _meshes.has(key):
++		return _meshes[key]
++	var v := PackedVector3Array()
++	var n := PackedVector3Array()
++	var hx := size.x * 0.5
++	var hz := size.z * 0.5
++	var y0 := -size.y * 0.5
++	var y1 := size.y * 0.5
++	var inside := Vector3(0, -size.y * 0.25, 0)
++	var r0: Vector3
++	var r1: Vector3
++	if size.x >= size.z:
++		r0 = Vector3(-(hx - hz), y1, 0)
++		r1 = Vector3(hx - hz, y1, 0)
++	else:
++		r0 = Vector3(0, y1, -(hz - hx))
++		r1 = Vector3(0, y1, hz - hx)
++	var c00 := Vector3(-hx, y0, -hz)
++	var c10 := Vector3(hx, y0, -hz)
++	var c11 := Vector3(hx, y0, hz)
++	var c01 := Vector3(-hx, y0, hz)
++	if size.x >= size.z:
++		_quad(v, n, c00, c10, r1, r0, inside)
++		_quad(v, n, c01, c11, r1, r0, inside)
++		_tri(v, n, c00, c01, r0, inside)
++		_tri(v, n, c10, c11, r1, inside)
++	else:
++		_quad(v, n, c00, c01, r1, r0, inside)
++		_quad(v, n, c10, c11, r1, r0, inside)
++		_tri(v, n, c00, c10, r0, inside)
++		_tri(v, n, c01, c11, r1, inside)
++	_quad(v, n, c00, c10, c11, c01, Vector3(0, 1.0, 0))
++	var m := _commit(v, n)
++	_meshes[key] = m
++	return m
++
++
++## Arco (portal): ancho size.x, alto size.y, fondo size.z; grosor del marco = thick.
++static func arch(size: Vector3, thick := 0.3, segments := 8) -> Mesh:
++	var key := "__arch_%s_%.2f_%d" % [str(size), thick, segments]
++	if _meshes.has(key):
++		return _meshes[key]
++	var v := PackedVector3Array()
++	var n := PackedVector3Array()
++	var hw := size.x * 0.5
++	var r := hw - thick
++	var spring := size.y - hw          # altura donde empieza la curva
++	var hz := size.z * 0.5
++	# Pilares.
++	for s: float in [-1.0, 1.0]:
++		var cx := s * (hw - thick * 0.5)
++		_box_into(v, n, Vector3(cx, spring * 0.5, 0), Vector3(thick, spring, size.z))
++	# Dovelas.
++	for i in range(segments):
++		var a0 := PI * i / segments
++		var a1 := PI * (i + 1) / segments
++		var i0 := Vector3(cos(a0) * r, spring + sin(a0) * r, 0)
++		var i1 := Vector3(cos(a1) * r, spring + sin(a1) * r, 0)
++		var o0 := Vector3(cos(a0) * hw, spring + sin(a0) * hw, 0)
++		var o1 := Vector3(cos(a1) * hw, spring + sin(a1) * hw, 0)
++		var mid := (i0 + i1 + o0 + o1) * 0.25
++		var f := Vector3(0, 0, hz)
++		_quad(v, n, i0 + f, o0 + f, o1 + f, i1 + f, mid)
++		_quad(v, n, i0 - f, o0 - f, o1 - f, i1 - f, mid)
++		_quad(v, n, o0 - f, o1 - f, o1 + f, o0 + f, mid)
++		_quad(v, n, i0 - f, i1 - f, i1 + f, i0 + f, mid + (mid - Vector3(0, spring, 0)))
++	var m := _commit(v, n)
++	_meshes[key] = m
++	return m
++
++
++## Escalera: size = ancho × alto × fondo, con `steps` peldaños que suben hacia -z.
++static func stairs(size: Vector3, steps := 4) -> Mesh:
++	var key := "__stairs_%s_%d" % [str(size), steps]
++	if _meshes.has(key):
++		return _meshes[key]
++	var v := PackedVector3Array()
++	var n := PackedVector3Array()
++	var sh := size.y / steps
++	var sd := size.z / steps
++	for i in range(steps):
++		var hgt := sh * (i + 1)
++		_box_into(v, n, Vector3(0, hgt * 0.5, size.z * 0.5 - sd * (i + 0.5)), Vector3(size.x, hgt, sd))
++	var m := _commit(v, n)
++	_meshes[key] = m
++	return m
++
++
++## Toro (rueda) en el plano YZ: eje de giro X. radius = radio medio, tube = grosor.
++static func torus(radius: float, tube: float, segments := 10, sides := 4) -> Mesh:
++	var key := "__tor_%.3f_%.3f_%d_%d" % [radius, tube, segments, sides]
++	if _meshes.has(key):
++		return _meshes[key]
++	var v := PackedVector3Array()
++	var n := PackedVector3Array()
++	for i in range(segments):
++		var a0 := TAU * i / segments
++		var a1 := TAU * (i + 1) / segments
++		var c0 := Vector3(0, sin(a0), cos(a0)) * radius
++		var c1 := Vector3(0, sin(a1), cos(a1)) * radius
++		for j in range(sides):
++			var b0 := TAU * j / sides + PI / sides
++			var b1 := TAU * (j + 1) / sides + PI / sides
++			var p00 := c0 + (c0.normalized() * cos(b0) + Vector3.RIGHT * sin(b0)) * tube
++			var p01 := c0 + (c0.normalized() * cos(b1) + Vector3.RIGHT * sin(b1)) * tube
++			var p10 := c1 + (c1.normalized() * cos(b0) + Vector3.RIGHT * sin(b0)) * tube
++			var p11 := c1 + (c1.normalized() * cos(b1) + Vector3.RIGHT * sin(b1)) * tube
++			_quad(v, n, p00, p10, p11, p01, (c0 + c1) * 0.5)
++	var m := _commit(v, n)
++	_meshes[key] = m
++	return m
++
++
++## Rueda completa (llanta de toro + disco central), eje Y como cylinder(). Cacheada.
++static func wheel(radius: float, width: float) -> Mesh:
++	var key := "__wheel_%.2f_%.2f" % [radius, width]
++	if _meshes.has(key):
++		return _meshes[key]
++	var v := PackedVector3Array()
++	var n := PackedVector3Array()
++	var disc := cylinder(radius * 0.72, radius * 0.72, width * 0.8, 8)
++	var tor := torus(radius * 0.84, maxf(width * 0.5, radius * 0.16), 12, 4)
++	var rot := Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3.ZERO)
++	for pair in [[disc, Transform3D()], [tor, rot]]:
++		var arr: Array = _flat_arrays(pair[0])
++		v.append_array((pair[1] as Transform3D) * (arr[0] as PackedVector3Array))
++		n.append_array(Transform3D((pair[1] as Transform3D).basis, Vector3.ZERO) * (arr[1] as PackedVector3Array))
++	var m := _commit(v, n)
++	_meshes[key] = m
++	return m
++
++
++static func _box_into(v: PackedVector3Array, n: PackedVector3Array, c: Vector3, s: Vector3) -> void:
++	var h := s * 0.5
++	var p := []
++	for i in range(8):
++		p.append(c + Vector3(h.x * (1 if i & 1 else -1), h.y * (1 if i & 2 else -1), h.z * (1 if i & 4 else -1)))
++	_quad(v, n, p[0], p[1], p[3], p[2], c)
++	_quad(v, n, p[4], p[5], p[7], p[6], c)
++	_quad(v, n, p[0], p[1], p[5], p[4], c)
++	_quad(v, n, p[2], p[3], p[7], p[6], c)
++	_quad(v, n, p[0], p[2], p[6], p[4], c)
++	_quad(v, n, p[1], p[3], p[7], p[5], c)
++
++
+ static func arr_color(a, fallback: Color) -> Color:
+ 	if a is Array and a.size() >= 3:
+ 		return Color(float(a[0]), float(a[1]), float(a[2]))
+ 	return fallback
+ 
+ 
+-## Choza: paredes de madera, techo de paja a dos aguas y puerta.
+-static func make_hut(variant: int) -> Node3D:
+-	var cfg: Dictionary = GameData.buildings.get("choza", {})
+-	var size := Vector3(3.0, 2.0, 3.0)
+-	var s: Array = cfg.get("size", [3.0, 2.0, 3.0])
+-	size = Vector3(float(s[0]), float(s[1]), float(s[2]))
+-	var wall := arr_color(cfg.get("wall_color"), Color(0.55, 0.4, 0.26))
+-	var roof := arr_color(cfg.get("roof_color"), Color(0.78, 0.66, 0.36))
+-	var shade := 0.88 + float(variant % 5) * 0.05
+-	var root := Node3D.new()
+-	root.add_child(mesh_node(cached("hut_walls", func(): return box(size)), mat(wall * shade), Vector3(0, size.y * 0.5, 0)))
+-	var roof_node := mesh_node(cached("hut_roof", func(): return prism(Vector3(size.x + 0.7, 1.5, size.z + 0.5))),
+-			mat(roof * shade), Vector3(0, size.y + 0.75, 0))
+-	roof_node.rotation_degrees.y = 90
+-	root.add_child(roof_node)
+-	root.add_child(mesh_node(cached("hut_door", func(): return box(Vector3(0.8, 1.3, 0.1))),
+-			mat(Color(0.28, 0.18, 0.1)), Vector3(0, 0.65, size.z * 0.5 + 0.03)))
+-	return root
++# --- Modelos unidos ------------------------------------------------------------------------------
++
++## Buffer de una malla unida: vértices, normales, colores y UV2 (tipo de material, azar).
++class Buf:
++	var v := PackedVector3Array()
++	var n := PackedVector3Array()
++	var c := PackedColorArray()
++	var u := PackedVector2Array()
++
++	func add(mesh: Mesh, xf: Transform3D, col: Color, kind: int, rnd := 0.0) -> void:
++		var arr: Array = MeshLib._flat_arrays(mesh)
++		var verts: PackedVector3Array = arr[0]
++		var cnt := verts.size()
++		v.append_array(xf * verts)
++		n.append_array(Transform3D(xf.basis.inverse().transposed(), Vector3.ZERO) * (arr[1] as PackedVector3Array))
++		var cc := PackedColorArray()
++		cc.resize(cnt)
++		cc.fill(col)
++		c.append_array(cc)
++		var uu := PackedVector2Array()
++		uu.resize(cnt)
++		uu.fill(Vector2(kind, rnd))
++		u.append_array(uu)
++
++	func box(center: Vector3, size: Vector3, xf: Transform3D, col: Color, kind: int, rnd := 0.0) -> void:
++		add(MeshLib.cached("__ubox", func(): return MeshLib.box(Vector3.ONE)), xf * Transform3D(Basis.from_scale(size), center), col, kind, rnd)
++
++	func commit() -> ArrayMesh:
++		var m := ArrayMesh.new()
++		if v.is_empty():
++			return m
++		var arrays := []
++		arrays.resize(Mesh.ARRAY_MAX)
++		arrays[Mesh.ARRAY_VERTEX] = v
++		arrays[Mesh.ARRAY_NORMAL] = n
++		arrays[Mesh.ARRAY_COLOR] = c
++		arrays[Mesh.ARRAY_TEX_UV2] = u
++		m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
++		m.surface_set_material(0, MeshLib.building_mat())
++		return m
++
++
++## Vértices y normales de la primera superficie, sin índices (cacheado por malla).
++static var _flat_cache := {}
++
++
++static func _flat_arrays(mesh: Mesh) -> Array:
++	var id := mesh.get_instance_id()
++	if _flat_cache.has(id):
++		return _flat_cache[id]
++	if mesh.get_surface_count() == 0:
++		return [PackedVector3Array(), PackedVector3Array()]
++	var arr: Array = mesh.surface_get_arrays(0)
++	if arr.size() < Mesh.ARRAY_MAX or arr[Mesh.ARRAY_VERTEX] == null:
++		return [PackedVector3Array(), PackedVector3Array()]
++	var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
++	var norms: PackedVector3Array = arr[Mesh.ARRAY_NORMAL]
++	var idx = arr[Mesh.ARRAY_INDEX]
++	if idx is PackedInt32Array and not (idx as PackedInt32Array).is_empty():
++		var fv := PackedVector3Array()
++		var fn := PackedVector3Array()
++		fv.resize(idx.size())
++		fn.resize(idx.size())
++		for i in range(idx.size()):
++			fv[i] = verts[idx[i]]
++			fn[i] = norms[idx[i]]
++		verts = fv
++		norms = fn
++	var out := [verts, norms]
++	_flat_cache[id] = out
++	return out
++
++
++## Tipo de material de una pieza: explícito ("m": "ladrillo") o deducido del color y la forma.
++static func classify(part: Dictionary, s: String, size: Vector3, col: Color) -> int:
++	if part.has("m"):
++		return int(KIND_NAMES.get(str(part["m"]), K_PLAIN))
++	var lum := col.r * 0.3 + col.g * 0.59 + col.b * 0.11
++	if col.b > col.r + 0.06 and col.b >= col.g - 0.04 and lum < 0.7:
++		return K_GLASS
++	var small := minf(size.x, minf(size.y, size.z)) < 0.25 and maxf(size.x, maxf(size.y, size.z)) < 1.4
++	if small or s == "sphere":
++		return K_PLAIN
++	var gray := absf(col.r - col.g) < 0.06 and absf(col.g - col.b) < 0.07
++	if s == "prism" or s == "hip":
++		if col.r > 0.55 and col.g > 0.45 and col.b < 0.45 and col.r - col.b > 0.25:
++			return K_THATCH
++		if col.r > col.g * 1.45 and col.r > 0.3:
++			return K_TILE
++		if gray:
++			return K_METAL if lum < 0.5 else K_CONCRETE
++		return K_WOOD if lum < 0.42 else K_PLAIN
++	if gray:
++		return K_STONE if lum < 0.56 else K_CONCRETE
++	if col.r > 0.45 and col.g < 0.4 and col.r > col.g * 1.5 and col.b < col.g * 1.1:
++		return K_BRICK
++	if lum < 0.42 and col.r > col.b and col.g > col.b * 0.9:
++		return K_WOOD
++	if lum > 0.6 and col.r >= col.b:
++		return K_PLASTER
++	return K_PLAIN
++
++
++## Variación leve de tono por edificio (variant >= 0) y armonía de la paleta (saturación acotada).
++static func vary(col: Color, kind: int, variant: int) -> Color:
++	var h := col.h
++	var s := minf(col.s, 0.72)
++	var val := col.v
++	if variant >= 0 and kind != K_GLASS and kind != K_GLOW and kind != K_METAL:
++		var r := fposmod(sin(float(variant) * 12.9898 + float(kind) * 3.1) * 43758.5453, 1.0)
++		h = fposmod(h + (r - 0.5) * 0.035, 1.0)
++		s = clampf(s * (0.9 + r * 0.2), 0.0, 1.0)
++		val = clampf(val * (0.93 + r * 0.12), 0.0, 1.0)
++	return Color.from_hsv(h, s, val)
+ 
+ 
+-static func make_well() -> Node3D:
++## Construye un modelo a partir de piezas definidas en JSON:
++## {"s": box|bevel|prism|hip|cyl|sphere|floors|arch|stairs|torus|win|door|chimney|fence,
++##  "size": [...], "pos": [...], "c": [r,g,b], "rot": grados Y, "rx"/"rz": grados, "m": material}
++## Devuelve un Node3D con una o dos MeshInstance3D (cuerpo y detalles) que comparten material.
++static func build_model(parts: Array, tint := 1.0, override: Material = null, variant := -1) -> Node3D:
++	var key := "%d|%.3f|%d" % [str(parts).hash(), tint, variant]
++	var pair: Array
++	if _models.has(key):
++		pair = _models[key]
++	else:
++		pair = _merge(parts, tint, variant)
++		_models[key] = pair
+ 	var root := Node3D.new()
+-	root.add_child(mesh_node(cylinder(0.9, 1.0, 0.9, 8), mat(Color(0.55, 0.55, 0.55)), Vector3(0, 0.45, 0)))
+-	root.add_child(mesh_node(cylinder(0.7, 0.7, 0.05, 8), mat(Color(0.15, 0.3, 0.45), 0.2), Vector3(0, 0.88, 0)))
+-	for x in [-0.8, 0.8]:
+-		root.add_child(mesh_node(box(Vector3(0.12, 1.6, 0.12)), mat(Color(0.4, 0.28, 0.16)), Vector3(x, 1.3, 0)))
+-	var roof := mesh_node(prism(Vector3(2.2, 0.6, 1.4)), mat(Color(0.5, 0.32, 0.2)), Vector3(0, 2.35, 0))
+-	root.add_child(roof)
++	var body := MeshInstance3D.new()
++	body.name = "Body"
++	body.mesh = pair[0]
++	body.add_to_group("gfx_main")
++	_set_range(body, "gfx_main")
++	if override:
++		body.material_override = override
++	root.add_child(body)
++	if (pair[1] as ArrayMesh).get_surface_count() > 0:
++		var det := MeshInstance3D.new()
++		det.name = "Detail"
++		det.mesh = pair[1]
++		det.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++		det.add_to_group("gfx_detail")
++		_set_range(det, "gfx_detail")
++		if override:
++			det.material_override = override
++		root.add_child(det)
+ 	return root
+ 
+ 
+-## Persona low-poly: cuerpo (ropa), cabeza y cabello.
+-static func make_person(cloth: Color, skin: Color, hair: Color, female: bool) -> Node3D:
+-	var root := Node3D.new()
+-	var bottom := 0.3 if female else 0.2
+-	var body_mesh: Mesh = cached("person_body_f" if female else "person_body_m", func(): return cylinder(0.13, bottom, 0.75, 6))
+-	root.add_child(mesh_node(body_mesh, mat(cloth), Vector3(0, 0.45, 0)))
+-	root.add_child(mesh_node(cached("person_legs", func(): return box(Vector3(0.22, 0.12, 0.14))),
+-			mat(Color(0.2, 0.16, 0.12)), Vector3(0, 0.06, 0)))
+-	root.add_child(mesh_node(cached("person_head", func(): return sphere(0.13, 6, 4)), mat(skin), Vector3(0, 0.95, 0)))
+-	root.add_child(mesh_node(cached("person_hair", func(): return sphere(0.14, 6, 3)), mat(hair), Vector3(0, 1.0, -0.02)))
+-	return root
++## Distancia de dibujo según la calidad (GraphicsSettings); SkyRig la actualiza al cambiarla.
++static func _set_range(mi: GeometryInstance3D, group: String) -> void:
++	var p := GraphicsSettings.profile()
++	var end := float(p["detail_range"]) if group == "gfx_detail" else float(p["building_range"])
++	mi.visibility_range_end = end
++	mi.visibility_range_end_margin = end * 0.1
++	mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+ 
+ 
+-## Construye un modelo a partir de piezas definidas en JSON:
+-## {"s": box|prism|cyl|sphere|floors, "size": [...], "pos": [...], "c": [r,g,b], "rot": grados Y, "rx"/"rz": grados}
+-static func build_model(parts: Array, tint := 1.0, override: Material = null) -> Node3D:
+-	var root := Node3D.new()
+-	for part in parts:
++static func apply_ranges(tree: SceneTree, p: Dictionary) -> void:
++	for g in [["gfx_main", "building_range"], ["gfx_detail", "detail_range"], ["gfx_tree", "tree_range"]]:
++		var end := float(p[g[1]])
++		tree.set_group(g[0], "visibility_range_end", end)
++		tree.set_group(g[0], "visibility_range_end_margin", end * 0.1)
++
++
++static func _merge(parts: Array, tint: float, variant: int) -> Array:
++	var main := Buf.new()
++	var det := Buf.new()
++	var body_idx := -1
++	var body_vol := 0.0
++	var infos := []
++	for i in range(parts.size()):
++		var part: Dictionary = parts[i]
+ 		var s := str(part.get("s", "box"))
+ 		var size := _vec(part.get("size", [1, 1, 1]), Vector3.ONE)
+ 		var pos := _vec(part.get("pos", [0, 0, 0]), Vector3.ZERO)
+-		var color := arr_color(part.get("c"), Color(0.7, 0.7, 0.7)) * tint
+-		color.a = 1.0
+-		if s == "floors":
+-			root.add_child(_floors(part, size, pos, color, tint, override))
+-			continue
+-		var mesh: Mesh
+-		var key := "%s_%s" % [s, str(size)]
++		infos.append([s, size, pos])
++		var flat := absf(float(part.get("rx", 0))) < 0.1 and absf(float(part.get("rz", 0))) < 0.1
++		if s == "box" and flat and pos.y - size.y * 0.5 < 0.15 and size.y >= 1.5 and size.x * size.y * size.z > body_vol:
++			body_vol = size.x * size.y * size.z
++			body_idx = i
++	for i in range(parts.size()):
++		var part: Dictionary = parts[i]
++		var s: String = infos[i][0]
++		var size: Vector3 = infos[i][1]
++		var pos: Vector3 = infos[i][2]
++		var raw := arr_color(part.get("c"), Color(0.7, 0.7, 0.7)) * tint
++		raw.a = 1.0
++		var basis := Basis.from_euler(Vector3(deg_to_rad(float(part.get("rx", 0))), deg_to_rad(float(part.get("rot", 0))), deg_to_rad(float(part.get("rz", 0)))))
++		var xf := Transform3D(basis, pos)
++		var kind := classify(part, s, size, raw)
++		var col := vary(raw, kind, variant)
++		var rnd := fposmod(float(i) * 0.618 + float(variant) * 0.31, 1.0)
+ 		match s:
++			"floors":
++				_floors_into(main, det, part, size, pos, col, tint, variant)
+ 			"prism":
+-				mesh = cached(key, func(): return prism(size))
++				main.add(prism(size), xf, col, kind, rnd)
++				_roof_details(det, size, xf, col)
++			"hip":
++				main.add(hip_roof(size), xf, col, kind, rnd)
+ 			"cyl":
+-				mesh = cached(key, func(): return cylinder(size.x, size.z, size.y, 8))
++				main.add(cylinder(size.x, size.z, size.y, int(part.get("seg", 8))), xf, col, kind, rnd)
+ 			"sphere":
+-				mesh = cached("sphere_unit", func(): return sphere(0.5, 7, 4))
++				main.add(sphere(0.5, 7, 4), xf * Transform3D(Basis.from_scale(size), Vector3.ZERO), col, kind, rnd)
++			"bevel":
++				main.add(bevel_box(size, float(part.get("bevel", 0.08))), xf, col, kind, rnd)
++			"arch":
++				main.add(arch(size, float(part.get("thick", 0.3))), xf, col, kind, rnd)
++			"stairs":
++				main.add(stairs(size, int(part.get("steps", 4))), xf, col, kind, rnd)
++			"torus":
++				main.add(torus(size.x, size.z, 12, 4), xf, col, kind, rnd)
++			"win":
++				_window(main, det, size, xf, col, pos, true)
++			"door":
++				_door(main, det, size, xf, col, pos)
++			"chimney":
++				main.box(Vector3(0, size.y * 0.5, 0), size, xf, col, K_BRICK if kind == K_PLAIN else kind, rnd)
++				det.box(Vector3(0, size.y + 0.06, 0), Vector3(size.x + 0.12, 0.12, size.z + 0.12), xf, col.darkened(0.2), K_PLAIN)
++			"fence":
++				_fence(det, size, xf, col)
+ 			_:
+-				mesh = cached(key, func(): return box(size))
+-		var mi := mesh_node(mesh, override if override else mat(color), pos)
+-		if s == "sphere":
+-			mi.scale = size
+-		mi.rotation_degrees = Vector3(float(part.get("rx", 0)), float(part.get("rot", 0)), float(part.get("rz", 0)))
+-		root.add_child(mi)
+-	return root
++				var thin := _thin_axis(size)
++				if thin >= 0 and thin != 1:
++					var w := size.z if thin == 0 else size.x
++					var dark := raw.get_luminance() < 0.36
++					if kind == K_GLASS and size.y <= 2.6 and w <= 4.5:
++						_window(main, det, size, xf, col, pos, false)
++						continue
++					if dark and size.y >= 1.2 and size.y <= 2.8 and w <= 1.8 and pos.y - size.y * 0.5 < 0.15:
++						_door(main, det, size, xf, col, pos)
++						continue
++					if dark and size.y < 1.2 and w <= 1.6:
++						main.add(box(size), xf, col, K_SHUTTER, rnd)
++						_sill(det, size, xf, col.darkened(0.15), pos)
++						continue
++				main.add(cached("__box_" + str(size), func(): return box(size)), xf, col, kind, rnd)
++				if i == body_idx:
++					_body_trims(det, main, parts, infos, i, size, xf, col, kind)
++	return [main.commit(), det.commit()]
+ 
+ 
+ static func _vec(a, fallback: Vector3) -> Vector3:
+@@ -160,21 +673,170 @@ static func _vec(a, fallback: Vector3) -> Vector3:
+ 	return fallback
+ 
+ 
+-## Edificio de varios pisos: franjas de muro y ventanas alternadas.
+-static func _floors(part: Dictionary, size: Vector3, pos: Vector3, wall: Color, tint: float, override: Material) -> Node3D:
+-	var root := Node3D.new()
+-	root.position = pos
++## Eje delgado (0 = x, 1 = y, 2 = z) de una caja plana (ventanas, puertas, letreros) o -1.
++static func _thin_axis(size: Vector3) -> int:
++	var m := minf(size.x, minf(size.y, size.z))
++	if m > 0.16:
++		return -1
++	if size.y == m:
++		return 1
++	# Una pieza de fachada es ancha y alta respecto a su grosor (no un poste ni un listón).
++	var w := size.z if size.x == m else size.x
++	if w < 0.3 or size.y < 0.3 or w < m * 3.0:
++		return -1
++	return 0 if size.x == m else 2
++
++
++## Dirección hacia fuera de una pieza pegada a la fachada (según su posición respecto al centro).
++static func _outward(size: Vector3, pos: Vector3, xf: Transform3D) -> Vector3:
++	var thin := _thin_axis(size)
++	var axis := Vector3.RIGHT if thin == 0 else Vector3.BACK
++	var local := xf.basis.inverse() * pos
++	var sgn := 1.0 if local.dot(axis) >= 0.0 else -1.0
++	if absf(pos.x) < 0.01 and absf(pos.z) < 0.01:
++		sgn = 1.0
++	return axis * sgn
++
++
++## Ventana: vidrio con marco, travesaño (si es ancha) y alféizar.
++static func _window(main: Buf, det: Buf, size: Vector3, xf: Transform3D, glass: Color, pos: Vector3, explicit: bool) -> void:
++	var thin := _thin_axis(size)
++	if thin < 0:
++		thin = 2
++	var w := size.z if thin == 0 else size.x
++	var h := size.y
++	var d := size.x if thin == 0 else size.z
++	var out := _outward(size, pos, xf)
++	var along := Vector3.BACK if thin == 0 else Vector3.RIGHT
++	var fcol := Color(0.9, 0.87, 0.8) if glass.get_luminance() < 0.5 else Color(0.3, 0.3, 0.32)
++	var rnd := fposmod(pos.x * 0.37 + pos.y * 0.91 + pos.z * 0.53, 1.0)
++	main.add(box(size), xf, glass, K_GLASS, rnd)
++	var fw := clampf(minf(w, h) * 0.08, 0.05, 0.1)
++	var fd := d + 0.05
++	var depth := Vector3(absf(out.x), 0, absf(out.z)) * fd
++	# Marco: dos jambas y dos travesaños.
++	for sgn: float in [-1.0, 1.0]:
++		det.box(along * sgn * (w * 0.5 + fw * 0.5) + out * 0.015, along.abs() * fw + Vector3(0, h + fw * 2.0, 0) + depth, xf, fcol, K_PLAIN)
++		det.box(Vector3(0, sgn * (h * 0.5 + fw * 0.5), 0) + out * 0.015, along.abs() * (w + fw * 2.0) + Vector3(0, fw, 0) + depth, xf, fcol, K_PLAIN)
++	# Cruz central en ventanas grandes.
++	if w > 0.5:
++		det.box(out * 0.02, along.abs() * fw * 0.6 + Vector3(0, h, 0) + depth, xf, fcol, K_PLAIN)
++	if h > 0.5 and w <= 3.0:
++		det.box(out * 0.02, along.abs() * w + Vector3(0, fw * 0.6, 0) + depth, xf, fcol, K_PLAIN)
++	if explicit or w <= 3.0:
++		_sill(det, size, xf, fcol.darkened(0.1), pos)
++
++
++static func _sill(det: Buf, size: Vector3, xf: Transform3D, col: Color, pos: Vector3) -> void:
++	var thin := _thin_axis(size)
++	if thin < 0:
++		return
++	var w := size.z if thin == 0 else size.x
++	var out := _outward(size, pos, xf)
++	var along := Vector3.BACK if thin == 0 else Vector3.RIGHT
++	det.box(Vector3(0, -size.y * 0.5 - 0.05, 0) + out * 0.08, along.abs() * (w + 0.18) + Vector3(0, 0.07, 0) + Vector3(absf(out.x), 0, absf(out.z)) * 0.2, xf, col, K_STONE)
++
++
++## Puerta: hoja de madera con marco, dintel y escalón de piedra.
++static func _door(main: Buf, det: Buf, size: Vector3, xf: Transform3D, col: Color, pos: Vector3) -> void:
++	var thin := _thin_axis(size)
++	if thin < 0:
++		thin = 2
++	var w := size.z if thin == 0 else size.x
++	var h := size.y
++	var out := _outward(size, pos, xf)
++	var along := Vector3.BACK if thin == 0 else Vector3.RIGHT
++	var rnd := fposmod(pos.x * 0.37 + pos.z * 0.53, 1.0)
++	main.add(box(size), xf, col, K_WOOD, rnd)
++	var fcol := col.darkened(0.35)
++	var depth := Vector3(absf(out.x), 0, absf(out.z)) * (minf(size.x, size.z) + 0.06)
++	for sgn: float in [-1.0, 1.0]:
++		det.box(along * sgn * (w * 0.5 + 0.05), along.abs() * 0.1 + Vector3(0, h + 0.1, 0) + depth, xf, fcol, K_WOOD)
++	det.box(Vector3(0, h * 0.5 + 0.07, 0), along.abs() * (w + 0.3) + Vector3(0, 0.14, 0) + depth, xf, fcol, K_WOOD)
++	# Escalón de piedra.
++	det.box(Vector3(0, -h * 0.5 + 0.06, 0) + out * 0.28, along.abs() * (w + 0.4) + Vector3(0, 0.12, 0) + Vector3(absf(out.x), 0, absf(out.z)) * 0.5, xf, Color(0.55, 0.53, 0.5), K_STONE)
++	# Pomo.
++	det.box(along * w * 0.3 + out * 0.06, Vector3(0.06, 0.06, 0.06), xf, Color(0.75, 0.6, 0.25), K_METAL)
++
++
++## Cumbrera y aleros de un techo a dos aguas (PrismMesh: triángulo en XY, extruido en Z).
++static func _roof_details(det: Buf, size: Vector3, xf: Transform3D, col: Color) -> void:
++	var dark := col.darkened(0.3)
++	det.box(Vector3(0, size.y * 0.5 - 0.02, 0), Vector3(0.16, 0.12, size.z + 0.06), xf, dark, K_PLAIN)
++	for sgn: float in [-1.0, 1.0]:
++		det.box(Vector3(sgn * (size.x * 0.5 - 0.03), -size.y * 0.5 + 0.02, 0), Vector3(0.1, 0.1, size.z + 0.02), xf, dark, K_WOOD)
++
++
++## Zócalo y cornisa del volumen principal (si el modelo no los trae ya).
++static func _body_trims(det: Buf, main: Buf, parts: Array, infos: Array, bi: int, size: Vector3, xf: Transform3D, col: Color, kind: int) -> void:
++	var top := xf.origin.y + size.y * 0.5
++	var has_base := false
++	var has_roof := false
++	for j in range(infos.size()):
++		if j == bi:
++			continue
++		var s: String = infos[j][0]
++		var sz: Vector3 = infos[j][1]
++		var p: Vector3 = infos[j][2]
++		var bottom := p.y - (0.0 if s == "floors" else sz.y * 0.5)
++		if bottom < 0.1 and sz.y < 1.0 and sz.x >= size.x * 0.8 and sz.z >= size.z * 0.8:
++			has_base = true
++		if absf(bottom - top) < 0.45 and (s == "prism" or s == "hip" or (sz.x >= size.x - 0.05 and sz.z >= size.z - 0.05)):
++			has_roof = true
++	var base_kind := K_STONE if kind != K_CONCRETE else K_CONCRETE
++	if not has_base:
++		main.box(Vector3(0, -size.y * 0.5 + 0.17, 0), Vector3(size.x + 0.08, 0.34, size.z + 0.08), xf, col.darkened(0.28), base_kind)
++	if not has_roof:
++		det.box(Vector3(0, size.y * 0.5 - 0.04, 0), Vector3(size.x + 0.18, 0.16, size.z + 0.18), xf, col.lightened(0.12), K_PLAIN)
++	# Esquineras en muros de estuco/adobe/ladrillo.
++	if kind == K_PLASTER or kind == K_BRICK:
++		for sx: float in [-1.0, 1.0]:
++			for sz2: float in [-1.0, 1.0]:
++				det.box(Vector3(sx * size.x * 0.5, 0.0, sz2 * size.z * 0.5), Vector3(0.14, size.y - 0.3, 0.14), xf, col.lightened(0.1) if kind == K_BRICK else col.darkened(0.12), K_PLAIN)
++
++
++## Cerca de madera: postes y dos travesaños a lo largo de X (size.x = largo, size.y = alto).
++static func _fence(det: Buf, size: Vector3, xf: Transform3D, col: Color) -> void:
++	var n := maxi(2, int(size.x / 1.2) + 1)
++	for k in range(n):
++		var x := -size.x * 0.5 + size.x * k / (n - 1)
++		det.box(Vector3(x, size.y * 0.5, 0), Vector3(0.1, size.y, 0.1), xf, col, K_WOOD)
++	for y: float in [size.y * 0.4, size.y * 0.8]:
++		det.box(Vector3(0, y, 0), Vector3(size.x, 0.07, 0.05), xf, col.lightened(0.05), K_WOOD)
++
++
++## Edificio de varios pisos: franjas de muro y ventanas alternadas, parteluces, zócalo y cornisa.
++static func _floors_into(main: Buf, det: Buf, part: Dictionary, size: Vector3, pos: Vector3, wall: Color, tint: float, variant: int) -> void:
+ 	var n := maxi(1, int(part.get("floors", 1)))
+ 	var fh := size.y / n
+ 	var glass := arr_color(part.get("c2"), Color(0.3, 0.4, 0.5)) * tint
+ 	glass.a = 1.0
+-	var slab: Mesh = cached("slab_%s_%.2f" % [str(size), fh], func(): return box(Vector3(size.x, fh * 0.35, size.z)))
+-	var band: Mesh = cached("band_%s_%.2f" % [str(size), fh], func(): return box(Vector3(size.x - 0.12, fh * 0.65, size.z - 0.12)))
++	glass = vary(glass, K_GLASS, variant)
++	var wk := classify(part, "box", size, wall)
++	if wk == K_GLASS:
++		wk = K_CONCRETE
++	var xf := Transform3D(Basis(), pos)
+ 	for i in range(n):
+ 		var y0 := i * fh
+-		root.add_child(mesh_node(slab, override if override else mat(wall), Vector3(0, y0 + fh * 0.175, 0)))
+-		root.add_child(mesh_node(band, override if override else mat(glass, 0.3), Vector3(0, y0 + fh * 0.35 + fh * 0.325, 0)))
+-	return root
++		main.box(Vector3(0, y0 + fh * 0.175, 0), Vector3(size.x, fh * 0.35, size.z), xf, wall, wk)
++		main.box(Vector3(0, y0 + fh * 0.675, 0), Vector3(size.x - 0.12, fh * 0.65, size.z - 0.12), xf, glass, K_GLASS, fposmod(i * 0.37 + variant * 0.11, 1.0))
++	# Parteluces verticales en las cuatro fachadas (una sola pieza alta por columna).
++	var mul := wall.darkened(0.12)
++	for axis: int in [0, 1]:
++		var span := size.x if axis == 0 else size.z
++		var cols := maxi(1, int(span / 1.4))
++		for k in range(1, cols):
++			var t := -span * 0.5 + span * k / cols
++			for sgn: float in [-1.0, 1.0]:
++				var c := Vector3(t, size.y * 0.5, sgn * (size.z * 0.5 - 0.02)) if axis == 0 else Vector3(sgn * (size.x * 0.5 - 0.02), size.y * 0.5, t)
++				var sz := Vector3(0.1, size.y, 0.1)
++				det.box(c, sz, xf, mul, K_PLAIN)
++	# Esquinas, zócalo y cornisa.
++	for sx: float in [-1.0, 1.0]:
++		for sz2: float in [-1.0, 1.0]:
++			main.box(Vector3(sx * (size.x * 0.5 - 0.1), size.y * 0.5, sz2 * (size.z * 0.5 - 0.1)), Vector3(0.24, size.y, 0.24), xf, wall.darkened(0.08), wk)
++	main.box(Vector3(0, 0.3, 0), Vector3(size.x + 0.1, 0.6, size.z + 0.1), xf, wall.darkened(0.3), K_STONE)
++	det.box(Vector3(0, size.y - 0.08, 0), Vector3(size.x + 0.22, 0.2, size.z + 0.22), xf, wall.lightened(0.1), K_PLAIN)
+ 
+ 
+ static func model_height(parts: Array) -> float:
+@@ -182,11 +844,115 @@ static func model_height(parts: Array) -> float:
+ 	for part in parts:
+ 		var size := _vec(part.get("size", [1, 1, 1]), Vector3.ONE)
+ 		var pos := _vec(part.get("pos", [0, 0, 0]), Vector3.ZERO)
+-		var top := pos.y + (size.y if str(part.get("s", "")) == "floors" else size.y * 0.5)
++		var s := str(part.get("s", ""))
++		var top := pos.y + (size.y if s == "floors" or s == "chimney" or s == "fence" else size.y * 0.5)
+ 		h = maxf(h, top)
+ 	return h
+ 
+ 
++# --- Modelos sueltos -------------------------------------------------------------------------------
++
++## Choza: paredes de madera, techo de paja a dos aguas y puerta.
++static func make_hut(variant: int) -> Node3D:
++	var cfg: Dictionary = GameData.buildings.get("choza", {})
++	var s: Array = cfg.get("size", [3.0, 2.0, 3.0])
++	var size := Vector3(float(s[0]), float(s[1]), float(s[2]))
++	var wall := arr_color(cfg.get("wall_color"), Color(0.55, 0.4, 0.26))
++	var roof := arr_color(cfg.get("roof_color"), Color(0.78, 0.66, 0.36))
++	var parts := [
++		{"s": "box", "size": [size.x, size.y, size.z], "pos": [0, size.y * 0.5, 0], "c": [wall.r, wall.g, wall.b], "m": "madera"},
++		{"s": "prism", "size": [size.x + 0.7, 1.5, size.z + 0.5], "pos": [0, size.y + 0.75, 0], "c": [roof.r, roof.g, roof.b], "rot": 90, "m": "paja"},
++		{"s": "box", "size": [0.8, 1.3, 0.1], "pos": [0, 0.65, size.z * 0.5 + 0.03], "c": [0.28, 0.18, 0.1]},
++	]
++	return build_model(parts, 1.0, null, variant % 5)
++
++
++static func make_well() -> Node3D:
++	var parts := [
++		{"s": "cyl", "size": [0.9, 0.9, 1.0], "pos": [0, 0.45, 0], "c": [0.58, 0.56, 0.52], "m": "piedra", "seg": 10},
++		{"s": "cyl", "size": [1.0, 0.1, 1.0], "pos": [0, 0.92, 0], "c": [0.5, 0.48, 0.45], "seg": 10},
++		{"s": "cyl", "size": [0.72, 0.05, 0.72], "pos": [0, 0.88, 0], "c": [0.12, 0.26, 0.4], "m": "vidrio", "seg": 10},
++		{"s": "box", "size": [0.12, 1.6, 0.12], "pos": [-0.8, 1.3, 0], "c": [0.4, 0.28, 0.16], "m": "madera"},
++		{"s": "box", "size": [0.12, 1.6, 0.12], "pos": [0.8, 1.3, 0], "c": [0.4, 0.28, 0.16], "m": "madera"},
++		{"s": "cyl", "size": [0.08, 1.7, 0.08], "pos": [0, 1.75, 0], "c": [0.35, 0.24, 0.14], "rz": 90},
++		{"s": "prism", "size": [2.2, 0.6, 1.4], "pos": [0, 2.35, 0], "c": [0.62, 0.3, 0.2], "m": "teja"},
++		{"s": "box", "size": [0.3, 0.3, 0.3], "pos": [0, 1.45, 0], "c": [0.4, 0.3, 0.2], "m": "madera"},
++	]
++	return build_model(parts)
++
++
++## Persona low-poly (una malla unida por colores) con piernas y brazos aparte para animar el paso.
++## Nodos: "Body", "LegL", "LegR", "ArmL", "ArmR" (pivotes en cadera y hombro).
++static func make_person(cloth: Color, skin: Color, hair: Color, female: bool) -> Node3D:
++	var key := "__person_%s_%s_%s_%s" % [cloth.to_html(), skin.to_html(), hair.to_html(), female]
++	var meshes: Array
++	if _models.has(key):
++		meshes = _models[key]
++	else:
++		var pants := cloth.darkened(0.45) if not female else cloth.darkened(0.1)
++		var shoes := Color(0.16, 0.12, 0.09)
++		var body := Buf.new()
++		var id := Transform3D()
++		# Torso con cintura, cuello y cabeza.
++		body.add(cylinder(0.12, 0.15, 0.4, 6), Transform3D(Basis.from_scale(Vector3(1.0, 1.0, 0.72)), Vector3(0, 0.78, 0)), cloth, K_PLAIN)
++		if female:
++			body.add(cylinder(0.15, 0.25, 0.34, 7), Transform3D(Basis(), Vector3(0, 0.5, 0)), cloth.darkened(0.08), K_PLAIN)
++		else:
++			body.add(cylinder(0.15, 0.15, 0.1, 6), Transform3D(Basis.from_scale(Vector3(1.0, 1.0, 0.75)), Vector3(0, 0.56, 0)), pants.darkened(0.2), K_PLAIN)
++		body.add(cylinder(0.045, 0.05, 0.08, 5), Transform3D(Basis(), Vector3(0, 1.01, 0)), skin, K_PLAIN)
++		body.add(sphere(0.115, 7, 5), Transform3D(Basis.from_scale(Vector3(1.0, 1.08, 1.0)), Vector3(0, 1.14, 0)), skin, K_PLAIN)
++		body.add(sphere(0.122, 7, 3), Transform3D(Basis.from_scale(Vector3(1.0, 0.9, 1.0)), Vector3(0, 1.19, -0.02)), hair, K_PLAIN)
++		if female:
++			body.box(Vector3(0, 1.08, -0.1), Vector3(0.2, 0.22, 0.06), id, hair, K_PLAIN)
++		var leg := Buf.new()
++		leg.box(Vector3(0, -0.24, 0), Vector3(0.1, 0.46, 0.11), id, pants, K_PLAIN)
++		leg.box(Vector3(0, -0.46, 0.03), Vector3(0.11, 0.06, 0.17), id, shoes, K_PLAIN)
++		var arm := Buf.new()
++		arm.box(Vector3(0, -0.17, 0), Vector3(0.075, 0.34, 0.08), id, cloth.darkened(0.06), K_PLAIN)
++		arm.box(Vector3(0, -0.37, 0), Vector3(0.07, 0.07, 0.07), id, skin, K_PLAIN)
++		meshes = [body.commit(), leg.commit(), arm.commit()]
++		_models[key] = meshes
++	var root := Node3D.new()
++	var b := MeshInstance3D.new()
++	b.name = "Body"
++	b.mesh = meshes[0]
++	root.add_child(b)
++	for side in [["LegL", -0.065, 1], ["LegR", 0.065, 1], ["ArmL", -0.19, 2], ["ArmR", 0.19, 2]]:
++		var mi := MeshInstance3D.new()
++		mi.name = side[0]
++		mi.mesh = meshes[side[2]]
++		mi.position = Vector3(float(side[1]), 0.5 if side[2] == 1 else 0.95, 0)
++		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if side[2] == 2 else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
++		root.add_child(mi)
++	return root
++
++
++## Animación de paso: phase avanza con la distancia recorrida; amount 0 = quieto, 1 = caminando.
++static func animate_person(model: Node3D, phase: float, amount: float) -> void:
++	var sw := sin(phase) * 0.55 * amount
++	var n := model.get_node_or_null("LegL") as Node3D
++	if n == null:
++		return
++	n.rotation.x = sw
++	(model.get_node("LegR") as Node3D).rotation.x = -sw
++	(model.get_node("ArmL") as Node3D).rotation.x = -sw * 0.8
++	(model.get_node("ArmR") as Node3D).rotation.x = sw * 0.8
++
++
++## Etiqueta 3D legible: tamaño fijo en pantalla (no se vuelve gigante ni diminuta con el zoom),
++## se desvanece a partir de max_dist (evita que se amontonen al alejarse) y va sobre la geometría
++## cercana con prioridad de dibujo alta.
++static func style_label(lab: Label3D, max_dist := 180.0) -> void:
++	lab.fixed_size = true
++	lab.pixel_size = 0.0007 * 40.0 / maxf(float(lab.font_size), 1.0)
++	lab.visibility_range_end = max_dist
++	lab.visibility_range_end_margin = max_dist * 0.15
++	lab.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
++	lab.outline_modulate = Color(0.05, 0.05, 0.07, 0.85)
++	lab.render_priority = 2
++	lab.outline_render_priority = 1
++
++
+ static func ghost_mat(ok: bool) -> StandardMaterial3D:
+ 	var key := "__ghost_%s" % ok
+ 	if _materials.has(key):
+@@ -209,16 +975,35 @@ static func construction_mat() -> StandardMaterial3D:
+ 	return m
+ 
+ 
+-## Andamio de obra alrededor de un edificio.
++## Andamio de obra alrededor de un edificio (una sola malla unida).
+ static func scaffold(footprint: float, height: float) -> Node3D:
++	var key := "__scaffold_%.2f_%.2f" % [footprint, height]
++	var mesh: ArrayMesh
++	if _models.has(key):
++		mesh = _models[key]
++	else:
++		var buf := Buf.new()
++		var id := Transform3D()
++		var w := footprint * 0.5 + 0.3
++		var wood := Color(0.6, 0.45, 0.25)
++		for x: float in [-w, w]:
++			for z: float in [-w, w]:
++				buf.box(Vector3(x, height * 0.5, z), Vector3(0.12, height, 0.12), id, wood, K_WOOD)
++		var lv := maxi(2, int(height / 1.6))
++		for k in range(1, lv + 1):
++			var y := height * k / (lv + 0.5)
++			for z: float in [-w, w]:
++				buf.box(Vector3(0, y, z), Vector3(w * 2.0, 0.08, 0.12), id, wood, K_WOOD)
++				buf.box(Vector3(0, y - 0.05, z * 0.93), Vector3(w * 2.0, 0.05, 0.45), id, wood.darkened(0.15), K_WOOD)
++		# Diagonales.
++		for z: float in [-w, w]:
++			var ang := atan2(height * 0.66, w * 2.0)
++			buf.box(Vector3(0, height * 0.4, z), Vector3(sqrt(w * w * 4.0 + height * height * 0.44), 0.07, 0.07), Transform3D(Basis(Vector3.BACK, ang), Vector3.ZERO), wood.darkened(0.1), K_WOOD)
++		buf.box(Vector3(0, 0.02, 0), Vector3(footprint + 1.0, 0.05, footprint + 1.0), id, Color(0.5, 0.4, 0.28), K_PLAIN)
++		mesh = buf.commit()
++		_models[key] = mesh
+ 	var root := Node3D.new()
+-	var w := footprint * 0.5 + 0.3
+-	var pole_mat := mat(Color(0.6, 0.45, 0.25))
+-	for x in [-w, w]:
+-		for z in [-w, w]:
+-			root.add_child(mesh_node(box(Vector3(0.12, height, 0.12)), pole_mat, Vector3(x, height * 0.5, z)))
+-	for y in [height * 0.33, height * 0.66]:
+-		for z in [-w, w]:
+-			root.add_child(mesh_node(box(Vector3(w * 2.0, 0.08, 0.12)), pole_mat, Vector3(0, y, z)))
+-	root.add_child(mesh_node(box(Vector3(footprint + 1.0, 0.05, footprint + 1.0)), mat(Color(0.5, 0.4, 0.28)), Vector3(0, 0.02, 0)))
++	var mi := MeshInstance3D.new()
++	mi.mesh = mesh
++	root.add_child(mi)
+ 	return root
+diff --git a/scripts/world/mining_visuals.gd b/scripts/world/mining_visuals.gd
+index 6584b3a..d545b0e 100644
+--- a/scripts/world/mining_visuals.gd
++++ b/scripts/world/mining_visuals.gd
+@@ -174,6 +174,7 @@ func _build_area(d: Dictionary) -> void:
+ 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ 	label.font_size = 40
+ 	label.pixel_size = 0.022
++	MeshLib.style_label(label, 200.0)
+ 	label.outline_size = 10
+ 	label.modulate = col.lightened(0.45)
+ 	label.position = Vector3(0, 4.1, 0)
+diff --git a/scripts/world/road_mesh.gd b/scripts/world/road_mesh.gd
+new file mode 100644
+index 0000000..c4442f0
+--- /dev/null
++++ b/scripts/world/road_mesh.gd
+@@ -0,0 +1,357 @@
++class_name RoadMesh
++extends RefCounted
++## Mallas continuas para carreteras, caminos y vías férreas (docs/GRAFICOS.md).
++## - strip(): franja pegada al terreno con varios vértices a lo ancho (sigue el relieve sin flotar ni
++##   hundirse), faldones laterales que tapan huecos, tapas redondas en los extremos (intersecciones
++##   limpias) y UV para el shader (UV.x a lo ancho, UV.y en metros).
++## - rail(): balasto trapezoidal, durmientes y rieles a una misma altura suavizada (alineados en curvas).
++## - bridge(): vigas, barandas y pilares donde la polilínea cruza agua.
++## Material: shaders/road.gdshader (tierra, empedrado, asfalto, balasto, acero y madera).
++
++const KIND_DIRT := 0
++const KIND_COBBLE := 1
++const KIND_ASPHALT := 2
++const KIND_BALLAST := 3
++const KIND_STEEL := 4
++const KIND_PLANKS := 5
++
++static var _mats := {}
++
++
++## Material compartido para un tipo de camino ("barro", "empedrado", "cemento", "balasto"…).
++static func material(kind: String, color := Color(-1, 0, 0)) -> ShaderMaterial:
++	var k := KIND_DIRT
++	var c := Color(0.5, 0.4, 0.28)
++	match kind:
++		"barro", "tierra":
++			k = KIND_DIRT
++			c = Color(0.5, 0.39, 0.26)
++		"empedrado":
++			k = KIND_COBBLE
++			c = Color(0.56, 0.54, 0.5)
++		"cemento", "asfalto":
++			k = KIND_ASPHALT
++			c = Color(0.27, 0.27, 0.28)
++		"balasto":
++			k = KIND_BALLAST
++			c = Color(0.46, 0.43, 0.4)
++		"acero":
++			k = KIND_STEEL
++			c = Color(0.55, 0.55, 0.58)
++		"madera":
++			k = KIND_PLANKS
++			c = Color(0.45, 0.32, 0.2)
++	if color.r >= 0.0:
++		c = color
++	var key := "%d_%s" % [k, c.to_html()]
++	if _mats.has(key):
++		return _mats[key]
++	var m := ShaderMaterial.new()
++	m.shader = load("res://shaders/road.gdshader")
++	m.set_shader_parameter("kind", k)
++	m.set_shader_parameter("base_color", c)
++	_mats[key] = m
++	return m
++
++
++static func _ground(t: Terrain, x: float, z: float) -> float:
++	return TransitVisuals.ground(t, x, z)
++
++
++## Muestras a lo largo de la polilínea: [{p: Vector2, dir: Vector2, d: float}].
++static func _samples(pts: PackedVector2Array, total: float, step: float, offset: float) -> Array:
++	var cum := TransitSim.poly_cum(pts)
++	var out := []
++	var n := maxi(1, int(ceil(total / step)))
++	for i in range(n + 1):
++		var d := minf(total, i * step)
++		var a := TransitSim.poly_point(pts, cum, maxf(0.0, d - 0.6))
++		var b := TransitSim.poly_point(pts, cum, minf(total, d + 0.6))
++		var dir := b - a
++		dir = dir.normalized() if dir.length() > 0.001 else Vector2(1, 0)
++		var perp := Vector2(-dir.y, dir.x)
++		out.append({"p": TransitSim.poly_point(pts, cum, d) + perp * offset, "dir": dir, "perp": perp, "d": d})
++	return out
++
++
++static func total_length(pts: PackedVector2Array, max_len := -1.0) -> float:
++	var cum := TransitSim.poly_cum(pts)
++	var total := cum[cum.size() - 1] if cum.size() > 0 else 0.0
++	return minf(total, max_len) if max_len >= 0.0 else total
++
++
++## Franja continua a lo largo de una polilínea (desplazada `offset` hacia un lado).
++static func strip(t: Terrain, pts: PackedVector2Array, offset: float, width: float, lift: float, max_len := -1.0, caps := true) -> ArrayMesh:
++	var total := total_length(pts, max_len)
++	var st := SurfaceTool.new()
++	st.begin(Mesh.PRIMITIVE_TRIANGLES)
++	if pts.size() < 2 or total < 0.05:
++		st.set_normal(Vector3.UP)
++		st.add_vertex(Vector3.ZERO)
++		st.add_vertex(Vector3.ZERO)
++		st.add_vertex(Vector3.ZERO)
++		return st.commit()
++	var across := 4 if width > 1.0 else 1        # segmentos a lo ancho
++	var samples := _samples(pts, total, 1.0 if width > 1.0 else 1.5, offset)
++	var rows := []
++	for s in samples:
++		var c: Vector2 = s["p"]
++		var perp: Vector2 = s["perp"]
++		var hc := _ground(t, c.x, c.y)
++		var row := []
++		for k in range(across + 1):
++			var f := float(k) / across
++			var q := c + perp * (0.5 - f) * width
++			# Altura = el terreno bajo el vértice y a medio camino hacia sus vecinos (no se hunde).
++			var h := _ground(t, q.x, q.y)
++			if width > 1.0:
++				var q2 := q + perp * (width / across) * 0.5
++				h = maxf(h, _ground(t, q2.x, q2.y))
++			h = maxf(h, hc - 0.35)
++			row.append(Vector3(q.x, h + lift, q.y))
++		rows.append(row)
++	for i in range(rows.size() - 1):
++		var r0: Array = rows[i]
++		var r1: Array = rows[i + 1]
++		var v0 := float(samples[i]["d"])
++		var v1 := float(samples[i + 1]["d"])
++		for k in range(across):
++			var u0 := float(k) / across
++			var u1 := float(k + 1) / across
++			_tri(st, r0[k], Vector2(u0, v0), r0[k + 1], Vector2(u1, v0), r1[k], Vector2(u0, v1))
++			_tri(st, r0[k + 1], Vector2(u1, v0), r1[k + 1], Vector2(u1, v1), r1[k], Vector2(u0, v1))
++		# Faldones bajo los bordes (ocultan huecos contra el terreno).
++		if width > 1.0:
++			for e in [[0, 0.0], [across, 1.0]]:
++				var a: Vector3 = r0[e[0]]
++				var b: Vector3 = r1[e[0]]
++				var drop := Vector3(0, -0.4, 0)
++				_tri(st, a, Vector2(e[1], v0), b, Vector2(e[1], v1), a + drop, Vector2(e[1], v0))
++				_tri(st, b, Vector2(e[1], v1), b + drop, Vector2(e[1], v1), a + drop, Vector2(e[1], v0))
++	# Tapas semicirculares en los extremos: los cruces y empalmes se ven continuos.
++	if caps and width > 1.0:
++		for end in [0, samples.size() - 1]:
++			var s: Dictionary = samples[end]
++			var c: Vector2 = s["p"]
++			var dir: Vector2 = s["dir"] * (-1.0 if end == 0 else 1.0)
++			var perp: Vector2 = s["perp"]
++			var hc := _ground(t, c.x, c.y) + lift
++			var center := Vector3(c.x, hc, c.y)
++			var seg := 6
++			var prev := Vector3.ZERO
++			for k in range(seg + 1):
++				var ang := PI * k / seg
++				var q := c + (perp * cos(ang) + dir * sin(ang)) * width * 0.5
++				var h := maxf(_ground(t, q.x, q.y), hc - lift - 0.35) + lift
++				var pv := Vector3(q.x, h, q.y)
++				if k > 0:
++					var vv := float(s["d"])
++					_tri(st, center, Vector2(0.5, vv), prev, Vector2(0.5 + 0.5 * cos(PI * (k - 1) / seg), vv), pv, Vector2(0.5 + 0.5 * cos(ang), vv))
++				prev = pv
++	st.generate_normals()
++	return st.commit()
++
++
++static func _tri(st: SurfaceTool, a: Vector3, ua: Vector2, b: Vector3, ub: Vector2, c: Vector3, uc: Vector2) -> void:
++	# Cara hacia arriba (el shader no recorta caras, pero la normal debe mirar al cielo).
++	if (c - a).cross(b - a).y < 0.0:
++		var tv := b
++		b = c
++		c = tv
++		var tu := ub
++		ub = uc
++		uc = tu
++	st.set_uv(ua)
++	st.add_vertex(a)
++	st.set_uv(ub)
++	st.add_vertex(b)
++	st.set_uv(uc)
++	st.add_vertex(c)
++
++
++## Nodo de camino completo (franja con su material y puente donde cruza agua).
++static func road_node(t: Terrain, pts: PackedVector2Array, kind: String, width: float, ghost: Material = null, max_len := -1.0, color := Color(-1, 0, 0)) -> Node3D:
++	var root := Node3D.new()
++	var body := MeshLib.mesh_node(strip(t, pts, 0.0, width, 0.06, max_len), ghost if ghost else material(kind, color))
++	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++	body.name = "Superficie"
++	root.add_child(body)
++	if ghost == null:
++		root.add_child(bridge(t, pts, width, max_len))
++	return root
++
++
++## Altura del lecho de la vía: el terreno suavizado a lo largo (sin baches) y nunca bajo el suelo.
++static func _bed_heights(t: Terrain, samples: Array) -> PackedFloat32Array:
++	var raw := PackedFloat32Array()
++	for s in samples:
++		var p: Vector2 = s["p"]
++		var perp: Vector2 = s["perp"]
++		var h := _ground(t, p.x, p.y)
++		h = maxf(h, maxf(_ground(t, p.x + perp.x * 0.8, p.y + perp.y * 0.8), _ground(t, p.x - perp.x * 0.8, p.y - perp.y * 0.8)) - 0.1)
++		raw.append(h)
++	var out := PackedFloat32Array()
++	out.resize(raw.size())
++	for i in range(raw.size()):
++		var acc := 0.0
++		var wsum := 0.0
++		for k in range(-2, 3):
++			var j := clampi(i + k, 0, raw.size() - 1)
++			var wk := 1.0 / (1.0 + absf(k))
++			acc += raw[j] * wk
++			wsum += wk
++		out[i] = maxf(acc / wsum, raw[i] - 0.05)
++	return out
++
++
++## Vía férrea: balasto trapezoidal, durmientes y dos rieles de acero a la misma altura.
++static func rail(t: Terrain, pts: PackedVector2Array, offset := 0.0, max_len := -1.0, ghost: Material = null) -> Node3D:
++	var root := Node3D.new()
++	root.name = "ViaFerrea"
++	var total := total_length(pts, max_len)
++	if pts.size() < 2 or total < 0.5:
++		return root
++	var samples := _samples(pts, total, 1.0, offset)
++	var bed := _bed_heights(t, samples)
++	# Balasto: perfil trapezoidal (base pegada al terreno, corona plana).
++	var st := SurfaceTool.new()
++	st.begin(Mesh.PRIMITIVE_TRIANGLES)
++	var prof := [[-1.55, 0.0, true], [-1.05, 0.2, false], [1.05, 0.2, false], [1.55, 0.0, true]]
++	var rows := []
++	for i in range(samples.size()):
++		var p: Vector2 = samples[i]["p"]
++		var perp: Vector2 = samples[i]["perp"]
++		var row := []
++		for pr in prof:
++			var q := p + perp * float(pr[0])
++			var y := (_ground(t, q.x, q.y) - 0.12) if bool(pr[2]) else bed[i] + float(pr[1])
++			row.append(Vector3(q.x, y, q.y))
++		rows.append(row)
++	for i in range(rows.size() - 1):
++		var v0 := float(samples[i]["d"])
++		var v1 := float(samples[i + 1]["d"])
++		for k in range(prof.size() - 1):
++			var u0 := float(k) / (prof.size() - 1)
++			var u1 := float(k + 1) / (prof.size() - 1)
++			_tri(st, rows[i][k], Vector2(u0, v0), rows[i][k + 1], Vector2(u1, v0), rows[i + 1][k], Vector2(u0, v1))
++			_tri(st, rows[i][k + 1], Vector2(u1, v0), rows[i + 1][k + 1], Vector2(u1, v1), rows[i + 1][k], Vector2(u0, v1))
++	st.generate_normals()
++	var ballast := MeshLib.mesh_node(st.commit(), ghost if ghost else material("balasto"))
++	ballast.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++	root.add_child(ballast)
++	# Durmientes (MultiMesh) cada 0,65 m, apoyados en la corona del balasto.
++	var xf: Array[Transform3D] = []
++	var cum := TransitSim.poly_cum(pts)
++	var d := 0.3
++	while d < total:
++		var i := clampi(int(round(d)), 0, samples.size() - 1)
++		var a := TransitSim.poly_point(pts, cum, maxf(0.0, d - 0.6))
++		var b := TransitSim.poly_point(pts, cum, minf(total, d + 0.6))
++		var dir := (b - a).normalized() if (b - a).length() > 0.001 else Vector2(1, 0)
++		var perp := Vector2(-dir.y, dir.x)
++		var c := TransitSim.poly_point(pts, cum, d) + perp * offset
++		var hb := lerpf(bed[clampi(int(floor(d)), 0, bed.size() - 1)], bed[clampi(int(ceil(d)), 0, bed.size() - 1)], fposmod(d, 1.0))
++		xf.append(Transform3D(Basis(Vector3.UP, atan2(dir.x, dir.y)), Vector3(c.x, hb + 0.24, c.y)))
++		d += 0.65
++		if i < 0:
++			break
++	if not xf.is_empty():
++		var mm := MultiMesh.new()
++		mm.transform_format = MultiMesh.TRANSFORM_3D
++		mm.mesh = MeshLib.cached("rail_tie2", func(): return MeshLib.box(Vector3(2.0, 0.1, 0.24)))
++		mm.instance_count = xf.size()
++		for k in range(xf.size()):
++			mm.set_instance_transform(k, xf[k])
++		var mmi := MultiMeshInstance3D.new()
++		mmi.multimesh = mm
++		mmi.material_override = ghost if ghost else MeshLib.mat(Color(0.3, 0.21, 0.14))
++		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++		root.add_child(mmi)
++	# Rieles: perfil rectangular extruido a la altura de la corona + durmiente.
++	for side: float in [-0.55, 0.55]:
++		var rs := SurfaceTool.new()
++		rs.begin(Mesh.PRIMITIVE_TRIANGLES)
++		var rrows := []
++		for i in range(samples.size()):
++			var p: Vector2 = samples[i]["p"] + samples[i]["perp"] * side
++			var perp: Vector2 = samples[i]["perp"]
++			var y := bed[i] + 0.29
++			rrows.append([Vector3(p.x + perp.x * 0.045, y, p.y + perp.y * 0.045), Vector3(p.x + perp.x * 0.045, y + 0.1, p.y + perp.y * 0.045),
++					Vector3(p.x - perp.x * 0.045, y + 0.1, p.y - perp.y * 0.045), Vector3(p.x - perp.x * 0.045, y, p.y - perp.y * 0.045)])
++		for i in range(rrows.size() - 1):
++			var v0 := float(samples[i]["d"])
++			var v1 := float(samples[i + 1]["d"])
++			for k in range(3):
++				var a0: Vector3 = rrows[i][k]
++				var a1: Vector3 = rrows[i][k + 1]
++				var b0: Vector3 = rrows[i + 1][k]
++				var b1: Vector3 = rrows[i + 1][k + 1]
++				rs.set_uv(Vector2(0, v0))
++				rs.add_vertex(a0)
++				rs.set_uv(Vector2(1, v0))
++				rs.add_vertex(a1)
++				rs.set_uv(Vector2(0, v1))
++				rs.add_vertex(b0)
++				rs.set_uv(Vector2(1, v0))
++				rs.add_vertex(a1)
++				rs.set_uv(Vector2(1, v1))
++				rs.add_vertex(b1)
++				rs.set_uv(Vector2(0, v1))
++				rs.add_vertex(b0)
++		rs.generate_normals()
++		var rmi := MeshLib.mesh_node(rs.commit(), ghost if ghost else material("acero"))
++		rmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++		root.add_child(rmi)
++	if ghost == null:
++		root.add_child(bridge(t, pts, 3.2, max_len, offset))
++	return root
++
++
++## Puente donde la polilínea cruza agua: tablero con vigas laterales, barandas y pilares.
++static func bridge(t: Terrain, pts: PackedVector2Array, width: float, max_len := -1.0, offset := 0.0) -> Node3D:
++	var root := Node3D.new()
++	root.name = "Puente"
++	if t == null:
++		return root
++	var total := total_length(pts, max_len)
++	var samples := _samples(pts, total, 2.0, offset)
++	var stone := MeshLib.mat(Color(0.52, 0.5, 0.47))
++	var wood := MeshLib.mat(Color(0.36, 0.26, 0.17))
++	var top := t.water_level + 1.0
++	var unit := MeshLib.cached("__bridge_unit", func(): return MeshLib.box(Vector3.ONE))
++	var prev_over := false
++	var prev_p := Vector2.ZERO
++	for i in range(samples.size()):
++		var p: Vector2 = samples[i]["p"]
++		var dir: Vector2 = samples[i]["dir"]
++		var perp: Vector2 = samples[i]["perp"]
++		var over := t.height_at(p.x, p.y) < t.water_level + 0.2
++		if over:
++			var yaw := atan2(dir.x, dir.y)
++			if i % 2 == 0:
++				var bottom := t.height_at(p.x, p.y) - 0.3
++				var hgt := maxf(0.5, top - bottom - 0.15)
++				var pil := MeshLib.mesh_node(unit, stone, Vector3(p.x, bottom + hgt * 0.5, p.y))
++				pil.scale = Vector3(width * 0.8, hgt, 0.7)
++				pil.rotation.y = yaw
++				root.add_child(pil)
++			if prev_over:
++				var mid := (p + prev_p) * 0.5
++				var seg := p.distance_to(prev_p) + 0.1
++				for s: float in [-1.0, 1.0]:
++					var q := mid + perp * s * (width * 0.5 + 0.05)
++					var beam := MeshLib.mesh_node(unit, wood, Vector3(q.x, top - 0.12, q.y))
++					beam.scale = Vector3(0.18, 0.35, seg)
++					beam.rotation.y = yaw
++					root.add_child(beam)
++					var rail := MeshLib.mesh_node(unit, wood, Vector3(q.x, top + 0.75, q.y))
++					rail.scale = Vector3(0.08, 0.08, seg)
++					rail.rotation.y = yaw
++					root.add_child(rail)
++					var q2 := p + perp * s * (width * 0.5 + 0.05)
++					var post := MeshLib.mesh_node(unit, wood, Vector3(q2.x, top + 0.38, q2.y))
++					post.scale = Vector3(0.1, 0.8, 0.1)
++					root.add_child(post)
++		prev_over = over
++		prev_p = p
++	return root
+diff --git a/scripts/world/sky_rig.gd b/scripts/world/sky_rig.gd
+new file mode 100644
+index 0000000..4788a14
+--- /dev/null
++++ b/scripts/world/sky_rig.gd
+@@ -0,0 +1,176 @@
++class_name SkyRig
++extends Node3D
++## Iluminación y postproceso del mundo (docs/GRAFICOS.md): un solo Environment con cielo
++## procedural, sol/luna con ciclo día-noche suave (amanecer y atardecer cálidos), tonemapping ACES,
++## luz ambiental del cielo, sombras direccionales en cascadas y, solo en Forward+, SSAO, glow y
++## niebla con dispersión del sol. En Compatibility (OpenGL) esos efectos se omiten.
++## night_factor (0 = día, 1 = noche) enciende ventanas y faroles emisivos (MeshLib.set_night).
++
++var env: Environment
++var sky_mat: ProceduralSkyMaterial
++var sun: DirectionalLight3D
++var world_env: WorldEnvironment
++var night_factor := 0.0
++var _profile: Dictionary = {}
++var _last_night := -1.0
++
++# Colores del cielo por altura del sol: [elevación, cenit, horizonte, luz del sol].
++const SKY_KEYS := [
++	[-0.35, Color(0.015, 0.025, 0.06), Color(0.05, 0.07, 0.13), Color(0.55, 0.65, 0.95)],
++	[-0.08, Color(0.08, 0.1, 0.24), Color(0.36, 0.26, 0.34), Color(0.7, 0.6, 0.8)],
++	[0.02, Color(0.22, 0.3, 0.52), Color(0.98, 0.56, 0.3), Color(1.0, 0.55, 0.3)],
++	[0.16, Color(0.28, 0.46, 0.76), Color(0.96, 0.78, 0.58), Color(1.0, 0.8, 0.6)],
++	[0.4, Color(0.24, 0.47, 0.82), Color(0.68, 0.8, 0.9), Color(1.0, 0.95, 0.88)],
++	[1.0, Color(0.2, 0.44, 0.8), Color(0.64, 0.78, 0.9), Color(1.0, 0.98, 0.94)],
++]
++
++
++func _ready() -> void:
++	add_to_group(GraphicsSettings.GROUP)
++
++
++func build() -> void:
++	sky_mat = ProceduralSkyMaterial.new()
++	sky_mat.sun_angle_max = 18.0
++	sky_mat.sun_curve = 0.12
++	sky_mat.ground_bottom_color = Color(0.18, 0.2, 0.2)
++	sky_mat.ground_curve = 0.06
++	sky_mat.sky_curve = 0.12
++	var sky := Sky.new()
++	sky.sky_material = sky_mat
++	sky.radiance_size = Sky.RADIANCE_SIZE_64
++	env = Environment.new()
++	env.background_mode = Environment.BG_SKY
++	env.sky = sky
++	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
++	env.ambient_light_sky_contribution = 1.0
++	env.ambient_light_energy = 0.6
++	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
++	env.tonemap_mode = Environment.TONE_MAPPER_ACES
++	env.tonemap_exposure = 1.0
++	env.tonemap_white = 6.0
++	env.fog_enabled = true
++	env.fog_density = 0.0003
++	env.fog_sky_affect = 0.25
++	env.fog_aerial_perspective = 0.25
++	env.fog_sun_scatter = 0.12
++	# Glow suave (solo Forward+): los emisivos de noche florecen un poco.
++	env.glow_intensity = 0.55
++	env.glow_strength = 0.9
++	env.glow_bloom = 0.02
++	env.glow_hdr_threshold = 1.05
++	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
++	env.set_glow_level(0, 0.0)
++	env.set_glow_level(1, 1.0)
++	env.set_glow_level(2, 0.6)
++	env.set_glow_level(3, 0.4)
++	env.set_glow_level(4, 0.2)
++	# SSAO (solo Forward+ en calidad alta).
++	env.ssao_radius = 1.4
++	env.ssao_intensity = 1.8
++	env.ssao_power = 1.4
++	env.ssao_detail = 0.4
++	env.ssao_horizon = 0.08
++	env.ssao_light_affect = 0.15
++	env.ssao_ao_channel_affect = 0.0
++	world_env = WorldEnvironment.new()
++	world_env.environment = env
++	add_child(world_env)
++	sun = DirectionalLight3D.new()
++	sun.name = "Sun"
++	sun.shadow_enabled = true
++	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
++	sun.directional_shadow_split_1 = 0.06
++	sun.directional_shadow_split_2 = 0.16
++	sun.directional_shadow_split_3 = 0.4
++	sun.directional_shadow_blend_splits = true
++	sun.directional_shadow_fade_start = 0.85
++	sun.directional_shadow_pancake_size = 30.0
++	# Sesgos pequeños: sin acné en caras planas ni "peter-panning" en la base de los edificios.
++	sun.shadow_bias = 0.03
++	sun.shadow_normal_bias = 1.1
++	sun.shadow_blur = 1.2
++	sun.light_angular_distance = 0.6
++	add_child(sun)
++	apply_graphics(GraphicsSettings.profile())
++
++
++## Aplica el perfil de calidad (GraphicsSettings.apply lo llama en todos los del grupo).
++func apply_graphics(p: Dictionary) -> void:
++	_profile = p
++	if env == null:
++		return
++	var fp := bool(p.get("forward_plus", false))
++	sun.shadow_enabled = bool(p.get("shadows", true))
++	sun.directional_shadow_max_distance = float(p.get("shadow_distance", 220.0))
++	sun.shadow_blur = [0.6, 1.1, 1.4][int(p.get("level", 2))]
++	RenderingServer.directional_shadow_atlas_set_size(int(p.get("shadow_atlas", 4096)), true)
++	RenderingServer.directional_soft_shadow_filter_set_quality([
++		RenderingServer.SHADOW_QUALITY_HARD, RenderingServer.SHADOW_QUALITY_SOFT_LOW,
++		RenderingServer.SHADOW_QUALITY_SOFT_MEDIUM][int(p.get("soft_shadows", 1))])
++	env.ssao_enabled = bool(p.get("ssao", false))
++	env.glow_enabled = bool(p.get("glow", false))
++	# En Forward+ la niebla dispersa la luz del sol; en Compatibility queda solo la exponencial.
++	env.fog_sun_scatter = 0.12 if fp else 0.0
++	var vp := get_viewport()
++	if vp:
++		vp.msaa_3d = int(p.get("msaa", Viewport.MSAA_2X))
++		vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if bool(p.get("fxaa", false)) else Viewport.SCREEN_SPACE_AA_DISABLED
++	if is_inside_tree():
++		MeshLib.apply_ranges(get_tree(), p)
++
++
++static func _sky_at(elev: float) -> Array:
++	for i in range(SKY_KEYS.size() - 1):
++		var a: Array = SKY_KEYS[i]
++		var b: Array = SKY_KEYS[i + 1]
++		if elev <= float(b[0]):
++			var t := clampf(inverse_lerp(float(a[0]), float(b[0]), elev), 0.0, 1.0)
++			t = t * t * (3.0 - 2.0 * t)
++			return [(a[1] as Color).lerp(b[1], t), (a[2] as Color).lerp(b[2], t), (a[3] as Color).lerp(b[3], t)]
++	var last: Array = SKY_KEYS[SKY_KEYS.size() - 1]
++	return [last[1], last[2], last[3]]
++
++
++## Actualiza sol, cielo y luz según la hora (0-24) y el oscurecimiento del clima (0-1).
++func update(hour: float, dim: float) -> void:
++	if sun == null:
++		return
++	# El sol sale a las 6 y se pone a las 18; su altura máxima es ~62°.
++	var t := (hour - 6.0) / 12.0
++	var elev := sin(t * PI)                      # < 0 de noche
++	var sun_elev_deg := elev * 62.0
++	var az := -70.0 + t * 140.0
++	var keys := _sky_at(elev)
++	var gray := Color(0.5, 0.53, 0.58)
++	var top: Color = (keys[0] as Color).lerp(gray * clampf(elev + 0.35, 0.1, 1.0), dim * 0.8)
++	var horizon: Color = (keys[1] as Color).lerp(gray * clampf(elev + 0.45, 0.15, 1.0), dim * 0.8)
++	sky_mat.sky_top_color = top
++	sky_mat.sky_horizon_color = horizon
++	sky_mat.ground_horizon_color = horizon.darkened(0.25)
++	sky_mat.sun_curve = lerpf(0.05, 0.15, clampf(elev * 3.0, 0.0, 1.0))
++	var day := smoothstep(-0.06, 0.3, elev)
++	var moon := smoothstep(-0.02, -0.25, elev)
++	night_factor = 1.0 - smoothstep(-0.1, 0.12, elev)
++	if elev > -0.04:
++		# Sol: luz cálida a baja altura, blanca a mediodía.
++		sun.rotation = Vector3(-deg_to_rad(maxf(sun_elev_deg, 3.0)), deg_to_rad(az), 0)
++		sun.light_color = keys[2]
++		sun.light_energy = lerpf(0.0, 1.25, day) * (1.0 - dim * 0.55)
++		sky_mat.sky_energy_multiplier = 1.0
++	else:
++		# Luna: luz azulada y tenue, alta en el cielo.
++		sun.rotation = Vector3(-deg_to_rad(48.0), deg_to_rad(az + 180.0 + 30.0), 0)
++		sun.light_color = Color(0.62, 0.72, 1.0)
++		sun.light_energy = 0.2 * moon * (1.0 - dim * 0.7)
++	sun.shadow_opacity = lerpf(0.55, 1.0, day) if elev > -0.04 else 0.5
++	env.ambient_light_energy = lerpf(0.16, 0.72, day) * (1.0 - dim * 0.2)
++	env.ambient_light_color = Color(0.4, 0.5, 0.75)
++	env.ambient_light_sky_contribution = lerpf(0.35, 1.0, day)
++	env.tonemap_exposure = lerpf(1.12, 1.0, day)
++	env.fog_light_color = horizon.lerp(top, 0.35)
++	env.fog_light_energy = lerpf(0.6, 1.0, day)
++	var nf := clampf(night_factor + dim * 0.35, 0.0, 1.0)
++	if absf(nf - _last_night) > 0.01:
++		_last_night = nf
++		MeshLib.set_night(nf)
+diff --git a/scripts/world/street_lights.gd b/scripts/world/street_lights.gd
+new file mode 100644
+index 0000000..05f8473
+--- /dev/null
++++ b/scripts/world/street_lights.gd
+@@ -0,0 +1,180 @@
++class_name StreetLights
++extends Node3D
++## Faroles en la plaza y a lo largo de las carreteras (docs/GRAFICOS.md). Postes y faroles van en
++## MultiMesh (dos llamadas de dibujo para todo el pueblo); la pantalla del farol es emisiva y se
++## enciende de noche (MeshLib.glow_mat + MeshLib.set_night). En calidad Alta con Forward+ se
++## añaden luces reales (OmniLight3D) en los faroles más cercanos a la plaza.
++## Se reconstruye solo cuando cambian las carreteras.
++
++const SPACING := 18.0
++const MAX_REAL_LIGHTS := 10
++
++var world: Node3D
++var _sig := ""
++var _timer := 0.0
++var _posts: MultiMeshInstance3D
++var _heads: MultiMeshInstance3D
++var _lights: Node3D
++var _pools: MultiMeshInstance3D
++var _pool_mat: ShaderMaterial
++var _spots: Array[Vector3] = []
++var _real := false
++
++
++func _ready() -> void:
++	add_to_group(GraphicsSettings.GROUP)
++
++
++func setup(p_world: Node3D) -> void:
++	world = p_world
++	name = "StreetLights"
++	_posts = MultiMeshInstance3D.new()
++	_posts.material_override = MeshLib.mat(Color(0.16, 0.16, 0.17), 0.6)
++	add_child(_posts)
++	_heads = MultiMeshInstance3D.new()
++	_heads.material_override = MeshLib.glow_mat(Color(1.0, 0.78, 0.45), 0.05, 3.2)
++	_heads.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++	add_child(_heads)
++	_pool_mat = ShaderMaterial.new()
++	_pool_mat.shader = load("res://shaders/light_pool.gdshader")
++	_pools = MultiMeshInstance3D.new()
++	_pools.material_override = _pool_mat
++	_pools.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++	_pools.visible = false
++	add_child(_pools)
++	_lights = Node3D.new()
++	add_child(_lights)
++	_real = bool(GraphicsSettings.profile().get("lamp_lights", false))
++	rebuild()
++
++
++func _signature() -> String:
++	return "%d|%d|%d" % [int(GameState.logistics.get("road_version", 0)), RoadSim.roads(GameState).size(), TransitSim.polys(GameState).size()]
++
++
++static func _post_mesh() -> Mesh:
++	return MeshLib.cached("__lamp_post", func():
++		var b := MeshLib.Buf.new()
++		var id := Transform3D()
++		b.add(MeshLib.cylinder(0.14, 0.18, 0.3, 6), Transform3D(Basis(), Vector3(0, 0.15, 0)), Color.WHITE, 0)
++		b.add(MeshLib.cylinder(0.05, 0.07, 3.2, 6), Transform3D(Basis(), Vector3(0, 1.9, 0)), Color.WHITE, 0)
++		b.box(Vector3(0.25, 3.45, 0), Vector3(0.6, 0.06, 0.06), id, Color.WHITE, 0)
++		b.add(MeshLib.cylinder(0.02, 0.2, 0.18, 6), Transform3D(Basis(), Vector3(0.5, 3.52, 0)), Color.WHITE, 0)
++		var m := b.commit()
++		m.surface_set_material(0, null)
++		return m)
++
++
++static func _head_mesh() -> Mesh:
++	return MeshLib.cached("__lamp_head", func(): return MeshLib.cylinder(0.12, 0.09, 0.26, 6))
++
++
++func rebuild() -> void:
++	_sig = _signature()
++	_spots.clear()
++	var xs: Array[Transform3D] = []
++	var t: Terrain = world.terrain
++	# Plaza: seis faroles alrededor.
++	for k in range(6):
++		var a := TAU * k / 6.0 + 0.26
++		var p := Vector2(sin(a), cos(a)) * 8.6
++		xs.append(Transform3D(Basis(Vector3.UP, a + PI * 0.5), Vector3(p.x, t.height_at(p.x, p.y), p.y)))
++	# Carreteras trazadas por puntos.
++	for poly in TransitSim.polys(GameState):
++		var segs := TransitSim.poly_segments(GameState, int(poly["id"]))
++		if segs.is_empty():
++			continue
++		var pts := PackedVector2Array([RoadSim.seg_a(segs[0])])
++		for s in segs:
++			pts.append(RoadSim.seg_b(s))
++		var width := float(RoadSim.kind_def(str(segs[0]["kind"])).get("width", 2.4))
++		_along(t, pts, width, xs)
++	# Caminos automáticos (casa → plaza): un farol por tramo largo.
++	for r in RoadSim.roads(GameState):
++		if r.has("poly"):
++			continue
++		var pts2 := PackedVector2Array([RoadSim.seg_a(r), RoadSim.seg_b(r)])
++		_along(t, pts2, float(RoadSim.kind_def(str(r["kind"])).get("width", 2.2)), xs)
++	_posts.multimesh = _mm(_post_mesh(), xs, Transform3D())
++	_heads.multimesh = _mm(_head_mesh(), xs, Transform3D(Basis(), Vector3(0.5, 3.33, 0)))
++	var pool_x: Array[Transform3D] = []
++	for x in xs:
++		_spots.append(x * Vector3(0.5, 3.2, 0))
++		var g := x * Vector3(0.5, 0, 0)
++		pool_x.append(Transform3D(Basis(), Vector3(g.x, t.height_at(g.x, g.z) + 0.05, g.z)))
++	_pools.multimesh = _mm(MeshLib.cached("__pool", func():
++		var pm := PlaneMesh.new()
++		pm.size = Vector2(9.0, 9.0)
++		return pm), pool_x, Transform3D())
++	_rebuild_real()
++
++
++func _along(t: Terrain, pts: PackedVector2Array, width: float, xs: Array[Transform3D]) -> void:
++	var cum := TransitSim.poly_cum(pts)
++	var total := cum[cum.size() - 1] if cum.size() > 0 else 0.0
++	if total < 8.0:
++		return
++	var d := SPACING * 0.5
++	var side := 1.0
++	while d < total - 3.0:
++		var a := TransitSim.poly_point(pts, cum, maxf(0.0, d - 0.5))
++		var b := TransitSim.poly_point(pts, cum, minf(total, d + 0.5))
++		var dir := (b - a).normalized() if (b - a).length() > 0.001 else Vector2(1, 0)
++		var perp := Vector2(-dir.y, dir.x) * side
++		var p := TransitSim.poly_point(pts, cum, d) + perp * (width * 0.5 + 0.7)
++		var h := t.height_at(p.x, p.y)
++		if h > t.water_level + 0.3 and p.length() > 10.0:
++			# El brazo del farol apunta hacia la calzada.
++			var arm := -perp
++			xs.append(Transform3D(Basis(Vector3.UP, atan2(-arm.y, arm.x)), Vector3(p.x, h - 0.05, p.y)))
++		d += SPACING
++		side = -side
++
++
++static func _mm(mesh: Mesh, xs: Array[Transform3D], offset: Transform3D) -> MultiMesh:
++	var mm := MultiMesh.new()
++	mm.transform_format = MultiMesh.TRANSFORM_3D
++	mm.mesh = mesh
++	mm.instance_count = xs.size()
++	for i in range(xs.size()):
++		mm.set_instance_transform(i, xs[i] * offset)
++	return mm
++
++
++func _rebuild_real() -> void:
++	for ch in _lights.get_children():
++		ch.queue_free()
++	if not _real:
++		return
++	var spots := _spots.duplicate()
++	spots.sort_custom(func(a: Vector3, b: Vector3): return Vector2(a.x, a.z).length() < Vector2(b.x, b.z).length())
++	for i in range(mini(MAX_REAL_LIGHTS, spots.size())):
++		var l := OmniLight3D.new()
++		l.position = spots[i] - Vector3(0, 0.3, 0)
++		l.omni_range = 9.0
++		l.light_color = Color(1.0, 0.78, 0.5)
++		l.shadow_enabled = false
++		l.light_energy = 0.0
++		_lights.add_child(l)
++
++
++func apply_graphics(p: Dictionary) -> void:
++	var r := bool(p.get("lamp_lights", false))
++	if r != _real:
++		_real = r
++		_rebuild_real()
++
++
++func _process(delta: float) -> void:
++	_timer += delta
++	if _timer < 1.0:
++		return
++	_timer = 0.0
++	if _signature() != _sig:
++		rebuild()
++	var e := MeshLib.night() * 1.6
++	_pool_mat.set_shader_parameter("night", MeshLib.night())
++	_pools.visible = MeshLib.night() > 0.02
++	for l in _lights.get_children():
++		(l as OmniLight3D).light_energy = e
++		(l as OmniLight3D).visible = e > 0.02
+diff --git a/scripts/world/terrain_look.gd b/scripts/world/terrain_look.gd
+new file mode 100644
+index 0000000..ba04eb4
+--- /dev/null
++++ b/scripts/world/terrain_look.gd
+@@ -0,0 +1,20 @@
++class_name TerrainLook
++extends RefCounted
++## Gradación de color del terreno sin tocar terrain.gd (docs/GRAFICOS.md): cambia el shader de los
++## materiales ya creados por Terrain (pueblo y chunks) por copias con la gradación de
++## shaders/terrain_grade.gdshaderinc. Los parámetros (estación, nieve, niebla) se conservan porque
++## los uniformes se llaman igual. Enganche: una línea en world.gd después de terrain.start_country().
++## Si la Fase 9B cambia terrain.gdshader o terrain_chunk.gdshader, hay que llevar el cambio a las
++## copias *_plus (o quitar el enganche).
++
++
++static func apply(t: Terrain) -> void:
++	if t == null:
++		return
++	var town := load("res://shaders/terrain_plus.gdshader") as Shader
++	var chunk := load("res://shaders/terrain_chunk_plus.gdshader") as Shader
++	if t.material and town:
++		t.material.shader = town
++	for m in [t.chunk_material, t.fog_material, t.outside_material]:
++		if m != null and chunk:
++			(m as ShaderMaterial).shader = chunk
+diff --git a/scripts/world/tourism_visuals.gd b/scripts/world/tourism_visuals.gd
+index c2502aa..2180f0c 100644
+--- a/scripts/world/tourism_visuals.gd
++++ b/scripts/world/tourism_visuals.gd
+@@ -138,7 +138,8 @@ func _move(t: Dictionary, delta: float, mult: float) -> void:
+ 		node.rotation.y = atan2(dir.x, dir.z)
+ 		t["bob"] = float(t["bob"]) + delta * 10.0 * mult
+ 		var model: Node3D = node.get_child(0)
+-		model.position.y = absf(sin(float(t["bob"]))) * 0.06
++		model.position.y = absf(sin(float(t["bob"]))) * 0.035
++		MeshLib.animate_person(model.get_child(0), float(t["bob"]) * 0.6, 1.0)
+ 	else:
+ 		path.pop_front()
+ 		if path.is_empty():
+@@ -171,7 +172,7 @@ func _make_model() -> Node3D:
+ 	var person := MeshLib.make_person(cloth, skin, Color(0.2, 0.15, 0.1), _rng.randf() < 0.5)
+ 	root.add_child(person)
+ 	var hat_col := Color(0.85, 0.78, 0.55) if _rng.randf() < 0.6 else Color(0.25, 0.25, 0.3)
+-	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_brim", func(): return MeshLib.cylinder(0.24, 0.24, 0.03, 8)), MeshLib.mat(hat_col), Vector3(0, 1.08, 0)))
+-	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_hat", func(): return MeshLib.cylinder(0.12, 0.14, 0.14, 8)), MeshLib.mat(hat_col), Vector3(0, 1.15, 0)))
+-	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_pack", func(): return MeshLib.box(Vector3(0.24, 0.3, 0.12))), MeshLib.mat(Color(0.35, 0.3, 0.2)), Vector3(0, 0.6, -0.2)))
++	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_brim", func(): return MeshLib.cylinder(0.24, 0.24, 0.03, 8)), MeshLib.mat(hat_col), Vector3(0, 1.27, 0)))
++	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_hat", func(): return MeshLib.cylinder(0.12, 0.14, 0.14, 8)), MeshLib.mat(hat_col), Vector3(0, 1.34, 0)))
++	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_pack", func(): return MeshLib.box(Vector3(0.24, 0.3, 0.12))), MeshLib.mat(Color(0.35, 0.3, 0.2)), Vector3(0, 0.8, -0.16)))
+ 	return root
+diff --git a/scripts/world/trade_visuals.gd b/scripts/world/trade_visuals.gd
+index dededd5..dd1ec8e 100644
+--- a/scripts/world/trade_visuals.gd
++++ b/scripts/world/trade_visuals.gd
+@@ -65,27 +65,26 @@ func _rebuild() -> void:
+ 		var width := 2.6
+ 		var length := TransitSim.poly_length(pts)
+ 		if pts.size() >= 2 and (level > 0 or float(l["progress"]) > 0.0):
+-			var color := Color(0.45, 0.34, 0.22)
++			var kind := "barro"
++			var color := Color(-1, 0, 0)
+ 			if level <= 0:
+-				# Camino en construcción: se abre paso desde el pueblo.
++				# Camino en construcción: se abre paso desde el pueblo (tierra más clara).
+ 				length *= float(l["progress"])
+-				color = Color(0.55, 0.45, 0.3)
++				color = Color(0.58, 0.47, 0.32)
+ 				width = 2.0
+ 			elif level == 2:
+-				color = Color(0.55, 0.53, 0.5)
++				kind = "empedrado"
+ 				width = 3.2
+ 			elif level >= 3:
+-				color = Color(0.23, 0.23, 0.25)
++				kind = "cemento"
+ 				width = 4.4
+-			var node := MeshLib.mesh_node(TransitVisuals.strip_mesh(terrain, pts, 0.0, width, 0.07, length), MeshLib.mat(color))
++			var node := MeshLib.mesh_node(RoadMesh.strip(terrain, pts, 0.0, width, 0.07, length), RoadMesh.material(kind, color))
+ 			node.name = "CaminoExterior"
+ 			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ 			_root.add_child(node)
+ 			if road_node == null:
+ 				road_node = node
+-			if level >= 3:
+-				node.add_child(MeshLib.mesh_node(TransitVisuals.strip_mesh(terrain, pts, 0.0, 0.18, 0.09, length), MeshLib.mat(Color(0.95, 0.85, 0.35))))
+-			node.add_child(TransitVisuals.bridge_pillars(terrain, pts))
++			node.add_child(RoadMesh.bridge(terrain, pts, width, length))
+ 			_clear_trees(str(l["tid"]) + "r", pts, length, width * 0.5 + 1.8)
+ 		if bool(l["rail"]):
+ 			var rp: PackedVector2Array = l["rail_points"]
+diff --git a/scripts/world/transit_visuals.gd b/scripts/world/transit_visuals.gd
+index 1f2d491..2d4c416 100644
+--- a/scripts/world/transit_visuals.gd
++++ b/scripts/world/transit_visuals.gd
+@@ -75,111 +75,19 @@ func _h(x: float, z: float) -> float:
+ # --- Mallas ------------------------------------------------------------------------------------
+ 
+ ## Franja continua a lo largo de una polilínea (desplazada `offset` hacia un lado).
++## Implementación en RoadMesh (sigue el relieve, faldones, tapas en los extremos y UV para el shader).
+ static func strip_mesh(t: Terrain, pts: PackedVector2Array, offset: float, width: float, lift: float, max_len := -1.0) -> ArrayMesh:
+-	var st := SurfaceTool.new()
+-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+-	var cum := TransitSim.poly_cum(pts)
+-	var total := cum[cum.size() - 1] if cum.size() > 0 else 0.0
+-	if max_len >= 0.0:
+-		total = minf(total, max_len)
+-	var step := 1.5
+-	var n := maxi(1, int(ceil(total / step)))
+-	var prev_l := Vector3.ZERO
+-	var prev_r := Vector3.ZERO
+-	for i in range(n + 1):
+-		var d := minf(total, i * step)
+-		var a := TransitSim.poly_point(pts, cum, maxf(0.0, d - 0.4))
+-		var b := TransitSim.poly_point(pts, cum, minf(total, d + 0.4))
+-		var dir := b - a
+-		if dir.length() < 0.001:
+-			dir = Vector2(1, 0)
+-		dir = dir.normalized()
+-		var perp := Vector2(-dir.y, dir.x)
+-		var c := TransitSim.poly_point(pts, cum, d) + perp * offset
+-		var l2 := c + perp * width * 0.5
+-		var r2 := c - perp * width * 0.5
+-		var hc := ground(t, c.x, c.y)
+-		var l := Vector3(l2.x, maxf(ground(t, l2.x, l2.y), hc - 0.3) + lift, l2.y)
+-		var r := Vector3(r2.x, maxf(ground(t, r2.x, r2.y), hc - 0.3) + lift, r2.y)
+-		if i > 0:
+-			for v in [prev_l, prev_r, l, prev_r, r, l]:
+-				st.set_normal(Vector3.UP)
+-				st.add_vertex(v)
+-		prev_l = l
+-		prev_r = r
+-	st.generate_normals()
+-	return st.commit()
+-
+-
+-## Vía férrea: balasto, durmientes y dos rieles de acero.
++	return RoadMesh.strip(t, pts, offset, width, lift, max_len)
++
++
++## Vía férrea: balasto, durmientes y dos rieles de acero (RoadMesh.rail).
+ static func rail_node(t: Terrain, pts: PackedVector2Array, offset := 0.0, max_len := -1.0, ghost: Material = null) -> Node3D:
+-	var root := Node3D.new()
+-	root.name = "ViaFerrea"
+-	var ballast := MeshLib.mesh_node(strip_mesh(t, pts, offset, 2.6, 0.06, max_len), ghost if ghost else MeshLib.mat(Color(0.46, 0.42, 0.38)))
+-	ballast.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+-	root.add_child(ballast)
+-	for off in [-0.55, 0.55]:
+-		root.add_child(MeshLib.mesh_node(strip_mesh(t, pts, offset + off, 0.12, 0.26, max_len), ghost if ghost else MeshLib.mat(Color(0.62, 0.62, 0.66), 0.35)))
+-	# Durmientes (MultiMesh) cada 0,9 m.
+-	var cum := TransitSim.poly_cum(pts)
+-	var total := cum[cum.size() - 1] if cum.size() > 0 else 0.0
+-	if max_len >= 0.0:
+-		total = minf(total, max_len)
+-	var xf: Array[Transform3D] = []
+-	var d := 0.3
+-	while d < total:
+-		var a := TransitSim.poly_point(pts, cum, maxf(0.0, d - 0.4))
+-		var b := TransitSim.poly_point(pts, cum, minf(total, d + 0.4))
+-		var dir := (b - a).normalized() if (b - a).length() > 0.001 else Vector2(1, 0)
+-		var perp := Vector2(-dir.y, dir.x)
+-		var c := TransitSim.poly_point(pts, cum, d) + perp * offset
+-		var basis := Basis(Vector3.UP, atan2(dir.x, dir.y))
+-		xf.append(Transform3D(basis, Vector3(c.x, ground(t, c.x, c.y) + 0.14, c.y)))
+-		d += 0.9
+-	if not xf.is_empty():
+-		var mm := MultiMesh.new()
+-		mm.transform_format = MultiMesh.TRANSFORM_3D
+-		mm.mesh = MeshLib.cached("rail_tie", func(): return MeshLib.box(Vector3(1.9, 0.12, 0.3)))
+-		mm.instance_count = xf.size()
+-		for i in range(xf.size()):
+-			mm.set_instance_transform(i, xf[i])
+-		var mmi := MultiMeshInstance3D.new()
+-		mmi.multimesh = mm
+-		mmi.material_override = ghost if ghost else MeshLib.mat(Color(0.33, 0.22, 0.14))
+-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+-		root.add_child(mmi)
+-	return root
++	return RoadMesh.rail(t, pts, offset, max_len, ghost)
+ 
+ 
+-## Pilares del puente donde la polilínea cruza agua.
+-static func bridge_pillars(t: Terrain, pts: PackedVector2Array) -> Node3D:
+-	var root := Node3D.new()
+-	if t == null:
+-		return root
+-	var cum := TransitSim.poly_cum(pts)
+-	var total := cum[cum.size() - 1] if cum.size() > 0 else 0.0
+-	var d := 2.0
+-	var mat := MeshLib.mat(Color(0.5, 0.48, 0.45))
+-	var rail_mat := MeshLib.mat(Color(0.35, 0.25, 0.16))
+-	while d < total:
+-		var p := TransitSim.poly_point(pts, cum, d)
+-		if t.height_at(p.x, p.y) < t.water_level + 0.2:
+-			var top := t.water_level + 1.0
+-			var bottom := t.height_at(p.x, p.y)
+-			var hgt := maxf(0.5, top - bottom)
+-			var pil := MeshLib.mesh_node(MeshLib.cached("bridge_pillar", func(): return MeshLib.box(Vector3(0.6, 1.0, 0.6))), mat, Vector3(p.x, bottom + hgt * 0.5, p.y))
+-			pil.scale = Vector3(1, hgt, 1)
+-			root.add_child(pil)
+-			var a := TransitSim.poly_point(pts, cum, maxf(0.0, d - 0.5))
+-			var b := TransitSim.poly_point(pts, cum, minf(total, d + 0.5))
+-			var dir := (b - a).normalized() if (b - a).length() > 0.001 else Vector2(1, 0)
+-			var perp := Vector2(-dir.y, dir.x)
+-			for s in [-1.0, 1.0]:
+-				var q: Vector2 = p + perp * s * 1.7
+-				var post := MeshLib.mesh_node(MeshLib.cached("bridge_post", func(): return MeshLib.box(Vector3(0.12, 0.8, 0.12))), rail_mat, Vector3(q.x, top + 0.45, q.y))
+-				root.add_child(post)
+-		d += 4.0
+-	return root
++## Puente (vigas, barandas y pilares) donde la polilínea cruza agua.
++static func bridge_pillars(t: Terrain, pts: PackedVector2Array, width := 3.0) -> Node3D:
++	return RoadMesh.bridge(t, pts, width)
+ 
+ 
+ # --- Carreteras por puntos ---------------------------------------------------------------------
+@@ -228,20 +136,7 @@ func _rebuild_roads() -> void:
+ 
+ func _road_strip(t: Terrain, pts: PackedVector2Array, kind: String, ghost: Material = null) -> Node3D:
+ 	var kd := RoadSim.kind_def(kind)
+-	var width := float(kd.get("width", 2.2))
+-	var col := MeshLib.arr_color(kd.get("color"), Color(0.5, 0.4, 0.3))
+-	var root := Node3D.new()
+-	var body := MeshLib.mesh_node(strip_mesh(t, pts, 0.0, width, 0.08), ghost if ghost else MeshLib.mat(col))
+-	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+-	root.add_child(body)
+-	if ghost == null:
+-		# Bordes más oscuros y línea central en la carretera de cemento.
+-		for s in [-1.0, 1.0]:
+-			root.add_child(MeshLib.mesh_node(strip_mesh(t, pts, s * (width * 0.5 - 0.1), 0.22, 0.1), MeshLib.mat(col.darkened(0.25))))
+-		if kind == "cemento":
+-			root.add_child(MeshLib.mesh_node(strip_mesh(t, pts, 0.0, 0.14, 0.11), MeshLib.mat(Color(0.95, 0.85, 0.35))))
+-		root.add_child(bridge_pillars(t, pts))
+-	return root
++	return RoadMesh.road_node(t, pts, kind, float(kd.get("width", 2.2)), ghost)
+ 
+ 
+ # --- Paraderos, buses y autos ------------------------------------------------------------------
+@@ -260,6 +155,7 @@ func _rebuild_stops() -> void:
+ 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ 		lab.font_size = 36
+ 		lab.pixel_size = 0.02
++		MeshLib.style_label(lab, 160.0)
+ 		lab.outline_size = 8
+ 		lab.modulate = Color(1.0, 0.85, 0.45)
+ 		lab.position = Vector3(0, 3.6, 0)
+@@ -285,9 +181,14 @@ static func bus_model() -> Node3D:
+ 	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_windows", func(): return MeshLib.box(Vector3(1.64, 0.55, 3.9))), MeshLib.mat(Color(0.2, 0.3, 0.4), 0.3), Vector3(0, 1.45, -0.2)))
+ 	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_front", func(): return MeshLib.box(Vector3(1.4, 0.6, 0.05))), MeshLib.mat(Color(0.2, 0.3, 0.4), 0.3), Vector3(0, 1.45, 2.31)))
+ 	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_roof", func(): return MeshLib.box(Vector3(1.5, 0.12, 4.4))), MeshLib.mat(Color(0.95, 0.95, 0.92)), Vector3(0, 1.96, 0)))
++	# Faros (se encienden de noche), parachoques y franja lateral.
++	for x in [-0.55, 0.55]:
++		root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_light", func(): return MeshLib.box(Vector3(0.28, 0.16, 0.05))), MeshLib.glow_mat(Color(1.0, 0.92, 0.7), 0.1, 2.5), Vector3(x, 0.72, 2.31)))
++	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_bumper", func(): return MeshLib.box(Vector3(1.64, 0.18, 4.72))), MeshLib.mat(Color(0.18, 0.18, 0.2), 0.5), Vector3(0, 0.5, 0)))
++	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_stripe", func(): return MeshLib.box(Vector3(1.63, 0.1, 4.0))), MeshLib.mat(Color(0.95, 0.95, 0.92)), Vector3(0, 1.08, 0)))
+ 	for z in [1.5, -1.5]:
+ 		for x in [-0.8, 0.8]:
+-			var w := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.cylinder(0.35, 0.35, 0.2, 8)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
++			var w := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
+ 			w.rotation.z = PI * 0.5
+ 			root.add_child(w)
+ 	return root
+diff --git a/scripts/world/utilities_visuals.gd b/scripts/world/utilities_visuals.gd
+index 7b57d30..0023b26 100644
+--- a/scripts/world/utilities_visuals.gd
++++ b/scripts/world/utilities_visuals.gd
+@@ -239,6 +239,7 @@ func _build_layer(lay: String) -> void:
+ 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ 		lab.font_size = 44
+ 		lab.pixel_size = 0.02
++		MeshLib.style_label(lab, 200.0)
+ 		lab.outline_size = 8
+ 		var tie := lay == GridSim.POWER and bool(comp["info"].get(n, {}).get("tie", false))
+ 		lab.text = "Red %d%s" % [n, " · entrada regional" if tie else ""]
+diff --git a/scripts/world/vegetation.gd b/scripts/world/vegetation.gd
+new file mode 100644
+index 0000000..23bbbf7
+--- /dev/null
++++ b/scripts/world/vegetation.gd
+@@ -0,0 +1,331 @@
++class_name Vegetation
++extends Node3D
++## Vegetación del pueblo (docs/GRAFICOS.md): reemplaza los conos de Terrain.scatter_nature por
++## árboles low-poly con variantes por clima y bioma (coníferas, frondosos, palmeras, arbustos y
++## cactus), en MultiMesh por celdas de 100 m (se recortan fuera de cámara y tienen distancia de
++## dibujo). Balanceo con el viento en shaders/foliage.gdshader. Además dispersa pasto y flores
++## cerca de la cámara (calidad Media y Alta).
++##
++## No modifica terrain.gd: lee sus posiciones de árboles (tree_positions, _tree_xforms), oculta sus
++## MultiMesh de conos del pueblo y registra un "ocultador" en terrain._tree_mms para que
++## Terrain.clear_trees() también tale estos árboles al construir o trazar caminos.
++
++const CELL := 100.0
++const V_CONIFER := 0
++const V_BROAD := 1
++const V_PALM := 2
++const V_BUSH := 3
++const V_CACTUS := 4
++const GRASS_COUNT := 1400
++
++var terrain: Terrain
++var world: Node3D
++var _root: Node3D
++var _map := {}                # índice del árbol -> [MultiMesh, índice local]
++var _grass: MultiMeshInstance3D
++var _grass_center := Vector2(INF, INF)
++var _grass_on := true
++var _grass_range := 70.0
++var _block_sig := ""
++var _blocked := {}            # celdas de 3 m ocupadas por caminos o edificios
++var _timer := 0.0
++
++
++class TreeHider:
++	extends RefCounted
++	var owner_ref: WeakRef
++
++	func set_instance_transform(i: int, xf: Transform3D) -> void:
++		var v: Vegetation = owner_ref.get_ref()
++		if v != null and v._map.has(i):
++			var e: Array = v._map[i]
++			(e[0] as MultiMesh).set_instance_transform(int(e[1]), xf)
++
++
++func _ready() -> void:
++	add_to_group(GraphicsSettings.GROUP)
++
++
++func setup(p_world: Node3D, t: Terrain) -> void:
++	world = p_world
++	terrain = t
++	name = "Vegetation"
++	rebuild()
++	apply_graphics(GraphicsSettings.profile())
++
++
++# --- Modelos --------------------------------------------------------------------------------
++
++static func _mesh(v: int) -> Mesh:
++	return MeshLib.cached("__veg_%d" % v, func(): return _build_mesh(v))
++
++
++static func _build_mesh(v: int) -> Mesh:
++	var b := MeshLib.Buf.new()
++	var trunk := Color(0.42, 0.3, 0.2)
++	var id := Transform3D()
++	match v:
++		V_CONIFER:
++			var g := Color(0.16, 0.36, 0.22)
++			b.add(MeshLib.cylinder(0.1, 0.17, 1.2, 5), Transform3D(Basis(), Vector3(0, 0.6, 0)), trunk, 0)
++			b.add(MeshLib.cylinder(0.0, 1.35, 1.7, 7), Transform3D(Basis(), Vector3(0, 1.75, 0)), g, 0)
++			b.add(MeshLib.cylinder(0.0, 1.05, 1.5, 7), Transform3D(Basis(Vector3.UP, 0.4), Vector3(0, 2.6, 0)), g.lightened(0.05), 0)
++			b.add(MeshLib.cylinder(0.0, 0.7, 1.3, 7), Transform3D(Basis(Vector3.UP, 0.8), Vector3(0, 3.4, 0)), g.lightened(0.1), 0)
++		V_BROAD:
++			var g := Color(0.3, 0.5, 0.22)
++			b.add(MeshLib.cylinder(0.13, 0.2, 1.8, 6), Transform3D(Basis(), Vector3(0, 0.9, 0)), trunk, 0)
++			b.add(MeshLib.cylinder(0.05, 0.08, 0.9, 5), Transform3D(Basis(Vector3.BACK, -0.7), Vector3(0.3, 1.9, 0)), trunk, 0)
++			b.add(MeshLib.sphere(1.0, 7, 5), Transform3D(Basis.from_scale(Vector3(1.15, 0.9, 1.1)), Vector3(0, 2.6, 0)), g, 0)
++			b.add(MeshLib.sphere(0.75, 6, 4), Transform3D(Basis(), Vector3(0.75, 2.2, 0.3)), g.lightened(0.07), 0)
++			b.add(MeshLib.sphere(0.7, 6, 4), Transform3D(Basis(), Vector3(-0.6, 2.3, -0.4)), g.darkened(0.08), 0)
++		V_PALM:
++			var g := Color(0.32, 0.52, 0.2)
++			var p := Vector3.ZERO
++			for k in range(5):
++				var seg_b := Basis(Vector3.BACK, -0.06 * k)
++				b.add(MeshLib.cylinder(0.11 - k * 0.01, 0.14 - k * 0.01, 0.85, 6), Transform3D(seg_b, p + Vector3(0, 0.42, 0)), trunk.lightened(0.1 if k % 2 == 0 else 0.0), 0)
++				p += seg_b * Vector3(0, 0.82, 0)
++			for k in range(7):
++				var yaw := TAU * k / 7.0
++				var leaf := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, 0.45)
++				b.box(Vector3(0, 0, 0.9), Vector3(0.45, 0.05, 1.8), Transform3D(leaf, p + Vector3(0, 0.05, 0)), g if k % 2 == 0 else g.darkened(0.1), 0)
++			b.add(MeshLib.sphere(0.16, 5, 3), Transform3D(Basis(), p), Color(0.4, 0.3, 0.15), 0)
++		V_BUSH:
++			var g := Color(0.26, 0.44, 0.2)
++			b.add(MeshLib.sphere(0.6, 6, 4), Transform3D(Basis.from_scale(Vector3(1.2, 0.8, 1.1)), Vector3(0, 0.4, 0)), g, 0)
++			b.add(MeshLib.sphere(0.45, 6, 4), Transform3D(Basis(), Vector3(0.55, 0.32, 0.2)), g.lightened(0.08), 0)
++			b.add(MeshLib.sphere(0.4, 6, 4), Transform3D(Basis(), Vector3(-0.4, 0.3, -0.35)), g.darkened(0.06), 0)
++		V_CACTUS:
++			var g := Color(0.3, 0.5, 0.3)
++			b.add(MeshLib.cylinder(0.2, 0.24, 2.4, 7), Transform3D(Basis(), Vector3(0, 1.2, 0)), g, 0)
++			b.add(MeshLib.sphere(0.2, 7, 3), Transform3D(Basis(), Vector3(0, 2.4, 0)), g, 0)
++			for s: float in [-1.0, 1.0]:
++				b.add(MeshLib.cylinder(0.12, 0.12, 0.5, 6), Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(s * 0.4, 1.1 + s * 0.2, 0)), g, 0)
++				b.add(MeshLib.cylinder(0.13, 0.13, 0.9, 6), Transform3D(Basis(), Vector3(s * 0.62, 1.5 + s * 0.2, 0)), g.lightened(0.05), 0)
++	var m := b.commit()
++	m.surface_set_material(0, null)
++	return m
++
++
++static func _grass_mesh() -> Mesh:
++	return MeshLib.cached("__grass", func():
++		var b := MeshLib.Buf.new()
++		var g := Color(0.34, 0.56, 0.24)
++		for k in range(4):
++			var yaw := TAU * k / 4.0 + 0.3
++			b.add(MeshLib.cylinder(0.0, 0.07, 0.45, 3), Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, 0.25), Vector3(sin(yaw) * 0.08, 0.2, cos(yaw) * 0.08)), g.lightened(k * 0.04), 0)
++		var m := b.commit()
++		m.surface_set_material(0, null)
++		return m)
++
++
++static func _flower_mesh() -> Mesh:
++	return MeshLib.cached("__flower", func():
++		var b := MeshLib.Buf.new()
++		b.add(MeshLib.cylinder(0.015, 0.015, 0.35, 3), Transform3D(Basis(), Vector3(0, 0.17, 0)), Color(0.3, 0.5, 0.2), 0)
++		b.add(MeshLib.sphere(0.07, 5, 3), Transform3D(Basis(), Vector3(0, 0.37, 0)), Color(1, 1, 1), 0)
++		var m := b.commit()
++		m.surface_set_material(0, null)
++		return m)
++
++
++# --- Árboles ---------------------------------------------------------------------------------
++
++func _variant_for(p: Vector2, h: float, r: float) -> int:
++	var gen: CountryGen = terrain.gen
++	var temp := 0.0
++	var biome := CountryGen.B_LLANURA
++	if gen != null:
++		temp = gen.climate(p.x, p.y, h).x
++		biome = gen.biome_id(p.x, p.y, h)
++	if biome == CountryGen.B_DESIERTO:
++		return V_CACTUS if r < 0.6 else V_BUSH
++	if h > 18.0 or temp < -0.2 or biome == CountryGen.B_MONTANA or biome == CountryGen.B_NEVADO:
++		return V_CONIFER if r < 0.82 else V_BUSH
++	if biome == CountryGen.B_SELVA or (temp > 0.55 and h < terrain.water_level + 4.0):
++		return V_PALM if r < 0.35 else (V_BROAD if r < 0.85 else V_BUSH)
++	if h < terrain.water_level + 2.0:
++		return V_BROAD if r < 0.6 else V_BUSH
++	return V_BROAD if r < 0.45 else (V_CONIFER if r < 0.8 else V_BUSH)
++
++
++func rebuild() -> void:
++	if _root:
++		_root.queue_free()
++	_root = Node3D.new()
++	_root.name = "Trees"
++	add_child(_root)
++	_map.clear()
++	if terrain == null or terrain.nature_root == null:
++		return
++	var xforms: Array = terrain._tree_xforms
++	var positions: Array = terrain.tree_positions
++	# Oculta los conos del pueblo (tronco y copa) y registra el ocultador para clear_trees().
++	var kids := terrain.nature_root.get_children()
++	for k in range(mini(2, kids.size())):
++		(kids[k] as Node3D).visible = false
++	var hider := TreeHider.new()
++	hider.owner_ref = weakref(self)
++	terrain._tree_mms.append([hider, Transform3D()])
++	# Agrupa por celda y variante.
++	var groups := {}
++	var rng := RandomNumberGenerator.new()
++	rng.seed = int(GameState.settings.get("seed", 1)) + 7
++	for i in range(mini(xforms.size(), positions.size())):
++		var xf: Transform3D = xforms[i]
++		var p: Vector2 = positions[i]
++		var r := rng.randf()
++		var tint_v := rng.randf_range(0.82, 1.15)
++		var v := _variant_for(p, xf.origin.y, r)
++		var cell := Vector2i(floori(p.x / CELL), floori(p.y / CELL))
++		var key := Vector3i(cell.x, cell.y, v)
++		if not groups.has(key):
++			groups[key] = []
++		var dim := 1.0 if terrain.is_unlocked(p.x, p.y) else 0.68
++		var s := xf.basis.get_scale()
++		var basis := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(s.x, s.y, s.x) * (0.8 if v == V_BUSH else 1.0))
++		var tint := Color(tint_v * dim, tint_v * dim * rng.randf_range(0.95, 1.05), tint_v * dim * 0.95)
++		(groups[key] as Array).append([i, Transform3D(basis, xf.origin - Vector3(0, 0.05, 0)), tint])
++	var p := GraphicsSettings.profile()
++	for key in groups:
++		var list: Array = groups[key]
++		var mm := MultiMesh.new()
++		mm.transform_format = MultiMesh.TRANSFORM_3D
++		mm.use_colors = true
++		mm.mesh = _mesh(key.z)
++		mm.instance_count = list.size()
++		for j in range(list.size()):
++			mm.set_instance_transform(j, list[j][1])
++			mm.set_instance_color(j, list[j][2])
++			_map[int(list[j][0])] = [mm, j]
++		var mmi := MultiMeshInstance3D.new()
++		mmi.multimesh = mm
++		mmi.material_override = MeshLib.vertex_color_mat()
++		mmi.add_to_group("gfx_tree")
++		mmi.visibility_range_end = float(p["tree_range"])
++		mmi.visibility_range_end_margin = float(p["tree_range"]) * 0.1
++		mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
++		_root.add_child(mmi)
++	# Árboles ya talados antes de esta reconstrucción.
++	var hidden := Transform3D(Basis().scaled(Vector3.ZERO), Vector3.ZERO)
++	var trunk_mm: MultiMesh = (kids[0] as MultiMeshInstance3D).multimesh if kids.size() > 0 and kids[0] is MultiMeshInstance3D else null
++	if trunk_mm:
++		for i in range(mini(trunk_mm.instance_count, positions.size())):
++			if trunk_mm.get_instance_transform(i).basis.get_scale().length() < 0.001 and _map.has(i):
++				(_map[i][0] as MultiMesh).set_instance_transform(int(_map[i][1]), hidden)
++	_grass_center = Vector2(INF, INF)
++
++
++func apply_graphics(p: Dictionary) -> void:
++	_grass_on = bool(p.get("grass", true))
++	_grass_range = float(p.get("grass_range", 70.0))
++	_grass_center = Vector2(INF, INF)
++	if _grass:
++		_grass.visible = _grass_on
++
++
++# --- Pasto y flores cerca de la cámara ---------------------------------------------------------
++
++func _block_signature() -> String:
++	return "%d|%d|%d" % [int(GameState.logistics.get("road_version", 0)), RoadSim.roads(GameState).size(), GameState.buildings.size()]
++
++
++func _rebuild_blocked() -> void:
++	_block_sig = _block_signature()
++	_blocked.clear()
++	for r in RoadSim.roads(GameState):
++		var a := RoadSim.seg_a(r)
++		var b := RoadSim.seg_b(r)
++		var n := maxi(1, int(a.distance_to(b) / 1.5))
++		for k in range(n + 1):
++			var q := a.lerp(b, float(k) / n)
++			for dx: int in [-1, 0, 1]:
++				for dz: int in [-1, 0, 1]:
++					_blocked[Vector2i(floori(q.x / 3.0) + dx, floori(q.y / 3.0) + dz)] = true
++	for bld in GameState.buildings:
++		var fp := GameState.footprint_of(bld) * 0.6 + 1.0
++		var c := Vector2(float(bld["x"]), float(bld["z"]))
++		for gx in range(floori((c.x - fp) / 3.0), floori((c.x + fp) / 3.0) + 1):
++			for gz in range(floori((c.y - fp) / 3.0), floori((c.y + fp) / 3.0) + 1):
++				_blocked[Vector2i(gx, gz)] = true
++
++
++func _process(delta: float) -> void:
++	if terrain == null or world == null or not _grass_on:
++		return
++	var rig: CameraRig = world.get("camera_rig")
++	if rig == null or rig.camera == null or not rig.camera.current:
++		return
++	_timer += delta
++	if _timer < 0.25:
++		return
++	_timer = 0.0
++	var cp := Vector2(rig.position.x, rig.position.z)
++	var far := rig.distance > 160.0
++	if _grass:
++		_grass.visible = not far
++	if far:
++		return
++	if _block_signature() != _block_sig:
++		_rebuild_blocked()
++		_grass_center = Vector2(INF, INF)
++	if cp.distance_to(_grass_center) < _grass_range * 0.3:
++		return
++	_grass_center = cp
++	_scatter_grass(cp)
++
++
++func _scatter_grass(c: Vector2) -> void:
++	if _grass == null:
++		_grass = MultiMeshInstance3D.new()
++		_grass.name = "Grass"
++		_grass.material_override = MeshLib.vertex_color_mat()
++		_grass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++		add_child(_grass)
++		var fl := MultiMeshInstance3D.new()
++		fl.name = "Flowers"
++		fl.material_override = MeshLib.vertex_color_mat()
++		fl.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++		_grass.add_child(fl)
++	var rng := RandomNumberGenerator.new()
++	rng.seed = int(c.x / 10.0) * 7919 + int(c.y / 10.0)
++	var gx: Array[Transform3D] = []
++	var gc: Array[Color] = []
++	var fx: Array[Transform3D] = []
++	var fc: Array[Color] = []
++	var flower_cols := [Color(0.95, 0.85, 0.3), Color(0.95, 0.95, 0.95), Color(0.85, 0.4, 0.55), Color(0.6, 0.5, 0.9)]
++	var r := _grass_range
++	for k in range(GRASS_COUNT):
++		var q := c + Vector2(rng.randf_range(-r, r), rng.randf_range(-r, r))
++		if q.distance_to(Vector2.ZERO) < 9.0 or _blocked.has(Vector2i(floori(q.x / 3.0), floori(q.y / 3.0))):
++			continue
++		var h := terrain.height_at(q.x, q.y)
++		if h < terrain.water_level + 0.8 or h > 22.0:
++			continue
++		var slope := absf(terrain.height_at(q.x + 1.0, q.y) - h) + absf(terrain.height_at(q.x, q.y + 1.0) - h)
++		if slope > 0.8:
++			continue
++		var s := rng.randf_range(0.7, 1.4)
++		var xf := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(s, s * rng.randf_range(0.8, 1.3), s)), Vector3(q.x, h - 0.03, q.y))
++		if rng.randf() < 0.1:
++			fx.append(xf)
++			fc.append(flower_cols[rng.randi() % flower_cols.size()])
++		else:
++			gx.append(xf)
++			var g := rng.randf_range(0.85, 1.15)
++			gc.append(Color(g, g, g * 0.9))
++	_grass.multimesh = _fill(_grass_mesh(), gx, gc)
++	(_grass.get_child(0) as MultiMeshInstance3D).multimesh = _fill(_flower_mesh(), fx, fc)
++	_grass.visible = _grass_on
++
++
++static func _fill(mesh: Mesh, xs: Array[Transform3D], cs: Array[Color]) -> MultiMesh:
++	var mm := MultiMesh.new()
++	mm.transform_format = MultiMesh.TRANSFORM_3D
++	mm.use_colors = true
++	mm.mesh = mesh
++	mm.instance_count = xs.size()
++	for i in range(xs.size()):
++		mm.set_instance_transform(i, xs[i])
++		mm.set_instance_color(i, cs[i])
++	return mm
+diff --git a/scripts/world/water_look.gd b/scripts/world/water_look.gd
+new file mode 100644
+index 0000000..cd56c15
+--- /dev/null
++++ b/scripts/world/water_look.gd
+@@ -0,0 +1,26 @@
++class_name WaterLook
++extends RefCounted
++## Material del agua (shaders/water.gdshader). Se engancha desde world.gd con una línea después de
++## terrain.make_water(): no modifica terrain.gd, solo reemplaza el material del plano de agua.
++## Hornea un mapa de alturas del terreno alrededor del pueblo para el color por profundidad y la
++## espuma de la orilla (el resto del país usa una profundidad media).
++
++const RES := 192
++const EXTENT := 480.0
++
++
++static func apply(t: Terrain) -> void:
++	if t == null or t.water == null:
++		return
++	var img := Image.create(RES, RES, false, Image.FORMAT_RF)
++	var x0 := -EXTENT * 0.5
++	var step := EXTENT / RES
++	for j in range(RES):
++		for i in range(RES):
++			img.set_pixel(i, j, Color(t.height_at(x0 + (i + 0.5) * step, x0 + (j + 0.5) * step), 0, 0))
++	var m := ShaderMaterial.new()
++	m.shader = load("res://shaders/water.gdshader")
++	m.set_shader_parameter("height_tex", ImageTexture.create_from_image(img))
++	m.set_shader_parameter("height_rect", Vector4(x0, x0, EXTENT, EXTENT))
++	m.set_shader_parameter("water_level", t.water_level)
++	t.water.material_override = m
+diff --git a/scripts/world/world.gd b/scripts/world/world.gd
+index 4f9a508..25c485d 100644
+--- a/scripts/world/world.gd
++++ b/scripts/world/world.gd
+@@ -12,6 +12,9 @@ var interior: InteriorView
+ var sun: DirectionalLight3D
+ var env: Environment
+ var sky_mat: ProceduralSkyMaterial
++var sky_rig: SkyRig
++var street_lights: StreetLights
++var vegetation: Vegetation
+ var weather_fx: WeatherFX
+ var minimap: Minimap
+ var agents := {}            # id -> CitizenAgent
+@@ -50,12 +53,19 @@ func _ready() -> void:
+ 	NpcBusinessSim.set_terrain_check(terrain.footprint_ok)   # Libre mercado: NPC y gobierno no construyen en agua.
+ 	terrain.build_mesh()
+ 	terrain.make_water()
++	WaterLook.apply(terrain)   # Agua con shader (docs/GRAFICOS.md).
+ 	terrain.scatter_nature(seed_value)
+ 	terrain.start_country()   # Fase 9A: país por chunks con streaming, niebla y municipios.
++	TerrainLook.apply(terrain)   # Gradación de color del terreno (docs/GRAFICOS.md).
+ 	terrain.set_season(GameState.season)
+ 
++	vegetation = Vegetation.new()
++	add_child(vegetation)
++	vegetation.setup(self, terrain)
++
+ 	var plaza_y := terrain.height_at(0, 0)
+-	var square := MeshLib.mesh_node(MeshLib.cylinder(8.0, 8.0, 0.12, 12), MeshLib.mat(Color(0.6, 0.52, 0.38)), Vector3(0, plaza_y + 0.02, 0))
++	var square := MeshLib.mesh_node(_plaza_mesh(8.0, 24), RoadMesh.material("empedrado", Color(0.62, 0.56, 0.46)), Vector3(0, plaza_y + 0.04, 0))
++	square.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ 	add_child(square)
+ 	var well := MeshLib.make_well()
+ 	well.position = Vector3(0, plaza_y, 0)
+@@ -97,6 +107,9 @@ func _ready() -> void:
+ 	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new(), UtilitiesVisuals.new(), TransitVisuals.new(), MiningVisuals.new()]:
+ 		add_child(vis)
+ 		vis.setup(self)
++	street_lights = StreetLights.new()
++	add_child(street_lights)
++	street_lights.setup(self)
+ 
+ 	hud = Hud.new()
+ 	hud.name = "HUD"
+@@ -128,31 +141,14 @@ func _ready() -> void:
+ 
+ 
+ func _build_environment() -> void:
+-	sky_mat = ProceduralSkyMaterial.new()
+-	sky_mat.sky_top_color = Color(0.32, 0.55, 0.85)
+-	sky_mat.sky_horizon_color = Color(0.72, 0.82, 0.9)
+-	sky_mat.ground_horizon_color = Color(0.6, 0.65, 0.6)
+-	sky_mat.ground_bottom_color = Color(0.3, 0.32, 0.3)
+-	var sky := Sky.new()
+-	sky.sky_material = sky_mat
+-	env = Environment.new()
+-	env.background_mode = Environment.BG_SKY
+-	env.sky = sky
+-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+-	env.ambient_light_energy = 0.45
+-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+-	env.tonemap_exposure = 0.85
+-	env.fog_enabled = true
+-	env.fog_light_color = Color(0.7, 0.78, 0.86)
+-	env.fog_density = 0.0003
+-	env.fog_sky_affect = 0.3
+-	var we := WorldEnvironment.new()
+-	we.environment = env
+-	add_child(we)
+-	sun = DirectionalLight3D.new()
+-	sun.shadow_enabled = true
+-	sun.directional_shadow_max_distance = 250.0
+-	add_child(sun)
++	# Iluminación y postproceso: SkyRig (docs/GRAFICOS.md).
++	sky_rig = SkyRig.new()
++	sky_rig.name = "SkyRig"
++	add_child(sky_rig)
++	sky_rig.build()
++	env = sky_rig.env
++	sun = sky_rig.sun
++	sky_mat = sky_rig.sky_mat
+ 
+ 
+ # --- Edificios ---------------------------------------------------------------------------
+@@ -184,10 +180,10 @@ func _rebuild_building(id: int) -> void:
+ 			holder.add_child(model)
+ 			holder.add_child(MeshLib.scaffold(fp, height))
+ 		"mejorando":
+-			holder.add_child(MeshLib.build_model(parts, tint))
++			holder.add_child(MeshLib.build_model(parts, tint, null, id % 5))
+ 			holder.add_child(MeshLib.scaffold(fp, height + 0.5))
+ 		_:
+-			holder.add_child(MeshLib.build_model(parts, tint))
++			holder.add_child(MeshLib.build_model(parts, tint, null, id % 5))
+ 	# Los edificios del jugador llevan una bandera dorada.
+ 	if GameState.owned_by_player(b):
+ 		var flag := MeshLib.mesh_node(MeshLib.box(Vector3(0.05, 1.2, 0.05)), MeshLib.mat(Color(0.3, 0.2, 0.1)), Vector3(fp * 0.5, 0.6, fp * 0.5))
+@@ -232,6 +228,7 @@ func _on_day() -> void:
+ func _on_zones_changed() -> void:
+ 	terrain.build_mesh()
+ 	terrain.scatter_nature(int(GameState.settings.get("seed", 1)))
++	vegetation.rebuild()
+ 	for id in building_nodes:
+ 		var b: Dictionary = GameState.get_building(id)
+ 		terrain.clear_trees(float(b["x"]), float(b["z"]), GameState.footprint_of(b) * 0.8 + 1.0)
+@@ -337,26 +334,37 @@ func _process(delta: float) -> void:
+ 
+ 
+ func _update_daylight() -> void:
+-	if sun == null:
++	if sky_rig == null:
+ 		return
+ 	# A velocidades altas se fija la luz de mediodía para evitar parpadeo día/noche.
+ 	var h := 12.0 if (TimeManager.speed >= 3 or TimeManager.jumping) else TimeManager.hour_float()
+-	var t := (h - 6.0) / 12.0
+-	var elev := sin(t * PI)
+ 	var w := WeatherSim.weather_data(GameState)
+-	var dim := float(w.get("sky_dim", 0.0))
+-	var day := clampf(elev * 1.6, 0.0, 1.0)
+-	sun.rotation = Vector3(-deg_to_rad(maxf(elev, 0.08) * 70.0), deg_to_rad(-30.0 + t * 120.0), 0)
+-	sun.light_energy = lerpf(0.08, 0.95, day) * (1.0 - dim * 0.6)
+-	sun.light_color = Color(1.0, 0.82, 0.62).lerp(Color(1.0, 0.97, 0.92), clampf(elev * 2.0, 0.0, 1.0))
+-	var gray := Color(0.55, 0.58, 0.62)
+-	var night_top := Color(0.03, 0.05, 0.12)
+-	var top := night_top.lerp(Color(0.32, 0.55, 0.85).lerp(gray, dim), day)
+-	var horizon := Color(0.08, 0.1, 0.18).lerp(Color(0.72, 0.82, 0.9).lerp(gray, dim), day)
+-	sky_mat.sky_top_color = top
+-	sky_mat.sky_horizon_color = horizon
+-	env.ambient_light_energy = lerpf(0.2, 0.45, day)
+-	env.fog_light_color = horizon
++	sky_rig.update(h, float(w.get("sky_dim", 0.0)))
++
++
++## Plaza empedrada: disco con UV.x = 0,5 en el centro y 0 en el borde (el shader dibuja el bordillo).
++func _plaza_mesh(r: float, seg: int) -> Mesh:
++	var st := SurfaceTool.new()
++	st.begin(Mesh.PRIMITIVE_TRIANGLES)
++	for i in range(seg):
++		var a0 := TAU * i / seg
++		var a1 := TAU * (i + 1) / seg
++		for v in [[Vector3.ZERO, 0.5], [Vector3(sin(a1) * r, 0, cos(a1) * r), 0.0], [Vector3(sin(a0) * r, 0, cos(a0) * r), 0.0]]:
++			st.set_normal(Vector3.UP)
++			st.set_uv(Vector2(float(v[1]), 0.0))
++			st.add_vertex(v[0])
++	# Faldón del borde.
++	for i in range(seg):
++		var a0 := TAU * i / seg
++		var a1 := TAU * (i + 1) / seg
++		var p0 := Vector3(sin(a0) * r, 0, cos(a0) * r)
++		var p1 := Vector3(sin(a1) * r, 0, cos(a1) * r)
++		var dn := Vector3(0, -0.3, 0)
++		for v in [p0, p1, p1 + dn, p0, p1 + dn, p0 + dn]:
++			st.set_normal((p0 + p1).normalized())
++			st.set_uv(Vector2(0.0, 0.0))
++			st.add_vertex(v)
++	return st.commit()
+ 
+ 
+ func _ring_mesh() -> Mesh:
+diff --git a/shaders/building.gdshader b/shaders/building.gdshader
+new file mode 100644
+index 0000000..3183dbc
+--- /dev/null
++++ b/shaders/building.gdshader
+@@ -0,0 +1,142 @@
++shader_type spatial;
++render_mode cull_back;
++// Material único de edificios y modelos de MeshLib (docs/GRAFICOS.md).
++// COLOR.rgb = color base (con la variación de tono de cada edificio ya aplicada).
++// UV2.x = tipo de material: 0 liso, 1 estuco/adobe, 2 ladrillo, 3 madera, 4 piedra, 5 teja,
++//         6 paja, 7 concreto, 8 metal, 9 vidrio, 10 emisivo (farol), 11 postigo de madera.
++// UV2.y = azar por pieza (ventanas encendidas de noche, vetas).
++// Sombreado plano: la normal sale de las derivadas de pantalla (low-poly limpio y consistente).
++// Los patrones son procedurales en espacio del mundo: sin texturas, baratos en un M1 y en OpenGL.
++
++uniform float night : hint_range(0.0, 1.0) = 0.0;
++uniform float detail_fade_start = 70.0;
++uniform float detail_fade_end = 140.0;
++uniform vec3 window_light = vec3(1.0, 0.72, 0.38);
++
++varying vec3 wpos;
++varying vec3 wnrm;
++varying flat vec2 mdata;
++
++float hash21(vec2 p) {
++	p = fract(p * vec2(123.34, 456.21));
++	p += dot(p, p + 45.32);
++	return fract(p.x * p.y);
++}
++
++float vnoise(vec2 p) {
++	vec2 i = floor(p);
++	vec2 f = fract(p);
++	f = f * f * (3.0 - 2.0 * f);
++	float a = hash21(i);
++	float b = hash21(i + vec2(1.0, 0.0));
++	float c = hash21(i + vec2(0.0, 1.0));
++	float d = hash21(i + vec2(1.0, 1.0));
++	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
++}
++
++void vertex() {
++	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
++	wnrm = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
++	mdata = UV2;
++}
++
++// Coordenadas 2D sobre la cara según la normal dominante (u horizontal, v vertical).
++vec2 face_uv(vec3 p, vec3 n) {
++	vec3 a = abs(n);
++	if (a.y > 0.7) {
++		return p.xz;
++	}
++	return (a.x > a.z) ? vec2(p.z, p.y) : vec2(p.x, p.y);
++}
++
++void fragment() {
++	vec3 n = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
++	if (dot(n, VERTEX) > 0.0) {
++		n = -n;
++	}
++	NORMAL = n;
++	vec3 base = COLOR.rgb;
++	float kind = floor(mdata.x + 0.5);
++	float rnd = mdata.y;
++	float dist = length(VERTEX);
++	// Los patrones se desvanecen con la distancia (evita moiré y parpadeo).
++	float detail = 1.0 - smoothstep(detail_fade_start, detail_fade_end, dist);
++	vec2 uv = face_uv(wpos, normalize(wnrm));
++	float shade = 1.0;
++	float rough = 0.88;
++	float metal = 0.0;
++	float spec = 0.35;
++	vec3 emit = vec3(0.0);
++	if (kind == 1.0) {
++		// Estuco / adobe: manchas suaves.
++		shade = 0.94 + 0.08 * vnoise(uv * 1.3) + 0.04 * vnoise(uv * 6.0);
++	} else if (kind == 2.0) {
++		// Ladrillo: hiladas de 0,22 m y juntas de mortero.
++		vec2 b = uv / vec2(0.46, 0.22);
++		b.x += 0.5 * mod(floor(b.y), 2.0);
++		vec2 f = fract(b);
++		float mortar = step(f.y, 0.1) + step(f.x, 0.05);
++		float tone = 0.9 + 0.18 * hash21(floor(b));
++		shade = mix(tone, 1.25, clamp(mortar, 0.0, 1.0) * 0.6);
++	} else if (kind == 3.0) {
++		// Madera: tablas horizontales de 0,28 m con vetas.
++		float row = floor(uv.y / 0.28);
++		float f = fract(uv.y / 0.28);
++		shade = 0.86 + 0.16 * hash21(vec2(row, rnd * 17.0)) + 0.05 * vnoise(vec2(uv.x * 3.0, row * 7.0));
++		shade *= mix(0.72, 1.0, smoothstep(0.0, 0.08, f));
++	} else if (kind == 4.0) {
++		// Piedra: bloques irregulares.
++		vec2 b = uv / vec2(0.7, 0.4);
++		b.x += 0.37 * mod(floor(b.y), 3.0);
++		vec2 f = fract(b);
++		float joint = step(f.y, 0.08) + step(f.x, 0.05);
++		shade = mix(0.82 + 0.26 * hash21(floor(b)), 0.62, clamp(joint, 0.0, 1.0));
++		shade *= 0.95 + 0.1 * vnoise(uv * 4.0);
++	} else if (kind == 5.0) {
++		// Teja: hileras onduladas a lo largo de la pendiente.
++		float row = floor(wpos.y / 0.24);
++		float f = fract(wpos.y / 0.24);
++		float along = (abs(wnrm.x) > abs(wnrm.z)) ? wpos.z : wpos.x;
++		float wave = 0.5 + 0.5 * sin(along * 20.0);
++		shade = (0.84 + 0.12 * wave + 0.08 * hash21(vec2(row, floor(along * 3.2)))) * mix(0.7, 1.0, smoothstep(0.0, 0.2, f));
++	} else if (kind == 6.0) {
++		// Paja: fibras.
++		float along = (abs(wnrm.x) > abs(wnrm.z)) ? wpos.z : wpos.x;
++		shade = 0.84 + 0.2 * vnoise(vec2(along * 14.0, wpos.y * 1.5)) + 0.06 * vnoise(vec2(along * 40.0, wpos.y * 3.0));
++		shade *= mix(0.78, 1.0, smoothstep(0.0, 0.25, fract(wpos.y / 0.45)));
++	} else if (kind == 7.0) {
++		// Concreto: paneles grandes.
++		vec2 f = fract(uv / vec2(3.0, 1.5));
++		float joint = step(f.y, 0.02) + step(f.x, 0.01);
++		shade = (0.93 + 0.07 * vnoise(uv * 2.0)) * mix(1.0, 0.8, clamp(joint, 0.0, 1.0));
++	} else if (kind == 8.0) {
++		// Metal corrugado.
++		shade = 0.88 + 0.12 * sin(uv.x * 30.0);
++		rough = 0.45;
++		metal = 0.35;
++		spec = 0.6;
++	} else if (kind == 9.0) {
++		// Vidrio: brillante; de noche algunas ventanas se encienden (según el azar de la pieza).
++		rough = 0.12;
++		metal = 0.25;
++		spec = 0.8;
++		float lit = step(0.35, fract(rnd * 7.31 + floor(wpos.y / 2.6) * 0.37 + floor((wpos.x + wpos.z) / 2.2) * 0.23));
++		emit = window_light * lit * night * 1.6;
++		base = mix(base, base * 0.35, night * lit);
++	} else if (kind == 11.0) {
++		// Postigo de madera: tablas verticales; de noche, luz cálida entre las rendijas.
++		float f = fract((uv.x + uv.y * 0.001) / 0.16);
++		shade = (0.85 + 0.15 * hash21(vec2(floor(uv.x / 0.16), rnd * 9.0))) * mix(0.6, 1.0, smoothstep(0.0, 0.15, f));
++		float lit = step(0.3, fract(rnd * 5.17 + 0.2));
++		emit = window_light * lit * night * mix(1.4, 0.25, smoothstep(0.0, 0.2, f));
++	} else if (kind == 10.0) {
++		rough = 0.5;
++		emit = base * (0.25 + night * 3.0);
++	}
++	shade = mix(1.0, shade, detail);
++	ALBEDO = base * shade;
++	ROUGHNESS = rough;
++	METALLIC = metal;
++	SPECULAR = spec;
++	EMISSION = emit;
++}
+diff --git a/shaders/foliage.gdshader b/shaders/foliage.gdshader
+new file mode 100644
+index 0000000..defc94a
+--- /dev/null
++++ b/shaders/foliage.gdshader
+@@ -0,0 +1,38 @@
++shader_type spatial;
++render_mode cull_disabled;
++// Vegetación y rocas con color por instancia/vértice (docs/GRAFICOS.md).
++// Balanceo con el viento barato: solo se mueven los vértices altos de las piezas verdes
++// (copas, hojas, pasto); troncos marrones y rocas grises quedan quietos.
++// Sombreado plano con normales de derivadas de pantalla (low-poly limpio).
++
++uniform float wind_strength = 0.12;
++uniform float wind_speed = 1.3;
++uniform vec2 wind_dir = vec2(0.8, 0.6);
++
++varying float sway_w;
++
++void vertex() {
++	vec3 wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
++	vec3 origin = MODEL_MATRIX[3].xyz;
++	float green = clamp((COLOR.g - max(COLOR.r, COLOR.b)) * 6.0, 0.0, 1.0);
++	float hgt = max(wp.y - origin.y, 0.0);
++	float phase = dot(origin.xz, vec2(0.13, 0.17));
++	float s = sin(TIME * wind_speed + phase) * 0.7 + sin(TIME * wind_speed * 2.3 + phase * 1.7) * 0.3;
++	vec2 off = wind_dir * s * wind_strength * hgt * 0.35 * green;
++	// Desplazamiento en espacio del mundo convertido al espacio local del modelo.
++	float sc2 = max(dot(MODEL_MATRIX[0].xyz, MODEL_MATRIX[0].xyz), 0.0001);
++	vec3 local_off = (vec4(off.x, 0.0, off.y, 0.0) * MODEL_MATRIX).xyz / sc2;
++	VERTEX += local_off;
++}
++
++void fragment() {
++	vec3 n = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
++	if (dot(n, VERTEX) > 0.0) {
++		n = -n;
++	}
++	NORMAL = n;
++	ALBEDO = COLOR.rgb;
++	ROUGHNESS = 0.92;
++	SPECULAR = 0.25;
++	BACKLIGHT = COLOR.rgb * 0.25;
++}
+diff --git a/shaders/light_pool.gdshader b/shaders/light_pool.gdshader
+new file mode 100644
+index 0000000..8e6c859
+--- /dev/null
++++ b/shaders/light_pool.gdshader
+@@ -0,0 +1,19 @@
++shader_type spatial;
++render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabled, skip_vertex_transform;
++// Charco de luz bajo los faroles (docs/GRAFICOS.md): disco aditivo con caída radial que se enciende
++// de noche. Imita la luz del farol sobre el suelo sin luces reales (sirve igual en Compatibility).
++
++uniform float night : hint_range(0.0, 1.0) = 0.0;
++uniform vec3 light_color : source_color = vec3(1.0, 0.72, 0.4);
++
++void vertex() {
++	VERTEX = (MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
++	float d = length(VERTEX);
++	VERTEX -= VERTEX / max(d, 0.001) * min(0.08 + d * 0.003, 4.0);
++}
++
++void fragment() {
++	float r = length(UV - vec2(0.5)) * 2.0;
++	float f = pow(clamp(1.0 - r, 0.0, 1.0), 2.2);
++	ALBEDO = light_color * f * night * 0.55;
++}
+diff --git a/shaders/road.gdshader b/shaders/road.gdshader
+new file mode 100644
+index 0000000..1793dc3
+--- /dev/null
++++ b/shaders/road.gdshader
+@@ -0,0 +1,97 @@
++shader_type spatial;
++render_mode skip_vertex_transform, cull_disabled;
++// Carreteras, caminos, balasto y rieles (docs/GRAFICOS.md). Patrones procedurales sin texturas:
++// kind 0 = tierra con huellas, 1 = empedrado, 2 = asfalto con líneas, 3 = balasto (grava),
++// 4 = acero de riel, 5 = tablero de madera (puentes).
++// UV.x = 0..1 a lo ancho, UV.y = metros a lo largo. Los patrones "de superficie" usan coordenadas
++// del mundo: dos tramos que se cruzan dibujan exactamente lo mismo (intersecciones sin parpadeo).
++// El vértice se acerca un poco a la cámara (sesgo de profundidad) para no pelear con el terreno.
++
++uniform int kind = 0;
++uniform vec3 base_color : source_color = vec3(0.5, 0.4, 0.3);
++uniform float depth_bias = 0.04;
++uniform float detail_fade = 120.0;
++
++varying vec3 wpos;
++
++float hash21(vec2 p) {
++	p = fract(p * vec2(123.34, 456.21));
++	p += dot(p, p + 45.32);
++	return fract(p.x * p.y);
++}
++
++float vnoise(vec2 p) {
++	vec2 i = floor(p);
++	vec2 f = fract(p);
++	f = f * f * (3.0 - 2.0 * f);
++	return mix(mix(hash21(i), hash21(i + vec2(1.0, 0.0)), f.x), mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), f.x), f.y);
++}
++
++void vertex() {
++	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
++	VERTEX = (MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
++	float d = length(VERTEX);
++	VERTEX -= VERTEX / max(d, 0.001) * min(depth_bias + d * 0.0022, 4.0);
++	NORMAL = normalize((MODELVIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
++}
++
++void fragment() {
++	float dist = length(VERTEX);
++	float detail = 1.0 - smoothstep(detail_fade * 0.5, detail_fade, dist);
++	vec2 w = wpos.xz;
++	float u = UV.x;
++	float along = UV.y;
++	vec3 c = base_color;
++	float rough = 0.95;
++	float metal = 0.0;
++	float edge = smoothstep(0.0, 0.1, u) * smoothstep(1.0, 0.9, u);
++	if (kind == 0) {
++		// Tierra apisonada: manchas, huellas de ruedas y bordes con pasto.
++		float n = vnoise(w * 1.6) * 0.6 + vnoise(w * 5.0) * 0.4;
++		float ruts = exp(-pow((u - 0.3) / 0.06, 2.0)) + exp(-pow((u - 0.7) / 0.06, 2.0));
++		c *= 0.86 + 0.24 * n;
++		c *= 1.0 - 0.2 * ruts * detail;
++		c = mix(vec3(0.3, 0.42, 0.2) * (0.85 + 0.3 * n), c, smoothstep(0.0, 0.16, min(u, 1.0 - u) + (n - 0.5) * 0.12));
++	} else if (kind == 1) {
++		// Empedrado: piedras en hileras desfasadas, juntas oscuras y bordillo.
++		vec2 p = w / 0.3;
++		p.x += 0.5 * mod(floor(p.y), 2.0);
++		vec2 f = fract(p) - 0.5;
++		float stone = hash21(floor(p));
++		float joint = smoothstep(0.38, 0.5, max(abs(f.x), abs(f.y)));
++		c *= (0.88 + 0.2 * stone) * mix(1.0, 0.72, joint * detail);
++		c *= 0.94 + 0.12 * vnoise(w * 0.4);
++		float curb = 1.0 - step(0.06, u) * step(u, 0.94);
++		c = mix(c, base_color * 0.82, curb);
++		rough = 0.85;
++	} else if (kind == 2) {
++		// Asfalto: grano fino, bordes blancos y línea central amarilla discontinua.
++		float n = vnoise(w * 3.0) * 0.5 + vnoise(w * 11.0) * 0.5;
++		c *= 0.88 + 0.2 * n;
++		float side = step(0.055, u) * step(u, 0.095) + step(0.905, u) * step(u, 0.945);
++		float center = step(abs(u - 0.5), 0.022) * step(fract(along / 4.0), 0.55);
++		c = mix(c, vec3(0.92, 0.92, 0.88), side * 0.9);
++		c = mix(c, vec3(0.95, 0.78, 0.25), center * 0.95);
++		float shoulder = 1.0 - step(0.03, u) * step(u, 0.97);
++		c = mix(c, base_color * 1.4, shoulder);
++		rough = 0.8;
++	} else if (kind == 3) {
++		// Balasto: grava.
++		float g = hash21(floor(w / 0.12)) * 0.6 + vnoise(w * 2.5) * 0.4;
++		c *= 0.75 + 0.45 * g;
++	} else if (kind == 4) {
++		c = base_color;
++		rough = 0.35;
++		metal = 0.7;
++	} else if (kind == 5) {
++		// Tablones de madera cruzados.
++		float plank = fract(along / 0.35);
++		c *= (0.82 + 0.25 * hash21(vec2(floor(along / 0.35), 3.0))) * mix(0.65, 1.0, smoothstep(0.0, 0.12, plank));
++		rough = 0.9;
++	}
++	c = mix(base_color, c, 0.35 + 0.65 * detail);
++	ALBEDO = c;
++	ROUGHNESS = rough;
++	METALLIC = metal;
++	SPECULAR = 0.3;
++}
+diff --git a/shaders/terrain_chunk_plus.gdshader b/shaders/terrain_chunk_plus.gdshader
+new file mode 100644
+index 0000000..a5ac9ff
+--- /dev/null
++++ b/shaders/terrain_chunk_plus.gdshader
+@@ -0,0 +1,34 @@
++shader_type spatial;
++render_mode cull_disabled;
++#include "res://shaders/terrain_grade.gdshaderinc"
++// Copia de terrain_chunk.gdshader + gradación (docs/GRAFICOS.md). Fase 9A: chunks del país (malla indexada). La normal plana sale de las derivadas de pantalla,
++// así el estilo low-poly se conserva sin duplicar vértices. COLOR.a marca la hierba (estación).
++// fog > 0: territorio sin explorar (bruma clara con el relieve tenue).
++
++uniform vec3 season_tint = vec3(1.0);
++uniform float snow_amount : hint_range(0.0, 1.0) = 0.0;
++uniform float fog : hint_range(0.0, 1.0) = 0.0;
++uniform vec3 fog_color = vec3(0.56, 0.6, 0.66);
++
++varying vec3 tg_wpos;
++
++void vertex() {
++	tg_wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
++}
++
++void fragment() {
++	vec3 n = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
++	if (dot(n, VERTEX) > 0.0) {
++		n = -n;   // el signo de dFdy depende del backend: la normal siempre mira a la cámara
++	}
++	NORMAL = n;
++	vec3 c = COLOR.rgb;
++	float grass = COLOR.a;
++	c = mix(c, c * season_tint, grass);
++	c = mix(c, vec3(0.92, 0.94, 0.97) * max(max(COLOR.r, COLOR.g), 0.45) * 1.6, grass * snow_amount);
++	c = terrain_grade(c, grass, tg_wpos, length(VERTEX));
++	c = mix(c, fog_color * (0.7 + 0.4 * dot(c, vec3(0.33))), fog);
++	ALBEDO = c;
++	ROUGHNESS = 0.95;
++	SPECULAR = 0.2 * (1.0 - fog);
++}
+diff --git a/shaders/terrain_grade.gdshaderinc b/shaders/terrain_grade.gdshaderinc
+new file mode 100644
+index 0000000..2d51e61
+--- /dev/null
++++ b/shaders/terrain_grade.gdshaderinc
+@@ -0,0 +1,29 @@
++// Gradación de color del terreno (docs/GRAFICOS.md). La usan terrain_plus y terrain_chunk_plus.
++// Baja la saturación del pasto (el verde puro se veía "neón"), le da variación suave de tono por
++// zonas (manchas secas y húmedas) y oscurece un poco a lo lejos para dar profundidad.
++
++float tg_hash(vec2 p) {
++	p = fract(p * vec2(123.34, 456.21));
++	p += dot(p, p + 45.32);
++	return fract(p.x * p.y);
++}
++
++float tg_noise(vec2 p) {
++	vec2 i = floor(p);
++	vec2 f = fract(p);
++	f = f * f * (3.0 - 2.0 * f);
++	return mix(mix(tg_hash(i), tg_hash(i + vec2(1.0, 0.0)), f.x), mix(tg_hash(i + vec2(0.0, 1.0)), tg_hash(i + vec2(1.0, 1.0)), f.x), f.y);
++}
++
++vec3 terrain_grade(vec3 c, float grass, vec3 wpos, float dist) {
++	float lum = dot(c, vec3(0.3, 0.59, 0.11));
++	// Pasto: menos saturado y un poco más oscuro, con manchas secas (ocre) y húmedas.
++	vec3 g = mix(vec3(lum), c, 0.72) * 0.9;
++	float patch = tg_noise(wpos.xz * 0.035) * 0.65 + tg_noise(wpos.xz * 0.13) * 0.35;
++	g = mix(g, g * vec3(1.12, 1.0, 0.78), smoothstep(0.55, 0.85, patch) * 0.55);
++	g = mix(g, g * vec3(0.85, 0.95, 0.9), smoothstep(0.45, 0.15, patch) * 0.5);
++	c = mix(c, g, grass);
++	// Resto (tierra, roca, arena): variación leve.
++	c *= 0.95 + 0.1 * tg_noise(wpos.xz * 0.5);
++	return c * mix(1.0, 0.92, smoothstep(150.0, 900.0, dist));
++}
+diff --git a/shaders/terrain_plus.gdshader b/shaders/terrain_plus.gdshader
+new file mode 100644
+index 0000000..a613bca
+--- /dev/null
++++ b/shaders/terrain_plus.gdshader
+@@ -0,0 +1,23 @@
++shader_type spatial;
++#include "res://shaders/terrain_grade.gdshaderinc"
++// Copia de terrain.gdshader + gradación (docs/GRAFICOS.md). Terreno low-poly con color por vértice. COLOR.a marca la hierba,
++// que se tiñe según la estación (y se cubre de nieve en invierno).
++
++uniform vec3 season_tint = vec3(1.0);
++uniform float snow_amount : hint_range(0.0, 1.0) = 0.0;
++
++varying vec3 tg_wpos;
++
++void vertex() {
++	tg_wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
++}
++
++void fragment() {
++	vec3 c = COLOR.rgb;
++	float grass = COLOR.a;
++	c = mix(c, c * season_tint, grass);
++	c = mix(c, vec3(0.92, 0.94, 0.97) * max(max(COLOR.r, COLOR.g), 0.45) * 1.6, grass * snow_amount);
++	ALBEDO = terrain_grade(c, grass, tg_wpos, length(VERTEX));
++	ROUGHNESS = 0.95;
++	SPECULAR = 0.2;
++}
+diff --git a/shaders/water.gdshader b/shaders/water.gdshader
+new file mode 100644
+index 0000000..4b41313
+--- /dev/null
++++ b/shaders/water.gdshader
+@@ -0,0 +1,70 @@
++shader_type spatial;
++render_mode blend_mix, depth_draw_opaque, cull_disabled, specular_schlick_ggx;
++// Agua de ríos, lagos y mar (docs/GRAFICOS.md). Sin textura de profundidad (funciona igual en
++// Forward+ y en Compatibility): la profundidad sale de un mapa de alturas del terreno horneado
++// alrededor del pueblo (height_tex). Color por profundidad, brillo con fresnel, ondas suaves en la
++// normal y espuma animada en la orilla.
++
++uniform sampler2D height_tex : filter_linear, repeat_disable;
++uniform vec4 height_rect = vec4(-200.0, -200.0, 400.0, 400.0);   // x0, z0, ancho, alto
++uniform float water_level = 0.0;
++uniform float far_depth = 4.0;
++uniform vec3 shallow_color : source_color = vec3(0.22, 0.58, 0.6);
++uniform vec3 deep_color : source_color = vec3(0.05, 0.2, 0.36);
++uniform vec3 foam_color : source_color = vec3(0.92, 0.96, 0.98);
++uniform float wave_scale = 0.18;
++
++varying vec3 wpos;
++
++float hash21(vec2 p) {
++	p = fract(p * vec2(123.34, 456.21));
++	p += dot(p, p + 45.32);
++	return fract(p.x * p.y);
++}
++
++float vnoise(vec2 p) {
++	vec2 i = floor(p);
++	vec2 f = fract(p);
++	f = f * f * (3.0 - 2.0 * f);
++	return mix(mix(hash21(i), hash21(i + vec2(1.0, 0.0)), f.x), mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), f.x), f.y);
++}
++
++float waves(vec2 p, float t) {
++	return vnoise(p * 0.35 + vec2(t * 0.25, t * 0.12)) * 0.6 + vnoise(p * 0.9 - vec2(t * 0.18, -t * 0.3)) * 0.4;
++}
++
++void vertex() {
++	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
++}
++
++void fragment() {
++	vec2 uv = (wpos.xz - height_rect.xy) / height_rect.zw;
++	float depth = far_depth;
++	if (uv.x > 0.0 && uv.y > 0.0 && uv.x < 1.0 && uv.y < 1.0) {
++		depth = max(water_level - texture(height_tex, uv).r, 0.0);
++	}
++	float dist = length(VERTEX);
++	float t = TIME;
++	// Ondas: normal perturbada por dos capas de ruido (se aplanan a lo lejos).
++	float e = 0.35;
++	float h0 = waves(wpos.xz, t);
++	float hx = waves(wpos.xz + vec2(e, 0.0), t);
++	float hz = waves(wpos.xz + vec2(0.0, e), t);
++	float calm = 1.0 - smoothstep(60.0, 260.0, dist);
++	vec3 wn = normalize(vec3((h0 - hx) * wave_scale * 6.0 * calm, 1.0, (h0 - hz) * wave_scale * 6.0 * calm));
++	NORMAL = normalize((VIEW_MATRIX * vec4(wn, 0.0)).xyz);
++	float d01 = clamp(depth / 3.0, 0.0, 1.0);
++	vec3 col = mix(shallow_color, deep_color, smoothstep(0.0, 1.0, d01));
++	// Espuma en la orilla: bandas que avanzan y se deshacen con ruido.
++	float shore = 1.0 - smoothstep(0.0, 0.55, depth);
++	float bands = smoothstep(0.55, 0.9, sin(depth * 14.0 - t * 1.8) * 0.5 + 0.5) * (1.0 - smoothstep(0.1, 0.6, depth));
++	float foam = clamp(shore * 0.75 + bands * 0.5, 0.0, 1.0) * smoothstep(0.35, 0.65, vnoise(wpos.xz * 1.8 + t * 0.3) + shore * 0.4);
++	foam *= 1.0 - smoothstep(80.0, 180.0, dist);
++	col = mix(col, foam_color, foam);
++	float fres = pow(1.0 - clamp(dot(normalize(-VERTEX), NORMAL), 0.0, 1.0), 4.0);
++	ALBEDO = col;
++	ROUGHNESS = mix(0.06, 0.5, foam);
++	METALLIC = 0.0;
++	SPECULAR = 0.6;
++	ALPHA = clamp(mix(0.55, 0.92, d01) + fres * 0.3 + foam, 0.0, 1.0);
++}
+diff --git a/tests/screenshot_graficos.gd b/tests/screenshot_graficos.gd
+new file mode 100644
+index 0000000..e4ebbde
+--- /dev/null
++++ b/tests/screenshot_graficos.gd
+@@ -0,0 +1,218 @@
++extends Node
++## Capturas del sistema gráfico (docs/GRAFICOS.md): pueblo de día, atardecer y noche, interior de
++## una casa, zona industrial (carreteras, rieles y mina) y una vista media con río y vegetación.
++## También mide el tiempo de frame promedio en cada vista (orientativo con xvfb).
++## xvfb-run -a -s "-screen 0 1600x900x24" godot --rendering-driver opengl3 res://tests/screenshot_graficos.tscn -- <carpeta> <prefijo> [calidad]
++
++var out := "user://"
++var prefix := "g"
++var world: Node3D
++var rig: CameraRig
++var perf := []
++
++
++func _pv(arr: Array) -> PackedVector2Array:
++	var o := PackedVector2Array()
++	for a in arr:
++		o.append(Vector2(float(a[0]), float(a[1])))
++	return o
++
++
++func _place(type_id: String, x: float, z: float, rot := 0.0, level := 1, tier := "normal") -> Dictionary:
++	var b: Dictionary = ConstructionSim.make_building(GameState, type_id, level, x, z, rot, "jugador")
++	if tier != "normal":
++		b["tier"] = tier
++	GameState.add_building(b)
++	return b
++
++
++func _set_hour(h: float) -> void:
++	TimeManager.total_hours += int(floor(h)) - TimeManager.hour()
++	TimeManager.hour_fraction = h - floor(h)
++
++
++func _cam(pos: Vector3, dist: float, yaw: float) -> void:
++	rig.follow = null
++	rig.target_pos = pos
++	rig.position = pos
++	rig.distance = dist
++	rig.target_distance = dist
++	rig.yaw = yaw
++	rig.target_yaw = yaw
++
++
++func _shot(name: String, frames := 45) -> void:
++	for i in range(frames):
++		await get_tree().process_frame
++	# Tiempo de frame promedio (20 frames) y carga de la escena (llamadas de dibujo, objetos, primitivas).
++	var t0 := Time.get_ticks_usec()
++	for i in range(20):
++		await get_tree().process_frame
++	var ms := float(Time.get_ticks_usec() - t0) / 20000.0
++	var calls := int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
++	var objs := int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME))
++	var prims := int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
++	var nodes := int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
++	perf.append("%s: %.1f ms/frame (~%.0f FPS) · %d draw calls · %d objetos · %d primitivas · %d nodos" % [name, ms, 1000.0 / maxf(ms, 0.01), calls, objs, prims, nodes])
++	get_viewport().get_texture().get_image().save_png("%s/%s_%s.png" % [out, prefix, name])
++	print("captura: %s_%s.png  %.1f ms/frame" % [prefix, name, ms])
++
++
++func _ready() -> void:
++	var args := OS.get_cmdline_user_args()
++	out = args[0] if args.size() > 0 else "user://"
++	prefix = args[1] if args.size() > 1 else "g"
++	var gs = GameState
++	gs.new_game({"map_type": "rio", "seed": 2024, "difficulty": "facil"})
++	gs.suppress_notifications = true
++	gs.money = 900000.0
++	gs.weather["type"] = "despejado"
++	gs.research["era"] = 3
++	for t in ["carretas", "caminos_empedrados", "maquina_vapor", "ferrocarril", "automovil", "transporte_publico", "polvora"]:
++		if not gs.techs.has(t):
++			gs.techs.append(t)
++	gs.unlocked_zones = []
++	for x in range(gs.ZONE_GRID):
++		for y in range(gs.ZONE_GRID):
++			gs.unlocked_zones.append([x, y])
++	# Viviendas de varias épocas y calidades alrededor de la plaza.
++	var homes := [[1, "normal", -18, 12, 0.3], [1, "media", -12, 20, 0.8], [2, "normal", 16, 14, 2.6], [2, "alta", 22, 4, 2.0],
++			[3, "normal", -20, -8, 1.3], [3, "media", 12, -18, 3.4], [4, "normal", -30, 24, 0.5], [2, "media", 4, 24, 3.1],
++			[1, "alta", -6, -22, 0.2], [5, "normal", 36, -26, 0.9]]
++	var alta := {}
++	for h in homes:
++		var b := _place("vivienda", h[2], h[3], h[4], h[0], h[1])
++		if h[0] == 2 and h[1] == "alta":
++			alta = b
++	_place("taberna", -26, -2, 1.4)
++	_place("tienda", 24, -8, 4.0)
++	_place("panaderia", 8, 16, 3.3)
++	_place("iglesia", 0, -16, 0.0)
++	_place("banco", -10, 30, 3.0, 2)
++	_place("oficina", 30, 18, 2.4, 2)
++	# Zona industrial al oeste: almacén, fábricas, central y depósito de camiones.
++	_place("almacen", -54, -10, 0.0, 2)
++	_place("siderurgica", -66, 8, 1.57)
++	_place("aserradero", -46, 12, 0.2)
++	_place("central_carbon", -74, -24, 0.0)
++	_place("deposito_camiones", -44, -28, 0.4)
++	# Carreteras: cemento por el pueblo hacia la zona industrial y una rama empedrada.
++	TransitSim.build_road(gs, _pv([[-8, 0], [-30, 6], [-48, 0], [-62, -6], [-80, -8]]), "cemento")
++	TransitSim.build_road(gs, _pv([[8, 2], [26, 10], [40, 28]]), "empedrado")
++	TransitSim.build_road(gs, _pv([[-48, 0], [-50, -18], [-44, -34]]), "barro")
++	var tid := str(TradeSim.towns(gs)[0]["id"])
++	TransitSim.set_trade_path(gs, tid, _pv([[-9, 4], [-40, 26], [-80, 20], [-130, 48], [-199, 40]]))
++	TimeManager.advance_days(int(TradeSim.project(gs, tid).get("total_days", 40)) + 1)
++	_place("estacion_tren", -30, -40, 0.3)
++	TransitSim.set_trade_path(gs, tid, _pv([[-32, -48], [-60, -52], [-100, -40], [-150, -44], [-199, -30]]), true)
++	TimeManager.advance_days(int(TradeSim.connection(gs, tid)["work"]["rail"]["done_day"]) - gs.today() + 1)
++	for i in range(8):
++		gs.money = 900000.0
++		TimeManager.advance_days(1)
++	gs.weather["type"] = "despejado"
++	gs.season = "primavera"
++	world = load("res://scenes/main.tscn").instantiate()
++	add_child(world)
++	await get_tree().process_frame
++	rig = world.camera_rig
++	var terrain: Terrain = world.terrain
++	TransitVisuals.instance.rebuild()
++	# Mina de hierro sobre un yacimiento en terreno seco cerca de la zona industrial.
++	var spot := Vector2(-90, 30)
++	var best := INF
++	for x in range(-130, -60, 4):
++		for z in range(-10, 60, 4):
++			if terrain.footprint_ok(x, z, 24.0) == "" and terrain.is_land(x, z, 1.0) and Vector2(x + 90, z - 30).length() < best:
++				best = Vector2(x + 90, z - 30).length()
++				spot = Vector2(x, z)
++	gs.logistics["deposits"] = [{"id": 1, "type": "hierro", "x": spot.x, "z": spot.y, "amount": 14000.0, "initial": 14000.0, "grade": 1.1}]
++	MineSim.ensure_area(gs.logistics["deposits"][0])
++	var d: Dictionary = gs.logistics["deposits"][0]
++	var c := spot + Vector2(-6, 4)
++	var r := ConstructionSim.start_construction(gs, "mina_hierro", c.x, c.y, 0.3, "Mina La Colorada", "sas")
++	var mine: Dictionary = r.get("building", {})
++	if not mine.is_empty():
++		mine["status"] = "activo"
++		mine["level"] = 2
++		mine["target_level"] = 2
++		for p in [["tajo", 0.2, 0.62, 0.0], ["socavon", -1.9, 0.62, 2.6], ["torre_extraccion", 1.9, 0.6, -0.5]]:
++			var ang := float(p[1])
++			var pos := Vector2(float(d["x"]), float(d["z"])) + Vector2.from_angle(ang) * MineSim.radius_at(d, ang) * float(p[2])
++			MineSim.add_part(gs, mine, str(p[0]), pos.x, pos.y, float(p[3]))
++		for part in MineSim.parts(mine):
++			part["status"] = "activo"
++		EventBus.building_changed.emit(int(mine["id"]))
++		MiningVisuals.instance.rebuild_all()
++	world.hud.visible = true
++	TimeManager.set_speed(0)
++	var plaza := Vector3(0, terrain.height_at(0, 0), 0)
++	# Diagnóstico de rendimiento: GFX_OFF=terreno,agua,charcos,pasto,sombras desactiva partes.
++	var off := OS.get_environment("GFX_OFF").split(",")
++	if "terreno" in off:
++		terrain.material.shader = load("res://shaders/terrain.gdshader")
++		for m in [terrain.chunk_material, terrain.fog_material, terrain.outside_material]:
++			m.shader = load("res://shaders/terrain_chunk.gdshader")
++	if "agua" in off:
++		terrain.water.material_override = MeshLib.mat(Color(0.2, 0.45, 0.62))
++	if "charcos" in off and world.street_lights:
++		world.street_lights.visible = false
++	if "pasto" in off and world.vegetation:
++		world.vegetation.apply_graphics({"grass": false})
++	if "sombras" in off:
++		world.sun.shadow_enabled = false
++	if "edificios" in off:
++		MeshLib.building_mat().shader = load("res://shaders/terrain.gdshader")
++	var rapido := args.size() > 2 and args[2] == "rapido"
++	# 1) Pueblo de día.
++	_set_hour(10.0)
++	_cam(plaza, 62.0, 35.0)
++	await _shot("pueblo_dia")
++	# 2) Atardecer y noche.
++	_set_hour(17.35)
++	_cam(plaza, 62.0, 200.0)
++	await _shot("pueblo_atardecer")
++	_set_hour(21.5)
++	_cam(plaza, 55.0, 35.0)
++	await _shot("pueblo_noche")
++	if rapido:
++		print("RENDIMIENTO rapido GFX_OFF=%s" % OS.get_environment("GFX_OFF"))
++		for l in perf:
++			print("  " + l)
++		get_tree().quit()
++		return
++	# 3) Zona industrial con carreteras, rieles y mina.
++	_set_hour(11.0)
++	_cam(Vector3(-62, terrain.height_at(-62, -10), -10), 85.0, 20.0)
++	await _shot("industrial")
++	if not mine.is_empty():
++		_cam(Vector3(float(d["x"]), terrain.height_at(float(d["x"]), float(d["z"])), float(d["z"])), 45.0, 205.0)
++		await _shot("mina")
++	# 4) Vista media con río y vegetación: busca agua cerca del pueblo.
++	var river := Vector3(90, 0, 0)
++	var rbest := INF
++	for x in range(-180, 180, 6):
++		for z in range(-180, 180, 6):
++			if terrain.height_at(x, z) < terrain.water_level - 0.3:
++				var dd := Vector2(x, z).length()
++				if dd < rbest and dd > 50.0:
++					rbest = dd
++					river = Vector3(x, 0, z)
++	river.y = terrain.water_level
++	_cam(river, 48.0, 120.0)
++	await _shot("rio_vegetacion")
++	_cam(river + Vector3(-10, 0, 10), 22.0, 300.0)
++	await _shot("rio_cerca")
++	# 5) Interior de una casa.
++	_set_hour(10.0)
++	if not alta.is_empty():
++		for cz in gs.citizens.values().slice(0, 3):
++			cz.home_id = int(alta["id"])
++		EventBus.interior_requested.emit(int(alta["id"]))
++		await _shot("interior")
++	print("RENDIMIENTO (%s, %s):" % [prefix, RenderingServer.get_video_adapter_name()])
++	for l in perf:
++		print("  " + l)
++	var f := FileAccess.open("%s/%s_rendimiento.txt" % [out, prefix], FileAccess.WRITE)
++	if f:
++		f.store_string("\n".join(perf) + "\n")
++	get_tree().quit()
+diff --git a/tests/screenshot_graficos.tscn b/tests/screenshot_graficos.tscn
+new file mode 100644
+index 0000000..0abe11f
+--- /dev/null
++++ b/tests/screenshot_graficos.tscn
+@@ -0,0 +1,6 @@
++[gd_scene load_steps=2 format=3]
++
++[ext_resource type="Script" path="res://tests/screenshot_graficos.gd" id="1"]
++
++[node name="ShotGraficos" type="Node"]
++script = ExtResource("1")

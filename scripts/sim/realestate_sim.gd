@@ -127,7 +127,7 @@ static func cap_rate(gs) -> float:
 static func value_total(gs, level: int, tier: String) -> float:
 	var pc := pricing_cfg()
 	return replacement_cost(gs, level, tier) * (1.0 + float(pc.get("developer_margin", 0.24))) * demand(gs) \
-		* float(pc.get("era_value_mult", {}).get(str(gs.era()), 1.0))
+		* float(pc.get("era_value_mult", {}).get(str(gs.era()), 1.0)) * GlobalEconSim.property_mult(gs)   # Ciclo económico.
 
 
 static func _floor_factor(floor: int) -> float:

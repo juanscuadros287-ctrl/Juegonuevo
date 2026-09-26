@@ -1,15 +1,18 @@
 # Pedidos en cola (aprobados por Sebastián)
 
+## PRIORIDAD: mapa mundial con países reales
+Reemplazar los 5 países ficticios por el mundo real con sus países (ver docs/MAPA_MUNDIAL.md, sección CAMBIO). Se combina con el parche wip/fase9b_mapa.patch.
+
 Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que están en curso.
 
-## A. Economía global (después de la Fase 9A, que deja moneda por país)
+## A. Economía global (hecho — ver docs/ECONOMIA_GLOBAL.md)
 1. **Bolsa de valores mundial**, que se desbloquea por época y cuando el gobierno la autoriza (ley o institución). Permite convertir empresas en S.A., emitir acciones, comprar acciones de empresas NPC, cobrar dividendos y sufrir compras hostiles.
 2. **Ciclos económicos por país**: auge, recesión, crisis bancarias y burbujas, con señales previas.
 3. **Moneda e inflación por país**, no por pueblo: tipo de cambio que afecta importaciones y exportaciones.
 4. **Seguros**: de incendio, robo y carga. También pueden ser un negocio del jugador.
 5. **Marca y calidad de producto.** Calidad = f(nivel del edificio, tecnología, maquinaria, habilidad de los empleados, calidad de los insumos). La reputación de la marca sube el precio aceptado; la mala calidad la baja.
 
-## B. Trabajo (moderado, nada exagerado)
+## B. Trabajo (hecho — ver docs/TRABAJO_MUNDO.md)
 6. **Sindicatos y huelgas**, cuando hay sueldos bajos o malas condiciones. Paros cortos y negociables.
 7. **Experiencia por oficio**: el veterano produce más; si se va, se pierde.
 8. **Competencia NPC**: guerras de precio suaves y ofertas a tus empleados.
@@ -19,12 +22,12 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
 10. **Política**: campañas, cargos, lobby y riesgo de escándalo.
 11. **Matrimonio**: al casarse se unen las fortunas, pero el jugador decide el orden de herederos (1.º, 2.º, 3.º…). Proponer matrimonio viendo el patrimonio de la otra persona; ella acepta o rechaza, no se obliga.
 
-## D. Mundo
+## D. Mundo (hecho — ver docs/TRABAJO_MUNDO.md)
 12. **Clima y estaciones** que afectan la producción: sequías, heladas, inundaciones y malas cosechas.
 13. **Contaminación**: enferma a los vecinos y trae multas. Se reduce con maquinaria especializada (filtros, depuradoras) y con energías renovables.
 15. **Guerras entre países sin combate** (moderadas): cortan rutas y cambian la demanda.
 
-## E. Impuestos, efectivo y mercado negro
+## E. Impuestos, efectivo y mercado negro (hecho — ver docs/EFECTIVO_MERCADO_NEGRO.md)
 14. **Impuesto a la venta** (IVA) además del impuesto a la ganancia.
 - **Dos tipos de dinero: efectivo y banco.** Las ventas no declaradas solo se hacen con personas de confianza y cobran en efectivo. Con efectivo se paga a quien lo acepte; con banco, las operaciones declaradas.
 - **Mercado negro**, con investigación: cultivos, fábricas o mercancía sin impuestos.
