@@ -1,0 +1,8 @@
+pueblo_dia: 462.5 ms/frame (~2 FPS) · 2570 draw calls · 4721 objetos · 2012438 primitivas · 4140 nodos
+pueblo_atardecer: 395.1 ms/frame (~3 FPS) · 1964 draw calls · 4115 objetos · 1792888 primitivas · 4140 nodos
+pueblo_noche: 417.4 ms/frame (~2 FPS) · 1684 draw calls · 3835 objetos · 2255242 primitivas · 4140 nodos
+industrial: 456.4 ms/frame (~2 FPS) · 1790 draw calls · 3941 objetos · 1896231 primitivas · 4149 nodos
+mina: 451.2 ms/frame (~2 FPS) · 954 draw calls · 3105 objetos · 2034470 primitivas · 4149 nodos
+rio_vegetacion: 401.1 ms/frame (~2 FPS) · 1898 draw calls · 4049 objetos · 1790348 primitivas · 4149 nodos
+rio_cerca: 377.4 ms/frame (~3 FPS) · 381 draw calls · 2532 objetos · 1935423 primitivas · 4149 nodos
+interior: 142.3 ms/frame (~7 FPS) · 697 draw calls · 3221 objetos · 916994 primitivas · 4305 nodos

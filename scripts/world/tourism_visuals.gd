@@ -138,7 +138,8 @@ func _move(t: Dictionary, delta: float, mult: float) -> void:
 		node.rotation.y = atan2(dir.x, dir.z)
 		t["bob"] = float(t["bob"]) + delta * 10.0 * mult
 		var model: Node3D = node.get_child(0)
-		model.position.y = absf(sin(float(t["bob"]))) * 0.06
+		model.position.y = absf(sin(float(t["bob"]))) * 0.035
+		MeshLib.animate_person(model.get_child(0), float(t["bob"]) * 0.6, 1.0)
 	else:
 		path.pop_front()
 		if path.is_empty():
@@ -171,7 +172,7 @@ func _make_model() -> Node3D:
 	var person := MeshLib.make_person(cloth, skin, Color(0.2, 0.15, 0.1), _rng.randf() < 0.5)
 	root.add_child(person)
 	var hat_col := Color(0.85, 0.78, 0.55) if _rng.randf() < 0.6 else Color(0.25, 0.25, 0.3)
-	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_brim", func(): return MeshLib.cylinder(0.24, 0.24, 0.03, 8)), MeshLib.mat(hat_col), Vector3(0, 1.08, 0)))
-	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_hat", func(): return MeshLib.cylinder(0.12, 0.14, 0.14, 8)), MeshLib.mat(hat_col), Vector3(0, 1.15, 0)))
-	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_pack", func(): return MeshLib.box(Vector3(0.24, 0.3, 0.12))), MeshLib.mat(Color(0.35, 0.3, 0.2)), Vector3(0, 0.6, -0.2)))
+	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_brim", func(): return MeshLib.cylinder(0.24, 0.24, 0.03, 8)), MeshLib.mat(hat_col), Vector3(0, 1.27, 0)))
+	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_hat", func(): return MeshLib.cylinder(0.12, 0.14, 0.14, 8)), MeshLib.mat(hat_col), Vector3(0, 1.34, 0)))
+	person.add_child(MeshLib.mesh_node(MeshLib.cached("tourist_pack", func(): return MeshLib.box(Vector3(0.24, 0.3, 0.12))), MeshLib.mat(Color(0.35, 0.3, 0.2)), Vector3(0, 0.8, -0.16)))
 	return root

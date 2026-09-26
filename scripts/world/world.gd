@@ -12,6 +12,9 @@ var interior: InteriorView
 var sun: DirectionalLight3D
 var env: Environment
 var sky_mat: ProceduralSkyMaterial
+var sky_rig: SkyRig
+var street_lights: StreetLights
+var vegetation: Vegetation
 var weather_fx: WeatherFX
 var minimap: Minimap
 var agents := {}            # id -> CitizenAgent
@@ -50,12 +53,19 @@ func _ready() -> void:
 	NpcBusinessSim.set_terrain_check(terrain.footprint_ok)   # Libre mercado: NPC y gobierno no construyen en agua.
 	terrain.build_mesh()
 	terrain.make_water()
+	WaterLook.apply(terrain)   # Agua con shader (docs/GRAFICOS.md).
 	terrain.scatter_nature(seed_value)
 	terrain.start_country()   # Fase 9A: país por chunks con streaming, niebla y municipios.
+	TerrainLook.apply(terrain)   # Gradación de color del terreno (docs/GRAFICOS.md).
 	terrain.set_season(GameState.season)
 
+	vegetation = Vegetation.new()
+	add_child(vegetation)
+	vegetation.setup(self, terrain)
+
 	var plaza_y := terrain.height_at(0, 0)
-	var square := MeshLib.mesh_node(MeshLib.cylinder(8.0, 8.0, 0.12, 12), MeshLib.mat(Color(0.6, 0.52, 0.38)), Vector3(0, plaza_y + 0.02, 0))
+	var square := MeshLib.mesh_node(_plaza_mesh(8.0, 24), RoadMesh.material("empedrado", Color(0.62, 0.56, 0.46)), Vector3(0, plaza_y + 0.04, 0))
+	square.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(square)
 	var well := MeshLib.make_well()
 	well.position = Vector3(0, plaza_y, 0)
@@ -97,6 +107,9 @@ func _ready() -> void:
 	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new(), UtilitiesVisuals.new(), TransitVisuals.new(), MiningVisuals.new()]:
 		add_child(vis)
 		vis.setup(self)
+	street_lights = StreetLights.new()
+	add_child(street_lights)
+	street_lights.setup(self)
 
 	hud = Hud.new()
 	hud.name = "HUD"
@@ -128,31 +141,14 @@ func _ready() -> void:
 
 
 func _build_environment() -> void:
-	sky_mat = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.32, 0.55, 0.85)
-	sky_mat.sky_horizon_color = Color(0.72, 0.82, 0.9)
-	sky_mat.ground_horizon_color = Color(0.6, 0.65, 0.6)
-	sky_mat.ground_bottom_color = Color(0.3, 0.32, 0.3)
-	var sky := Sky.new()
-	sky.sky_material = sky_mat
-	env = Environment.new()
-	env.background_mode = Environment.BG_SKY
-	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.45
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 0.85
-	env.fog_enabled = true
-	env.fog_light_color = Color(0.7, 0.78, 0.86)
-	env.fog_density = 0.0003
-	env.fog_sky_affect = 0.3
-	var we := WorldEnvironment.new()
-	we.environment = env
-	add_child(we)
-	sun = DirectionalLight3D.new()
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 250.0
-	add_child(sun)
+	# Iluminación y postproceso: SkyRig (docs/GRAFICOS.md).
+	sky_rig = SkyRig.new()
+	sky_rig.name = "SkyRig"
+	add_child(sky_rig)
+	sky_rig.build()
+	env = sky_rig.env
+	sun = sky_rig.sun
+	sky_mat = sky_rig.sky_mat
 
 
 # --- Edificios ---------------------------------------------------------------------------
@@ -184,10 +180,10 @@ func _rebuild_building(id: int) -> void:
 			holder.add_child(model)
 			holder.add_child(MeshLib.scaffold(fp, height))
 		"mejorando":
-			holder.add_child(MeshLib.build_model(parts, tint))
+			holder.add_child(MeshLib.build_model(parts, tint, null, id % 5))
 			holder.add_child(MeshLib.scaffold(fp, height + 0.5))
 		_:
-			holder.add_child(MeshLib.build_model(parts, tint))
+			holder.add_child(MeshLib.build_model(parts, tint, null, id % 5))
 	# Los edificios del jugador llevan una bandera dorada.
 	if GameState.owned_by_player(b):
 		var flag := MeshLib.mesh_node(MeshLib.box(Vector3(0.05, 1.2, 0.05)), MeshLib.mat(Color(0.3, 0.2, 0.1)), Vector3(fp * 0.5, 0.6, fp * 0.5))
@@ -232,6 +228,7 @@ func _on_day() -> void:
 func _on_zones_changed() -> void:
 	terrain.build_mesh()
 	terrain.scatter_nature(int(GameState.settings.get("seed", 1)))
+	vegetation.rebuild()
 	for id in building_nodes:
 		var b: Dictionary = GameState.get_building(id)
 		terrain.clear_trees(float(b["x"]), float(b["z"]), GameState.footprint_of(b) * 0.8 + 1.0)
@@ -337,26 +334,37 @@ func _process(delta: float) -> void:
 
 
 func _update_daylight() -> void:
-	if sun == null:
+	if sky_rig == null:
 		return
 	# A velocidades altas se fija la luz de mediodía para evitar parpadeo día/noche.
 	var h := 12.0 if (TimeManager.speed >= 3 or TimeManager.jumping) else TimeManager.hour_float()
-	var t := (h - 6.0) / 12.0
-	var elev := sin(t * PI)
 	var w := WeatherSim.weather_data(GameState)
-	var dim := float(w.get("sky_dim", 0.0))
-	var day := clampf(elev * 1.6, 0.0, 1.0)
-	sun.rotation = Vector3(-deg_to_rad(maxf(elev, 0.08) * 70.0), deg_to_rad(-30.0 + t * 120.0), 0)
-	sun.light_energy = lerpf(0.08, 0.95, day) * (1.0 - dim * 0.6)
-	sun.light_color = Color(1.0, 0.82, 0.62).lerp(Color(1.0, 0.97, 0.92), clampf(elev * 2.0, 0.0, 1.0))
-	var gray := Color(0.55, 0.58, 0.62)
-	var night_top := Color(0.03, 0.05, 0.12)
-	var top := night_top.lerp(Color(0.32, 0.55, 0.85).lerp(gray, dim), day)
-	var horizon := Color(0.08, 0.1, 0.18).lerp(Color(0.72, 0.82, 0.9).lerp(gray, dim), day)
-	sky_mat.sky_top_color = top
-	sky_mat.sky_horizon_color = horizon
-	env.ambient_light_energy = lerpf(0.2, 0.45, day)
-	env.fog_light_color = horizon
+	sky_rig.update(h, float(w.get("sky_dim", 0.0)))
+
+
+## Plaza empedrada: disco con UV.x = 0,5 en el centro y 0 en el borde (el shader dibuja el bordillo).
+func _plaza_mesh(r: float, seg: int) -> Mesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in range(seg):
+		var a0 := TAU * i / seg
+		var a1 := TAU * (i + 1) / seg
+		for v in [[Vector3.ZERO, 0.5], [Vector3(sin(a1) * r, 0, cos(a1) * r), 0.0], [Vector3(sin(a0) * r, 0, cos(a0) * r), 0.0]]:
+			st.set_normal(Vector3.UP)
+			st.set_uv(Vector2(float(v[1]), 0.0))
+			st.add_vertex(v[0])
+	# Faldón del borde.
+	for i in range(seg):
+		var a0 := TAU * i / seg
+		var a1 := TAU * (i + 1) / seg
+		var p0 := Vector3(sin(a0) * r, 0, cos(a0) * r)
+		var p1 := Vector3(sin(a1) * r, 0, cos(a1) * r)
+		var dn := Vector3(0, -0.3, 0)
+		for v in [p0, p1, p1 + dn, p0, p1 + dn, p0 + dn]:
+			st.set_normal((p0 + p1).normalized())
+			st.set_uv(Vector2(0.0, 0.0))
+			st.add_vertex(v)
+	return st.commit()
 
 
 func _ring_mesh() -> Mesh:

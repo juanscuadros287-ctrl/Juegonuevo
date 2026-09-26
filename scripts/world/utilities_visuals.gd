@@ -239,6 +239,7 @@ func _build_layer(lay: String) -> void:
 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		lab.font_size = 44
 		lab.pixel_size = 0.02
+		MeshLib.style_label(lab, 200.0)
 		lab.outline_size = 8
 		var tie := lay == GridSim.POWER and bool(comp["info"].get(n, {}).get("tie", false))
 		lab.text = "Red %d%s" % [n, " · entrada regional" if tie else ""]

@@ -121,6 +121,7 @@ func _deposit_marker(type: String) -> Node3D:
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.font_size = 48
 	label.pixel_size = 0.02
+	MeshLib.style_label(label, 220.0)
 	label.outline_size = 8
 	label.modulate = col.lightened(0.35)
 	label.position = Vector3(-1.6, 4.8, -0.4)
@@ -157,29 +158,10 @@ func rebuild_roads() -> void:
 		_roads_root.add_child(_road_node(RoadSim.seg_a(r), RoadSim.seg_b(r), str(r["kind"])))
 
 
-## Tramo de carretera siguiendo el terreno: tablones cortos inclinados según la pendiente.
+## Tramo de carretera siguiendo el terreno: franja continua con tapas redondas (RoadMesh).
 func _road_node(a: Vector2, b: Vector2, kind: String, material: Material = null) -> Node3D:
-	var root := Node3D.new()
 	var kd := RoadSim.kind_def(kind)
-	var width := float(kd.get("width", 2.2))
-	var mat: Material = material if material else MeshLib.mat(MeshLib.arr_color(kd.get("color"), Color(0.5, 0.4, 0.3)))
-	var unit := MeshLib.cached("road_unit", func(): return MeshLib.box(Vector3.ONE))
-	var length := a.distance_to(b)
-	var n := maxi(1, int(ceil(length / PIECE)))
-	var dir := (b - a) / maxf(0.001, length)
-	for i in range(n):
-		var p0 := a + dir * (length * i / n)
-		var p1 := a + dir * (length * (i + 1) / n)
-		var h0 := _h(p0.x, p0.y)
-		var h1 := _h(p1.x, p1.y)
-		var mid := (p0 + p1) * 0.5
-		var seg_len := p0.distance_to(p1)
-		var piece := MeshLib.mesh_node(unit, mat, Vector3(mid.x, maxf((h0 + h1) * 0.5, _h(mid.x, mid.y)) + 0.07, mid.y))
-		piece.rotation = Vector3(-atan2(h1 - h0, seg_len), atan2(dir.x, dir.y), 0)
-		piece.scale = Vector3(width, 0.1, seg_len + 0.35)
-		piece.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		root.add_child(piece)
-	return root
+	return RoadMesh.road_node(_terrain(), PackedVector2Array([a, b]), kind, float(kd.get("width", 2.2)), material)
 
 
 func start_road_mode(kind: String) -> void:
@@ -408,6 +390,7 @@ func rebuild_links() -> void:
 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		lab.font_size = 40
 		lab.pixel_size = 0.02
+		MeshLib.style_label(lab, 200.0)
 		lab.outline_size = 8
 		lab.modulate = Color(0.75, 1.0, 0.75)
 		lab.position = Vector3(wp.x, _h(wp.x, wp.y) + (5.5 if wid == WarehouseSim.PLAZA else 8.5), wp.y)
@@ -537,7 +520,7 @@ func _carrier_model(mode: String) -> Node3D:
 			root.add_child(boiler)
 			root.add_child(MeshLib.mesh_node(MeshLib.cached("steam_stack", func(): return MeshLib.cylinder(0.14, 0.14, 1.0, 6)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(0, 2.0, 1.6)))
 			for w in [Vector3(-0.75, 0.45, 1.2), Vector3(0.75, 0.45, 1.2), Vector3(-0.75, 0.45, -0.9), Vector3(0.75, 0.45, -0.9)]:
-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_v", func(): return MeshLib.cylinder(0.45, 0.45, 0.14, 10)), MeshLib.mat(Color(0.35, 0.1, 0.08)), w)
+				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_v", func(): return MeshLib.wheel(0.45, 0.14)), MeshLib.mat(Color(0.35, 0.1, 0.08)), w)
 				wheel.rotation.z = PI * 0.5
 				root.add_child(wheel)
 		"trailer":
@@ -545,14 +528,14 @@ func _carrier_model(mode: String) -> Node3D:
 			root.add_child(MeshLib.mesh_node(MeshLib.cached("trailer_cab", func(): return MeshLib.box(Vector3(1.5, 1.3, 1.3))), MeshLib.mat(Color(0.15, 0.3, 0.65)), Vector3(0, 1.1, 1.6)))
 			for z in [1.5, -0.2, -2.6]:
 				for x in [-0.8, 0.8]:
-					var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.cylinder(0.35, 0.35, 0.2, 8)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
+					var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
 					wheel.rotation.z = PI * 0.5
 					root.add_child(wheel)
 		"camion":
 			root.add_child(MeshLib.mesh_node(MeshLib.cached("truck_cargo", func(): return MeshLib.box(Vector3(1.4, 1.2, 2.4))), MeshLib.mat(Color(0.3, 0.4, 0.3)), Vector3(0, 1.0, -0.4)))
 			root.add_child(MeshLib.mesh_node(MeshLib.cached("truck_cab", func(): return MeshLib.box(Vector3(1.3, 1.0, 1.0))), MeshLib.mat(Color(0.7, 0.2, 0.15)), Vector3(0, 0.9, 1.4)))
 			for w in [Vector3(-0.7, 0.35, 1.2), Vector3(0.7, 0.35, 1.2), Vector3(-0.7, 0.35, -1.0), Vector3(0.7, 0.35, -1.0)]:
-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.cylinder(0.35, 0.35, 0.2, 8)), MeshLib.mat(Color(0.1, 0.1, 0.1)), w)
+				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), w)
 				wheel.rotation.z = PI * 0.5
 				root.add_child(wheel)
 		_:
@@ -566,7 +549,7 @@ func _carrier_model(mode: String) -> Node3D:
 			root.add_child(MeshLib.mesh_node(MeshLib.cached("cart_bed", func(): return MeshLib.box(Vector3(1.3, 0.35, 1.6))), MeshLib.mat(Color(0.5, 0.36, 0.2)), Vector3(0, 0.75, -0.4)))
 			root.add_child(MeshLib.mesh_node(MeshLib.cached("cart_load", func(): return MeshLib.box(Vector3(1.0, 0.5, 1.2))), MeshLib.mat(Color(0.62, 0.52, 0.34)), Vector3(0, 1.15, -0.4)))
 			for wx in [-0.72, 0.72]:
-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_c", func(): return MeshLib.cylinder(0.45, 0.45, 0.1, 8)), MeshLib.mat(Color(0.3, 0.2, 0.12)), Vector3(wx, 0.45, -0.4))
+				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_c", func(): return MeshLib.wheel(0.45, 0.1)), MeshLib.mat(Color(0.3, 0.2, 0.12)), Vector3(wx, 0.45, -0.4))
 				wheel.rotation.z = PI * 0.5
 				root.add_child(wheel)
 	return root
