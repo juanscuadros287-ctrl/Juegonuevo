@@ -176,9 +176,10 @@ static func is_water(gs, p: Vector2) -> bool:
 	return h < WaterSim._water_level + 0.2
 
 
+## Fase 9B: dentro del país (antes: dentro de los 400 m del pueblo).
 static func _inside_map(gs, p: Vector2, margin := 0.5) -> bool:
-	var half: float = gs.MAP_SIZE * 0.5 - margin
-	return absf(p.x) <= half and absf(p.y) <= half
+	var b := MapSim.country_bounds_m(gs).grow(-margin)
+	return b.has_point(p)
 
 
 ## Tramos de agua a lo largo de la polilínea: {wet (m), longest (m), wet_segments: [bool]}.

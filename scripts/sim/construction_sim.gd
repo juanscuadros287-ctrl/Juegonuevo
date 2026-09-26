@@ -173,6 +173,13 @@ static func start_construction(gs, type_id: String, x: float, z: float, rot: flo
 	if reason != "":
 		return {"error": reason}
 	var cost := cost_for(gs, type_id, 1, false, tier)
+	var bm := MunicipalSim.build_mult(gs, x, z)   # Fase 9B: permisos según la regulación del municipio.
+	if bm > 1.0001 or bm < 0.9999:
+		var extra := float(cost["money"]) * (bm - 1.0)
+		cost["money"] = float(cost["money"]) + extra
+		cost["total"] = float(cost["total"]) + extra
+		if extra > 0.0 and gs.money < float(cost["total"]):
+			return {"error": "Dinero insuficiente con los permisos del municipio (%s)" % Fmt.money(float(cost["total"]))}
 	_pay_cost(gs, cost)
 	var b := make_building(gs, type_id, 1, x, z, rot, "jugador")
 	MineSim.on_new_building(gs, b)   # Minas: el centro nuevo empieza sin frentes.
@@ -400,9 +407,15 @@ static func _complete(gs, b: Dictionary, crew: Array) -> void:
 
 # --- Expansión de terreno -------------------------------------------------------------
 
-static func zone_cost(gs) -> float:
+## Precio de una parcela de 80 m al gobierno. En el chunk del pueblo sigue la fórmula de siempre (suelo
+## urbano que se encarece con cada compra); fuera, el precio del mercado de tierras (Fase 9B: municipio,
+## bioma, cercanía a pueblos y carreteras, demanda y fluctuación mensual). Sin coordenadas: la de siempre.
+static func zone_cost(gs, zx := 0, zy := 0) -> float:
 	var n: int = gs.unlocked_zones.size() - 1
-	return float(GameData.game.get("zone_expansion_cost", 2500)) * pow(float(GameData.game.get("zone_expansion_growth", 1.5)), n) * gs.price_mult()
+	var town: float = float(GameData.game.get("zone_expansion_cost", 2500)) * pow(float(GameData.game.get("zone_expansion_growth", 1.5)), n) * gs.price_mult()
+	if zx >= 0 and zx < gs.ZONE_GRID and zy >= 0 and zy < gs.ZONE_GRID:
+		return town
+	return LandSim.parcel_price(gs, zx, zy)
 
 
 static func zone_block_reason(gs, zx: int, zy: int) -> String:
@@ -417,8 +430,8 @@ static func zone_block_reason(gs, zx: int, zy: int) -> String:
 			adjacent = true
 	if not adjacent:
 		return "Debe ser vecina de una zona desbloqueada"
-	if gs.money < zone_cost(gs):
-		return "Dinero insuficiente (%s)" % Fmt.money(zone_cost(gs))
+	if gs.money < zone_cost(gs, zx, zy):
+		return "Dinero insuficiente (%s)" % Fmt.money(zone_cost(gs, zx, zy))
 	return ""
 
 
@@ -426,7 +439,7 @@ static func unlock_zone(gs, zx: int, zy: int) -> String:
 	var reason := zone_block_reason(gs, zx, zy)
 	if reason != "":
 		return reason
-	var cost := zone_cost(gs)
+	var cost := zone_cost(gs, zx, zy)
 	gs.add_money(-cost)
 	# El terreno se le compra al gobierno: el dinero va al tesoro público.
 	GovSim.add_treasury(gs, cost)

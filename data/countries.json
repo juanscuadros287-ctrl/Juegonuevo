@@ -1,5 +1,5 @@
 {
-  "_nota": "Fase 9A — Países (ficticios, con inspiración real). size = chunks de 400 m por lado (24–40). terrain = perfil de generación: mountain/forest/lakes/rivers/desert/swamp/islands en 0..1, humidity y temperature en -1..1, lat_gradient = cuánto enfría el norte, coast = lados con mar (norte, sur, este, oeste o todos). resources = multiplicadores de abundancia (yacimientos y fortalezas de la región). zones = municipios (Voronoi de chunks); town_ratio = fracción con pueblo (el resto son zonas libres). plateaus = mesetas escalonadas, canyons = cañones en mesetas y montañas. currency, base_inflation y exchange_rate_to_ref: economía por país (para la Fase 10; aún no se usan). terrain_cost: multiplicadores de MapSim.terrain_cost_mult para vías (pendiente, túnel, puente, cañón, altura).",
+  "_nota": "Fase 9A — Países (ficticios, con inspiración real). size = chunks de 400 m por lado (56–80; Fase 9B). terrain = perfil de generación: mountain/forest/lakes/rivers/desert/swamp/islands en 0..1, humidity y temperature en -1..1, lat_gradient = cuánto enfría el norte, coast = lados con mar (norte, sur, este, oeste o todos). resources = multiplicadores de abundancia (yacimientos y fortalezas de la región). zones = municipios (Voronoi de chunks; 30–60, de 6×6 a 10×10 chunks); town_ratio = fracción con pueblo (el resto son zonas libres). plateaus = mesetas escalonadas, canyons = cañones en mesetas y montañas. currency, base_inflation y exchange_rate_to_ref: economía por país (para la Fase 10; aún no se usan). terrain_cost: multiplicadores de MapSim.terrain_cost_mult para vías (pendiente, túnel, puente, cañón, altura).",
   "chunk_size": 400.0,
   "default_by_map_type": {
     "interior": "pampaverde",
@@ -11,17 +11,17 @@
   "outside_ring": 2,
   "expedition": {
     "base_cost": 1200.0,
-    "cost_growth_per_chunk": 0.22,
+    "cost_growth_per_chunk": 0.1,
     "base_days": 6,
-    "days_per_chunk": 2,
-    "reveal_radius": 1,
+    "days_per_chunk": 1,
+    "reveal_radius": 2,
     "max_active": 2
   },
   "countries": {
     "andoria": {
       "label": "Andoria",
       "order": 0,
-      "size": 32,
+      "size": 68,
       "inspiration": "Andes y Amazonía (Colombia, Perú, Ecuador)",
       "description": "Cordilleras nevadas al norte y oeste, valles cafeteros, selva húmeda al sur y ríos caudalosos que bajan al mar.",
       "terrain": {
@@ -43,7 +43,7 @@
         "plateaus": 0.35,
         "canyons": 0.45
       },
-      "zones": 26,
+      "zones": 58,
       "town_ratio": 0.7,
       "resources": {
         "oro": 1.6,
@@ -66,7 +66,7 @@
     "pampaverde": {
       "label": "Pampaverde",
       "order": 1,
-      "size": 30,
+      "size": 64,
       "inspiration": "Pampa y litoral (Argentina, Uruguay)",
       "description": "Llanuras inmensas de pastos y trigo, lagunas, grandes ríos lentos y una sierra baja al oeste. Costa atlántica al este.",
       "terrain": {
@@ -87,7 +87,7 @@
         "plateaus": 0.1,
         "canyons": 0.1
       },
-      "zones": 22,
+      "zones": 54,
       "town_ratio": 0.65,
       "resources": {
         "oro": 0.6,
@@ -110,7 +110,7 @@
     "islas_coralinas": {
       "label": "Islas Coralinas",
       "order": 2,
-      "size": 30,
+      "size": 60,
       "inspiration": "Caribe y archipiélagos tropicales (Cuba, Filipinas)",
       "description": "Archipiélago de islas volcánicas con playas, manglares y selva. Mucha costa y pesca; poca tierra plana.",
       "terrain": {
@@ -131,7 +131,7 @@
         "plateaus": 0.0,
         "canyons": 0.15
       },
-      "zones": 20,
+      "zones": 44,
       "town_ratio": 0.75,
       "resources": {
         "oro": 0.7,
@@ -154,7 +154,7 @@
     "arenalia": {
       "label": "Arenalia",
       "order": 3,
-      "size": 34,
+      "size": 72,
       "inspiration": "Desiertos y oasis (Marruecos, Sonora, Atacama)",
       "description": "Dunas y mesetas secas con oasis y pocos ríos; sierras ricas en minerales y una costa fresca al oeste.",
       "terrain": {
@@ -175,7 +175,7 @@
         "plateaus": 0.75,
         "canyons": 0.85
       },
-      "zones": 24,
+      "zones": 60,
       "town_ratio": 0.5,
       "resources": {
         "oro": 1.3,
@@ -198,7 +198,7 @@
     "nordhavia": {
       "label": "Nordhavia",
       "order": 4,
-      "size": 36,
+      "size": 76,
       "inspiration": "Fiordos y bosques boreales (Noruega, Patagonia chilena)",
       "description": "Bosques de coníferas, cientos de lagos, montañas nevadas y fiordos en la costa oeste. Inviernos largos.",
       "terrain": {
@@ -220,7 +220,7 @@
         "plateaus": 0.15,
         "canyons": 0.5
       },
-      "zones": 28,
+      "zones": 60,
       "town_ratio": 0.55,
       "resources": {
         "oro": 0.8,

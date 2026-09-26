@@ -123,9 +123,8 @@ func _build_region() -> void:
 		var row := HBoxContainer.new()
 		var dx := float(d["x"])
 		var dz := float(d["z"])
-		var zs: float = gs.MAP_SIZE / gs.ZONE_GRID
-		var half: float = gs.MAP_SIZE * 0.5
-		var owned: bool = gs.is_zone_unlocked(clampi(int((dx + half) / zs), 0, 4), clampi(int((dz + half) / zs), 0, 4))
+		var zc := MapSim.zone_at(gs, dx, dz)   # Fase 9B: parcelas en índices globales (también fuera del pueblo).
+		var owned: bool = gs.is_zone_unlocked(zc.x, zc.y)
 		var pct := float(d["amount"]) / maxf(1.0, float(d.get("initial", d["amount"])))
 		var l := UIKit.label("%s · %s u. (%d%%)%s" % [RegionSim.resource_label(str(d["type"])), Fmt.thousands(float(d["amount"])), int(pct * 100.0),
 				"" if owned else " · terreno del gobierno"], 13, RegionSim.resource_color(str(d["type"])).lightened(0.3))

@@ -64,6 +64,8 @@ static func ready(gs) -> bool:
 
 ## Países del archivo de países (si el mapa cambia la lista, se agregan los nuevos).
 static func country_defs() -> Dictionary:
+	if WorldData.is_real(MapSim.country_id(GameState)):
+		return WorldData.real_defs()   # Mapa mundial: países reales (moneda, inflación y cambio reales).
 	return GameData.extra("countries").get("countries", {})
 
 

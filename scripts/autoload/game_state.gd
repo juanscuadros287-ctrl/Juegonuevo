@@ -169,6 +169,7 @@ func _init_expansions() -> void:
 	WarSim.init_state(self)
 	MoneySim.init_state(self)   # Sección E: efectivo y mercado negro.
 	GlobalEconSim.init_state(self)   # Economía global (partidas viejas: valores por defecto).
+	MapSim.post_init(self)   # Fase 9B: pueblos de comercio con posición real en municipios.
 
 
 # --- Simulación diaria -----------------------------------------------------
@@ -209,6 +210,7 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		EducationSim.monthly(self)
 		BusinessSim.monthly(self)
 		GovSim.monthly(self)
+		MapSim.monthly(self)   # Fase 9B: precios de la tierra, comercio NPC de tierras, alcaldes y misiones regionales.
 		FreeMarketSim.monthly(self)
 		LaborSim.monthly(self)   # Trabajo: sindicatos, guerras de precio y ofertas a tus empleados.
 		PollutionSim.monthly(self)   # Mundo: contaminación acumulada por zona y filtros.
