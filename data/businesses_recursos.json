@@ -10424,8 +10424,7 @@
   "label": "Hangar de carga",
   "order": 19.3,
   "footprint": 12.0,
-  "description": "PREVISTO: hangar para aviones de carga (tecnología Aviación). Los aviones se pueden comprar, pero el transporte aéreo internacional llegará en una fase posterior.",
-  "planned": true,
+  "description": "Hangar para aviones de carga (tecnología Aviación): capacidad, mantenimiento y combustible por avión. Rutas manuales o automáticas entre aeropuertos del país (Logística → Transporte) y entre países (panel Aviación).",
   "levels": [
    {
     "label": "Hangar de carga",

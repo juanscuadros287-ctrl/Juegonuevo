@@ -18,6 +18,7 @@ const CHUNK := 400.0
 
 static var _gen: CountryGen = null
 static var _gen_key := ""
+static var _gens := {}   # Fase 10: un generador por país con presencia (clave -> CountryGen)
 
 
 static func cfg() -> Dictionary:
@@ -70,9 +71,18 @@ static func gen(gs = null) -> CountryGen:
 	var cid := country_id(gs)
 	var key := "%s|%d|%s" % [mt, sd, cid]
 	if _gen == null or key != _gen_key:
-		_gen = CountryGen.new().init(mt, sd, cid)
-		_gen_key = key
+		_use_gen(key, mt, sd, cid)
 	return _gen
+
+
+## Fase 10: guarda hasta 4 generadores (uno por país con presencia) para no rehacerlos al cambiar de país.
+static func _use_gen(key: String, mt: String, sd: int, cid: String) -> void:
+	if not _gens.has(key):
+		if _gens.size() >= 4:
+			_gens.clear()
+		_gens[key] = CountryGen.new().init(mt, sd, cid)
+	_gen = _gens[key]
+	_gen_key = key
 
 
 # --- Estado ------------------------------------------------------------------------------------
@@ -611,8 +621,7 @@ static func currency(gs = null) -> Dictionary:
 static func gen_for(map_type: String, seed_value: int, cid: String) -> CountryGen:
 	var k := "%s|%d|%s" % [map_type, seed_value, cid]
 	if _gen == null or k != _gen_key:
-		_gen = CountryGen.new().init(map_type, seed_value, cid)
-		_gen_key = k
+		_use_gen(k, map_type, seed_value, cid)
 	return _gen
 
 

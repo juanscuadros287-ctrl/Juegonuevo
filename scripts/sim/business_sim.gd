@@ -99,6 +99,7 @@ static func expected_output(gs, b: Dictionary) -> float:
 	total *= TechSim.mult(gs, "production", str(def.get("product", "")))
 	total *= MineSim.yield_mult(gs, b)   # Minas: ley × reserva restante × escombrera.
 	total *= LaborSim.strike_mult(gs, b) * ClimateSim.output_mult(gs, b)   # Trabajo: huelga · Mundo: clima de la zona.
+	total *= CountriesSim.op_mult()   # Fase 10: gerente o presencia del jugador en ese país.
 	return total
 
 

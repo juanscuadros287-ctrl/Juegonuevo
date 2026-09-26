@@ -509,6 +509,8 @@ static func bought_vehicles(gs, st: Dictionary) -> int:
 
 ## ¿Está el vehículo de viaje?
 static func vehicle_busy(gs, vid: int, now: float) -> bool:
+	if float(get_vehicle(gs, vid).get("air_busy_until", -1.0)) > now:
+		return true   # Fase 10: avión en un vuelo internacional (AirSim).
 	for s in shipments(gs):
 		if float(s["back"]) > now:
 			for x in s.get("vehicles", []):
@@ -747,7 +749,11 @@ static func route_block_reason(gs, from_id: int, to_id: int, mode: String, vehic
 	if md.is_empty():
 		return "Medio de transporte desconocido"
 	if is_planned(mode):
-		return "%s: el transporte aéreo de carga llegará en una fase posterior" % mode_label(mode)
+		return "%s: aún no disponible" % mode_label(mode)
+	if mode == "avion":
+		var air := AirSim.domestic_block_reason(gs, from_id, to_id)   # Fase 10: aviones entre aeropuertos del país.
+		if air != "":
+			return air
 	if not gs.has_tech(str(md.get("tech", ""))):
 		return "Requiere investigar: %s" % GameData.tech_label(str(md.get("tech", "")))
 	if vehicle_id >= 0:

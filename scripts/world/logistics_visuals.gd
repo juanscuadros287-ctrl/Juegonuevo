@@ -531,6 +531,16 @@ func _carrier_model(mode: String) -> Node3D:
 					var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
 					wheel.rotation.z = PI * 0.5
 					root.add_child(wheel)
+		"avion":
+			# Fase 10: avión de carga low-poly (fuselaje, alas, cola y motores).
+			var hull := MeshLib.mat(Color(0.88, 0.89, 0.9))
+			root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_body", func(): return MeshLib.box(Vector3(2.2, 2.2, 14.0))), hull, Vector3(0, 0, 0)))
+			root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_nose", func(): return MeshLib.box(Vector3(1.6, 1.5, 2.0))), MeshLib.mat(Color(0.2, 0.3, 0.5)), Vector3(0, 0.2, 7.6)))
+			root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_wing", func(): return MeshLib.box(Vector3(18.0, 0.35, 3.2))), hull, Vector3(0, 0.3, 0.6)))
+			root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_tail_h", func(): return MeshLib.box(Vector3(6.5, 0.3, 1.8))), hull, Vector3(0, 0.8, -6.2)))
+			root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_tail_v", func(): return MeshLib.box(Vector3(0.3, 3.2, 2.2))), MeshLib.mat(Color(0.75, 0.2, 0.15)), Vector3(0, 2.4, -6.0)))
+			for ex in [-4.5, 4.5]:
+				root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_engine", func(): return MeshLib.box(Vector3(0.9, 0.9, 2.2))), MeshLib.mat(Color(0.3, 0.32, 0.35)), Vector3(ex, -0.4, 1.2)))
 		"camion":
 			root.add_child(MeshLib.mesh_node(MeshLib.cached("truck_cargo", func(): return MeshLib.box(Vector3(1.4, 1.2, 2.4))), MeshLib.mat(Color(0.3, 0.4, 0.3)), Vector3(0, 1.0, -0.4)))
 			root.add_child(MeshLib.mesh_node(MeshLib.cached("truck_cab", func(): return MeshLib.box(Vector3(1.3, 1.0, 1.0))), MeshLib.mat(Color(0.7, 0.2, 0.15)), Vector3(0, 0.9, 1.4)))
@@ -591,5 +601,7 @@ func _process(delta: float) -> void:
 			var m: Node3D = models[i]
 			var q := p + side * (i - (models.size() - 1) * 0.5) * 1.6 - dir.normalized() * i * 1.2
 			m.position = Vector3(q.x, _h(q.x, q.y), q.y)
+			if str(s["mode"]) == "avion":   # Fase 10: sube, cruza y aterriza.
+				m.position.y += 4.0 + 36.0 * sin(PI * clampf(frac, 0.0, 1.0))
 			m.rotation.y = atan2(dir.x, dir.y)
 			m.visible = true

@@ -26,6 +26,7 @@ static func make_building(gs, type_id: String, level: int, x: float, z: float, r
 		b["price"] = BusinessSim.default_price(gs, def)
 		b["auto_price"] = true
 		b["markup"] = 0.1
+	b["country_id"] = CountriesSim.current_id()   # Fase 10: país del edificio.
 	return b
 
 
@@ -38,6 +39,7 @@ static func normalize_building(src: Dictionary) -> Dictionary:
 	b["level"] = int(b.get("level", 1))
 	b["target_level"] = int(b.get("target_level", b["level"]))
 	b["owner_id"] = int(b.get("owner_id", -1))
+	b["country_id"] = str(b.get("country_id", ""))   # Fase 10 (partida vieja: se marca al cargar).
 	for k in ["status", "name", "legal"]:
 		if not b.has(k):
 			b[k] = {"status": "activo", "name": "", "legal": "sas"}[k]
@@ -126,7 +128,9 @@ static func level_block_reason(gs, type_id: String, level: int) -> String:
 
 
 static func build_block_reason(gs, type_id: String, tier := "normal") -> String:
-	var r := level_block_reason(gs, type_id, 1)
+	var r := CountriesSim.control_block_reason(gs)   # Fase 10: vista remota sin gerente.
+	if r == "":
+		r = level_block_reason(gs, type_id, 1)
 	if r != "":
 		return r
 	var def := GameData.building_def(type_id)
@@ -329,6 +333,8 @@ static func daily(gs) -> void:
 	var mine := sites.filter(func(s): return gs.owned_by_player(s) or str(s.get("contractor", "")) == "jugador")
 	var points_share: float = float(gs.get_meta("construction_points", 0.0)) / maxi(1, mine.size()) if gs.has_meta("construction_points") else 0.0
 	for b in sites:
+		if mine.has(b) and not CountriesSim.works_advance():
+			continue   # Fase 10: sin gerente ni presencia del jugador en ese país, sus obras no avanzan.
 		var lvl := int(b["target_level"])
 		var need_workers := int(GameData.level_def(b["type"], lvl).get("workers", 2))
 		var crew := _crew(gs, b, need_workers)
@@ -339,7 +345,7 @@ static func daily(gs) -> void:
 			work += 1.0
 			c.money += wage
 			BusinessSim.pay(gs, b, wage, "obras")
-		b["work_done"] = float(b["work_done"]) + work * TechSim.mult(gs, "construction_speed")
+		b["work_done"] = float(b["work_done"]) + work * TechSim.mult(gs, "construction_speed") * (CountriesSim.work_mult() if mine.has(b) else 1.0)
 		if float(b["work_done"]) >= float(b["work_needed"]):
 			_complete(gs, b, crew)
 
@@ -419,7 +425,9 @@ static func zone_cost(gs, zx := 0, zy := 0) -> float:
 
 
 static func zone_block_reason(gs, zx: int, zy: int) -> String:
-	var map_reason := MapSim.zone_map_block_reason(gs, zx, zy)   # Fase 9A: dentro del país y explorado.
+	var map_reason := CountriesSim.control_block_reason(gs)   # Fase 10: vista remota sin gerente.
+	if map_reason == "":
+		map_reason = MapSim.zone_map_block_reason(gs, zx, zy)   # Fase 9A: dentro del país y explorado.
 	if map_reason != "":
 		return map_reason
 	if gs.is_zone_unlocked(zx, zy):
