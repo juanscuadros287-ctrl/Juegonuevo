@@ -23,13 +23,18 @@ const LOD_NONE := -1
 const LOD_HIGH := 0
 const LOD_MID := 1
 const LOD_FAR := 2
-const LOD_RES := [80, 20, 20]     # alta (5 m), media (20 m), lejana: tesela de 4×4 chunks (80 m)
+const LOD_LOW := 3                # (mapa v2) media-baja: chunk detallado de 20 m hasta varios km
+const LOD_RES := [80, 40, 20, 20] # alta (5 m), media (10 m), lejana: tesela de 4×4 chunks (80 m), media-baja (20 m)
 const TILE := 4                   # chunks por lado de una tesela lejana
 const MAP_PX := 5                 # píxeles del minimapa por chunk (80 m por píxel)
 const HIGH_DIST := 700.0
-const MID_DIST := 2800.0
+const MID_DIST := 2000.0
+const MID_DIST_MAX := 3400.0      # con la cámara alta, la media (10 m) llega hasta 1,3 × su altura
+const LOW_DIST_MIN := 2600.0      # la media-baja llega a max(esto, 2 × altura de la cámara)…
+const LOW_DIST_MAX := 7500.0      # …sin pasar de aquí
 const MAX_HIGH := 9
-const MAX_MID := 48
+const MAX_MID := 56
+const MAX_LOW := 150
 const FAR_BATCH := 2
 const FRAME_BUDGET_MS := 5.0
 const DIM_LOCKED := 0.32
@@ -74,7 +79,13 @@ var overlay: CountryOverlay
 var water: MeshInstance3D
 var map_image: Image             # MAP_PX px por chunk (80 m por píxel), incluye el anillo exterior
 var map_texture: ImageTexture
-var stats := {"jobs": 0, "uploads": 0, "upload_ms": 0.0, "job_ms": 0.0, "high": 0, "mid": 0, "far": 0}
+var stats := {"jobs": 0, "uploads": 0, "upload_ms": 0.0, "job_ms": 0.0, "high": 0, "mid": 0, "low": 0, "far": 0}
+var geo_tex: ImageTexture        # (mapa v2) ríos, tierra y altura real del país para los shaders
+var geo_rect := Rect2()
+var river_tex: ImageTexture      # (mapa v2) distancia (m) al cauce, 8 píxeles por celda de la rejilla real
+var river_ms := 0.0
+var _low_dist := LOW_DIST_MIN
+var _fade_r := 0.0               # radio (m) donde termina la malla detallada (transición con la lejana)
 var _jobs: Array = []            # [{task, req}]
 var _far_queue: Array = []
 var _ready_results: Array = []
@@ -465,6 +476,7 @@ func _ensure_materials() -> void:
 	fog_tex = ImageTexture.create_from_image(fog_image)
 	zone_tex = ImageTexture.create_from_image(zone_image)
 	detail_tex = ImageTexture.create_from_image(detail_image)
+	_build_geo_texture()
 	chunk_material = _make_chunk_mat(false)
 	far_material = _make_chunk_mat(true)
 	fog_material = far_material
@@ -482,7 +494,94 @@ func _make_chunk_mat(is_far: bool) -> ShaderMaterial:
 	m.set_shader_parameter("map_texels", float(w))
 	m.set_shader_parameter("chunk_size", CHUNK)
 	m.set_shader_parameter("is_far", is_far)
+	m.set_shader_parameter("water_level", water_level)
+	m.set_shader_parameter("snow_line", 150.0)
+	if geo_tex != null:
+		m.set_shader_parameter("geo_tex", geo_tex)
+		m.set_shader_parameter("river_tex", river_tex)
+		m.set_shader_parameter("has_geo", true)
+		m.set_shader_parameter("geo_rect", Vector4(geo_rect.position.x, geo_rect.position.y, geo_rect.size.x, geo_rect.size.y))
 	return m
+
+
+## (Mapa v2) Rejilla real del país para los shaders (terreno y agua): R = distancia al río (m),
+## G = ancho del río (m), B = fracción de tierra, A = altura real (m, negativa en el mar).
+func _build_geo_texture() -> void:
+	if gen == null or not gen.real or gen._gm <= 1:
+		return
+	var m := gen._gm
+	var img := Image.create(m, m, false, Image.FORMAT_RGBAF)
+	for j in range(m):
+		for i in range(m):
+			var k := j * m + i
+			img.set_pixel(i, j, Color(gen._rdist[k], gen._rwid[k], gen._fland[k], gen._elev[k]))
+	geo_tex = ImageTexture.create_from_image(img)
+	geo_rect = Rect2(gen._gx0 - gen._gcell * 0.5, gen._gx0 - gen._gcell * 0.5, m * gen._gcell, m * gen._gcell)
+	_build_river_texture()
+
+
+## La distancia al río de la rejilla (200 m) interpolada deja "cuentas" en lugar de líneas. Aquí se
+## reconstruye el cauce: cada celda cercana a un río se proyecta sobre él (contra el gradiente de la
+## distancia) y se unen las celdas vecinas con segmentos; luego se rasteriza la distancia exacta a
+## esos segmentos en una textura 8× más fina (25 m por píxel).
+func _build_river_texture() -> void:
+	var t0 := Time.get_ticks_usec()
+	var m := gen._gm
+	var g := gen._gcell
+	var rd := gen._rdist
+	const R := 8
+	const CAP := 160.0
+	var w := m * R
+	var ps := g / R
+	var dist := PackedFloat32Array()
+	dist.resize(w * w)
+	dist.fill(CAP)
+	var pts := {}
+	for j in range(1, m - 1):
+		for i in range(1, m - 1):
+			var k := j * m + i
+			var d := rd[k]
+			if d > g * 0.75 or gen._rwid[k] <= 0.0:
+				continue
+			var gv := Vector2(rd[k + 1] - rd[k - 1], rd[k + m] - rd[k - m]) / (2.0 * g)
+			var c := Vector2(gen._gx0 + i * g, gen._gx0 + j * g)
+			if gv.length() > 0.5:
+				c -= gv.normalized() * d
+			elif d > 50.0:
+				continue   # justo sobre el cauce el gradiente no sirve: esa celda no aporta punto
+			pts[k] = c
+	var ox := geo_rect.position.x
+	var oz := geo_rect.position.y
+	for k in pts:
+		var a: Vector2 = pts[k]
+		var any := false
+		for off in [1, m, m + 1, m - 1]:
+			if pts.has(k + off):
+				_raster_seg(dist, w, ps, ox, oz, a, pts[k + off], CAP)
+				any = true
+		if not any:
+			_raster_seg(dist, w, ps, ox, oz, a, a, CAP)
+	var img := Image.create_from_data(w, w, false, Image.FORMAT_RF, dist.to_byte_array())
+	river_tex = ImageTexture.create_from_image(img)
+	river_ms = (Time.get_ticks_usec() - t0) / 1000.0
+
+
+static func _raster_seg(dist: PackedFloat32Array, w: int, ps: float, ox: float, oz: float, a: Vector2, b: Vector2, cap: float) -> void:
+	var i0 := maxi(int((minf(a.x, b.x) - cap - ox) / ps), 0)
+	var i1 := mini(int((maxf(a.x, b.x) + cap - ox) / ps), w - 1)
+	var j0 := maxi(int((minf(a.y, b.y) - cap - oz) / ps), 0)
+	var j1 := mini(int((maxf(a.y, b.y) + cap - oz) / ps), w - 1)
+	var ab := b - a
+	var l2 := maxf(ab.length_squared(), 0.0001)
+	for j in range(j0, j1 + 1):
+		var pz := oz + (j + 0.5) * ps
+		for i in range(i0, i1 + 1):
+			var p := Vector2(ox + (i + 0.5) * ps, pz)
+			var t := clampf((p - a).dot(ab) / l2, 0.0, 1.0)
+			var d := p.distance_to(a + ab * t)
+			var q := j * w + i
+			if d < dist[q]:
+				dist[q] = d
 
 
 ## Niveles de niebla por chunk: 0 explorado, velo ligero en tu municipio y los vecinos, velo en lo sin
@@ -557,7 +656,7 @@ func _update_borders() -> void:
 	var k := smoothstep(500.0, 1800.0, alt)
 	var width := clampf(alt * 0.0021, 6.0, 70.0)
 	for m in [chunk_material, far_material]:
-		m.set_shader_parameter("border_alpha", 0.42 * k)
+		m.set_shader_parameter("border_alpha", 0.32 * k)
 		m.set_shader_parameter("border_width", width)
 
 
@@ -592,8 +691,12 @@ func _update_lods() -> void:
 	if cam == null:
 		return
 	var cp := cam.global_position
-	var want_high := []
-	var want_mid := []
+	# Mapa v2: la malla detallada llega más lejos cuanto más alta está la cámara (vista de región o
+	# municipio a 1–4 km): alta (5 m) < 700 m, media (10 m) < 2 km, media-baja (20 m) hasta 2× la altura.
+	var alt := cp.y - maxf(height_at(cp.x, cp.z), water_level)
+	_low_dist = clampf(alt * 2.0, LOW_DIST_MIN, LOW_DIST_MAX)
+	var mid_dist := clampf(alt * 1.3, MID_DIST, MID_DIST_MAX)
+	var want_any := []
 	var rev: Dictionary = GameState.map.get("chunks_revealed", {})
 	var active := []
 	for c in chunks:
@@ -606,24 +709,41 @@ func _update_lods() -> void:
 		var q := Vector2(clampf(cp.x, r.position.x, r.end.x), clampf(cp.z, r.position.y, r.end.y))
 		var dist := Vector3(q.x - cp.x, float(d["h"]) - cp.y, q.y - cp.z).length()
 		d["dist"] = dist
-		if revealed and gen.in_country_chunk(c.x, c.y):
-			if dist < HIGH_DIST:
-				want_high.append(c)
-			elif dist < MID_DIST:
-				want_mid.append(c)
+		if revealed and gen.in_country_chunk(c.x, c.y) and dist < _low_dist:
+			want_any.append(c)
 	var by_dist := func(a: Vector2i, b: Vector2i) -> bool: return float(chunks[a]["dist"]) < float(chunks[b]["dist"])
-	want_high.sort_custom(by_dist)
-	want_mid.sort_custom(by_dist)
+	want_any.sort_custom(by_dist)
 	var wants := {}
-	for i in range(want_high.size()):
-		wants[want_high[i]] = LOD_HIGH if i < MAX_HIGH else LOD_MID
-	for i in range(want_mid.size()):
-		if i < MAX_MID:
-			wants[want_mid[i]] = LOD_MID
+	var nh := 0
+	var nm := 0
+	var nl := 0
+	var cover := _low_dist
+	for c in want_any:
+		var dist := float(chunks[c]["dist"])
+		if dist < HIGH_DIST and nh < MAX_HIGH:
+			wants[c] = LOD_HIGH
+			nh += 1
+		elif dist < mid_dist and nm < MAX_MID:
+			wants[c] = LOD_MID
+			nm += 1
+		elif nl < MAX_LOW:
+			wants[c] = LOD_LOW
+			nl += 1
+		else:
+			cover = dist
+			break
+	# Transición suave: la malla detallada se funde con la tesela lejana antes de su último anillo.
+	_fade_r = cover if _fade_r <= 0.0 else lerpf(_fade_r, cover, 0.35)
+	var ff := maxf(_fade_r - 60.0, 200.0)
+	for m in [chunk_material, far_material]:
+		if m != null:
+			m.set_shader_parameter("fade_far", ff)
+			m.set_shader_parameter("fade_near", ff - maxf(250.0, ff * 0.08))
 	# Mostrar la mejor malla disponible y liberar las que ya no hacen falta.
 	var queue := []
 	var high_n := 0
 	var mid_n := 0
+	var low_n := 0
 	for c in active:
 		var d: Dictionary = chunks[c]
 		var want := int(wants.get(c, LOD_FAR))
@@ -640,9 +760,13 @@ func _update_lods() -> void:
 			high_n += 1
 		elif int(d["lod"]) == LOD_MID:
 			mid_n += 1
+		elif int(d["lod"]) == LOD_LOW:
+			low_n += 1
 	stats["high"] = high_n
 	stats["mid"] = mid_n
-	queue.sort_custom(func(a, b): return int(a[1]) < int(b[1]) or (int(a[1]) == int(b[1]) and float(chunks[a[0]]["dist"]) < float(chunks[b[0]]["dist"])))
+	stats["low"] = low_n
+	var prio := func(l: int) -> int: return 2 if l == LOD_LOW else l   # alta, media, media-baja
+	queue.sort_custom(func(a, b): return prio.call(int(a[1])) < prio.call(int(b[1])) or (int(a[1]) == int(b[1]) and float(chunks[a[0]]["dist"]) < float(chunks[b[0]]["dist"])))
 	var owned := _owned.duplicate()
 	_detail_pending = queue.size()
 	for item in queue:
@@ -706,7 +830,7 @@ func _show(c: Vector2i, d: Dictionary, want: int) -> void:
 	if shown == LOD_NONE and d.get("far") != null:
 		shown = LOD_FAR
 	d["lod"] = shown
-	_set_detail_mask(c, shown == LOD_HIGH or shown == LOD_MID)
+	_set_detail_mask(c, shown == LOD_HIGH or shown == LOD_MID or shown == LOD_LOW)
 
 
 ## Marca los chunks con malla detallada visible: ahí el shader recorta la tesela lejana.
@@ -793,7 +917,7 @@ func _upload_results() -> void:
 			if chunks.has(c):
 				chunks[c]["busy"] = false
 				# El pedido pudo quedar viejo (la cámara se alejó): no se sube una malla detallada inútil.
-				if float(chunks[c].get("dist", 0.0)) < MID_DIST * 1.2:
+				if float(chunks[c].get("dist", 0.0)) < _low_dist * 1.2:
 					_apply_result(r)
 		if (Time.get_ticks_usec() - t0) / 1000.0 > FRAME_BUDGET_MS:
 			break
@@ -823,6 +947,8 @@ func _mesh_from(r: Dictionary, res: int) -> ArrayMesh:
 	arrays[Mesh.ARRAY_VERTEX] = r["verts"]
 	arrays[Mesh.ARRAY_NORMAL] = r["normals"]
 	arrays[Mesh.ARRAY_COLOR] = r["cols"]
+	if r.has("uvs"):
+		arrays[Mesh.ARRAY_TEX_UV] = r["uvs"]
 	arrays[Mesh.ARRAY_INDEX] = _indices_for(res)
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
@@ -997,9 +1123,11 @@ func _grid_mesh(x0: float, z0: float, step: float, n: int, hs: PackedFloat32Arra
 	var verts := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var cols := PackedColorArray()
+	var uvs := PackedVector2Array()   # (mapa v2) x = densidad de árboles del bioma, y = aridez
 	verts.resize(n * n + 4 * n)
 	normals.resize(n * n + 4 * n)
 	cols.resize(n * n + 4 * n)
+	uvs.resize(n * n + 4 * n)
 	var full := PackedColorArray()
 	full.resize(m * m)
 	var nys := PackedFloat32Array()
@@ -1026,14 +1154,19 @@ func _grid_mesh(x0: float, z0: float, step: float, n: int, hs: PackedFloat32Arra
 			verts[j * n + i] = Vector3(x, h, z)
 			normals[j * n + i] = Vector3(-dx, 1.0, -dz).normalized()
 			var col := full[k]
+			var uv := _veg_uv(bs[k])
 			if blur:
 				var acc := Color(0, 0, 0, 0)
+				var uacc := Vector2.ZERO
 				for oj in [-m, 0, m]:
 					for oi in [-1, 0, 1]:
 						acc += full[k + oj + oi]
+						uacc += _veg_uv(bs[k + oj + oi])
 				acc = acc / 9.0
-				col = col.lerp(acc, 0.7)
+				col = col.lerp(acc, 0.45)
+				uv = uv.lerp(uacc / 9.0, 0.6)
 			cols[j * n + i] = col
+			uvs[j * n + i] = uv
 	# Faldones: copia de cada borde hundida (tapa grietas con chunks de otra resolución).
 	var drop := 2.0 + step * 0.6
 	var base := n * n
@@ -1043,7 +1176,19 @@ func _grid_mesh(x0: float, z0: float, step: float, n: int, hs: PackedFloat32Arra
 			verts[base + e * n + t] = verts[g] - Vector3(0, drop, 0)
 			normals[base + e * n + t] = normals[g]
 			cols[base + e * n + t] = cols[g].darkened(0.1)
-	return {"verts": verts, "normals": normals, "cols": cols}
+			uvs[base + e * n + t] = uvs[g]
+	return {"verts": verts, "normals": normals, "cols": cols, "uvs": uvs}
+
+
+## Atributos de vegetación por bioma para el shader: densidad de árboles (copas) y aridez.
+## y < 0 marca montaña (-1) y nevado (-2).
+static func _veg_uv(b: int) -> Vector2:
+	var arid := 1.0 if b == CountryGen.B_DESIERTO else (0.5 if b == CountryGen.B_COSTA else 0.0)
+	if b == CountryGen.B_MONTANA:
+		arid = -1.0
+	elif b == CountryGen.B_NEVADO:
+		arid = -2.0
+	return Vector2(CountryGen.tree_density(b), arid)
 
 
 ## Arreglos de un chunk detallado (hilo-seguro): vértices, normales, colores, faldones y árboles.
@@ -1064,7 +1209,7 @@ func _chunk_arrays(c: Vector2i, lod: int, owned: Dictionary, cleared: Array) -> 
 	out["lod"] = lod
 	out["sig"] = _sig_from(c, owned)
 	out["tree_n"] = 0
-	if not (c == Vector2i.ZERO):
+	if not (c == Vector2i.ZERO) and lod != LOD_LOW:   # media-baja: las copas las dibuja el shader
 		# Árboles: rejilla sin borde (n×n) para los índices de siempre.
 		var hs := PackedFloat32Array()
 		var bs := PackedByteArray()
@@ -1191,7 +1336,7 @@ func _chunk_trees(c: Vector2i, lod: int, hs: PackedFloat32Array, bs: PackedByteA
 			var fn := gen._forest.get_noise_2d(px * 0.6, pz * 0.6)
 			dens *= clampf(0.55 + fn * 1.2, 0.0, 1.4)
 			if lod == LOD_MID:
-				dens *= 0.55
+				dens *= 0.5   # (mapa v2) el resto del bosque lo ponen las copas del shader
 			if r1 > dens:
 				continue
 			var tx := (px - x0) / step - i
@@ -1206,7 +1351,7 @@ func _chunk_trees(c: Vector2i, lod: int, hs: PackedFloat32Array, bs: PackedByteA
 					break
 			if skip:
 				continue
-			var s := lerpf(0.7, 1.45, r2) * (1.3 if b == CountryGen.B_SELVA else 1.0) * (1.8 if lod == LOD_MID else 1.0)
+			var s := lerpf(0.7, 1.45, r2) * (1.3 if b == CountryGen.B_SELVA else 1.0) * (1.4 if lod == LOD_MID else 1.0)
 			var hsc := lerpf(0.85, 1.3, r3) * (1.5 if b == CountryGen.B_NEVADO or b == CountryGen.B_MONTANA else 1.0)
 			var basis := Basis(Vector3.UP, r2 * TAU).scaled(Vector3(s, s * hsc, s))
 			var col := CountryGen.tree_color(b) * lerpf(0.82, 1.15, r3)

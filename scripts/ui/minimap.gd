@@ -38,15 +38,16 @@ func setup(p_world: Node) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Pequeño
+	# Mapa v2: esquina inferior izquierda, alineado con la barra de categorías (x = 8) y con su mismo
+	# estilo flotante de UIKit; si la ventana es baja y chocaría con la barra, se corre a su derecha.
 	small_panel = PanelContainer.new()
-	small_panel.add_theme_stylebox_override("panel", UIKit.panel_style(Color(0.08, 0.09, 0.11, 0.86), 6, 6))
+	small_panel.add_theme_stylebox_override("panel", UIKit.float_style(Color(0.075, 0.082, 0.1, 0.9), 12, 6))
 	small_panel.anchor_top = 1.0
 	small_panel.anchor_bottom = 1.0
-	small_panel.offset_left = 184
-	small_panel.offset_top = -(SMALL + 52)
-	small_panel.offset_bottom = -10
-	small_panel.offset_right = 184 + SMALL + 12
 	add_child(small_panel)
+	_place_small()
+	resized.connect(_place_small)
+	_place_small.call_deferred()
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 4)
 	small_panel.add_child(v)
@@ -65,7 +66,7 @@ func setup(p_world: Node) -> void:
 	v.add_child(small_map)
 	# Grande
 	big_panel = PanelContainer.new()
-	big_panel.add_theme_stylebox_override("panel", UIKit.panel_style(Color(0.08, 0.09, 0.11, 0.95), 8, 10))
+	big_panel.add_theme_stylebox_override("panel", UIKit.float_style(Color(0.075, 0.082, 0.1, 0.96), 12, 10))
 	big_panel.anchor_left = 0.5
 	big_panel.anchor_right = 0.5
 	big_panel.anchor_top = 0.5
@@ -137,6 +138,21 @@ func setup(p_world: Node) -> void:
 	EventBus.zones_changed.connect(_on_map_changed)
 	_rebuild_layers()
 	_select(Vector2i.ZERO)
+
+
+## Coloca el minimapa pequeño abajo a la izquierda sin tapar la barra de categorías del HUD.
+func _place_small() -> void:
+	if small_panel == null:
+		return
+	var left := 8.0
+	var h := SMALL + 52.0
+	var rail: Control = world.hud.side_menu if world != null and world.get("hud") != null and world.hud.get("side_menu") != null else null
+	if rail != null and size.y > 0.0 and size.y - 10.0 - h < rail.position.y + rail.size.y + 8.0:
+		left = rail.position.x + rail.size.x + 8.0
+	small_panel.offset_left = left
+	small_panel.offset_right = left + SMALL + 12.0
+	small_panel.offset_top = -(h + 10.0)
+	small_panel.offset_bottom = -10.0
 
 
 func set_expanded(on: bool) -> void:

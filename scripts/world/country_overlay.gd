@@ -5,6 +5,8 @@ extends Node3D
 ## - Pueblos NPC: punto y casco urbano low-poly proporcional a su población (dos MultiMesh para todo el
 ##   país: paredes y techos, instancias baratas).
 ## Las fronteras entre municipios se dibujan en el shader del terreno (terrain_chunk.gdshader).
+## Mapa v2: las etiquetas no se solapan (LabelDeclutter, prioridad: tu pueblo > pueblos por población >
+## municipios sin pueblo) y se desvanecen con la altura y la distancia a la cámara.
 
 const SHOW_FROM := 600.0      # altura de cámara desde la que se ven las etiquetas
 const FULL_AT := 1800.0
@@ -17,6 +19,7 @@ var houses_roofs: MultiMeshInstance3D
 var dot_mat_player: StandardMaterial3D
 var dot_mat_town: StandardMaterial3D
 var dot_mat_fog: StandardMaterial3D
+var declutter: LabelDeclutter
 
 
 func setup(t: Terrain) -> void:
@@ -24,6 +27,9 @@ func setup(t: Terrain) -> void:
 	dot_mat_player = _dot_mat(Color(1.0, 0.8, 0.2))
 	dot_mat_town = _dot_mat(Color(0.97, 0.95, 0.9))
 	dot_mat_fog = _dot_mat(Color(0.72, 0.74, 0.78))
+	declutter = LabelDeclutter.new()
+	declutter.name = "LabelDeclutter"
+	add_child(declutter)
 	_build_markers()
 	_build_houses()
 	refresh()
@@ -75,6 +81,7 @@ func _build_markers() -> void:
 			var c: Vector2 = z["centroid"]
 			var lb := _make_label(nm, 30)
 			lb.position = Vector3(c.x, _ground(c) + 30.0, c.y)
+			LabelDeclutter.register(lb, 3.0)
 			add_child(lb)
 			labels.append({"label": lb, "zone": z})
 			continue
@@ -94,6 +101,8 @@ func _build_markers() -> void:
 		var player := bool(z["player"])
 		var label := _make_label(nm, 44 if player else 38)
 		label.offset = Vector2(0, 40)
+		var pop := float(MunicipalSim.region(GameState, int(z["id"])).get("population", 600))
+		LabelDeclutter.register(label, 100.0 if player else 10.0 + log(maxf(pop, 1.0)) / log(10.0))
 		node.add_child(label)
 		markers.append({"node": node, "dot": dot, "label": label, "zone": z})
 
@@ -194,7 +203,15 @@ func _process(_delta: float) -> void:
 		dot.scale = Vector3.ONE * clampf(d * 0.0042, 0.5, 110.0)
 		dot.position.y = dot.scale.y
 		var label: Label3D = m["label"]
-		label.visible = k > 0.05 or (bool(m["zone"]["player"]) and alt > 250.0)
+		var player := bool(m["zone"]["player"])
+		label.visible = k > 0.02 or (player and alt > 250.0)
+		# Desvanecido por altura y por distancia (en vistas inclinadas, lo del horizonte se apaga).
+		var fd := 1.0 - smoothstep(alt * 3.0, alt * 5.0, d)
+		label.set_meta("decl_fade", (1.0 if player else k) * fd)
 		dot.visible = alt > 250.0
+	var kz := smoothstep(SHOW_FROM * 2.0, FULL_AT * 2.0, alt)
 	for l in labels:
-		(l["label"] as Label3D).visible = k > 0.3
+		var lb: Label3D = l["label"]
+		lb.visible = kz > 0.02
+		var fd2 := 1.0 - smoothstep(alt * 3.0, alt * 5.0, cp.distance_to(lb.global_position))
+		lb.set_meta("decl_fade", kz * fd2)

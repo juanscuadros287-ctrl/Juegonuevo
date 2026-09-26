@@ -13,6 +13,11 @@ uniform vec3 shallow_color : source_color = vec3(0.22, 0.58, 0.6);
 uniform vec3 deep_color : source_color = vec3(0.05, 0.2, 0.36);
 uniform vec3 foam_color : source_color = vec3(0.92, 0.96, 0.98);
 uniform float wave_scale = 0.18;
+// Mapa v2: rejilla real del país (A = altura/batimetría real en m, B = fracción de tierra) para el
+// color por profundidad en todo el país (plataforma turquesa, mar profundo azul oscuro).
+uniform sampler2D geo_tex : filter_linear, repeat_disable;
+uniform bool has_geo = false;
+uniform vec4 geo_rect = vec4(0.0, 0.0, 1.0, 1.0);
 
 varying vec3 wpos;
 
@@ -40,8 +45,19 @@ void vertex() {
 void fragment() {
 	vec2 uv = (wpos.xz - height_rect.xy) / height_rect.zw;
 	float depth = far_depth;
+	float real_d = -1.0;
+	float coast = 0.0;
 	if (uv.x > 0.0 && uv.y > 0.0 && uv.x < 1.0 && uv.y < 1.0) {
 		depth = max(water_level - texture(height_tex, uv).r, 0.0);
+	} else if (has_geo) {
+		vec2 guv = (wpos.xz - geo_rect.xy) / geo_rect.zw;
+		if (guv.x > 0.0 && guv.y > 0.0 && guv.x < 1.0 && guv.y < 1.0) {
+			vec4 g = texture(geo_tex, guv);
+			real_d = g.a < 0.0 ? -g.a : 25.0;   // lagos y ríos (altura positiva): poco profundos
+			coast = smoothstep(0.05, 0.6, g.b);
+		} else {
+			real_d = 3000.0;
+		}
 	}
 	float dist = length(VERTEX);
 	float t = TIME;
@@ -55,6 +71,14 @@ void fragment() {
 	NORMAL = normalize((VIEW_MATRIX * vec4(wn, 0.0)).xyz);
 	float d01 = clamp(depth / 3.0, 0.0, 1.0);
 	vec3 col = mix(shallow_color, deep_color, smoothstep(0.0, 1.0, d01));
+	if (real_d >= 0.0) {
+		// Profundidad real: orilla y plataforma turquesa → talud → océano profundo.
+		float k = clamp(sqrt(real_d / 3500.0), 0.0, 1.0);
+		vec3 shelf = mix(vec3(0.17, 0.42, 0.44), vec3(0.09, 0.27, 0.38), smoothstep(0.0, 0.25, k));
+		col = mix(shelf, vec3(0.03, 0.1, 0.2), smoothstep(0.2, 0.85, k));
+		col = mix(col, vec3(0.3, 0.55, 0.52), coast * 0.4);
+		d01 = max(smoothstep(0.0, 0.3, k), 0.35);
+	}
 	// Espuma en la orilla: bandas que avanzan y se deshacen con ruido.
 	float shore = 1.0 - smoothstep(0.0, 0.55, depth);
 	float bands = smoothstep(0.55, 0.9, sin(depth * 14.0 - t * 1.8) * 0.5 + 0.5) * (1.0 - smoothstep(0.1, 0.6, depth));

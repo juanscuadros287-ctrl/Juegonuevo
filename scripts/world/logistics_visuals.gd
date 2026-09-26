@@ -121,7 +121,7 @@ func _deposit_marker(type: String) -> Node3D:
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.font_size = 48
 	label.pixel_size = 0.02
-	MeshLib.style_label(label, 220.0)
+	MeshLib.style_label(label, 110.0, 0.5, 0.8)   # Mapa v2: yacimientos más pequeños y solo de cerca
 	label.outline_size = 8
 	label.modulate = col.lightened(0.35)
 	label.position = Vector3(-1.6, 4.8, -0.4)
@@ -390,7 +390,7 @@ func rebuild_links() -> void:
 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		lab.font_size = 40
 		lab.pixel_size = 0.02
-		MeshLib.style_label(lab, 200.0)
+		MeshLib.style_label(lab, 200.0, 2.0)
 		lab.outline_size = 8
 		lab.modulate = Color(0.75, 1.0, 0.75)
 		lab.position = Vector3(wp.x, _h(wp.x, wp.y) + (5.5 if wid == WarehouseSim.PLAZA else 8.5), wp.y)

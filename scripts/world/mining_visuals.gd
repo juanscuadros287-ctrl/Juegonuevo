@@ -174,7 +174,7 @@ func _build_area(d: Dictionary) -> void:
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.font_size = 40
 	label.pixel_size = 0.022
-	MeshLib.style_label(label, 200.0)
+	MeshLib.style_label(label, 140.0, 0.8, 0.82)   # Mapa v2: yacimientos más pequeños y solo de cerca
 	label.outline_size = 10
 	label.modulate = col.lightened(0.45)
 	label.position = Vector3(0, 4.1, 0)

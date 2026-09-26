@@ -678,7 +678,7 @@ func _test_chunk_timing() -> void:
 	add_child(t)
 	t.generate("interior", 1234)
 	t.build_mesh()
-	var labels := ["alta (80×80, 5 m)", "media (20×20, 20 m)", "lejana: tesela 4×4 chunks (20×20, 80 m)"]
+	var labels := ["alta (80×80, 5 m)", "media (40×40, 10 m)", "lejana: tesela 4×4 chunks (20×20, 80 m)"]
 	for lod in [Terrain.LOD_HIGH, Terrain.LOD_MID, Terrain.LOD_FAR]:
 		var t0 := Time.get_ticks_usec()
 		var reps := 3 if lod != Terrain.LOD_MID else 10

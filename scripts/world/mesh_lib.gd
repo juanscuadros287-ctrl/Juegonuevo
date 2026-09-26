@@ -942,9 +942,12 @@ static func animate_person(model: Node3D, phase: float, amount: float) -> void:
 ## Etiqueta 3D legible: tamaño fijo en pantalla (no se vuelve gigante ni diminuta con el zoom),
 ## se desvanece a partir de max_dist (evita que se amontonen al alejarse) y va sobre la geometría
 ## cercana con prioridad de dibujo alta.
-static func style_label(lab: Label3D, max_dist := 180.0) -> void:
+## Mapa v2: `prio` ordena las etiquetas al resolver choques en pantalla (LabelDeclutter: la de menor
+## prioridad se desplaza o se oculta) y `scale` achica o agranda el texto.
+static func style_label(lab: Label3D, max_dist := 180.0, prio := 1.0, scale := 1.0) -> void:
 	lab.fixed_size = true
-	lab.pixel_size = 0.00042 * 40.0 / maxf(float(lab.font_size), 1.0)
+	lab.pixel_size = 0.00042 * 40.0 * scale / maxf(float(lab.font_size), 1.0)
+	LabelDeclutter.register(lab, prio)
 	lab.visibility_range_end = max_dist
 	lab.visibility_range_end_margin = max_dist * 0.15
 	lab.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
