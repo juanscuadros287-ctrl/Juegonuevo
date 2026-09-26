@@ -138,12 +138,18 @@ en Forward+ y Compatibility. Fuera de ese recuadro se usa una profundidad media.
 
 ## 7. Terreno — `scripts/world/terrain_look.gd`, `shaders/terrain_*_plus.gdshader`
 
-Sin tocar la generación ni el LOD: `TerrainLook.apply(terrain)` (una línea en `world.gd`) cambia el
-shader de los materiales existentes por copias con la gradación de
-`shaders/terrain_grade.gdshaderinc` (pasto menos "neón", manchas secas y húmedas, leve
-oscurecimiento a distancia). Los uniformes se llaman igual, así que estación, nieve y niebla siguen
-funcionando. **Si la Fase 9B cambia `terrain.gdshader` o `terrain_chunk.gdshader`, hay que llevar el
-cambio a las copias `*_plus` (o quitar la línea del enganche).**
+`TerrainLook.apply(terrain)` (una línea en `world.gd`) cambia el shader de los materiales existentes
+por las versiones con la gradación de `shaders/terrain_grade.gdshaderinc` (pasto menos "neón",
+manchas secas y húmedas, leve oscurecimiento a distancia; las manchas finas se apagan a distancia
+para no hacer moiré).
+
+- Chunks del país: `terrain_chunk.gdshader` y `terrain_chunk_plus.gdshader` **incluyen el mismo
+  cuerpo** (`shaders/terrain_chunk_body.gdshaderinc`); la versión *plus* solo define
+  `TERRAIN_GRADE`. Ya no hay copia que sincronizar. (Antes la copia *plus* era la de la Fase 9A y al
+  engancharse borraba el velo, las fronteras de municipio y el recorte de la capa lejana: la tesela
+  de 80 m se dibujaba encima de las mallas detalladas y todo se veía borroso y en bloques.)
+- Pueblo: `terrain_plus.gdshader` sigue siendo copia de `terrain.gdshader`.
+- También pasa la rejilla real del país al agua (color por profundidad, ver §9).
 
 ## 8. Rendimiento
 
@@ -171,7 +177,109 @@ Claves: modelos unidos en 1–2 mallas por edificio con un material compartido, 
 con distancia de dibujo corta y sin sombra, vegetación/faroles/pasto en `MultiMesh`, visibility
 ranges por calidad, y carreteras/pasto sin sombra.
 
+## 9. Mapa v2 — el país a cualquier zoom
+
+Capturas en `docs/capturas/mapa_v2/` (`tests/screenshot_mapa_v2.tscn`, ver §9.6).
+
+### 9.1 LOD y transición (`scripts/world/terrain.gd`)
+
+| Nivel | Celda | Distancia (3D a la cámara) | Máximo | Árboles 3D |
+|---|---|---|---|---|
+| Alta | 5 m (80×80) | < 700 m | 9 chunks | tronco + copa |
+| Media | **10 m (40×40)** (antes 20 m) | < máx(2 km, 1,3 × altura de cámara), hasta 3,4 km | 56 | copas (menos y más chicas) |
+| **Media-baja (nueva, `LOD_LOW`)** | 20 m (20×20) | < máx(2,6 km, 2 × altura de cámara), hasta 7,5 km | 150 | no (las pone el shader) |
+| Lejana | 80 m, teselas 4×4 chunks | todo el país | — | no |
+
+Antes, con la cámara a 1–4 km (vista de región o municipio) ningún chunk entraba en la media (el
+límite era 2,8 km en 3D y la cámara ya estaba a esa altura): todo era la tesela de 80 m. Ahora la
+malla detallada llega más lejos cuanto más alta está la cámara, con presupuesto fijo de chunks.
+
+**Transición suave**: en la banda final del radio que cubre la malla detallada (`fade_near..fade_far`,
+≈ 8 % del radio, mínimo 250 m) la malla detallada y la tesela lejana se mezclan con un tramado
+complementario por píxel (cada píxel dibuja una u otra), así un chunk que entra o sale no "salta".
+El radio se suaviza entre actualizaciones.
+
+### 9.2 Shader del terreno (`terrain_chunk_body.gdshaderinc`)
+
+- Atributo nuevo por vértice (UV): x = densidad de árboles del bioma, y = aridez (desierto 1,
+  costa 0,5) o montaña (−1) / nevado (−2). La tesela lejana los suaviza como los colores.
+- Ruido de detalle en coordenadas del mundo **filtrado por el tamaño del píxel** (cada octava se apaga
+  por debajo de ~2 px): variación de color por bioma (zonas secas/húmedas), por pendiente (roca con
+  estratos) y por altura (páramo pardo, nieve en las cumbres con vetas de roca), arena en costas y
+  orillas (se ensancha un poco de lejos para que la costa se lea).
+- **Bosque y selva**: copas procedurales (Voronoi, una por celda con probabilidad = densidad). La
+  celda mide 9 m de cerca y crece con la distancia (≥ ~6 px, mezclando dos octavas sin saltos); cada
+  copa es una cúpula que inclina la normal (bump por derivadas de pantalla), así la luz real la
+  sombrea y los claros quedan oscuros. De lejos el bosque tiene textura y relieve, no manchas planas.
+- **Relieve**: normal suave del vértice con las laderas exageradas según la distancia (×1,5 cerca →
+  ×4 lejos, más en montaña), sombreado cartográfico suave desde el noroeste (solo de lejos) y crestas
+  de montaña procedurales cuya pendiente se calcula en el mundo (diferencias finitas) e inclina la
+  normal. De cerca se conservan las facetas low-poly (ahora solo hasta ~650 m).
+- **Ríos reales** como líneas azules con grosor mínimo en pantalla (se apagan de cerca, donde manda
+  el cauce tallado). La distancia al río de la rejilla de 200 m interpolada dejaba "cuentas"; en
+  `Terrain._build_river_texture()` se reconstruye el cauce (cada celda cercana se proyecta sobre el
+  río contra el gradiente de la distancia, las vecinas se unen con segmentos) y se rasteriza la
+  distancia exacta en una textura de 25 m por píxel (~70–110 ms al iniciar Colombia).
+- Velo de niebla, fronteras de municipio (un poco más tenues: 0,32) y recorte de la capa lejana como
+  en la Fase 9B.
+
+### 9.3 Agua (`shaders/water.gdshader`)
+
+Fuera del recuadro horneado del pueblo, el color sale de la batimetría real (ETOPO1, en `geo_tex`):
+orilla y plataforma turquesa, talud azul y océano profundo azul oscuro; lagos y ríos poco profundos.
+
+### 9.4 Etiquetas (`scripts/world/label_declutter.gd`)
+
+- `LabelDeclutter` (lo crea `CountryOverlay`) proyecta cada 0,1 s las etiquetas registradas, estima
+  su rectángulo en pantalla (fuente, tamaño, contorno, `pixel_size`, `offset`) y las coloca por
+  prioridad (a igual prioridad, la más cercana): si choca prueba a desplazarla arriba o abajo y, si
+  no cabe, la oculta. Los cambios se animan (`transparency` y `offset` suaves).
+- Prioridades: tu pueblo 100 > pueblos 10 + log10(población) > municipios sin pueblo 3 > almacenes
+  2 > resto 1 > minas 0,8 > yacimientos 0,5. `MeshLib.style_label(lab, dist, prio, escala)` registra
+  cualquier etiqueta 3D.
+- Desvanecido por distancia: los nombres del país se apagan con la altura (como antes) y además a
+  más de 3–5 veces la altura de la cámara (lo del horizonte en vistas inclinadas).
+- Yacimientos y minas: texto más chico (×0,8) y visibles solo de cerca (110–140 m).
+
+### 9.5 Minimapa (`scripts/ui/minimap.gd`)
+
+Abajo a la izquierda alineado con la barra de categorías (x = 8, sin el hueco del dock viejo), con el
+estilo flotante de UIKit (`float_style`, igual que la barra). Si la ventana es tan baja que chocaría
+con la barra de categorías, se corre a su derecha.
+
+### 9.6 Rendimiento
+
+`tests/screenshot_mapa_v2.gd` mide cada vista (12 frames) y guarda `docs/capturas/mapa_v2/rendimiento.txt`.
+Misma escena antes (commit 20020cb, con la copia vieja del shader) y después, xvfb + llvmpipe (render por
+CPU, 4 núcleos compartidos con otros agentes: el tiempo de frame es orientativo). Imágenes de antes:
+`antes_*.png`.
+
+| Vista | Cámara | ms/frame antes → después | Draw calls | Primitivas | Chunks detallados antes → después |
+|---|---|---|---|---|---|
+| Colombia completa | 29,8 km | 674 → 932 | 958 → 958 | 0,48 M → 0,48 M | 0 → 0 |
+| Región | 2,5 km | 345 → 675 | 547 → 582 | 0,16 M → 0,26 M | 21 media (20 m) → 27 media (10 m) + 60 media-baja |
+| Municipio completo | 6 km | 322 → 681 | 547 → 666 | 0,15 M → 0,26 M | 0 → 119 media-baja |
+| Montañas / costa | 7–9 km | 282–311 → 452–454 | igual | igual | 0 → 0 |
+| Pueblo de cerca | 150 m | 749 → 703 | 940 → 930 | 2,02 M → 2,02 M | 9 alta + 58 media → 9 + 56 + 29 |
+
+- **GPU**: las llamadas de dibujo y las primitivas casi no cambian (+0–20 % en vistas medias, por los
+  chunks de 20 m que antes no existían; cada uno es 1 llamada y ~900 triángulos). El shader del terreno
+  es más caro por píxel (copas Voronoi 2×9 celdas, 3 fbm de 4 octavas, crestas con 3 muestras solo en
+  montaña): en llvmpipe, que sombrea en CPU, eso sube el frame de las vistas lejanas ~1,5–2×; en una GPU
+  real (M1/Metal, Forward+) es un costo de fragmento pequeño frente a sombras y postproceso.
+- **CPU (hilos)**: chunk medio de 10 m ≈ 20 ms (antes 5–8 ms el de 20 m); media-baja ≈ 5–8 ms; tesela
+  lejana ≈ 9–13 ms. El cálculo acumulado en hilos de toda la sesión de capturas pasó de ≈ 5,8 s a
+  ≈ 11,3 s (más chunks detallados en vistas medias), siempre fuera del hilo principal y con el mismo
+  presupuesto de subida por frame (5 ms). Textura de ríos: 70–150 ms una vez al iniciar el país.
+- Si hiciera falta bajar el costo: `MAX_LOW` (150) y `LOW_DIST_MAX` (7,5 km) en `terrain.gd`, o
+  quitar las copas de la tesela lejana (`forest` en el shader).
+
 ## Archivos
+
+Mapa v2 — nuevos: `scripts/world/label_declutter.gd`, `shaders/terrain_chunk_body.gdshaderinc`,
+`tests/screenshot_mapa_v2.{gd,tscn}`; modificados: `terrain.gd`, `terrain_look.gd`, `country_overlay.gd`,
+`mesh_lib.gd` (style_label), `logistics_visuals.gd`, `mining_visuals.gd`, `minimap.gd`, `water.gdshader`,
+`terrain_chunk*.gdshader`, `terrain_grade.gdshaderinc`.
 
 Nuevos: `scripts/world/{sky_rig,graphics_settings,road_mesh,street_lights,vegetation,water_look,terrain_look}.gd`,
 `shaders/{building,road,water,foliage,light_pool,terrain_plus,terrain_chunk_plus}.gdshader`,

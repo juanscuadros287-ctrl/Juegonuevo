@@ -42,13 +42,17 @@ Diseño general en `docs/MAPA_MUNDIAL.md` (sección CAMBIO). Sigue a la Fase 9A 
 | Malla | Cálculo (hilo) |
 |---|---|
 | Alta 80×80 (5 m) | ≈ 60–115 ms |
-| Media 20×20 (20 m) | ≈ 5–8 ms |
+| Media 40×40 (10 m, mapa v2) | ≈ 20–30 ms |
+| Media-baja 20×20 (20 m) | ≈ 5–8 ms |
 | Tesela lejana 4×4 chunks (80 m) | ≈ 7–8 ms |
 | Colombia completa (441 teselas) | ≈ 3,6 s de CPU ≈ 1,2 s con 3 hilos |
 | Generación del país real (CountryGen) | 20–60 ms |
 Mientras haya mallas detalladas pendientes cerca de la cámara, la capa lejana usa un solo hilo.
 
 ## 3. Niebla y lectura visual (`shaders/terrain_chunk.gdshader`)
+> Mapa v2 (docs/GRAFICOS.md §9): LOD media de 10 m, nuevo nivel media-baja de 20 m que llega más lejos con la
+> cámara alta, transición tramada con la capa lejana, copas de árboles, relieve y nieve, ríos reales, agua por
+> profundidad y etiquetas sin solaparse. El shader vive en `terrain_chunk_body.gdshaderinc`.
 - Velo translúcido (desatura y aclara, deja ver relieve y biomas): 0 explorado, 0,22 vecinos, 0,45 sin explorar,
   0,8 otros países; interpolado entre chunks (bordes suaves).
 - Fronteras de municipio dibujadas en el shader (tenues, más cálidas alrededor del tuyo; ancho según la altura).
