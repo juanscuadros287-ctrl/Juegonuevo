@@ -310,7 +310,7 @@ func _update_info() -> void:
 		lines.append("[b]En trámite[/b]")
 		lines.append_array(pend)
 	lines.append("")
-	lines.append("Explorado: %d de %d territorios" % [MapSim.revealed_count(gs), terrain.gen.size * terrain.gen.size])
+	lines.append("Explorado: %d de %d territorios" % [MapSim.revealed_count(gs), MapSim.country_chunk_count(gs)])
 	info.text = "\n".join(lines)
 
 

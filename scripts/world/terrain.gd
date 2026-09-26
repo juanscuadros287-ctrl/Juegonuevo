@@ -33,9 +33,9 @@ const MAX_MID := 48
 const FAR_BATCH := 2
 const FRAME_BUDGET_MS := 5.0
 const DIM_LOCKED := 0.32
-const FOG_LIGHT := 0.3            # velo ligero: tu municipio sin explorar y los vecinos
-const FOG_AMOUNT := 0.6           # velo de lo no explorado (translúcido: se ve el relieve)
-const OUTSIDE_FOG := 0.92
+const FOG_LIGHT := 0.22           # velo ligero: tu municipio sin explorar y los vecinos
+const FOG_AMOUNT := 0.45          # velo de lo no explorado (translúcido: se ve el relieve)
+const OUTSIDE_FOG := 0.8          # otros países: atenuados y desaturados
 
 var size: float = 400.0
 var half: float = 200.0
@@ -69,6 +69,7 @@ var fog_tex: ImageTexture
 var zone_tex: ImageTexture
 var detail_tex: ImageTexture
 var _detail_dirty := false
+var _detail_pending := 0
 var overlay: CountryOverlay
 var water: MeshInstance3D
 var map_image: Image             # MAP_PX px por chunk (80 m por píxel), incluye el anillo exterior
@@ -643,12 +644,14 @@ func _update_lods() -> void:
 	stats["mid"] = mid_n
 	queue.sort_custom(func(a, b): return int(a[1]) < int(b[1]) or (int(a[1]) == int(b[1]) and float(chunks[a[0]]["dist"]) < float(chunks[b[0]]["dist"])))
 	var owned := _owned.duplicate()
+	_detail_pending = queue.size()
 	for item in queue:
 		if _jobs.size() >= _max_jobs:
 			break
 		var c: Vector2i = item[0]
 		chunks[c]["busy"] = true
 		_start_job([c], int(item[1]), owned)
+		_detail_pending -= 1
 	# Teselas lejanas que faltan, las más cercanas primero.
 	var need := []
 	for t in tiles:
@@ -665,7 +668,14 @@ func _update_lods() -> void:
 
 ## La capa lejana se reparte en tandas de teselas: se llenan los hilos libres en cada frame.
 func _feed_far_jobs() -> void:
-	while _jobs.size() < _max_jobs and not _far_queue.is_empty():
+	# Si faltan mallas detalladas cerca de la cámara, la capa lejana usa un solo hilo.
+	var limit := _max_jobs if _detail_pending <= 0 else 1
+	var far_running := 0
+	for j in _jobs:
+		if int(j["req"]["lod"]) == LOD_FAR:
+			far_running += 1
+	while _jobs.size() < _max_jobs and far_running < limit and not _far_queue.is_empty():
+		far_running += 1
 		var batch: Array = []
 		while batch.size() < FAR_BATCH and not _far_queue.is_empty():
 			var t: Vector2i = _far_queue.pop_front()
@@ -1219,6 +1229,19 @@ static func _push_xform(buf: PackedFloat32Array, b: Basis, o: Vector3, col: Colo
 
 func chunk_state(c: Vector2i) -> Dictionary:
 	return chunks.get(c, {})
+
+
+## Rectángulo (m) que ocupan los chunks del país (en los países reales, su frontera).
+func country_frame_m() -> Rect2:
+	var r := Rect2()
+	var first := true
+	for cy in range(gen.c0, gen.c1 + 1):
+		for cx in range(gen.c0, gen.c1 + 1):
+			if gen.in_country_chunk(cx, cy):
+				var cr := CountryGen.chunk_rect(cx, cy)
+				r = cr if first else r.merge(cr)
+				first = false
+	return r if not first else country_rect_m()
 
 
 func country_rect_m() -> Rect2:

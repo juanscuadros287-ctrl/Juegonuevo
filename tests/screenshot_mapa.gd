@@ -30,8 +30,12 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	var out := args[0] if args.size() > 0 else "user://"
 	var only := args[1] if args.size() > 1 else ""
+	if only == "mundo":
+		await _world_map(out)
+		get_tree().quit()
+		return
 	var gs = GameState
-	gs.new_game({"map_type": "rio", "seed": 2024, "difficulty": "facil", "country_id": "andoria", "town_name": "San Rafael"})
+	gs.new_game({"map_type": "interior", "seed": 2024, "difficulty": "facil", "country_id": "COL", "town_name": "San Rafael"})
 	gs.suppress_notifications = true
 	gs.money = 2000000.0
 	gs.weather["type"] = "despejado"
@@ -59,7 +63,7 @@ func _ready() -> void:
 		t.water.visible = false
 		only = "pais"
 	# 1) País completo con zoom máximo, encuadrado.
-	var b := t.country_rect_m()
+	var b := rig.frame
 	_set_cam(rig, Vector3(b.get_center().x, 0, b.get_center().y), rig.max_dist, 0.0)
 	var t0 := Time.get_ticks_msec()
 	await _wait_streaming(t, 1500)
@@ -89,4 +93,22 @@ func _ready() -> void:
 	if only == "" or only == "propiedad":
 		get_viewport().get_texture().get_image().save_png("%s/propiedad.png" % out)
 		print("captura: propiedad.png")
+	# 4) Mapa mundial con los países reales (Colombia seleccionada).
+	world.queue_free()
+	await get_tree().process_frame
+	if only == "":
+		await _world_map(out)
 	get_tree().quit()
+
+
+func _world_map(out: String) -> void:
+	var wm := WorldMap.new()
+	wm.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	wm.selected = "COL"
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	layer.add_child(wm)
+	for i in range(20):
+		await get_tree().process_frame
+	get_viewport().get_texture().get_image().save_png("%s/mapa_mundial.png" % out)
+	print("captura: mapa_mundial.png")

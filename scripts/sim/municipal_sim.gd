@@ -59,7 +59,12 @@ static func _generate(gs, g: CountryGen) -> Dictionary:
 		var zid := int(z["id"])
 		var player := bool(z["player"])
 		var nm := str(gs.settings.get("town_name", "Tu pueblo"))
-		if not player:
+		if not player and str(z.get("real_name", "")) != "" and not used.has(str(z["real_name"])):
+			nm = str(z["real_name"])   # país real: el municipio lleva el nombre de su lugar poblado real
+		elif not player and g.real and not _real_name_in(g, zid, used).is_empty():
+			var rp := _real_name_in(g, zid, used)
+			nm = str(rp["name"])
+		elif not player:
 			nm = _unique_name(r, names, used, zid)
 			var cp: Vector2 = z["town_pos"] if bool(z["town"]) else z["centroid"]
 			var biome := g.biome_at(cp.x, cp.y)
@@ -72,10 +77,21 @@ static func _generate(gs, g: CountryGen) -> Dictionary:
 		if not player:
 			policy = _random_policy(r, pol, stance)
 		var pop := int(r.randf_range(300, 3200)) if bool(z["town"]) else int(r.randf_range(20, 220))
+		if int(z.get("real_pop", 0)) > 0:
+			pop = clampi(int(z["real_pop"]) / 60, 400, 12000)   # a escala del juego
 		regs[key(zid)] = {"id": zid, "name": nm, "department": "", "town": bool(z["town"]), "player": player,
 				"population": pop, "policy": policy, "mayor": _new_mayor(gs, r, stance), "treasury": 0.0,
 				"tax_exempt_until": -1, "trade_town_id": ""}
 	return regs
+
+
+## País real: el lugar poblado real más grande dentro del municipio que aún no da nombre a otro.
+static func _real_name_in(g: CountryGen, zid: int, used: Dictionary) -> Dictionary:
+	for pl in g.places:
+		var c := CountryGen.chunk_of(float(pl["x"]), float(pl["z"]))
+		if g.zone_index(c.x, c.y) == zid and not used.has(str(pl["name"])):
+			return pl
+	return {}
 
 
 static func _unique_name(r: RandomNumberGenerator, names: Array, used: Dictionary, zid: int) -> String:

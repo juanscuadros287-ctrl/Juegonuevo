@@ -20,7 +20,7 @@ uniform float chunk_size = 400.0;
 uniform bool is_far = false;
 uniform float border_alpha = 0.0;
 uniform float border_width = 20.0;
-uniform vec3 veil_color = vec3(0.8, 0.83, 0.87);
+uniform vec3 veil_color = vec3(0.66, 0.68, 0.71);
 
 varying vec3 world_pos;
 
@@ -55,8 +55,8 @@ void fragment() {
 	// Velo translúcido: desatura, aclara un poco y baja el contraste, pero deja ver el relieve y el bioma.
 	float fog = texture(fog_tex, cuv / map_texels).r;
 	float lum = dot(c, vec3(0.3, 0.59, 0.11));
-	vec3 veiled = mix(c, vec3(lum), 0.65 * fog);
-	veiled = mix(veiled, veil_color * (0.55 + 0.6 * lum), 0.42 * fog);
+	vec3 veiled = mix(c, vec3(lum), 0.7 * fog);
+	veiled = mix(veiled, veil_color * (0.45 + 0.7 * lum), 0.3 * fog);
 	c = veiled;
 	// Fronteras de municipio (tenues; más cálidas alrededor del tuyo).
 	if (border_alpha > 0.001) {

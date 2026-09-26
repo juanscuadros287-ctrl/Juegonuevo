@@ -44,8 +44,12 @@ static func key(cx: int, cy: int) -> String:
 
 
 static func _hash01(gs, cx: int, cy: int, salt: int) -> float:
-	var h := hash("%d|%d|%d|%d" % [int(gs.settings.get("seed", 1)), cx, cy, salt])
-	return float(absi(h) % 100000) / 100000.0
+	# Mezcla entera (estilo splitmix): reparto uniforme sin patrones en franjas.
+	var h: int = int(gs.settings.get("seed", 1)) * 73856093 ^ cx * 19349663 ^ cy * 83492791 ^ salt * 2654435761
+	h = ((h ^ (h >> 16)) * 0x45d9f3b) & 0xFFFFFFFF
+	h = ((h ^ (h >> 16)) * 0x45d9f3b) & 0xFFFFFFFF
+	h = h ^ (h >> 16)
+	return float(h & 0xFFFFFF) / 16777216.0
 
 
 # --- Datos fijos por territorio (caché) ---------------------------------------------------------------

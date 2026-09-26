@@ -4,7 +4,6 @@ Los agentes se detuvieron por el límite semanal de uso. Su avance quedó guarda
 
 | Parche | Contenido |
 |---|---|
-| fase9b_mapa.patch | País más grande, municipios grandes, niebla translúcida y Fase 9B (regiones, mercado de tierras, pueblos en el mapa) |
 | trabajo_clima.patch | Sindicatos, experiencia, competencia NPC, clima, contaminación y guerras |
 | graficos.patch | Iluminación, cielo, sombras, modelos, carreteras, agua y vegetación |
 | interfaz.patch | Sistema de diseño, iconos, HUD compacto, paneles y gráficas |

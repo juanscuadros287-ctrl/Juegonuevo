@@ -19,6 +19,7 @@ var map_ids: Array = []
 var region_opt: OptionButton          # Fase 6: dónde fundar el pueblo
 var country_opt: OptionButton         # Fase 9A: país (perfil de biomas y recursos)
 var country_ids: Array = []
+var world_map: WorldMap
 var region_list: Array = []
 var region_preview: RegionPreview
 
@@ -128,13 +129,20 @@ func _build_new_panel(parent: Control) -> void:
 	grid.add_child(map_opt)
 
 	grid.add_child(UIKit.label("País"))
+	# Mapa mundial con países reales (los ficticios de la Fase 9A quedan solo para las pruebas).
+	var crow := HBoxContainer.new()
+	crow.add_theme_constant_override("separation", 6)
 	country_opt = OptionButton.new()
-	country_ids = MapSim.country_ids()
+	country_ids = MapSim.real_country_ids()
+	if country_ids.is_empty():
+		country_ids = MapSim.country_ids()
 	for id in country_ids:
 		var cd := MapSim.country_def(str(id))
-		country_opt.add_item("%s (%d×%d km)" % [str(cd.get("label", id)), int(round(int(cd.get("size", 30)) * 0.4)), int(round(int(cd.get("size", 30)) * 0.4))])
+		country_opt.add_item(str(cd.get("label", id)))
 	country_opt.item_selected.connect(func(_i): _refresh_regions())
-	grid.add_child(country_opt)
+	crow.add_child(country_opt)
+	crow.add_child(UIKit.button("Mapa mundial…", _open_world_map, 150))
+	grid.add_child(crow)
 
 	grid.add_child(UIKit.label("Semilla"))
 	seed_edit = SpinBox.new()
@@ -162,8 +170,26 @@ func _build_new_panel(parent: Control) -> void:
 
 ## Fase 9A: al cambiar el tipo de mapa se propone el país que mejor le va.
 func _on_map_changed() -> void:
-	country_opt.select(maxi(0, country_ids.find(MapSim.default_country(str(map_ids[map_opt.selected])))))
+	if country_opt.selected < 0 or _country() == "":
+		country_opt.select(maxi(0, country_ids.find(MapSim.DEFAULT_REAL)))
 	_refresh_regions()
+
+
+## Mapa mundial: elegir el país de inicio con clic sobre el mapa real.
+func _open_world_map() -> void:
+	if world_map == null:
+		world_map = WorldMap.new()
+		world_map.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		world_map.selected = _country()
+		add_child(world_map)
+		world_map.chosen.connect(func(iso: String):
+			var i := country_ids.find(iso)
+			if i >= 0:
+				country_opt.select(i)
+				_refresh_regions()
+			world_map.visible = false)
+	world_map.visible = true
+	world_map.select(_country())
 
 
 func _country() -> String:
@@ -192,7 +218,7 @@ func _update_desc() -> void:
 		var r: Dictionary = region_list[region_opt.selected]
 		desc_lbl.text += "\n\n%s: %s\nRecursos: %s" % [r.get("name", ""), r.get("description", ""), RegionSim.strengths_text(r)]
 		var cd := MapSim.country_def(_country())
-		desc_lbl.text += "\n\nPaís %s (%s): %s" % [cd.get("label", ""), cd.get("inspiration", ""), cd.get("description", "")]
+		desc_lbl.text += "\n\nPaís %s: %s" % [cd.get("label", ""), cd.get("description", "")]
 		region_preview.show_region(str(map_ids[map_opt.selected]), int(seed_edit.value), r)
 
 

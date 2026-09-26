@@ -23,6 +23,7 @@ var target_pos := Vector3.ZERO
 var follow: Node3D = null
 var max_dist := 330.0
 var bounds := Rect2(-200, -200, 400, 400)
+var frame := Rect2(-200, -200, 400, 400)   # rectángulo que ocupa el país (vista de país)
 var _dragging_pan := false
 var _dragging_rot := false
 
@@ -43,8 +44,9 @@ func setup(t: Terrain, start: Vector3, p_env: Environment = null) -> void:
 	position = start
 	if t != null and t.gen != null:
 		bounds = t.country_rect_m()
-		# Distancia para ver el país entero en pantalla (con margen).
-		max_dist = maxf(TOWN_MAX_DIST, bounds.size.x * 1.08)
+		# Fase 9B: encuadre del país real (su frontera, no el cuadrado de la rejilla) con margen.
+		frame = t.country_frame_m()
+		max_dist = maxf(TOWN_MAX_DIST, maxf(frame.size.y * 1.2, frame.size.x * 0.7))
 	_update_camera()
 
 
@@ -57,7 +59,7 @@ func focus(pos: Vector3, zoom := -1.0) -> void:
 
 ## Vista completa del país (zoom máximo sobre el centro).
 func view_country() -> void:
-	focus(Vector3(bounds.get_center().x, 0, bounds.get_center().y), max_dist)
+	focus(Vector3(frame.get_center().x, 0, frame.get_center().y), max_dist)
 
 
 ## Vuelve a la plaza del pueblo con el zoom de siempre.
@@ -120,7 +122,7 @@ func _pitch_deg(d: float) -> float:
 	var t := inverse_lerp(MIN_DIST, TOWN_MAX_DIST, minf(d, TOWN_MAX_DIST))
 	var p := lerpf(28.0, 68.0, sqrt(clampf(t, 0.0, 1.0)))
 	if d > TOWN_MAX_DIST:
-		p = lerpf(68.0, 78.0, smoothstep(TOWN_MAX_DIST, max_dist, d))
+		p = lerpf(68.0, 86.0, smoothstep(TOWN_MAX_DIST, max_dist, d))
 	return p
 
 

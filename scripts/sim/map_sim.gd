@@ -31,6 +31,14 @@ static func country_ids() -> Array:
 	return ids
 
 
+## Países reales jugables del mapa mundial (los de data/countries.json quedan como respaldo de pruebas).
+static func real_country_ids() -> Array:
+	return WorldData.playable_ids()
+
+
+const DEFAULT_REAL := "COL"
+
+
 static func country_def(id: String) -> Dictionary:
 	return CountryGen.country_def(id)
 
@@ -139,6 +147,17 @@ static func in_country_chunk(gs, cx: int, cy: int) -> bool:
 
 static func in_country(gs, x: float, z: float) -> bool:
 	return gen(gs).in_country(x, z)
+
+
+## Número de territorios (chunks) dentro del país (en los reales, dentro de la frontera).
+static func country_chunk_count(gs = null) -> int:
+	var g := gen(gs)
+	var n := 0
+	for cy in range(g.c0, g.c1 + 1):
+		for cx in range(g.c0, g.c1 + 1):
+			if g.in_country_chunk(cx, cy):
+				n += 1
+	return n
 
 
 static func is_revealed(gs, cx: int, cy: int) -> bool:
@@ -450,6 +469,9 @@ static func assign_towns(gs) -> void:
 		var reg := MunicipalSim.region(gs, zid)
 		if not reg.is_empty() and str(reg.get("trade_town_id", "")) != str(t["id"]):
 			var nm := str(t.get("name", reg.get("name", "")))
+			if gen(gs).real and str(reg.get("name", "")) != "":
+				nm = str(reg["name"])          # país real: el pueblo de comercio toma el nombre real del municipio
+				t["name"] = nm
 			for k in gs.map.get("regions", {}):
 				var other: Dictionary = gs.map["regions"][k]
 				if int(other["id"]) != zid and str(other.get("name", "")) == nm:
