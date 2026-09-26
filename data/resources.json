@@ -61,7 +61,7 @@
     "plaza_capacity": 200
   },
   "transport": {
-    "_nota": "Medios de transporte interno. capacity = unidades por viaje de UN vehículo (o cargador); speed = metros por día de juego; road = necesita carretera; road_kinds = tipos de carretera válidos (vacío = cualquiera); vehicle = vehículo individual que se compra en su edificio 'base' (caballeriza, deposito_camiones, hangar) con price, upkeep diario (alimento si animal=true, mantenimiento si no) y fuel_per_km = combustible por km recorrido; todo × price_mult. Cada vehículo necesita un conductor o arriero (empleado de su edificio). planned = previsto para una fase posterior (no hace rutas internas).",
+    "_nota": "Medios de transporte interno. capacity = unidades por viaje de UN vehículo (o cargador); speed = metros por día de juego; road = necesita carretera; road_kinds = tipos de carretera válidos (vacío = cualquiera); vehicle = vehículo individual que se compra en su edificio 'base' (caballeriza, deposito_camiones, hangar) con price, upkeep diario (alimento si animal=true, mantenimiento si no) y fuel_per_km = combustible por km recorrido; todo × price_mult. Cada vehículo necesita un conductor o arriero (empleado de su edificio). planned = previsto (no hace rutas). Fase 10: los aviones vuelan entre aeropuertos del país (rutas de aquí) y entre países (AirSim).",
     "route_factor": 1.25,
     "max_trips_per_day": 4,
     "depart_hour": 7,
@@ -72,7 +72,7 @@
       "carro_vapor": {"unit": "Carro de vapor", "label": "Carros de carga a vapor", "short": "carros de vapor", "capacity": 140, "speed": 650, "road": true, "road_kinds": ["empedrado", "cemento"], "tech": "maquina_vapor", "vehicle": true, "base": "deposito_camiones", "price": 1200, "upkeep": 0.6, "fuel_per_km": 3.0, "order": 3},
       "camion": {"unit": "Camión", "label": "Camiones de carga", "short": "camiones", "capacity": 250, "speed": 1200, "road": true, "road_kinds": ["empedrado", "cemento"], "tech": "automovil", "vehicle": true, "base": "deposito_camiones", "price": 3000, "upkeep": 0.8, "fuel_per_km": 4.0, "order": 4},
       "trailer": {"unit": "Tráiler", "label": "Camiones grandes (tráiler)", "short": "tráileres", "capacity": 600, "speed": 1100, "road": true, "road_kinds": ["cemento"], "tech": "industria_automotriz", "vehicle": true, "base": "deposito_camiones", "price": 8000, "upkeep": 1.6, "fuel_per_km": 7.0, "order": 5},
-      "avion": {"unit": "Avión", "label": "Aviones de carga", "short": "aviones", "capacity": 400, "speed": 20000, "road": false, "tech": "aviacion", "vehicle": true, "base": "hangar", "price": 60000, "upkeep": 12.0, "fuel_per_km": 30.0, "planned": true, "order": 6}
+      "avion": {"unit": "Avión", "label": "Aviones de carga", "short": "aviones", "capacity": 400, "speed": 20000, "road": false, "tech": "aviacion", "vehicle": true, "base": "hangar", "price": 60000, "upkeep": 12.0, "fuel_per_km": 30.0, "order": 6}
     }
   },
   "roads": {

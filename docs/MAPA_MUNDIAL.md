@@ -56,6 +56,8 @@ Los ciudadanos también tienen libre comercio: compran casas, terrenos y bienes.
 
 ## Fase 10 — Mapa mundial y otros países
 
+> Hecho: ver `docs/FASE10.md` (contexto por país, viajes, gerentes, aviación y carga entre países solo por avión).
+
 **Mapa mundial**
 - Es una pantalla aparte con países (`data/countries.json`). Cada país tiene ventajas y desventajas: recursos, biomas, impuestos, costo laboral, idioma, estabilidad política y época.
 - Al empezar la partida se **elige el país de inicio**.

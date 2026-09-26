@@ -64,17 +64,17 @@ notificaciones y controles.
 - **Barra superior** (46 px): pueblo y época · dinero, población, felicidad, salud con icono, valor
   y tendencia ▲▼ respecto al cierre del mes anterior (tooltips con detalle; clic abre Finanzas,
   Población o Estadísticas) · mini-retrato del jugador y aviso **SIN HEREDERO** · clima con icono y
-  temperatura · indicador del ciclo económico (`CycleIndicator`, clic → Economía mundial) · fecha · controles de tiempo (pausa, tiempo real, ×1, ×2, ×3, salto) · campana con
+  temperatura · país donde está el personaje (`CountryIndicator`, Fase 10: "En Colombia", "De viaje a Perú (3 d)", "viendo Perú (remoto)"; clic → mapa mundial) · indicador del ciclo económico (`CycleIndicator`, clic → Economía mundial) · fecha · controles de tiempo (pausa, tiempo real, ×1, ×2, ×3, salto) · campana con
   contador de no leídas · menú.
 - **Barra de iconos** (izquierda) agrupada en categorías con **menús desplegables**:
 
   | Categoría | Entradas (atajo) |
   |---|---|
-  | Mi dinastía (F1) | Mi personaje (P), Familia y herederos |
+  | Mi dinastía (F1) | Mi personaje (P), Familia y herederos, Mis países y mapa mundial (Fase 10) |
   | Construir (B) | — |
   | Empresas (F2) | Mis empresas (C), Bienes raíces (V), Contratos (K) |
   | Economía (F3) | Finanzas (F), Efectivo y riesgo, Estadísticas (Y), Economía mundial, Bolsa de valores, Seguros, Catálogo de bienes (O) |
-  | Logística y transporte (F4) | Logística (L), Transporte público (J), Servicios públicos (U), Comercio exterior (X) |
+  | Logística y transporte (F4) | Logística (L), Transporte público (J), Servicios públicos (U), Comercio exterior (X), Aviación (Fase 10) |
   | Sociedad (F5) | Población (Z), Pueblos vecinos, Gobierno (G), Turismo y publicidad |
   | Ciencia (I) | Investigación |
 
@@ -122,6 +122,9 @@ Todos usan `UIKit.header()` (icono + título + ↻ + cerrar). Destacados:
   pestañas Ciclos y monedas / Bolsa (`stock_panel.gd`) / Seguros (`insurance_panel.gd`)): cabecera
   estándar, pestañas con icono, ventana flotante con sombra y animación de entrada; accesibles desde
   la categoría Economía. Finanzas muestra efectivo/banco e impuesto a la venta en chips.
+- **Países** (`countries_window.gd`, Fase 10): ventana flotante con pestañas Mapa mundial (`game_world_map.gd`:
+  presencia, viaje, aviones en vuelo; licencia, terreno de entrada, viajar, ver) y Mis países (gerente y
+  resultados). **Aviación** (`aviation_window.gd`): aeropuertos, flota, vuelos, rutas y envío. Ver `docs/FASE10.md`.
 
 ## 5. Gráficas y datos (todas con `_draw`, sin crear nodos por punto)
 | Clase | Qué hace |

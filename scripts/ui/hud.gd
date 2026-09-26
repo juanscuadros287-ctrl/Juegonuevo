@@ -15,7 +15,8 @@ const BAR_H := 46.0
 ## Barra de iconos: categorías y sus entradas [id, etiqueta, icono, atajo].
 const CATEGORIES := [
 	{"id": "dinastia", "label": "Mi dinastía", "icon": "dynasty", "key": "F1", "items": [
-		["player", "Mi personaje", "character", "P"], ["family", "Familia y herederos", "family", ""]]},
+		["player", "Mi personaje", "character", "P"], ["family", "Familia y herederos", "family", ""],
+		["countries", "Mis países y mapa mundial", "globe", ""]]},   # Fase 10
 	{"id": "construir", "label": "Construir", "icon": "build", "key": "B", "items": [["build", "Construir", "build", "B"]]},
 	{"id": "empresas", "label": "Empresas", "icon": "companies", "key": "F2", "items": [
 		["companies", "Mis empresas", "companies", "C"], ["realestate", "Bienes raíces", "realestate", "V"], ["contracts", "Contratos", "contracts", "K"]]},
@@ -25,7 +26,8 @@ const CATEGORIES := [
 		["catalog", "Catálogo de bienes", "catalog", "O"]]},
 	{"id": "logistica", "label": "Logística y transporte", "icon": "logistics", "key": "F4", "items": [
 		["logistics", "Logística", "logistics", "L"], ["transit", "Transporte público", "transit", "J"],
-		["utilities", "Servicios públicos", "utilities", "U"], ["trade", "Comercio exterior", "trade", "X"]]},
+		["utilities", "Servicios públicos", "utilities", "U"], ["trade", "Comercio exterior", "trade", "X"],
+		["aviation", "Aviación", "logistics", ""]]},   # Fase 10
 	{"id": "sociedad", "label": "Sociedad", "icon": "society", "key": "F5", "items": [
 		["population", "Población", "population", "Z"], ["towns", "Pueblos vecinos", "town", ""],
 		["government", "Gobierno", "government", "G"], ["tourism", "Turismo y publicidad", "tourism", ""]]},
@@ -97,6 +99,9 @@ var transit_panel: TransitPanel
 var cash_panel: CashPanel   # Sección E: efectivo y riesgo
 var global_econ: GlobalEconWindow   # Economía global: ciclos, monedas, bolsa y seguros.
 var cycle_indicator: CycleIndicator
+var countries_window: CountriesWindow   # Fase 10: mapa mundial y Mis países
+var aviation_window: AviationWindow     # Fase 10: aeropuertos, flota, vuelos y rutas
+var country_indicator: CountryIndicator # Fase 10: país donde está el personaje
 
 # Interior
 var interior_panel: PanelContainer
@@ -161,6 +166,15 @@ func _ready() -> void:
 	root.add_child(global_econ)
 	global_econ.setup()
 	global_econ.message.connect(toast)
+	countries_window = CountriesWindow.new()   # Fase 10
+	root.add_child(countries_window)
+	countries_window.setup()
+	countries_window.message.connect(toast)
+	countries_window.view_requested.connect(switch_country)
+	aviation_window = AviationWindow.new()
+	root.add_child(aviation_window)
+	aviation_window.setup()
+	aviation_window.message.connect(toast)
 	_build_hint()
 	_build_flyout()
 	EventBus.notification_posted.connect(_on_notification)
@@ -269,6 +283,10 @@ func _build_top_bar() -> void:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(spacer)
+	country_indicator = CountryIndicator.new()   # Fase 10: país del personaje (clic: mapa mundial).
+	row.add_child(country_indicator)
+	country_indicator.pressed.connect(func(): countries_window.open(0))
+	country_indicator.view_change.connect(switch_country)
 	cycle_indicator = CycleIndicator.new()   # Economía global: fase del ciclo y señales.
 	cycle_indicator.icon = UIIcons.tex("economy", 16)
 	cycle_indicator.clip_text = true
@@ -453,6 +471,8 @@ func _adapt_top_bar() -> void:
 	var tight := w < 1380.0
 	player_lbl.visible = not tight
 	cycle_indicator.custom_minimum_size.x = 34.0 if compact else 140.0
+	country_indicator.custom_minimum_size.x = 34.0 if compact else 150.0   # Fase 10
+	country_indicator.size.x = 0.0
 	cycle_indicator.size.x = 0.0
 	weather_lbl.visible = not tight
 	era_lbl.custom_minimum_size.x = 110.0 if tight else 150.0
@@ -628,6 +648,10 @@ func _item_active(item_id: String) -> bool:
 			return global_econ != null and global_econ.visible and global_econ.tabs.current_tab == {"world_econ": 0, "stocks": 1, "insurance": 2}[item_id]
 		"research":
 			return research_screen != null and research_screen.visible
+		"countries":
+			return countries_window != null and countries_window.visible
+		"aviation":
+			return aviation_window != null and aviation_window.visible
 		"population":
 			return population_modal.has("root") and population_modal["root"].visible
 		"towns":
@@ -652,6 +676,12 @@ func _open_item(item_id: String) -> void:
 		"world_econ":
 			close_dock()
 			global_econ.open(0)
+		"countries":
+			close_dock()
+			countries_window.open(0)
+		"aviation":
+			close_dock()
+			aviation_window.open()
 		"stocks":
 			close_dock()
 			global_econ.open(1)
@@ -673,6 +703,15 @@ func _open_item(item_id: String) -> void:
 		_:
 			_show_dock(item_id)
 	_sync_category_buttons()
+
+
+## Fase 10: muestra otro país (al llegar de un viaje o en vista remota): carga sus datos y rehace el mundo 3D.
+func switch_country(iso: String) -> void:
+	var r := CountriesSim.set_active(GameState, iso)
+	if r != "":
+		toast(r)
+		return
+	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 
 # --- Notificaciones -----------------------------------------------------------------

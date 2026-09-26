@@ -271,9 +271,10 @@ func _test_planned_air() -> void:
 	gs.techs.append("aviacion")
 	var h := _place("hangar", -30, -25)
 	var r := LogisticsSim.buy_vehicle(gs, h, "avion")
-	check(r.has("vehicle"), "el hangar permite comprar aviones de carga (previsto)")
+	check(r.has("vehicle"), "el hangar permite comprar aviones de carga")
 	var e := LogisticsSim.create_route(gs, {"from": LogisticsSim.PLAZA, "to": int(_place("almacen", 30, 25)["id"]), "good": "madera", "qty": 5, "vehicle": int(r.get("vehicle", {}).get("id", -1))})
-	check(e.has("error") and str(e["error"]).find("fase posterior") >= 0, "el transporte aéreo queda para una fase posterior: %s" % e.get("error", ""))
+	# Fase 10: ya no hay rechazo de "fase posterior"; el avión vuela solo entre aeropuertos (docs/FASE10.md).
+	check(e.has("error") and str(e["error"]).find("fase posterior") < 0 and str(e["error"]).find("aeropuerto") >= 0, "el avión de carga vuela solo entre aeropuertos: %s" % e.get("error", ""))
 
 
 func _test_save_load() -> void:

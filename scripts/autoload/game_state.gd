@@ -39,6 +39,7 @@ var utilities: Dictionary = {}         # Redes: tramos eléctricos y de agua, ac
 var labor: Dictionary = {}             # Trabajo: sindicatos, huelgas, guerras de precio y ofertas NPC (LaborSim)
 var world_events: Dictionary = {}      # Mundo: clima, contaminación local y guerras (ClimateSim/PollutionSim/WarSim)
 var world_econ: Dictionary = {}        # Economía global: ciclos, monedas, bolsa, seguros, calidad y marca (GlobalEconSim)
+var countries: Dictionary = {}         # Fase 10: países con presencia, viajes, gerentes y aviación (CountriesSim)
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
 var weather: Dictionary = {}
@@ -54,6 +55,7 @@ var collecting_report := false
 var suppress_notifications := false
 var _report: Dictionary = {}
 var _building_index: Dictionary = {}   # id -> Dictionary (caché, no se guarda)
+var _deferred_notes: Array = []        # Fase 10: avisos de un país que se simuló sin verse (se muestran al final)
 
 
 func diff() -> Dictionary:
@@ -71,7 +73,7 @@ func price_level() -> float:
 
 ## Multiplicador de precios: dificultad × inflación. Úsalo para todo costo nominal.
 func price_mult() -> float:
-	return float(diff().get("price_mult", 1.0)) * price_level()
+	return float(diff().get("price_mult", 1.0)) * price_level() * CountriesSim._fx_mult   # Fase 10: cambio real del país cargado.
 
 
 # --- Partida nueva ----------------------------------------------------------
@@ -107,6 +109,7 @@ func new_game(opts: Dictionary) -> void:
 	PlayerSim.create_player(self)
 	GovSim.init_state(self)
 	_init_expansions()
+	CountriesSim.init_state(self)   # Fase 10: un solo país (el de origen) al empezar.
 	running = true
 	notify("Bienvenido a %s, %s. Eres el único empresario del pueblo." % [settings["town_name"], player_name()], "info")
 
@@ -139,6 +142,8 @@ func _clear() -> void:
 	labor = {}
 	world_events = {}
 	world_econ = {}
+	countries = {}
+	_deferred_notes = []
 	transit = {}
 	loans = []
 	next_loan_id = 1
@@ -172,11 +177,24 @@ func _init_expansions() -> void:
 	MapSim.post_init(self)   # Fase 9B: pueblos de comercio con posición real en municipios.
 
 
+## Fase 10: inicializa los sistemas de país de un país nuevo (CountriesSim._create_context).
+func init_country_systems() -> void:
+	_init_expansions()
+
+
 # --- Simulación diaria -----------------------------------------------------
 
 func simulate_day(new_month: bool, _new_year: bool) -> void:
 	if not running:
 		return
+	CountriesSim.day_begin(self)   # Fase 10: el pase principal es el del país de origen.
+	simulate_country_day(new_month, true)
+	CountriesSim.day_end(self, new_month)   # Fase 10: pase de cada otro país con presencia y vuelta al activo.
+
+
+## Un día de un país. primary = pase del país de origen (también lo global: jugador, banco, bolsa,
+## investigación, historial); los demás países con presencia solo corren sus sistemas de país.
+func simulate_country_day(new_month: bool, primary: bool) -> void:
 	WeatherSim.daily(self)
 	EventsSim.daily(self)
 	MapSim.daily(self)   # Fase 9A: expediciones.
@@ -184,7 +202,8 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	FreeMarketSim.produce(self)   # Libre mercado: producción de las empresas NPC.
 	LogisticsSim.daily(self)
 	TradeSim.daily(self)
-	GlobalEconSim.daily(self)   # Economía global: riesgo de los envíos (seguro de carga).
+	if primary:
+		GlobalEconSim.daily(self)   # Economía global: riesgo de los envíos (seguro de carga).
 	TransitSim.daily(self)   # Transporte: trazados a otros pueblos, buses, pasajes y parqueaderos.
 	TourismSim.daily(self)
 	RealEstateSim.daily(self)   # Bienes raíces: pago por etapas / pausa de obras.
@@ -196,17 +215,21 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 	PopulationSim.daily(self)
 	BusinessSim.end_day(self)
 	FreeMarketSim.daily(self)     # Empresas NPC, contratos y planes del gobierno.
-	TechSim.end_day(self)
+	if primary:
+		TechSim.end_day(self)
 	LaborSim.daily(self)   # Trabajo: experiencia, plazos de sindicatos, huelgas, guerras de precio y ofertas.
 	ClimateSim.daily(self)   # Mundo: pronósticos y eventos climáticos.
 	WarSim.daily(self)
-	PlayerSim.daily(self)
-	MoneySim.daily(self)   # Sección E: negocios ocultos, banco en rojo y plazo del caso.
+	if primary:
+		PlayerSim.daily(self)
+	if primary:
+		MoneySim.daily(self)   # Sección E: negocios ocultos, banco en rojo y plazo del caso.
 	if new_month and running:
 		RealEstateSim.monthly(self)   # Bienes raíces: unidades, preventas, arriendo y venta.
 		GridSim.monthly(self)   # Redes: facturas de luz y agua, mantenimiento, inquilinos sin servicios.
 		MarketSim.monthly_housing(self)
-		BankSim.monthly(self)
+		if primary:
+			BankSim.monthly(self)
 		EducationSim.monthly(self)
 		BusinessSim.monthly(self)
 		GovSim.monthly(self)
@@ -223,10 +246,14 @@ func simulate_day(new_month: bool, _new_year: bool) -> void:
 		TourismSim.monthly(self)
 		AdvertisingSim.monthly(self)
 		EconomySim.monthly(self)
-		GlobalEconSim.monthly(self)   # Economía global: ciclos, monedas, calidad, bolsa y seguros.
-		PlayerSim.monthly(self)
-		MoneySim.monthly(self)   # Sección E: inspecciones y cierre del mes.
-		_record_month()
+		if primary:
+			GlobalEconSim.monthly(self)   # Economía global: ciclos, monedas, calidad, bolsa y seguros.
+		if primary:
+			PlayerSim.monthly(self)
+		if primary:
+			MoneySim.monthly(self)   # Sección E: inspecciones y cierre del mes.
+		if primary:
+			_record_month()
 
 
 func _record_month() -> void:
@@ -283,7 +310,10 @@ func add_money(amount: float) -> void:
 # --- Jugador --------------------------------------------------------------------
 
 func player_citizen() -> Citizen:
-	return citizens.get(player_id)
+	var c: Citizen = citizens.get(player_id)
+	if c == null and player_id >= 0:
+		c = CountriesSim.home_citizen(self, player_id)   # Fase 10: con otro país cargado, el jugador vive en el de origen.
+	return c
 
 
 func is_player(id: int) -> bool:
@@ -427,6 +457,7 @@ func era() -> int:
 ## Categorías: info, nacimiento, muerte, salud, boda, emigracion, clima,
 ## importante, jugador, negocio, construccion, familia.
 func notify(text: String, category := "info") -> void:
+	text = CountriesSim.note_prefix(self) + text   # Fase 10: avisos de otro país con su nombre.
 	var entry := {"text": text, "category": category, "date": TimeManager.date_string(false)}
 	notifications_log.append(entry)
 	if notifications_log.size() > MAX_LOG:
@@ -436,7 +467,20 @@ func notify(text: String, category := "info") -> void:
 		if notes.size() < 40:
 			notes.append(entry)
 	if not suppress_notifications:
-		EventBus.notification_posted.emit(entry)
+		if EventBus.is_blocking_signals():
+			_deferred_notes.append(entry)   # Fase 10: se muestran al terminar el pase de ese país.
+		else:
+			EventBus.notification_posted.emit(entry)
+
+
+## Fase 10: muestra los avisos que se generaron con las señales bloqueadas (máx. 6 por día).
+func flush_deferred_notes() -> void:
+	if _deferred_notes.is_empty() or EventBus.is_blocking_signals():
+		return
+	var notes := _deferred_notes
+	_deferred_notes = []
+	for e in notes.slice(maxi(0, notes.size() - 6)):
+		EventBus.notification_posted.emit(e)
 
 
 func begin_report(years: int) -> void:
@@ -502,6 +546,7 @@ func to_dict() -> Dictionary:
 		"map": map,
 		"transit": transit,
 		"world_econ": world_econ,
+		"countries": CountriesSim.to_save(self),
 		"loans": loans,
 		"next_loan_id": next_loan_id,
 		"weather": weather,
@@ -580,7 +625,9 @@ func load_dict(d: Dictionary) -> void:
 	map = d.get("map", {})   # Partida sin mapa (antes de la Fase 9A): MapSim la convierte en país.
 	transit = d.get("transit", {})
 	world_econ = d.get("world_econ", {})
+	countries = CountriesSim.from_save(d.get("countries", {}))   # Fase 10 (partida vieja: un solo país).
 	_init_expansions()
+	CountriesSim.init_state(self)
 	if not d.has("utilities"):
 		GridSim.migrate(self)   # Partida sin redes: período de gracia si ya había centrales.
 	TechSim._recompute_mods(self)

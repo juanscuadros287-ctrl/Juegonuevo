@@ -35,6 +35,7 @@ var career: String = ""             # carrera que estudia
 var prison_until: int = -1          # día en que sale de la cárcel (-1 = libre)
 var prison_id: int = -1
 var visual_seed: int = 0
+var country_id: String = ""         # Fase 10: país donde vive (CountriesSim)
 
 
 func full_name() -> String:
@@ -71,7 +72,7 @@ func to_dict() -> Dictionary:
 		"last_birth_day": last_birth_day, "needs_met": needs_met, "visual_seed": visual_seed,
 		"school_id": school_id, "school_years": school_years, "school_level": school_level, "uni_years": uni_years,
 		"profession": profession, "career": career, "prison_until": prison_until, "prison_id": prison_id,
-		"trade_exp": trade_exp,
+		"trade_exp": trade_exp, "country_id": country_id,
 	}
 
 
@@ -107,6 +108,7 @@ static func from_dict(d: Dictionary) -> Citizen:
 	c.last_birth_day = int(d.get("last_birth_day", -100000))
 	c.needs_met = float(d.get("needs_met", 1.0))
 	c.visual_seed = int(d.get("visual_seed", c.id))
+	c.country_id = str(d.get("country_id", ""))
 	c.school_id = int(d.get("school_id", -1))
 	c.school_years = float(d.get("school_years", 0.0))
 	c.school_level = int(d.get("school_level", 0))

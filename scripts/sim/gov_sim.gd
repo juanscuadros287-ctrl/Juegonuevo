@@ -82,6 +82,7 @@ static func _pay_debts(gs) -> void:
 
 static func _collect_taxes(gs) -> void:
 	var p := policy(gs)
+	var tm := float(gs.government.get("tax_mult", 1.0))   # Fase 10: capa de impuestos del país (1 en el de origen).
 	var totals := {"renta": 0.0, "propiedad": 0.0, "nomina": 0.0, "multas": 0.0}
 	var local_total := 0.0
 	for b in gs.buildings:
@@ -91,16 +92,16 @@ static func _collect_taxes(gs) -> void:
 		if BusinessSim.is_business(b) and not nonprofit and not exempt(gs, "profit_tax"):
 			var profit := BusinessSim.period_profit(b, "last_month")
 			if profit > 0.0:
-				var t := profit * float(p.get("profit_tax", 0.0)) * PoliticsSim.profit_tax_mult(gs, b)   # Sección C: talento, cargos y lobby.
+				var t := profit * float(p.get("profit_tax", 0.0)) * tm * PoliticsSim.profit_tax_mult(gs, b)   # Sección C: talento, cargos y lobby.
 				BusinessSim.pay(gs, b, t, "impuestos")
 				totals["renta"] += t
 			local_total += MunicipalSim.collect_local_tax(gs, b, profit)   # Fase 9B: impuesto (±) del municipio (va a su tesoro).
 		if not nonprofit:
-			var pt := EconomySim.property_value(gs, b) * float(p.get("property_tax", 0.0)) / 12.0
+			var pt := EconomySim.property_value(gs, b) * float(p.get("property_tax", 0.0)) * tm / 12.0
 			if pt > 0.0:
 				BusinessSim.pay(gs, b, pt, "impuestos")
 				totals["propiedad"] += pt
-		var wt := BusinessSim.period_value(b, "last_month", "salarios") * float(p.get("wage_tax", 0.0))
+		var wt := BusinessSim.period_value(b, "last_month", "salarios") * float(p.get("wage_tax", 0.0)) * tm
 		if wt > 0.0:
 			BusinessSim.pay(gs, b, wt, "impuestos")
 			totals["nomina"] += wt
