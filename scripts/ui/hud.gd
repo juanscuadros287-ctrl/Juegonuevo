@@ -19,7 +19,8 @@ const CATEGORIES := [
 		["countries", "Mis países y mapa mundial", "globe", ""]]},   # Fase 10
 	{"id": "construir", "label": "Construir", "icon": "build", "key": "B", "items": [["build", "Construir", "build", "B"]]},
 	{"id": "empresas", "label": "Empresas", "icon": "companies", "key": "F2", "items": [
-		["companies", "Mis empresas", "companies", "C"], ["realestate", "Bienes raíces", "realestate", "V"], ["contracts", "Contratos", "contracts", "K"]]},
+		["companies", "Mis empresas", "companies", "C"], ["realestate", "Bienes raíces", "realestate", "V"], ["contracts", "Contratos", "contracts", "K"],
+		["hiring", "Contrataciones", "employment", ""]]},   # Contrataciones: vacantes, postulantes y personal
 	{"id": "economia", "label": "Economía", "icon": "economy", "key": "F3", "items": [
 		["finance", "Finanzas", "finance", "F"], ["cash", "Efectivo y riesgo", "money", ""], ["stats", "Estadísticas", "stats", "Y"],
 		["world_econ", "Economía mundial", "globe", ""], ["stocks", "Bolsa de valores", "trend_up", ""], ["insurance", "Seguros", "shield", ""],
@@ -101,6 +102,7 @@ var global_econ: GlobalEconWindow   # Economía global: ciclos, monedas, bolsa y
 var cycle_indicator: CycleIndicator
 var countries_window: CountriesWindow   # Fase 10: mapa mundial y Mis países
 var aviation_window: AviationWindow     # Fase 10: aeropuertos, flota, vuelos y rutas
+var hiring_panel: HiringPanel           # Contrataciones: vacantes, postulantes y personal
 var country_indicator: CountryIndicator # Fase 10: país donde está el personaje
 
 # Interior
@@ -175,6 +177,10 @@ func _ready() -> void:
 	root.add_child(aviation_window)
 	aviation_window.setup()
 	aviation_window.message.connect(toast)
+	hiring_panel = HiringPanel.new()   # Contrataciones
+	root.add_child(hiring_panel)
+	hiring_panel.setup(self)
+	hiring_panel.message.connect(toast)
 	_build_hint()
 	_build_flyout()
 	EventBus.notification_posted.connect(_on_notification)
@@ -585,7 +591,7 @@ func open_category(cid: String) -> void:
 	for it in cat["items"]:
 		var item_id := str(it[0])
 		var b := Button.new()
-		b.text = str(it[1])
+		b.text = str(it[1]) + (HiringPanel.badge_suffix() if item_id == "hiring" else "")   # Contrataciones: postulantes nuevos.
 		b.icon = UIIcons.tex(str(it[2]), 18)
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.custom_minimum_size = Vector2(230, 34)
@@ -652,6 +658,8 @@ func _item_active(item_id: String) -> bool:
 			return countries_window != null and countries_window.visible
 		"aviation":
 			return aviation_window != null and aviation_window.visible
+		"hiring":
+			return hiring_panel != null and hiring_panel.visible
 		"population":
 			return population_modal.has("root") and population_modal["root"].visible
 		"towns":
@@ -682,6 +690,9 @@ func _open_item(item_id: String) -> void:
 		"aviation":
 			close_dock()
 			aviation_window.open()
+		"hiring":
+			close_dock()
+			hiring_panel.open(0)
 		"stocks":
 			close_dock()
 			global_econ.open(1)

@@ -169,6 +169,7 @@ func _init_expansions() -> void:
 	GridSim.init_state(self)
 	TransitSim.init_state(self)
 	LaborSim.init_state(self)   # Trabajo: experiencia por oficio, sindicatos y competencia NPC.
+	HiringSim.init_state(self)   # Contrataciones: vacantes y postulantes (en labor["hiring"]).
 	ClimateSim.init_state(self)   # Mundo: clima por zona, contaminación local y guerras.
 	PollutionSim.init_state(self)
 	WarSim.init_state(self)
@@ -218,6 +219,7 @@ func simulate_country_day(new_month: bool, primary: bool) -> void:
 	if primary:
 		TechSim.end_day(self)
 	LaborSim.daily(self)   # Trabajo: experiencia, plazos de sindicatos, huelgas, guerras de precio y ofertas.
+	HiringSim.daily(self)   # Contrataciones: postulantes, vencimientos y auto-contratación.
 	ClimateSim.daily(self)   # Mundo: pronósticos y eventos climáticos.
 	WarSim.daily(self)
 	if primary:
@@ -236,6 +238,7 @@ func simulate_country_day(new_month: bool, primary: bool) -> void:
 		MapSim.monthly(self)   # Fase 9B: precios de la tierra, comercio NPC de tierras, alcaldes y misiones regionales.
 		FreeMarketSim.monthly(self)
 		LaborSim.monthly(self)   # Trabajo: sindicatos, guerras de precio y ofertas a tus empleados.
+		HiringSim.monthly(self)   # Contrataciones: reputación como empleador.
 		PollutionSim.monthly(self)   # Mundo: contaminación acumulada por zona y filtros.
 		EventsSim.monthly(self)
 		ClimateSim.monthly(self)

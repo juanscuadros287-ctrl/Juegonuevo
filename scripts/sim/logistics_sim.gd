@@ -629,6 +629,7 @@ static func buy_vehicle(gs, st: Dictionary, mode: String) -> Dictionary:
 	var v := {"id": id, "mode": mode, "base": int(st["id"]), "name": "%s %d" % [str(mode_def(mode).get("unit", mode_label(mode))), n + 1],
 		"bought": gs.today(), "km": 0.0, "trips": 0}
 	vehicles(gs).append(v)
+	HiringSim.on_vehicle_bought(gs, st, v)   # Contrataciones: vacante de conductor.
 	return {"vehicle": v}
 
 

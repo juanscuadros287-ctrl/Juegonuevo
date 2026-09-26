@@ -408,6 +408,7 @@ static func _complete(gs, b: Dictionary, crew: Array) -> void:
 	if Housing.is_home(b):
 		RealEstateSim.on_building_ready(gs, b)   # Bienes raíces: unidades, entregas de preventa.
 	gs.notify("%s: %s." % ["Mejora terminada" if upgraded else "Construcción terminada", gs.building_label(b) if b["name"] != "" else ld.get("label", "")], "construccion")
+	HiringSim.on_building_ready(gs, b, upgraded)   # Contrataciones: se publican las vacantes.
 	EventBus.building_changed.emit(int(b["id"]))
 
 
