@@ -65,27 +65,26 @@ func _rebuild() -> void:
 		var width := 2.6
 		var length := TransitSim.poly_length(pts)
 		if pts.size() >= 2 and (level > 0 or float(l["progress"]) > 0.0):
-			var color := Color(0.45, 0.34, 0.22)
+			var kind := "barro"
+			var color := Color(-1, 0, 0)
 			if level <= 0:
-				# Camino en construcción: se abre paso desde el pueblo.
+				# Camino en construcción: se abre paso desde el pueblo (tierra más clara).
 				length *= float(l["progress"])
-				color = Color(0.55, 0.45, 0.3)
+				color = Color(0.58, 0.47, 0.32)
 				width = 2.0
 			elif level == 2:
-				color = Color(0.55, 0.53, 0.5)
+				kind = "empedrado"
 				width = 3.2
 			elif level >= 3:
-				color = Color(0.23, 0.23, 0.25)
+				kind = "cemento"
 				width = 4.4
-			var node := MeshLib.mesh_node(TransitVisuals.strip_mesh(terrain, pts, 0.0, width, 0.07, length), MeshLib.mat(color))
+			var node := MeshLib.mesh_node(RoadMesh.strip(terrain, pts, 0.0, width, 0.07, length), RoadMesh.material(kind, color))
 			node.name = "CaminoExterior"
 			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			_root.add_child(node)
 			if road_node == null:
 				road_node = node
-			if level >= 3:
-				node.add_child(MeshLib.mesh_node(TransitVisuals.strip_mesh(terrain, pts, 0.0, 0.18, 0.09, length), MeshLib.mat(Color(0.95, 0.85, 0.35))))
-			node.add_child(TransitVisuals.bridge_pillars(terrain, pts))
+			node.add_child(RoadMesh.bridge(terrain, pts, width, length))
 			_clear_trees(str(l["tid"]) + "r", pts, length, width * 0.5 + 1.8)
 		if bool(l["rail"]):
 			var rp: PackedVector2Array = l["rail_points"]

@@ -6,6 +6,11 @@ extends Node3D
 const SPEED_MULT := [0.0, 0.6, 1.0, 4.0, 10.0]
 const CLOTH := [Color(0.55, 0.2, 0.18), Color(0.25, 0.35, 0.55), Color(0.35, 0.45, 0.25),
 		Color(0.6, 0.5, 0.3), Color(0.45, 0.3, 0.45), Color(0.7, 0.65, 0.55), Color(0.3, 0.3, 0.3)]
+const ERA_CLOTH := [
+	[Color(0.5, 0.36, 0.24), Color(0.62, 0.55, 0.42), Color(0.45, 0.2, 0.16), Color(0.35, 0.38, 0.3), Color(0.72, 0.66, 0.54), Color(0.3, 0.26, 0.22)],
+	[Color(0.18, 0.2, 0.3), Color(0.42, 0.14, 0.16), Color(0.35, 0.35, 0.36), Color(0.55, 0.48, 0.36), Color(0.24, 0.32, 0.26), Color(0.8, 0.76, 0.68)],
+	[Color(0.2, 0.36, 0.6), Color(0.8, 0.8, 0.78), Color(0.62, 0.2, 0.2), Color(0.3, 0.5, 0.35), Color(0.85, 0.65, 0.25), Color(0.25, 0.25, 0.28)],
+]
 const SKIN := [Color(0.95, 0.8, 0.65), Color(0.85, 0.65, 0.48), Color(0.68, 0.48, 0.34), Color(0.5, 0.35, 0.25)]
 const HAIR := [Color(0.1, 0.08, 0.06), Color(0.35, 0.22, 0.1), Color(0.6, 0.45, 0.25), Color(0.2, 0.15, 0.1)]
 
@@ -50,6 +55,9 @@ static func make_model(c: Citizen) -> Node3D:
 	r.randf_range(1.8, 2.6)
 	var hair: Color = HAIR[r.randi() % HAIR.size()]
 	var cloth: Color = CLOTH[r.randi() % CLOTH.size()]
+	# Ropa según la época (docs/GRAFICOS.md): tonos terrosos al inicio, más vivos en la era moderna.
+	var pal: Array = ERA_CLOTH[clampi(GameState.era() - 1, 0, ERA_CLOTH.size() - 1)]
+	cloth = pal[int(c.visual_seed) % pal.size()]
 	var skin: Color = SKIN[r.randi() % SKIN.size()]
 	if GameState.is_player(c.id):
 		cloth = Color(0.85, 0.65, 0.2)
@@ -70,7 +78,7 @@ func set_player_marker(on: bool) -> void:
 		t.outer_radius = 0.45
 		t.rings = 10
 		t.ring_segments = 4
-		_marker = MeshLib.mesh_node(t, MeshLib.mat(Color(1.0, 0.8, 0.15)), Vector3(0, 1.45, 0))
+		_marker = MeshLib.mesh_node(t, MeshLib.mat(Color(1.0, 0.8, 0.15)), Vector3(0, 1.62, 0))
 		add_child(_marker)
 	elif not on and _marker != null:
 		_marker.queue_free()
@@ -109,10 +117,12 @@ func _process(delta: float) -> void:
 		var dir := to / dist
 		position += dir * minf(step, dist)
 		rotation.y = atan2(dir.x, dir.z)
-		_bob += delta * 10.0 * SPEED_MULT[s]
-		_model.position.y = absf(sin(_bob)) * 0.06
-	else:
+		_bob += minf(step, dist) * 5.5 / maxf(_model.scale.y, 0.4)
+		_model.position.y = absf(sin(_bob)) * 0.035
+		MeshLib.animate_person(_model, _bob, 1.0)
+	elif _model.position.y != 0.0:
 		_model.position.y = 0.0
+		MeshLib.animate_person(_model, 0.0, 0.0)
 	position.y = terrain.height_at(position.x, position.z) if terrain else 0.0
 	# Dentro de casa: invisible.
 	var going_home := target.distance_to(home_pos) < 0.5

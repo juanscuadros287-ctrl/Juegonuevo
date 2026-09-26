@@ -75,111 +75,19 @@ func _h(x: float, z: float) -> float:
 # --- Mallas ------------------------------------------------------------------------------------
 
 ## Franja continua a lo largo de una polilínea (desplazada `offset` hacia un lado).
+## Implementación en RoadMesh (sigue el relieve, faldones, tapas en los extremos y UV para el shader).
 static func strip_mesh(t: Terrain, pts: PackedVector2Array, offset: float, width: float, lift: float, max_len := -1.0) -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var cum := TransitSim.poly_cum(pts)
-	var total := cum[cum.size() - 1] if cum.size() > 0 else 0.0
-	if max_len >= 0.0:
-		total = minf(total, max_len)
-	var step := 1.5
-	var n := maxi(1, int(ceil(total / step)))
-	var prev_l := Vector3.ZERO
-	var prev_r := Vector3.ZERO
-	for i in range(n + 1):
-		var d := minf(total, i * step)
-		var a := TransitSim.poly_point(pts, cum, maxf(0.0, d - 0.4))
-		var b := TransitSim.poly_point(pts, cum, minf(total, d + 0.4))
-		var dir := b - a
-		if dir.length() < 0.001:
-			dir = Vector2(1, 0)
-		dir = dir.normalized()
-		var perp := Vector2(-dir.y, dir.x)
-		var c := TransitSim.poly_point(pts, cum, d) + perp * offset
-		var l2 := c + perp * width * 0.5
-		var r2 := c - perp * width * 0.5
-		var hc := ground(t, c.x, c.y)
-		var l := Vector3(l2.x, maxf(ground(t, l2.x, l2.y), hc - 0.3) + lift, l2.y)
-		var r := Vector3(r2.x, maxf(ground(t, r2.x, r2.y), hc - 0.3) + lift, r2.y)
-		if i > 0:
-			for v in [prev_l, prev_r, l, prev_r, r, l]:
-				st.set_normal(Vector3.UP)
-				st.add_vertex(v)
-		prev_l = l
-		prev_r = r
-	st.generate_normals()
-	return st.commit()
+	return RoadMesh.strip(t, pts, offset, width, lift, max_len)
 
 
-## Vía férrea: balasto, durmientes y dos rieles de acero.
+## Vía férrea: balasto, durmientes y dos rieles de acero (RoadMesh.rail).
 static func rail_node(t: Terrain, pts: PackedVector2Array, offset := 0.0, max_len := -1.0, ghost: Material = null) -> Node3D:
-	var root := Node3D.new()
-	root.name = "ViaFerrea"
-	var ballast := MeshLib.mesh_node(strip_mesh(t, pts, offset, 2.6, 0.06, max_len), ghost if ghost else MeshLib.mat(Color(0.46, 0.42, 0.38)))
-	ballast.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	root.add_child(ballast)
-	for off in [-0.55, 0.55]:
-		root.add_child(MeshLib.mesh_node(strip_mesh(t, pts, offset + off, 0.12, 0.26, max_len), ghost if ghost else MeshLib.mat(Color(0.62, 0.62, 0.66), 0.35)))
-	# Durmientes (MultiMesh) cada 0,9 m.
-	var cum := TransitSim.poly_cum(pts)
-	var total := cum[cum.size() - 1] if cum.size() > 0 else 0.0
-	if max_len >= 0.0:
-		total = minf(total, max_len)
-	var xf: Array[Transform3D] = []
-	var d := 0.3
-	while d < total:
-		var a := TransitSim.poly_point(pts, cum, maxf(0.0, d - 0.4))
-		var b := TransitSim.poly_point(pts, cum, minf(total, d + 0.4))
-		var dir := (b - a).normalized() if (b - a).length() > 0.001 else Vector2(1, 0)
-		var perp := Vector2(-dir.y, dir.x)
-		var c := TransitSim.poly_point(pts, cum, d) + perp * offset
-		var basis := Basis(Vector3.UP, atan2(dir.x, dir.y))
-		xf.append(Transform3D(basis, Vector3(c.x, ground(t, c.x, c.y) + 0.14, c.y)))
-		d += 0.9
-	if not xf.is_empty():
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.mesh = MeshLib.cached("rail_tie", func(): return MeshLib.box(Vector3(1.9, 0.12, 0.3)))
-		mm.instance_count = xf.size()
-		for i in range(xf.size()):
-			mm.set_instance_transform(i, xf[i])
-		var mmi := MultiMeshInstance3D.new()
-		mmi.multimesh = mm
-		mmi.material_override = ghost if ghost else MeshLib.mat(Color(0.33, 0.22, 0.14))
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		root.add_child(mmi)
-	return root
+	return RoadMesh.rail(t, pts, offset, max_len, ghost)
 
 
-## Pilares del puente donde la polilínea cruza agua.
-static func bridge_pillars(t: Terrain, pts: PackedVector2Array) -> Node3D:
-	var root := Node3D.new()
-	if t == null:
-		return root
-	var cum := TransitSim.poly_cum(pts)
-	var total := cum[cum.size() - 1] if cum.size() > 0 else 0.0
-	var d := 2.0
-	var mat := MeshLib.mat(Color(0.5, 0.48, 0.45))
-	var rail_mat := MeshLib.mat(Color(0.35, 0.25, 0.16))
-	while d < total:
-		var p := TransitSim.poly_point(pts, cum, d)
-		if t.height_at(p.x, p.y) < t.water_level + 0.2:
-			var top := t.water_level + 1.0
-			var bottom := t.height_at(p.x, p.y)
-			var hgt := maxf(0.5, top - bottom)
-			var pil := MeshLib.mesh_node(MeshLib.cached("bridge_pillar", func(): return MeshLib.box(Vector3(0.6, 1.0, 0.6))), mat, Vector3(p.x, bottom + hgt * 0.5, p.y))
-			pil.scale = Vector3(1, hgt, 1)
-			root.add_child(pil)
-			var a := TransitSim.poly_point(pts, cum, maxf(0.0, d - 0.5))
-			var b := TransitSim.poly_point(pts, cum, minf(total, d + 0.5))
-			var dir := (b - a).normalized() if (b - a).length() > 0.001 else Vector2(1, 0)
-			var perp := Vector2(-dir.y, dir.x)
-			for s in [-1.0, 1.0]:
-				var q: Vector2 = p + perp * s * 1.7
-				var post := MeshLib.mesh_node(MeshLib.cached("bridge_post", func(): return MeshLib.box(Vector3(0.12, 0.8, 0.12))), rail_mat, Vector3(q.x, top + 0.45, q.y))
-				root.add_child(post)
-		d += 4.0
-	return root
+## Puente (vigas, barandas y pilares) donde la polilínea cruza agua.
+static func bridge_pillars(t: Terrain, pts: PackedVector2Array, width := 3.0) -> Node3D:
+	return RoadMesh.bridge(t, pts, width)
 
 
 # --- Carreteras por puntos ---------------------------------------------------------------------
@@ -228,20 +136,7 @@ func _rebuild_roads() -> void:
 
 func _road_strip(t: Terrain, pts: PackedVector2Array, kind: String, ghost: Material = null) -> Node3D:
 	var kd := RoadSim.kind_def(kind)
-	var width := float(kd.get("width", 2.2))
-	var col := MeshLib.arr_color(kd.get("color"), Color(0.5, 0.4, 0.3))
-	var root := Node3D.new()
-	var body := MeshLib.mesh_node(strip_mesh(t, pts, 0.0, width, 0.08), ghost if ghost else MeshLib.mat(col))
-	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	root.add_child(body)
-	if ghost == null:
-		# Bordes más oscuros y línea central en la carretera de cemento.
-		for s in [-1.0, 1.0]:
-			root.add_child(MeshLib.mesh_node(strip_mesh(t, pts, s * (width * 0.5 - 0.1), 0.22, 0.1), MeshLib.mat(col.darkened(0.25))))
-		if kind == "cemento":
-			root.add_child(MeshLib.mesh_node(strip_mesh(t, pts, 0.0, 0.14, 0.11), MeshLib.mat(Color(0.95, 0.85, 0.35))))
-		root.add_child(bridge_pillars(t, pts))
-	return root
+	return RoadMesh.road_node(t, pts, kind, float(kd.get("width", 2.2)), ghost)
 
 
 # --- Paraderos, buses y autos ------------------------------------------------------------------
@@ -260,6 +155,7 @@ func _rebuild_stops() -> void:
 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		lab.font_size = 36
 		lab.pixel_size = 0.02
+		MeshLib.style_label(lab, 160.0)
 		lab.outline_size = 8
 		lab.modulate = Color(1.0, 0.85, 0.45)
 		lab.position = Vector3(0, 3.6, 0)
@@ -285,9 +181,14 @@ static func bus_model() -> Node3D:
 	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_windows", func(): return MeshLib.box(Vector3(1.64, 0.55, 3.9))), MeshLib.mat(Color(0.2, 0.3, 0.4), 0.3), Vector3(0, 1.45, -0.2)))
 	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_front", func(): return MeshLib.box(Vector3(1.4, 0.6, 0.05))), MeshLib.mat(Color(0.2, 0.3, 0.4), 0.3), Vector3(0, 1.45, 2.31)))
 	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_roof", func(): return MeshLib.box(Vector3(1.5, 0.12, 4.4))), MeshLib.mat(Color(0.95, 0.95, 0.92)), Vector3(0, 1.96, 0)))
+	# Faros (se encienden de noche), parachoques y franja lateral.
+	for x in [-0.55, 0.55]:
+		root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_light", func(): return MeshLib.box(Vector3(0.28, 0.16, 0.05))), MeshLib.glow_mat(Color(1.0, 0.92, 0.7), 0.1, 2.5), Vector3(x, 0.72, 2.31)))
+	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_bumper", func(): return MeshLib.box(Vector3(1.64, 0.18, 4.72))), MeshLib.mat(Color(0.18, 0.18, 0.2), 0.5), Vector3(0, 0.5, 0)))
+	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_stripe", func(): return MeshLib.box(Vector3(1.63, 0.1, 4.0))), MeshLib.mat(Color(0.95, 0.95, 0.92)), Vector3(0, 1.08, 0)))
 	for z in [1.5, -1.5]:
 		for x in [-0.8, 0.8]:
-			var w := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.cylinder(0.35, 0.35, 0.2, 8)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
+			var w := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
 			w.rotation.z = PI * 0.5
 			root.add_child(w)
 	return root
