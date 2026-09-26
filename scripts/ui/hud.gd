@@ -1480,21 +1480,10 @@ func _build_options(body: VBoxContainer) -> void:
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.custom_minimum_size.x = 440
 	body.add_child(note)
-	var gfx := get_node_or_null("/root/GraphicsSettings")
-	if gfx != null:
-		body.add_child(HSeparator.new())
-		body.add_child(UIKit.label("Gráficos", 16, UIKit.ACCENT))
-		if gfx.has_method("build_options_ui"):
-			gfx.build_options_ui(body)
-		elif gfx.has_method("set_quality"):
-			var q := OptionButton.new()
-			for t in ["Baja", "Media", "Alta", "Ultra"]:
-				q.add_item(t)
-			var cur = gfx.get("quality")
-			if cur != null:
-				q.select(clampi(int(cur), 0, 3))
-			q.item_selected.connect(func(i): gfx.set_quality(i))
-			body.add_child(q)
+	# Calidad gráfica (Baja/Media/Alta): GraphicsSettings (scripts/world/graphics_settings.gd).
+	body.add_child(HSeparator.new())
+	body.add_child(UIKit.label("Gráficos", 16, UIKit.ACCENT))
+	body.add_child(GraphicsSettings.make_selector())
 	body.add_child(HSeparator.new())
 	body.add_child(UIKit.primary(UIKit.button("Listo", func(): _close(options_modal))))
 
