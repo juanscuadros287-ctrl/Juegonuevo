@@ -482,7 +482,9 @@ static func assign_towns(gs) -> void:
 		if not t.has("distance_base"):
 			var real := (municipalities(gs)[zid]["town_pos"] as Vector2).length() / 1000.0
 			t["distance_base"] = float(t.get("distance", 50.0))
-			t["distance"] = roundf(float(t["distance_base"]) * clampf(real / maxf(0.1, ref), 0.85, 1.15))
+			# Solo en países reales (los de respaldo conservan las distancias de la Fase 7 para las pruebas).
+			var f := clampf(real / maxf(0.1, ref), 0.85, 1.15) if gen(gs).real else 1.0
+			t["distance"] = roundf(float(t["distance_base"]) * f)
 			t["real_km"] = snappedf(real, 0.1)
 
 

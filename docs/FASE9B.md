@@ -82,7 +82,7 @@ Mientras haya mallas detalladas pendientes cerca de la cámara, la capa lejana u
 
 ## 6. Pueblos NPC con posición real
 - `MapSim.assign_towns` ubica los pueblos de TradeSim en municipios con pueblo (`map.town_assign`);
-  `trade_town_pos` es su posición real. Distancia de ruta ajustada por la real con límites ×0,85–×1,15.
+  `trade_town_pos` es su posición real. Distancia de ruta ajustada por la real con límites ×0,85–×1,15 (solo en países reales; los de respaldo conservan las distancias de la Fase 7).
 - Abrir una ruta revela **todo su municipio** y el corredor.
 - Cascos urbanos: casas low-poly proporcionales a la población (2 MultiMesh para todo el país).
 - Carreteras fuera del pueblo por tierra propia o del Estado explorada (`MapSim.public_way_ok`); TransitSim usa los
