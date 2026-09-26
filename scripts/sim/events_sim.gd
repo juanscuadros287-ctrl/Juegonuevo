@@ -97,10 +97,7 @@ static func _update_events(gs) -> void:
 
 
 static func _pollution(gs) -> void:
-	var total := 0.0
-	for b in gs.buildings:
-		if b["status"] == "activo":
-			total += float(gs.level_def(b).get("pollution", 0.0))
+	var total := PollutionSim.total_emission(gs)   # Mundo: según producción y filtros (renovables: 0).
 	var norm := maxf(3.0, gs.citizens.size() * float(cfg().get("pollution", {}).get("normalizer", 0.3)))
 	gs.problems["pollution"] = clampf(total / norm * 25.0, 0.0, 100.0)
 
@@ -150,6 +147,7 @@ static func _crime(gs) -> void:
 			for g in b["inventory"]:
 				b["inventory"][g] = float(b["inventory"][g]) * 0.85
 			BusinessSim.pay(gs, b, loss, "robos")
+			InsuranceSim.on_theft(gs, b, loss)   # Economía global: seguro de robo.
 			thief.money += loss
 			stolen += loss
 		else:
@@ -224,5 +222,6 @@ static func _fires(gs) -> void:
 			gs.notify("Un incendio destruyó %s. Sus habitantes quedaron sin hogar." % label, "importante")
 		else:
 			gs.notify("Incendio en %s (%s)." % [label, "controlado" if contained else "daños menores"], "info")
+		InsuranceSim.on_fire(gs, b, ratio, contained)   # Economía global: seguro de incendio (tuyo o de tu aseguradora).
 	if TimeManager.month() == 1:
 		gs.problems["fires_year"] = 0

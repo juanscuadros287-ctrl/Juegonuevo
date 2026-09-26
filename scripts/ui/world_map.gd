@@ -110,7 +110,7 @@ func select(iso: String) -> void:
 	else:
 		var cd := MapSim.country_def(iso)
 		var p := WorldData.profile(iso)
-		var d := WorldData.country_data(iso)
+		var d := WorldData.country_meta(iso)
 		info.text = "[b][color=#f2c65a]%s[/color][/b]\nIdioma: %s\nMoneda: %s (%s) · inflación base %.1f%%\nRecursos: %s\nTerritorio en el juego: %d×%d chunks de 400 m (1 chunk ≈ %.0f km reales)\nFundas tu pueblo cerca de: %s\n%d lugares reales para municipios" % [
 			cd.get("label", iso), p.get("language", ""), p.get("currency", {}).get("name", ""), p.get("currency", {}).get("symbol", ""),
 			float(p.get("base_inflation", 0.0)) * 100.0, ", ".join(PackedStringArray(p.get("real_resources", []))),

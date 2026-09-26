@@ -14,6 +14,7 @@ static var _profiles: Dictionary = {}
 static var _countries: Dictionary = {}     # iso -> datos decodificados
 static var _mutex := Mutex.new()
 static var _defs: Dictionary = {}
+static var _meta: Dictionary = {}
 
 
 static func _read_json(path: String) -> Dictionary:
@@ -94,6 +95,24 @@ static func country_data(id: String) -> Dictionary:
 	return d
 
 
+## Metadatos del país sin decodificar la rejilla (tamaño, escala, origen, lugares).
+static func country_meta(id: String) -> Dictionary:
+	_mutex.lock()
+	if _countries.has(id):
+		var c: Dictionary = _countries[id]
+		_mutex.unlock()
+		return c
+	if _meta.has(id):
+		var mc: Dictionary = _meta[id]
+		_mutex.unlock()
+		return mc
+	var d := _read_json(DIR + "countries/%s.json" % id)
+	d.erase("grid")
+	_meta[id] = d
+	_mutex.unlock()
+	return d
+
+
 static func _unpack(b64: String, size: int) -> PackedByteArray:
 	var comp := Marshalls.base64_to_raw(b64)
 	return comp.decompress(size, FileAccess.COMPRESSION_GZIP)
@@ -107,9 +126,25 @@ static func country_def(id: String) -> Dictionary:
 	return _defs[id]
 
 
+## Definiciones de todos los países reales jugables (economía global: moneda, inflación y cambio).
+## exchange_rate_to_ref = unidades de la moneda por 1 dólar (referencia).
+static func real_defs() -> Dictionary:
+	if _defs.has("__all"):
+		return _defs["__all"]
+	var out := {}
+	var i := 0
+	for id in playable_ids():
+		var d: Dictionary = country_def(id).duplicate()
+		d["order"] = i
+		i += 1
+		out[id] = d
+	_defs["__all"] = out
+	return out
+
+
 static func _make_def(id: String) -> Dictionary:
 	var p := profile(id)
-	var d := country_data(id)
+	var d := country_meta(id)
 	var size := int(d.get("size", 64))
 	var land := int(d.get("country_chunks_side", size))
 	var res: Dictionary = p.get("resources", {})
@@ -122,4 +157,5 @@ static func _make_def(id: String) -> Dictionary:
 			"zones": clampi(int(land * land * 0.5 / 64.0), 10, 60), "town_ratio": float(p.get("town_ratio", 0.75)),
 			"resources": res, "real_resources": p.get("real_resources", []), "language": str(p.get("language", "")),
 			"currency": p.get("currency", {}), "base_inflation": float(p.get("base_inflation", 0.05)),
-			"exchange_rate_to_ref": float(p.get("usd_per_unit", 1.0)), "km_per_chunk": float(d.get("km_per_chunk", 0.0))}
+			"exchange_rate_to_ref": snappedf(1.0 / maxf(0.000001, float(p.get("usd_per_unit", 1.0))), 0.0001),
+			"usd_per_unit": float(p.get("usd_per_unit", 1.0)), "km_per_chunk": float(d.get("km_per_chunk", 0.0))}

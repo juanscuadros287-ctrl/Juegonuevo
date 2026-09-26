@@ -715,7 +715,9 @@ func _test_world_streaming() -> void:
 	var world: Node3D = load("res://scenes/main.tscn").instantiate()
 	add_child(world)
 	var t: Terrain = world.terrain
-	for i in range(240):
+	# Espera por tiempo (no por frames): con la máquina cargada los hilos tardan más.
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 30000:
 		await get_tree().process_frame
 		if t.stats["high"] >= 5 and t.chunks[Vector2i(3, 3)].get("far") != null:
 			break

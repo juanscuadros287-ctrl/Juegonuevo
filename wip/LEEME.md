@@ -1,10 +1,9 @@
 # Trabajo en curso guardado (sin integrar)
 
-Los agentes se detuvieron por el límite semanal de uso. Su avance quedó guardado aquí como parches sobre el commit `f32063a`, para retomarlo después. Todavía NO está aplicado al juego.
+Los agentes se detuvieron por el límite semanal de uso. Su avance quedó guardado aquí como parches sobre el commit base indicado en cada parche (ver `git merge-base`), para retomarlo después. Todavía NO está aplicado al juego.
 
 | Parche | Contenido |
 |---|---|
-| trabajo_clima.patch | Sindicatos, experiencia, competencia NPC, clima, contaminación y guerras |
 | graficos.patch | Iluminación, cielo, sombras, modelos, carreteras, agua y vegetación |
 | interfaz.patch | Sistema de diseño, iconos, HUD compacto, paneles y gráficas |
 

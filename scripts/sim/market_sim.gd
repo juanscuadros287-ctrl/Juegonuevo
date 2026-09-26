@@ -51,11 +51,12 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 		if left <= 0.0001:
 			break
 		var price := float(b["price"])
-		if price > willing:
+		var am := QualitySim.accept_mult(gs, b)   # Economía global: calidad y marca suben el precio aceptado.
+		if price > willing * am:
 			continue
 		# Demanda elástica: por encima del precio de referencia compran menos (la publicidad ayuda).
 		var ad := AdvertisingSim.demand_mult(gs, b)
-		if price > ref_price and gs.rng.randf() < (price / ref_price - 1.0) / (willing / ref_price - 1.0) / ad:
+		if price > ref_price * am and gs.rng.randf() < (price / (ref_price * am) - 1.0) / (willing / ref_price - 1.0) / ad:
 			continue
 		var inv: Dictionary = b["inventory"]
 		var stock := float(inv.get(good, 0.0))
@@ -77,7 +78,7 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 	var quality := 1.0
 	var g: Dictionary = GameData.goods.get(good, {})
 	if left > 0.0001:
-		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs)
+		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs) * GlobalEconSim.import_fx_mult(gs) * WarSim.import_mult(gs, good)   # Tipo de cambio · Mundo: guerra.
 		var well := good == WaterSim.GOOD   # Redes: el agua del pozo comunitario es gratis (no se importa).
 		if employed and imp > 0.0 and not well and PopulationSim.pay_with(gs, payers, left * imp):
 			imported = left  # El dinero sale del pueblo.
@@ -101,7 +102,7 @@ static func discretionary(gs) -> void:
 	ShopSim.weekly(gs)   # Economía real: deseos de los vecinos en tus comercios especializados.
 	var cfg: Dictionary = GameData.citizens.get("discretionary", {})
 	var buffer_days := float(cfg.get("buffer_days", 45))
-	var share := float(cfg.get("weekly_share", 0.06)) * EventsSim.mult(gs, "discretionary")
+	var share := float(cfg.get("weekly_share", 0.06)) * EventsSim.mult(gs, "discretionary") * GlobalEconSim.demand_mult(gs)   # Ciclo económico.
 	var need_day := 0.0
 	for n in GameData.citizens.get("needs", {}).values():
 		need_day += float(n.get("cost", 0.1))

@@ -352,6 +352,7 @@ static func _health(gs, c: Citizen, age: int, season: Dictionary, wdata: Diction
 		var chance := float(dcfg.get("daily_chance", 0.0012)) * float(diff.get("disease_mult", 1.0)) * TechSim.world_mult(gs, "disease")
 		chance *= float(season.get("disease", 1.0)) * float(wdata.get("disease", 1.0))
 		chance *= WaterSim.disease_mult(gs, c)   # Redes: agua por tubería protege; pozos escasos enferman.
+		chance *= PollutionSim.disease_mult(gs, c)   # Mundo: vivir junto a fuentes contaminantes enferma.
 		if age <= 5 or age >= 60:
 			chance *= float(dcfg.get("vulnerable_mult", 2.0))
 		if c.needs_met < 0.6:
@@ -398,6 +399,7 @@ static func _happiness(gs, c: Citizen, occupancy: Dictionary, wdata: Dictionary)
 	target += float(c.get_meta("bonus", 0.0)) + TechSim.happiness_bonus(gs)
 	target += float(wdata.get("happiness", 0))
 	target += TransitSim.happiness_delta(gs, c)   # Transporte: caminar lejos cansa; bus y auto alegran.
+	target += PollutionSim.happiness_delta(gs, c)   # Mundo: humo y hollín en el barrio.
 	target = clampf(target, 0.0, 100.0)
 	c.happiness = clampf(c.happiness + (target - c.happiness) * float(h.get("adjust_rate", 0.05)), 0.0, 100.0)
 

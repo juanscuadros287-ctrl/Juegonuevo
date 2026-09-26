@@ -1,0 +1,14 @@
+{
+ "_nota": "Economía global: tu aseguradora (InsuranceSim). Cobra primas a empresas NPC, dueños de casas y negocios de los pueblos conectados y paga sus siniestros. clients_per_worker = pólizas que atiende cada empleado. La tarifa se fija en Economía mundial → Seguros.",
+ "aseguradora": {
+  "label": "Aseguradora", "category": "negocio", "sector": "Finanzas", "order": 11, "product": "servicio", "insurer": true,
+  "skill": "comercio", "base_wage": 2.3, "footprint": 5.0,
+  "description": "Vende seguros de incendio y robo a las empresas NPC, a los dueños de casas y a negocios de los pueblos con ruta comercial. Cobra primas cada mes y paga los siniestros: con una tarifa baja tienes más clientes pero más riesgo; un mal año de incendios puede costarte caro.",
+  "levels": [
+   {"label": "Agencia de seguros", "cost": 900, "materials": {"madera": 15, "piedra": 25}, "build_days": 20, "workers": 3, "jobs": 2, "prod_per_worker": 0, "clients_per_worker": 20, "quality": 1.0, "upkeep": 0.3, "unit_cost": 0, "tech": "contabilidad",
+    "model": [{"s": "box", "size": [4.6, 3.0, 3.8], "pos": [0, 1.5, 0], "c": [0.82, 0.8, 0.72]}, {"s": "prism", "size": [5.0, 1.1, 4.2], "pos": [0, 3.55, 0], "rot": 90, "c": [0.45, 0.28, 0.2]}, {"s": "box", "size": [1.0, 1.8, 0.1], "pos": [0, 0.9, 1.93], "c": [0.25, 0.18, 0.1]}, {"s": "box", "size": [2.6, 0.5, 0.08], "pos": [0, 2.5, 1.95], "c": [0.2, 0.35, 0.6]}]},
+   {"label": "Compañía de seguros", "cost": 3600, "materials": {"madera": 25, "piedra": 110}, "build_days": 45, "workers": 6, "jobs": 5, "prod_per_worker": 0, "clients_per_worker": 30, "quality": 1.1, "upkeep": 1.0, "unit_cost": 0, "tech": "banca_moderna",
+    "model": [{"s": "box", "size": [6.2, 5.2, 5.0], "pos": [0, 2.6, 0], "c": [0.86, 0.84, 0.78]}, {"s": "box", "size": [6.6, 0.4, 5.4], "pos": [0, 5.4, 0], "c": [0.4, 0.4, 0.44]}, {"s": "cyl", "size": [0.2, 3.4, 0.2], "pos": [-2.0, 1.7, 2.6], "c": [0.95, 0.93, 0.88]}, {"s": "cyl", "size": [0.2, 3.4, 0.2], "pos": [-0.7, 1.7, 2.6], "c": [0.95, 0.93, 0.88]}, {"s": "cyl", "size": [0.2, 3.4, 0.2], "pos": [0.7, 1.7, 2.6], "c": [0.95, 0.93, 0.88]}, {"s": "cyl", "size": [0.2, 3.4, 0.2], "pos": [2.0, 1.7, 2.6], "c": [0.95, 0.93, 0.88]}, {"s": "box", "size": [3.2, 0.6, 0.08], "pos": [0, 4.3, 2.52], "c": [0.2, 0.35, 0.6]}]}
+  ]
+ }
+}

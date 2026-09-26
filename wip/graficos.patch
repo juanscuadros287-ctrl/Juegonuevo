@@ -65,10 +65,10 @@ index c081283..e95ab52 100644
  	var going_home := target.distance_to(home_pos) < 0.5
 diff --git a/scripts/world/graphics_settings.gd b/scripts/world/graphics_settings.gd
 new file mode 100644
-index 0000000..fed9765
+index 0000000..2def0eb
 --- /dev/null
 +++ b/scripts/world/graphics_settings.gd
-@@ -0,0 +1,94 @@
+@@ -0,0 +1,95 @@
 +class_name GraphicsSettings
 +extends RefCounted
 +## Calidad gráfica (Baja / Media / Alta), guardada en user://graficos.cfg (docs/GRAFICOS.md).
@@ -95,7 +95,8 @@ index 0000000..fed9765
 +
 +
 +static func is_forward_plus() -> bool:
-+	return RenderingServer.get_current_rendering_method() == "forward_plus"
++	# En Compatibility (OpenGL) no hay RenderingDevice; Forward+ y Mobile sí (Metal/Vulkan).
++	return RenderingServer.get_rendering_device() != null
 +
 +
 +static func level() -> int:
@@ -164,10 +165,18 @@ index 0000000..fed9765
 +	row.add_child(ob)
 +	return row
 diff --git a/scripts/world/logistics_visuals.gd b/scripts/world/logistics_visuals.gd
-index 1c5e111..df620bd 100644
+index 1c5e111..90d0ba4 100644
 --- a/scripts/world/logistics_visuals.gd
 +++ b/scripts/world/logistics_visuals.gd
-@@ -157,29 +157,10 @@ func rebuild_roads() -> void:
+@@ -121,6 +121,7 @@ func _deposit_marker(type: String) -> Node3D:
+ 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ 	label.font_size = 48
+ 	label.pixel_size = 0.02
++	MeshLib.style_label(label, 220.0)
+ 	label.outline_size = 8
+ 	label.modulate = col.lightened(0.35)
+ 	label.position = Vector3(-1.6, 4.8, -0.4)
+@@ -157,29 +158,10 @@ func rebuild_roads() -> void:
  		_roads_root.add_child(_road_node(RoadSim.seg_a(r), RoadSim.seg_b(r), str(r["kind"])))
  
  
@@ -199,11 +208,54 @@ index 1c5e111..df620bd 100644
  
  
  func start_road_mode(kind: String) -> void:
+@@ -408,6 +390,7 @@ func rebuild_links() -> void:
+ 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ 		lab.font_size = 40
+ 		lab.pixel_size = 0.02
++		MeshLib.style_label(lab, 200.0)
+ 		lab.outline_size = 8
+ 		lab.modulate = Color(0.75, 1.0, 0.75)
+ 		lab.position = Vector3(wp.x, _h(wp.x, wp.y) + (5.5 if wid == WarehouseSim.PLAZA else 8.5), wp.y)
+@@ -537,7 +520,7 @@ func _carrier_model(mode: String) -> Node3D:
+ 			root.add_child(boiler)
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("steam_stack", func(): return MeshLib.cylinder(0.14, 0.14, 1.0, 6)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(0, 2.0, 1.6)))
+ 			for w in [Vector3(-0.75, 0.45, 1.2), Vector3(0.75, 0.45, 1.2), Vector3(-0.75, 0.45, -0.9), Vector3(0.75, 0.45, -0.9)]:
+-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_v", func(): return MeshLib.cylinder(0.45, 0.45, 0.14, 10)), MeshLib.mat(Color(0.35, 0.1, 0.08)), w)
++				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_v", func(): return MeshLib.wheel(0.45, 0.14)), MeshLib.mat(Color(0.35, 0.1, 0.08)), w)
+ 				wheel.rotation.z = PI * 0.5
+ 				root.add_child(wheel)
+ 		"trailer":
+@@ -545,14 +528,14 @@ func _carrier_model(mode: String) -> Node3D:
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("trailer_cab", func(): return MeshLib.box(Vector3(1.5, 1.3, 1.3))), MeshLib.mat(Color(0.15, 0.3, 0.65)), Vector3(0, 1.1, 1.6)))
+ 			for z in [1.5, -0.2, -2.6]:
+ 				for x in [-0.8, 0.8]:
+-					var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.cylinder(0.35, 0.35, 0.2, 8)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
++					var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
+ 					wheel.rotation.z = PI * 0.5
+ 					root.add_child(wheel)
+ 		"camion":
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("truck_cargo", func(): return MeshLib.box(Vector3(1.4, 1.2, 2.4))), MeshLib.mat(Color(0.3, 0.4, 0.3)), Vector3(0, 1.0, -0.4)))
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("truck_cab", func(): return MeshLib.box(Vector3(1.3, 1.0, 1.0))), MeshLib.mat(Color(0.7, 0.2, 0.15)), Vector3(0, 0.9, 1.4)))
+ 			for w in [Vector3(-0.7, 0.35, 1.2), Vector3(0.7, 0.35, 1.2), Vector3(-0.7, 0.35, -1.0), Vector3(0.7, 0.35, -1.0)]:
+-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.cylinder(0.35, 0.35, 0.2, 8)), MeshLib.mat(Color(0.1, 0.1, 0.1)), w)
++				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), w)
+ 				wheel.rotation.z = PI * 0.5
+ 				root.add_child(wheel)
+ 		_:
+@@ -566,7 +549,7 @@ func _carrier_model(mode: String) -> Node3D:
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("cart_bed", func(): return MeshLib.box(Vector3(1.3, 0.35, 1.6))), MeshLib.mat(Color(0.5, 0.36, 0.2)), Vector3(0, 0.75, -0.4)))
+ 			root.add_child(MeshLib.mesh_node(MeshLib.cached("cart_load", func(): return MeshLib.box(Vector3(1.0, 0.5, 1.2))), MeshLib.mat(Color(0.62, 0.52, 0.34)), Vector3(0, 1.15, -0.4)))
+ 			for wx in [-0.72, 0.72]:
+-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_c", func(): return MeshLib.cylinder(0.45, 0.45, 0.1, 8)), MeshLib.mat(Color(0.3, 0.2, 0.12)), Vector3(wx, 0.45, -0.4))
++				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_c", func(): return MeshLib.wheel(0.45, 0.1)), MeshLib.mat(Color(0.3, 0.2, 0.12)), Vector3(wx, 0.45, -0.4))
+ 				wheel.rotation.z = PI * 0.5
+ 				root.add_child(wheel)
+ 	return root
 diff --git a/scripts/world/mesh_lib.gd b/scripts/world/mesh_lib.gd
-index d2aadda..5c2b2fa 100644
+index d2aadda..a85c007 100644
 --- a/scripts/world/mesh_lib.gd
 +++ b/scripts/world/mesh_lib.gd
-@@ -1,10 +1,40 @@
+@@ -1,10 +1,41 @@
  class_name MeshLib
  extends RefCounted
 -## Fábrica de mallas y materiales low-poly compartidos (con caché).
@@ -238,6 +290,7 @@ index d2aadda..5c2b2fa 100644
 +const K_METAL := 8
 +const K_GLASS := 9
 +const K_GLOW := 10
++const K_SHUTTER := 11     # postigo de madera: de noche deja ver luz cálida
 +const KIND_NAMES := {"liso": 0, "estuco": 1, "adobe": 1, "ladrillo": 2, "madera": 3, "piedra": 4, "teja": 5,
 +		"paja": 6, "concreto": 7, "metal": 8, "vidrio": 9, "luz": 10}
 +
@@ -246,7 +299,7 @@ index d2aadda..5c2b2fa 100644
  
  static func mat(color: Color, roughness := 0.9) -> StandardMaterial3D:
  	var key := "%s_%.2f" % [color.to_html(), roughness]
-@@ -17,16 +47,55 @@ static func mat(color: Color, roughness := 0.9) -> StandardMaterial3D:
+@@ -17,16 +48,55 @@ static func mat(color: Color, roughness := 0.9) -> StandardMaterial3D:
  	return m
  
  
@@ -306,7 +359,7 @@ index d2aadda..5c2b2fa 100644
  static func cached(key: String, builder: Callable) -> Mesh:
  	if not _meshes.has(key):
  		_meshes[key] = builder.call()
-@@ -41,117 +110,555 @@ static func mesh_node(mesh: Mesh, material: Material, pos := Vector3.ZERO) -> Me
+@@ -41,117 +111,560 @@ static func mesh_node(mesh: Mesh, material: Material, pos := Vector3.ZERO) -> Me
  	return mi
  
  
@@ -371,6 +424,7 @@ index d2aadda..5c2b2fa 100644
 +	var m := ArrayMesh.new()
 +	if not v.is_empty():
 +		m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
++	_flat_cache[m.get_instance_id()] = [v, n]   # sin leer de la GPU al unir modelos
 +	return m
 +
 +
@@ -446,18 +500,18 @@ index d2aadda..5c2b2fa 100644
 +	var n := PackedVector3Array()
 +	# 24 vértices: cada esquina se recorta en 3 puntos.
 +	var pts := {}
-+	for sx in [-1, 1]:
-+		for sy in [-1, 1]:
-+			for sz in [-1, 1]:
++	for sx: int in [-1, 1]:
++		for sy: int in [-1, 1]:
++			for sz: int in [-1, 1]:
 +				var c := Vector3(h.x * sx, h.y * sy, h.z * sz)
 +				pts[Vector3i(sx, sy, sz)] = [c - Vector3(b * sx, 0, 0), c - Vector3(0, b * sy, 0), c - Vector3(0, 0, b * sz)]
 +	var o := Vector3.ZERO
 +	# Caras principales (reducidas).
 +	for axis in range(3):
-+		for s in [-1, 1]:
++		for s: int in [-1, 1]:
 +			var quad := []
-+			for u in [-1, 1]:
-+				for w in [-1, 1]:
++			for u: int in [-1, 1]:
++				for w: int in [-1, 1]:
 +					var k := Vector3i.ZERO
 +					k[axis] = s
 +					k[(axis + 1) % 3] = u
@@ -468,8 +522,8 @@ index d2aadda..5c2b2fa 100644
 +	for axis in range(3):
 +		var a1 := (axis + 1) % 3
 +		var a2 := (axis + 2) % 3
-+		for s1 in [-1, 1]:
-+			for s2 in [-1, 1]:
++		for s1: int in [-1, 1]:
++			for s2: int in [-1, 1]:
 +				var k0 := Vector3i.ZERO
 +				k0[axis] = -1
 +				k0[a1] = s1
@@ -538,7 +592,7 @@ index d2aadda..5c2b2fa 100644
 +	var spring := size.y - hw          # altura donde empieza la curva
 +	var hz := size.z * 0.5
 +	# Pilares.
-+	for s in [-1.0, 1.0]:
++	for s: float in [-1.0, 1.0]:
 +		var cx := s * (hw - thick * 0.5)
 +		_box_into(v, n, Vector3(cx, spring * 0.5, 0), Vector3(thick, spring, size.z))
 +	# Dovelas.
@@ -602,7 +656,7 @@ index d2aadda..5c2b2fa 100644
 +	return m
 +
 +
-+## Rueda completa (llanta de toro + disco central), eje X. Cacheada.
++## Rueda completa (llanta de toro + disco central), eje Y como cylinder(). Cacheada.
 +static func wheel(radius: float, width: float) -> Mesh:
 +	var key := "__wheel_%.2f_%.2f" % [radius, width]
 +	if _meshes.has(key):
@@ -612,10 +666,10 @@ index d2aadda..5c2b2fa 100644
 +	var disc := cylinder(radius * 0.72, radius * 0.72, width * 0.8, 8)
 +	var tor := torus(radius * 0.84, maxf(width * 0.5, radius * 0.16), 12, 4)
 +	var rot := Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3.ZERO)
-+	for pair in [[disc, rot], [tor, Transform3D()]]:
-+		var arr: Array = (pair[0] as Mesh).surface_get_arrays(0)
-+		v.append_array((pair[1] as Transform3D) * (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array))
-+		n.append_array(Transform3D((pair[1] as Transform3D).basis, Vector3.ZERO) * (arr[Mesh.ARRAY_NORMAL] as PackedVector3Array))
++	for pair in [[disc, Transform3D()], [tor, rot]]:
++		var arr: Array = _flat_arrays(pair[0])
++		v.append_array((pair[1] as Transform3D) * (arr[0] as PackedVector3Array))
++		n.append_array(Transform3D((pair[1] as Transform3D).basis, Vector3.ZERO) * (arr[1] as PackedVector3Array))
 +	var m := _commit(v, n)
 +	_meshes[key] = m
 +	return m
@@ -708,7 +762,11 @@ index d2aadda..5c2b2fa 100644
 +	var id := mesh.get_instance_id()
 +	if _flat_cache.has(id):
 +		return _flat_cache[id]
++	if mesh.get_surface_count() == 0:
++		return [PackedVector3Array(), PackedVector3Array()]
 +	var arr: Array = mesh.surface_get_arrays(0)
++	if arr.size() < Mesh.ARRAY_MAX or arr[Mesh.ARRAY_VERTEX] == null:
++		return [PackedVector3Array(), PackedVector3Array()]
 +	var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
 +	var norms: PackedVector3Array = arr[Mesh.ARRAY_NORMAL]
 +	var idx = arr[Mesh.ARRAY_INDEX]
@@ -929,7 +987,7 @@ index d2aadda..5c2b2fa 100644
 +						_door(main, det, size, xf, col, pos)
 +						continue
 +					if dark and size.y < 1.2 and w <= 1.6:
-+						main.add(box(size), xf, col, K_WOOD, rnd)
++						main.add(box(size), xf, col, K_SHUTTER, rnd)
 +						_sill(det, size, xf, col.darkened(0.15), pos)
 +						continue
 +				main.add(cached("__box_" + str(size), func(): return box(size)), xf, col, kind, rnd)
@@ -939,7 +997,7 @@ index d2aadda..5c2b2fa 100644
  
  
  static func _vec(a, fallback: Vector3) -> Vector3:
-@@ -160,21 +667,170 @@ static func _vec(a, fallback: Vector3) -> Vector3:
+@@ -160,21 +673,170 @@ static func _vec(a, fallback: Vector3) -> Vector3:
  	return fallback
  
  
@@ -989,7 +1047,7 @@ index d2aadda..5c2b2fa 100644
 +	var fd := d + 0.05
 +	var depth := Vector3(absf(out.x), 0, absf(out.z)) * fd
 +	# Marco: dos jambas y dos travesaños.
-+	for sgn in [-1.0, 1.0]:
++	for sgn: float in [-1.0, 1.0]:
 +		det.box(along * sgn * (w * 0.5 + fw * 0.5) + out * 0.015, along.abs() * fw + Vector3(0, h + fw * 2.0, 0) + depth, xf, fcol, K_PLAIN)
 +		det.box(Vector3(0, sgn * (h * 0.5 + fw * 0.5), 0) + out * 0.015, along.abs() * (w + fw * 2.0) + Vector3(0, fw, 0) + depth, xf, fcol, K_PLAIN)
 +	# Cruz central en ventanas grandes.
@@ -1024,7 +1082,7 @@ index d2aadda..5c2b2fa 100644
 +	main.add(box(size), xf, col, K_WOOD, rnd)
 +	var fcol := col.darkened(0.35)
 +	var depth := Vector3(absf(out.x), 0, absf(out.z)) * (minf(size.x, size.z) + 0.06)
-+	for sgn in [-1.0, 1.0]:
++	for sgn: float in [-1.0, 1.0]:
 +		det.box(along * sgn * (w * 0.5 + 0.05), along.abs() * 0.1 + Vector3(0, h + 0.1, 0) + depth, xf, fcol, K_WOOD)
 +	det.box(Vector3(0, h * 0.5 + 0.07, 0), along.abs() * (w + 0.3) + Vector3(0, 0.14, 0) + depth, xf, fcol, K_WOOD)
 +	# Escalón de piedra.
@@ -1037,7 +1095,7 @@ index d2aadda..5c2b2fa 100644
 +static func _roof_details(det: Buf, size: Vector3, xf: Transform3D, col: Color) -> void:
 +	var dark := col.darkened(0.3)
 +	det.box(Vector3(0, size.y * 0.5 - 0.02, 0), Vector3(0.16, 0.12, size.z + 0.06), xf, dark, K_PLAIN)
-+	for sgn in [-1.0, 1.0]:
++	for sgn: float in [-1.0, 1.0]:
 +		det.box(Vector3(sgn * (size.x * 0.5 - 0.03), -size.y * 0.5 + 0.02, 0), Vector3(0.1, 0.1, size.z + 0.02), xf, dark, K_WOOD)
 +
 +
@@ -1064,8 +1122,8 @@ index d2aadda..5c2b2fa 100644
 +		det.box(Vector3(0, size.y * 0.5 - 0.04, 0), Vector3(size.x + 0.18, 0.16, size.z + 0.18), xf, col.lightened(0.12), K_PLAIN)
 +	# Esquineras en muros de estuco/adobe/ladrillo.
 +	if kind == K_PLASTER or kind == K_BRICK:
-+		for sx in [-1.0, 1.0]:
-+			for sz2 in [-1.0, 1.0]:
++		for sx: float in [-1.0, 1.0]:
++			for sz2: float in [-1.0, 1.0]:
 +				det.box(Vector3(sx * size.x * 0.5, 0.0, sz2 * size.z * 0.5), Vector3(0.14, size.y - 0.3, 0.14), xf, col.lightened(0.1) if kind == K_BRICK else col.darkened(0.12), K_PLAIN)
 +
 +
@@ -1075,7 +1133,7 @@ index d2aadda..5c2b2fa 100644
 +	for k in range(n):
 +		var x := -size.x * 0.5 + size.x * k / (n - 1)
 +		det.box(Vector3(x, size.y * 0.5, 0), Vector3(0.1, size.y, 0.1), xf, col, K_WOOD)
-+	for y in [size.y * 0.4, size.y * 0.8]:
++	for y: float in [size.y * 0.4, size.y * 0.8]:
 +		det.box(Vector3(0, y, 0), Vector3(size.x, 0.07, 0.05), xf, col.lightened(0.05), K_WOOD)
 +
 +
@@ -1101,25 +1159,25 @@ index d2aadda..5c2b2fa 100644
 +		main.box(Vector3(0, y0 + fh * 0.675, 0), Vector3(size.x - 0.12, fh * 0.65, size.z - 0.12), xf, glass, K_GLASS, fposmod(i * 0.37 + variant * 0.11, 1.0))
 +	# Parteluces verticales en las cuatro fachadas (una sola pieza alta por columna).
 +	var mul := wall.darkened(0.12)
-+	for axis in [0, 1]:
++	for axis: int in [0, 1]:
 +		var span := size.x if axis == 0 else size.z
 +		var cols := maxi(1, int(span / 1.4))
 +		for k in range(1, cols):
 +			var t := -span * 0.5 + span * k / cols
-+			for sgn in [-1.0, 1.0]:
++			for sgn: float in [-1.0, 1.0]:
 +				var c := Vector3(t, size.y * 0.5, sgn * (size.z * 0.5 - 0.02)) if axis == 0 else Vector3(sgn * (size.x * 0.5 - 0.02), size.y * 0.5, t)
 +				var sz := Vector3(0.1, size.y, 0.1)
 +				det.box(c, sz, xf, mul, K_PLAIN)
 +	# Esquinas, zócalo y cornisa.
-+	for sx in [-1.0, 1.0]:
-+		for sz2 in [-1.0, 1.0]:
++	for sx: float in [-1.0, 1.0]:
++		for sz2: float in [-1.0, 1.0]:
 +			main.box(Vector3(sx * (size.x * 0.5 - 0.1), size.y * 0.5, sz2 * (size.z * 0.5 - 0.1)), Vector3(0.24, size.y, 0.24), xf, wall.darkened(0.08), wk)
 +	main.box(Vector3(0, 0.3, 0), Vector3(size.x + 0.1, 0.6, size.z + 0.1), xf, wall.darkened(0.3), K_STONE)
 +	det.box(Vector3(0, size.y - 0.08, 0), Vector3(size.x + 0.22, 0.2, size.z + 0.22), xf, wall.lightened(0.1), K_PLAIN)
  
  
  static func model_height(parts: Array) -> float:
-@@ -182,11 +838,101 @@ static func model_height(parts: Array) -> float:
+@@ -182,11 +844,115 @@ static func model_height(parts: Array) -> float:
  	for part in parts:
  		var size := _vec(part.get("size", [1, 1, 1]), Vector3.ONE)
  		var pos := _vec(part.get("pos", [0, 0, 0]), Vector3.ZERO)
@@ -1219,23 +1277,30 @@ index d2aadda..5c2b2fa 100644
 +	(model.get_node("ArmR") as Node3D).rotation.x = sw * 0.8
 +
 +
++## Etiqueta 3D legible: tamaño fijo en pantalla (no se vuelve gigante ni diminuta con el zoom),
++## se desvanece a partir de max_dist (evita que se amontonen al alejarse) y va sobre la geometría
++## cercana con prioridad de dibujo alta.
++static func style_label(lab: Label3D, max_dist := 180.0) -> void:
++	lab.fixed_size = true
++	lab.pixel_size = 0.0007 * 40.0 / maxf(float(lab.font_size), 1.0)
++	lab.visibility_range_end = max_dist
++	lab.visibility_range_end_margin = max_dist * 0.15
++	lab.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
++	lab.outline_modulate = Color(0.05, 0.05, 0.07, 0.85)
++	lab.render_priority = 2
++	lab.outline_render_priority = 1
++
++
  static func ghost_mat(ok: bool) -> StandardMaterial3D:
  	var key := "__ghost_%s" % ok
  	if _materials.has(key):
-@@ -209,16 +955,35 @@ static func construction_mat() -> StandardMaterial3D:
+@@ -209,16 +975,35 @@ static func construction_mat() -> StandardMaterial3D:
  	return m
  
  
 -## Andamio de obra alrededor de un edificio.
 +## Andamio de obra alrededor de un edificio (una sola malla unida).
  static func scaffold(footprint: float, height: float) -> Node3D:
--	var root := Node3D.new()
--	var w := footprint * 0.5 + 0.3
--	var pole_mat := mat(Color(0.6, 0.45, 0.25))
--	for x in [-w, w]:
--		for z in [-w, w]:
--			root.add_child(mesh_node(box(Vector3(0.12, height, 0.12)), pole_mat, Vector3(x, height * 0.5, z)))
--	for y in [height * 0.33, height * 0.66]:
 +	var key := "__scaffold_%.2f_%.2f" % [footprint, height]
 +	var mesh: ArrayMesh
 +	if _models.has(key):
@@ -1245,32 +1310,51 @@ index d2aadda..5c2b2fa 100644
 +		var id := Transform3D()
 +		var w := footprint * 0.5 + 0.3
 +		var wood := Color(0.6, 0.45, 0.25)
-+		for x in [-w, w]:
-+			for z in [-w, w]:
++		for x: float in [-w, w]:
++			for z: float in [-w, w]:
 +				buf.box(Vector3(x, height * 0.5, z), Vector3(0.12, height, 0.12), id, wood, K_WOOD)
 +		var lv := maxi(2, int(height / 1.6))
 +		for k in range(1, lv + 1):
 +			var y := height * k / (lv + 0.5)
-+			for z in [-w, w]:
++			for z: float in [-w, w]:
 +				buf.box(Vector3(0, y, z), Vector3(w * 2.0, 0.08, 0.12), id, wood, K_WOOD)
 +				buf.box(Vector3(0, y - 0.05, z * 0.93), Vector3(w * 2.0, 0.05, 0.45), id, wood.darkened(0.15), K_WOOD)
 +		# Diagonales.
- 		for z in [-w, w]:
--			root.add_child(mesh_node(box(Vector3(w * 2.0, 0.08, 0.12)), pole_mat, Vector3(0, y, z)))
--	root.add_child(mesh_node(box(Vector3(footprint + 1.0, 0.05, footprint + 1.0)), mat(Color(0.5, 0.4, 0.28)), Vector3(0, 0.02, 0)))
++		for z: float in [-w, w]:
 +			var ang := atan2(height * 0.66, w * 2.0)
 +			buf.box(Vector3(0, height * 0.4, z), Vector3(sqrt(w * w * 4.0 + height * height * 0.44), 0.07, 0.07), Transform3D(Basis(Vector3.BACK, ang), Vector3.ZERO), wood.darkened(0.1), K_WOOD)
 +		buf.box(Vector3(0, 0.02, 0), Vector3(footprint + 1.0, 0.05, footprint + 1.0), id, Color(0.5, 0.4, 0.28), K_PLAIN)
 +		mesh = buf.commit()
 +		_models[key] = mesh
-+	var root := Node3D.new()
+ 	var root := Node3D.new()
+-	var w := footprint * 0.5 + 0.3
+-	var pole_mat := mat(Color(0.6, 0.45, 0.25))
+-	for x in [-w, w]:
+-		for z in [-w, w]:
+-			root.add_child(mesh_node(box(Vector3(0.12, height, 0.12)), pole_mat, Vector3(x, height * 0.5, z)))
+-	for y in [height * 0.33, height * 0.66]:
+-		for z in [-w, w]:
+-			root.add_child(mesh_node(box(Vector3(w * 2.0, 0.08, 0.12)), pole_mat, Vector3(0, y, z)))
+-	root.add_child(mesh_node(box(Vector3(footprint + 1.0, 0.05, footprint + 1.0)), mat(Color(0.5, 0.4, 0.28)), Vector3(0, 0.02, 0)))
 +	var mi := MeshInstance3D.new()
 +	mi.mesh = mesh
 +	root.add_child(mi)
  	return root
+diff --git a/scripts/world/mining_visuals.gd b/scripts/world/mining_visuals.gd
+index 6584b3a..d545b0e 100644
+--- a/scripts/world/mining_visuals.gd
++++ b/scripts/world/mining_visuals.gd
+@@ -174,6 +174,7 @@ func _build_area(d: Dictionary) -> void:
+ 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ 	label.font_size = 40
+ 	label.pixel_size = 0.022
++	MeshLib.style_label(label, 200.0)
+ 	label.outline_size = 10
+ 	label.modulate = col.lightened(0.45)
+ 	label.position = Vector3(0, 4.1, 0)
 diff --git a/scripts/world/road_mesh.gd b/scripts/world/road_mesh.gd
 new file mode 100644
-index 0000000..ca26a38
+index 0000000..c4442f0
 --- /dev/null
 +++ b/scripts/world/road_mesh.gd
 @@ -0,0 +1,357 @@
@@ -1544,7 +1628,7 @@ index 0000000..ca26a38
 +		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 +		root.add_child(mmi)
 +	# Rieles: perfil rectangular extruido a la altura de la corona + durmiente.
-+	for side in [-0.55, 0.55]:
++	for side: float in [-0.55, 0.55]:
 +		var rs := SurfaceTool.new()
 +		rs.begin(Mesh.PRIMITIVE_TRIANGLES)
 +		var rrows := []
@@ -1614,7 +1698,7 @@ index 0000000..ca26a38
 +			if prev_over:
 +				var mid := (p + prev_p) * 0.5
 +				var seg := p.distance_to(prev_p) + 0.1
-+				for s in [-1.0, 1.0]:
++				for s: float in [-1.0, 1.0]:
 +					var q := mid + perp * s * (width * 0.5 + 0.05)
 +					var beam := MeshLib.mesh_node(unit, wood, Vector3(q.x, top - 0.12, q.y))
 +					beam.scale = Vector3(0.18, 0.35, seg)
@@ -1633,7 +1717,7 @@ index 0000000..ca26a38
 +	return root
 diff --git a/scripts/world/sky_rig.gd b/scripts/world/sky_rig.gd
 new file mode 100644
-index 0000000..a01faca
+index 0000000..4788a14
 --- /dev/null
 +++ b/scripts/world/sky_rig.gd
 @@ -0,0 +1,176 @@
@@ -1803,10 +1887,10 @@ index 0000000..a01faca
 +		sun.light_color = Color(0.62, 0.72, 1.0)
 +		sun.light_energy = 0.2 * moon * (1.0 - dim * 0.7)
 +	sun.shadow_opacity = lerpf(0.55, 1.0, day) if elev > -0.04 else 0.5
-+	env.ambient_light_energy = lerpf(0.35, 0.75, day) * (1.0 - dim * 0.2)
++	env.ambient_light_energy = lerpf(0.16, 0.72, day) * (1.0 - dim * 0.2)
 +	env.ambient_light_color = Color(0.4, 0.5, 0.75)
-+	env.ambient_light_sky_contribution = lerpf(0.55, 1.0, day)
-+	env.tonemap_exposure = lerpf(1.35, 1.0, day)
++	env.ambient_light_sky_contribution = lerpf(0.35, 1.0, day)
++	env.tonemap_exposure = lerpf(1.12, 1.0, day)
 +	env.fog_light_color = horizon.lerp(top, 0.35)
 +	env.fog_light_energy = lerpf(0.6, 1.0, day)
 +	var nf := clampf(night_factor + dim * 0.35, 0.0, 1.0)
@@ -1815,10 +1899,10 @@ index 0000000..a01faca
 +		MeshLib.set_night(nf)
 diff --git a/scripts/world/street_lights.gd b/scripts/world/street_lights.gd
 new file mode 100644
-index 0000000..b0142c1
+index 0000000..05f8473
 --- /dev/null
 +++ b/scripts/world/street_lights.gd
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,180 @@
 +class_name StreetLights
 +extends Node3D
 +## Faroles en la plaza y a lo largo de las carreteras (docs/GRAFICOS.md). Postes y faroles van en
@@ -1836,6 +1920,8 @@ index 0000000..b0142c1
 +var _posts: MultiMeshInstance3D
 +var _heads: MultiMeshInstance3D
 +var _lights: Node3D
++var _pools: MultiMeshInstance3D
++var _pool_mat: ShaderMaterial
 +var _spots: Array[Vector3] = []
 +var _real := false
 +
@@ -1854,6 +1940,13 @@ index 0000000..b0142c1
 +	_heads.material_override = MeshLib.glow_mat(Color(1.0, 0.78, 0.45), 0.05, 3.2)
 +	_heads.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 +	add_child(_heads)
++	_pool_mat = ShaderMaterial.new()
++	_pool_mat.shader = load("res://shaders/light_pool.gdshader")
++	_pools = MultiMeshInstance3D.new()
++	_pools.material_override = _pool_mat
++	_pools.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
++	_pools.visible = false
++	add_child(_pools)
 +	_lights = Node3D.new()
 +	add_child(_lights)
 +	_real = bool(GraphicsSettings.profile().get("lamp_lights", false))
@@ -1909,8 +2002,15 @@ index 0000000..b0142c1
 +		_along(t, pts2, float(RoadSim.kind_def(str(r["kind"])).get("width", 2.2)), xs)
 +	_posts.multimesh = _mm(_post_mesh(), xs, Transform3D())
 +	_heads.multimesh = _mm(_head_mesh(), xs, Transform3D(Basis(), Vector3(0.5, 3.33, 0)))
++	var pool_x: Array[Transform3D] = []
 +	for x in xs:
 +		_spots.append(x * Vector3(0.5, 3.2, 0))
++		var g := x * Vector3(0.5, 0, 0)
++		pool_x.append(Transform3D(Basis(), Vector3(g.x, t.height_at(g.x, g.z) + 0.05, g.z)))
++	_pools.multimesh = _mm(MeshLib.cached("__pool", func():
++		var pm := PlaneMesh.new()
++		pm.size = Vector2(9.0, 9.0)
++		return pm), pool_x, Transform3D())
 +	_rebuild_real()
 +
 +
@@ -1978,9 +2078,37 @@ index 0000000..b0142c1
 +	if _signature() != _sig:
 +		rebuild()
 +	var e := MeshLib.night() * 1.6
++	_pool_mat.set_shader_parameter("night", MeshLib.night())
++	_pools.visible = MeshLib.night() > 0.02
 +	for l in _lights.get_children():
 +		(l as OmniLight3D).light_energy = e
 +		(l as OmniLight3D).visible = e > 0.02
+diff --git a/scripts/world/terrain_look.gd b/scripts/world/terrain_look.gd
+new file mode 100644
+index 0000000..ba04eb4
+--- /dev/null
++++ b/scripts/world/terrain_look.gd
+@@ -0,0 +1,20 @@
++class_name TerrainLook
++extends RefCounted
++## Gradación de color del terreno sin tocar terrain.gd (docs/GRAFICOS.md): cambia el shader de los
++## materiales ya creados por Terrain (pueblo y chunks) por copias con la gradación de
++## shaders/terrain_grade.gdshaderinc. Los parámetros (estación, nieve, niebla) se conservan porque
++## los uniformes se llaman igual. Enganche: una línea en world.gd después de terrain.start_country().
++## Si la Fase 9B cambia terrain.gdshader o terrain_chunk.gdshader, hay que llevar el cambio a las
++## copias *_plus (o quitar el enganche).
++
++
++static func apply(t: Terrain) -> void:
++	if t == null:
++		return
++	var town := load("res://shaders/terrain_plus.gdshader") as Shader
++	var chunk := load("res://shaders/terrain_chunk_plus.gdshader") as Shader
++	if t.material and town:
++		t.material.shader = town
++	for m in [t.chunk_material, t.fog_material, t.outside_material]:
++		if m != null and chunk:
++			(m as ShaderMaterial).shader = chunk
 diff --git a/scripts/world/tourism_visuals.gd b/scripts/world/tourism_visuals.gd
 index c2502aa..2180f0c 100644
 --- a/scripts/world/tourism_visuals.gd
@@ -2047,7 +2175,7 @@ index dededd5..dd1ec8e 100644
  		if bool(l["rail"]):
  			var rp: PackedVector2Array = l["rail_points"]
 diff --git a/scripts/world/transit_visuals.gd b/scripts/world/transit_visuals.gd
-index 1f2d491..7d8ecdc 100644
+index 1f2d491..2d4c416 100644
 --- a/scripts/world/transit_visuals.gd
 +++ b/scripts/world/transit_visuals.gd
 @@ -75,111 +75,19 @@ func _h(x: float, z: float) -> float:
@@ -2193,9 +2321,45 @@ index 1f2d491..7d8ecdc 100644
  
  
  # --- Paraderos, buses y autos ------------------------------------------------------------------
+@@ -260,6 +155,7 @@ func _rebuild_stops() -> void:
+ 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ 		lab.font_size = 36
+ 		lab.pixel_size = 0.02
++		MeshLib.style_label(lab, 160.0)
+ 		lab.outline_size = 8
+ 		lab.modulate = Color(1.0, 0.85, 0.45)
+ 		lab.position = Vector3(0, 3.6, 0)
+@@ -285,9 +181,14 @@ static func bus_model() -> Node3D:
+ 	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_windows", func(): return MeshLib.box(Vector3(1.64, 0.55, 3.9))), MeshLib.mat(Color(0.2, 0.3, 0.4), 0.3), Vector3(0, 1.45, -0.2)))
+ 	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_front", func(): return MeshLib.box(Vector3(1.4, 0.6, 0.05))), MeshLib.mat(Color(0.2, 0.3, 0.4), 0.3), Vector3(0, 1.45, 2.31)))
+ 	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_roof", func(): return MeshLib.box(Vector3(1.5, 0.12, 4.4))), MeshLib.mat(Color(0.95, 0.95, 0.92)), Vector3(0, 1.96, 0)))
++	# Faros (se encienden de noche), parachoques y franja lateral.
++	for x in [-0.55, 0.55]:
++		root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_light", func(): return MeshLib.box(Vector3(0.28, 0.16, 0.05))), MeshLib.glow_mat(Color(1.0, 0.92, 0.7), 0.1, 2.5), Vector3(x, 0.72, 2.31)))
++	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_bumper", func(): return MeshLib.box(Vector3(1.64, 0.18, 4.72))), MeshLib.mat(Color(0.18, 0.18, 0.2), 0.5), Vector3(0, 0.5, 0)))
++	root.add_child(MeshLib.mesh_node(MeshLib.cached("bus_stripe", func(): return MeshLib.box(Vector3(1.63, 0.1, 4.0))), MeshLib.mat(Color(0.95, 0.95, 0.92)), Vector3(0, 1.08, 0)))
+ 	for z in [1.5, -1.5]:
+ 		for x in [-0.8, 0.8]:
+-			var w := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.cylinder(0.35, 0.35, 0.2, 8)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
++			var w := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
+ 			w.rotation.z = PI * 0.5
+ 			root.add_child(w)
+ 	return root
+diff --git a/scripts/world/utilities_visuals.gd b/scripts/world/utilities_visuals.gd
+index 7b57d30..0023b26 100644
+--- a/scripts/world/utilities_visuals.gd
++++ b/scripts/world/utilities_visuals.gd
+@@ -239,6 +239,7 @@ func _build_layer(lay: String) -> void:
+ 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ 		lab.font_size = 44
+ 		lab.pixel_size = 0.02
++		MeshLib.style_label(lab, 200.0)
+ 		lab.outline_size = 8
+ 		var tie := lay == GridSim.POWER and bool(comp["info"].get(n, {}).get("tie", false))
+ 		lab.text = "Red %d%s" % [n, " · entrada regional" if tie else ""]
 diff --git a/scripts/world/vegetation.gd b/scripts/world/vegetation.gd
 new file mode 100644
-index 0000000..835cbc3
+index 0000000..23bbbf7
 --- /dev/null
 +++ b/scripts/world/vegetation.gd
 @@ -0,0 +1,331 @@
@@ -2300,7 +2464,7 @@ index 0000000..835cbc3
 +			var g := Color(0.3, 0.5, 0.3)
 +			b.add(MeshLib.cylinder(0.2, 0.24, 2.4, 7), Transform3D(Basis(), Vector3(0, 1.2, 0)), g, 0)
 +			b.add(MeshLib.sphere(0.2, 7, 3), Transform3D(Basis(), Vector3(0, 2.4, 0)), g, 0)
-+			for s in [-1.0, 1.0]:
++			for s: float in [-1.0, 1.0]:
 +				b.add(MeshLib.cylinder(0.12, 0.12, 0.5, 6), Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(s * 0.4, 1.1 + s * 0.2, 0)), g, 0)
 +				b.add(MeshLib.cylinder(0.13, 0.13, 0.9, 6), Transform3D(Basis(), Vector3(s * 0.62, 1.5 + s * 0.2, 0)), g.lightened(0.05), 0)
 +	var m := b.commit()
@@ -2343,7 +2507,7 @@ index 0000000..835cbc3
 +		return V_CACTUS if r < 0.6 else V_BUSH
 +	if h > 18.0 or temp < -0.2 or biome == CountryGen.B_MONTANA or biome == CountryGen.B_NEVADO:
 +		return V_CONIFER if r < 0.82 else V_BUSH
-+	if biome == CountryGen.B_SELVA or temp > 0.4:
++	if biome == CountryGen.B_SELVA or (temp > 0.55 and h < terrain.water_level + 4.0):
 +		return V_PALM if r < 0.35 else (V_BROAD if r < 0.85 else V_BUSH)
 +	if h < terrain.water_level + 2.0:
 +		return V_BROAD if r < 0.6 else V_BUSH
@@ -2440,8 +2604,8 @@ index 0000000..835cbc3
 +		var n := maxi(1, int(a.distance_to(b) / 1.5))
 +		for k in range(n + 1):
 +			var q := a.lerp(b, float(k) / n)
-+			for dx in [-1, 0, 1]:
-+				for dz in [-1, 0, 1]:
++			for dx: int in [-1, 0, 1]:
++				for dz: int in [-1, 0, 1]:
 +					_blocked[Vector2i(floori(q.x / 3.0) + dx, floori(q.y / 3.0) + dz)] = true
 +	for bld in GameState.buildings:
 +		var fp := GameState.footprint_of(bld) * 0.6 + 1.0
@@ -2563,7 +2727,7 @@ index 0000000..cd56c15
 +	m.set_shader_parameter("water_level", t.water_level)
 +	t.water.material_override = m
 diff --git a/scripts/world/world.gd b/scripts/world/world.gd
-index 4f9a508..5ea50aa 100644
+index 4f9a508..25c485d 100644
 --- a/scripts/world/world.gd
 +++ b/scripts/world/world.gd
 @@ -12,6 +12,9 @@ var interior: InteriorView
@@ -2576,13 +2740,14 @@ index 4f9a508..5ea50aa 100644
  var weather_fx: WeatherFX
  var minimap: Minimap
  var agents := {}            # id -> CitizenAgent
-@@ -50,12 +53,18 @@ func _ready() -> void:
+@@ -50,12 +53,19 @@ func _ready() -> void:
  	NpcBusinessSim.set_terrain_check(terrain.footprint_ok)   # Libre mercado: NPC y gobierno no construyen en agua.
  	terrain.build_mesh()
  	terrain.make_water()
 +	WaterLook.apply(terrain)   # Agua con shader (docs/GRAFICOS.md).
  	terrain.scatter_nature(seed_value)
  	terrain.start_country()   # Fase 9A: país por chunks con streaming, niebla y municipios.
++	TerrainLook.apply(terrain)   # Gradación de color del terreno (docs/GRAFICOS.md).
  	terrain.set_season(GameState.season)
  
 +	vegetation = Vegetation.new()
@@ -2596,7 +2761,7 @@ index 4f9a508..5ea50aa 100644
  	add_child(square)
  	var well := MeshLib.make_well()
  	well.position = Vector3(0, plaza_y, 0)
-@@ -97,6 +106,9 @@ func _ready() -> void:
+@@ -97,6 +107,9 @@ func _ready() -> void:
  	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new(), UtilitiesVisuals.new(), TransitVisuals.new(), MiningVisuals.new()]:
  		add_child(vis)
  		vis.setup(self)
@@ -2606,7 +2771,7 @@ index 4f9a508..5ea50aa 100644
  
  	hud = Hud.new()
  	hud.name = "HUD"
-@@ -128,31 +140,14 @@ func _ready() -> void:
+@@ -128,31 +141,14 @@ func _ready() -> void:
  
  
  func _build_environment() -> void:
@@ -2646,7 +2811,7 @@ index 4f9a508..5ea50aa 100644
  
  
  # --- Edificios ---------------------------------------------------------------------------
-@@ -184,10 +179,10 @@ func _rebuild_building(id: int) -> void:
+@@ -184,10 +180,10 @@ func _rebuild_building(id: int) -> void:
  			holder.add_child(model)
  			holder.add_child(MeshLib.scaffold(fp, height))
  		"mejorando":
@@ -2659,7 +2824,7 @@ index 4f9a508..5ea50aa 100644
  	# Los edificios del jugador llevan una bandera dorada.
  	if GameState.owned_by_player(b):
  		var flag := MeshLib.mesh_node(MeshLib.box(Vector3(0.05, 1.2, 0.05)), MeshLib.mat(Color(0.3, 0.2, 0.1)), Vector3(fp * 0.5, 0.6, fp * 0.5))
-@@ -232,6 +227,7 @@ func _on_day() -> void:
+@@ -232,6 +228,7 @@ func _on_day() -> void:
  func _on_zones_changed() -> void:
  	terrain.build_mesh()
  	terrain.scatter_nature(int(GameState.settings.get("seed", 1)))
@@ -2667,7 +2832,7 @@ index 4f9a508..5ea50aa 100644
  	for id in building_nodes:
  		var b: Dictionary = GameState.get_building(id)
  		terrain.clear_trees(float(b["x"]), float(b["z"]), GameState.footprint_of(b) * 0.8 + 1.0)
-@@ -337,26 +333,37 @@ func _process(delta: float) -> void:
+@@ -337,26 +334,37 @@ func _process(delta: float) -> void:
  
  
  func _update_daylight() -> void:
@@ -2723,16 +2888,16 @@ index 4f9a508..5ea50aa 100644
  func _ring_mesh() -> Mesh:
 diff --git a/shaders/building.gdshader b/shaders/building.gdshader
 new file mode 100644
-index 0000000..0f8ae40
+index 0000000..3183dbc
 --- /dev/null
 +++ b/shaders/building.gdshader
-@@ -0,0 +1,136 @@
+@@ -0,0 +1,142 @@
 +shader_type spatial;
 +render_mode cull_back;
 +// Material único de edificios y modelos de MeshLib (docs/GRAFICOS.md).
 +// COLOR.rgb = color base (con la variación de tono de cada edificio ya aplicada).
 +// UV2.x = tipo de material: 0 liso, 1 estuco/adobe, 2 ladrillo, 3 madera, 4 piedra, 5 teja,
-+//         6 paja, 7 concreto, 8 metal, 9 vidrio, 10 emisivo (farol).
++//         6 paja, 7 concreto, 8 metal, 9 vidrio, 10 emisivo (farol), 11 postigo de madera.
 +// UV2.y = azar por pieza (ventanas encendidas de noche, vetas).
 +// Sombreado plano: la normal sale de las derivadas de pantalla (low-poly limpio y consistente).
 +// Los patrones son procedurales en espacio del mundo: sin texturas, baratos en un M1 y en OpenGL.
@@ -2852,6 +3017,12 @@ index 0000000..0f8ae40
 +		float lit = step(0.35, fract(rnd * 7.31 + floor(wpos.y / 2.6) * 0.37 + floor((wpos.x + wpos.z) / 2.2) * 0.23));
 +		emit = window_light * lit * night * 1.6;
 +		base = mix(base, base * 0.35, night * lit);
++	} else if (kind == 11.0) {
++		// Postigo de madera: tablas verticales; de noche, luz cálida entre las rendijas.
++		float f = fract((uv.x + uv.y * 0.001) / 0.16);
++		shade = (0.85 + 0.15 * hash21(vec2(floor(uv.x / 0.16), rnd * 9.0))) * mix(0.6, 1.0, smoothstep(0.0, 0.15, f));
++		float lit = step(0.3, fract(rnd * 5.17 + 0.2));
++		emit = window_light * lit * night * mix(1.4, 0.25, smoothstep(0.0, 0.2, f));
 +	} else if (kind == 10.0) {
 +		rough = 0.5;
 +		emit = base * (0.25 + night * 3.0);
@@ -2907,12 +3078,37 @@ index 0000000..defc94a
 +	SPECULAR = 0.25;
 +	BACKLIGHT = COLOR.rgb * 0.25;
 +}
+diff --git a/shaders/light_pool.gdshader b/shaders/light_pool.gdshader
+new file mode 100644
+index 0000000..8e6c859
+--- /dev/null
++++ b/shaders/light_pool.gdshader
+@@ -0,0 +1,19 @@
++shader_type spatial;
++render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabled, skip_vertex_transform;
++// Charco de luz bajo los faroles (docs/GRAFICOS.md): disco aditivo con caída radial que se enciende
++// de noche. Imita la luz del farol sobre el suelo sin luces reales (sirve igual en Compatibility).
++
++uniform float night : hint_range(0.0, 1.0) = 0.0;
++uniform vec3 light_color : source_color = vec3(1.0, 0.72, 0.4);
++
++void vertex() {
++	VERTEX = (MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
++	float d = length(VERTEX);
++	VERTEX -= VERTEX / max(d, 0.001) * min(0.08 + d * 0.003, 4.0);
++}
++
++void fragment() {
++	float r = length(UV - vec2(0.5)) * 2.0;
++	float f = pow(clamp(1.0 - r, 0.0, 1.0), 2.2);
++	ALBEDO = light_color * f * night * 0.55;
++}
 diff --git a/shaders/road.gdshader b/shaders/road.gdshader
 new file mode 100644
-index 0000000..97e2eae
+index 0000000..1793dc3
 --- /dev/null
 +++ b/shaders/road.gdshader
-@@ -0,0 +1,96 @@
+@@ -0,0 +1,97 @@
 +shader_type spatial;
 +render_mode skip_vertex_transform, cull_disabled;
 +// Carreteras, caminos, balasto y rieles (docs/GRAFICOS.md). Patrones procedurales sin texturas:
@@ -2969,14 +3165,15 @@ index 0000000..97e2eae
 +		c = mix(vec3(0.3, 0.42, 0.2) * (0.85 + 0.3 * n), c, smoothstep(0.0, 0.16, min(u, 1.0 - u) + (n - 0.5) * 0.12));
 +	} else if (kind == 1) {
 +		// Empedrado: piedras en hileras desfasadas, juntas oscuras y bordillo.
-+		vec2 p = w / 0.36;
++		vec2 p = w / 0.3;
 +		p.x += 0.5 * mod(floor(p.y), 2.0);
 +		vec2 f = fract(p) - 0.5;
 +		float stone = hash21(floor(p));
-+		float joint = smoothstep(0.36, 0.48, max(abs(f.x), abs(f.y)));
-+		c *= (0.8 + 0.35 * stone) * mix(1.0, 0.55, joint * detail);
-+		float curb = 1.0 - step(0.07, u) * step(u, 0.93);
-+		c = mix(c, base_color * 1.25, curb);
++		float joint = smoothstep(0.38, 0.5, max(abs(f.x), abs(f.y)));
++		c *= (0.88 + 0.2 * stone) * mix(1.0, 0.72, joint * detail);
++		c *= 0.94 + 0.12 * vnoise(w * 0.4);
++		float curb = 1.0 - step(0.06, u) * step(u, 0.94);
++		c = mix(c, base_color * 0.82, curb);
 +		rough = 0.85;
 +	} else if (kind == 2) {
 +		// Asfalto: grano fino, bordes blancos y línea central amarilla discontinua.
@@ -3008,6 +3205,110 @@ index 0000000..97e2eae
 +	ROUGHNESS = rough;
 +	METALLIC = metal;
 +	SPECULAR = 0.3;
++}
+diff --git a/shaders/terrain_chunk_plus.gdshader b/shaders/terrain_chunk_plus.gdshader
+new file mode 100644
+index 0000000..a5ac9ff
+--- /dev/null
++++ b/shaders/terrain_chunk_plus.gdshader
+@@ -0,0 +1,34 @@
++shader_type spatial;
++render_mode cull_disabled;
++#include "res://shaders/terrain_grade.gdshaderinc"
++// Copia de terrain_chunk.gdshader + gradación (docs/GRAFICOS.md). Fase 9A: chunks del país (malla indexada). La normal plana sale de las derivadas de pantalla,
++// así el estilo low-poly se conserva sin duplicar vértices. COLOR.a marca la hierba (estación).
++// fog > 0: territorio sin explorar (bruma clara con el relieve tenue).
++
++uniform vec3 season_tint = vec3(1.0);
++uniform float snow_amount : hint_range(0.0, 1.0) = 0.0;
++uniform float fog : hint_range(0.0, 1.0) = 0.0;
++uniform vec3 fog_color = vec3(0.56, 0.6, 0.66);
++
++varying vec3 tg_wpos;
++
++void vertex() {
++	tg_wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
++}
++
++void fragment() {
++	vec3 n = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
++	if (dot(n, VERTEX) > 0.0) {
++		n = -n;   // el signo de dFdy depende del backend: la normal siempre mira a la cámara
++	}
++	NORMAL = n;
++	vec3 c = COLOR.rgb;
++	float grass = COLOR.a;
++	c = mix(c, c * season_tint, grass);
++	c = mix(c, vec3(0.92, 0.94, 0.97) * max(max(COLOR.r, COLOR.g), 0.45) * 1.6, grass * snow_amount);
++	c = terrain_grade(c, grass, tg_wpos, length(VERTEX));
++	c = mix(c, fog_color * (0.7 + 0.4 * dot(c, vec3(0.33))), fog);
++	ALBEDO = c;
++	ROUGHNESS = 0.95;
++	SPECULAR = 0.2 * (1.0 - fog);
++}
+diff --git a/shaders/terrain_grade.gdshaderinc b/shaders/terrain_grade.gdshaderinc
+new file mode 100644
+index 0000000..2d51e61
+--- /dev/null
++++ b/shaders/terrain_grade.gdshaderinc
+@@ -0,0 +1,29 @@
++// Gradación de color del terreno (docs/GRAFICOS.md). La usan terrain_plus y terrain_chunk_plus.
++// Baja la saturación del pasto (el verde puro se veía "neón"), le da variación suave de tono por
++// zonas (manchas secas y húmedas) y oscurece un poco a lo lejos para dar profundidad.
++
++float tg_hash(vec2 p) {
++	p = fract(p * vec2(123.34, 456.21));
++	p += dot(p, p + 45.32);
++	return fract(p.x * p.y);
++}
++
++float tg_noise(vec2 p) {
++	vec2 i = floor(p);
++	vec2 f = fract(p);
++	f = f * f * (3.0 - 2.0 * f);
++	return mix(mix(tg_hash(i), tg_hash(i + vec2(1.0, 0.0)), f.x), mix(tg_hash(i + vec2(0.0, 1.0)), tg_hash(i + vec2(1.0, 1.0)), f.x), f.y);
++}
++
++vec3 terrain_grade(vec3 c, float grass, vec3 wpos, float dist) {
++	float lum = dot(c, vec3(0.3, 0.59, 0.11));
++	// Pasto: menos saturado y un poco más oscuro, con manchas secas (ocre) y húmedas.
++	vec3 g = mix(vec3(lum), c, 0.72) * 0.9;
++	float patch = tg_noise(wpos.xz * 0.035) * 0.65 + tg_noise(wpos.xz * 0.13) * 0.35;
++	g = mix(g, g * vec3(1.12, 1.0, 0.78), smoothstep(0.55, 0.85, patch) * 0.55);
++	g = mix(g, g * vec3(0.85, 0.95, 0.9), smoothstep(0.45, 0.15, patch) * 0.5);
++	c = mix(c, g, grass);
++	// Resto (tierra, roca, arena): variación leve.
++	c *= 0.95 + 0.1 * tg_noise(wpos.xz * 0.5);
++	return c * mix(1.0, 0.92, smoothstep(150.0, 900.0, dist));
++}
+diff --git a/shaders/terrain_plus.gdshader b/shaders/terrain_plus.gdshader
+new file mode 100644
+index 0000000..a613bca
+--- /dev/null
++++ b/shaders/terrain_plus.gdshader
+@@ -0,0 +1,23 @@
++shader_type spatial;
++#include "res://shaders/terrain_grade.gdshaderinc"
++// Copia de terrain.gdshader + gradación (docs/GRAFICOS.md). Terreno low-poly con color por vértice. COLOR.a marca la hierba,
++// que se tiñe según la estación (y se cubre de nieve en invierno).
++
++uniform vec3 season_tint = vec3(1.0);
++uniform float snow_amount : hint_range(0.0, 1.0) = 0.0;
++
++varying vec3 tg_wpos;
++
++void vertex() {
++	tg_wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
++}
++
++void fragment() {
++	vec3 c = COLOR.rgb;
++	float grass = COLOR.a;
++	c = mix(c, c * season_tint, grass);
++	c = mix(c, vec3(0.92, 0.94, 0.97) * max(max(COLOR.r, COLOR.g), 0.45) * 1.6, grass * snow_amount);
++	ALBEDO = terrain_grade(c, grass, tg_wpos, length(VERTEX));
++	ROUGHNESS = 0.95;
++	SPECULAR = 0.2;
 +}
 diff --git a/shaders/water.gdshader b/shaders/water.gdshader
 new file mode 100644
@@ -3087,10 +3388,10 @@ index 0000000..4b41313
 +}
 diff --git a/tests/screenshot_graficos.gd b/tests/screenshot_graficos.gd
 new file mode 100644
-index 0000000..b3ab81a
+index 0000000..e4ebbde
 --- /dev/null
 +++ b/tests/screenshot_graficos.gd
-@@ -0,0 +1,195 @@
+@@ -0,0 +1,218 @@
 +extends Node
 +## Capturas del sistema gráfico (docs/GRAFICOS.md): pueblo de día, atardecer y noche, interior de
 +## una casa, zona industrial (carreteras, rieles y mina) y una vista media con río y vegetación.
@@ -3239,17 +3540,40 @@ index 0000000..b3ab81a
 +	world.hud.visible = true
 +	TimeManager.set_speed(0)
 +	var plaza := Vector3(0, terrain.height_at(0, 0), 0)
++	# Diagnóstico de rendimiento: GFX_OFF=terreno,agua,charcos,pasto,sombras desactiva partes.
++	var off := OS.get_environment("GFX_OFF").split(",")
++	if "terreno" in off:
++		terrain.material.shader = load("res://shaders/terrain.gdshader")
++		for m in [terrain.chunk_material, terrain.fog_material, terrain.outside_material]:
++			m.shader = load("res://shaders/terrain_chunk.gdshader")
++	if "agua" in off:
++		terrain.water.material_override = MeshLib.mat(Color(0.2, 0.45, 0.62))
++	if "charcos" in off and world.street_lights:
++		world.street_lights.visible = false
++	if "pasto" in off and world.vegetation:
++		world.vegetation.apply_graphics({"grass": false})
++	if "sombras" in off:
++		world.sun.shadow_enabled = false
++	if "edificios" in off:
++		MeshLib.building_mat().shader = load("res://shaders/terrain.gdshader")
++	var rapido := args.size() > 2 and args[2] == "rapido"
 +	# 1) Pueblo de día.
 +	_set_hour(10.0)
 +	_cam(plaza, 62.0, 35.0)
 +	await _shot("pueblo_dia")
 +	# 2) Atardecer y noche.
-+	_set_hour(18.2)
++	_set_hour(17.35)
 +	_cam(plaza, 62.0, 200.0)
 +	await _shot("pueblo_atardecer")
 +	_set_hour(21.5)
 +	_cam(plaza, 55.0, 35.0)
 +	await _shot("pueblo_noche")
++	if rapido:
++		print("RENDIMIENTO rapido GFX_OFF=%s" % OS.get_environment("GFX_OFF"))
++		for l in perf:
++			print("  " + l)
++		get_tree().quit()
++		return
 +	# 3) Zona industrial con carreteras, rieles y mina.
 +	_set_hour(11.0)
 +	_cam(Vector3(-62, terrain.height_at(-62, -10), -10), 85.0, 20.0)

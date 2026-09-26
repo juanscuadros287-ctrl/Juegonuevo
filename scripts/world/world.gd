@@ -94,7 +94,7 @@ func _ready() -> void:
 	interior.name = "Interior"
 	add_child(interior)
 
-	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new(), UtilitiesVisuals.new(), TransitVisuals.new(), MiningVisuals.new()]:
+	for vis in [LogisticsVisuals.new(), TradeVisuals.new(), TourismVisuals.new(), UtilitiesVisuals.new(), TransitVisuals.new(), MiningVisuals.new(), PollutionVisuals.new()]:   # Mundo: humo sobre los contaminantes.
 		add_child(vis)
 		vis.setup(self)
 
