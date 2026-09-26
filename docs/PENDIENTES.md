@@ -37,3 +37,9 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
 - Cordilleras reales, cañones, mesetas, climas por altura y latitud, lagos y deltas.
 - Las vías por montaña cuestan más (excavación, túneles y puentes).
 - Aviones dentro y fuera del país.
+
+## G. Vehículos para ciudadanos y empresas NPC (después de rutas/barcos y módulos)
+- Fábricas de bicicletas, motos y autos (por época y tecnología) que venden a ciudadanos mediante concesionarios o tiendas; los ciudadanos compran según su riqueza y lo usan para ir al trabajo (TransitSim).
+- Venta de trenes, camiones, aviones y barcos a empresas NPC y gobiernos **por contrato** (ContractSim), con fabricación real (automotriz, aeronáutica, astillero).
+- Empresas NPC compran sus vehículos en puntos especializados (concesionario, astillero, fábrica) si existen; si no, importan.
+- Usar `VehicleCatalog.models(gs, tipo)` (modelos por investigación) del agente de rutas.
