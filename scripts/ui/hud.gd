@@ -123,7 +123,6 @@ var gameover_modal: Dictionary
 var details_modal: Dictionary
 var invite_modal: Dictionary
 var options_modal: Dictionary
-var save_name: LineEdit
 var load_list: ItemList
 var pop_table: DataTable
 var pop_search: LineEdit
@@ -140,6 +139,19 @@ var details_cb: Callable
 var invite_box: VBoxContainer
 var _scale_lbl: Label
 var _speed_before_menu := 0
+# Guardado: ranura activa, estado en el menú de pausa y aviso discreto "Guardado ✓".
+var _save_now_btn: Button
+var _save_status: Label
+var save_slots_box: VBoxContainer
+var _after_save := Callable()
+var _save_toast: PanelContainer
+var _save_toast_lbl: Label
+var _save_toast_t := 0.0
+# Barra superior adaptable: nivel de compactación (0 = completa) según el ancho disponible.
+const BAR_MAX_LEVEL := 5
+var _bar_level := 0
+var _bar_relax_t := 0.0
+var _top_row: HBoxContainer
 var _refresh := 0.0
 var _slow_refresh := 0.0
 
@@ -183,6 +195,11 @@ func _ready() -> void:
 	hiring_panel.message.connect(toast)
 	_build_hint()
 	_build_flyout()
+	_build_save_toast()
+	SaveManager.saved.connect(_on_saved)
+	if SaveManager.pending_notice != "":
+		toast(SaveManager.pending_notice, "importante")
+		SaveManager.pending_notice = ""
 	EventBus.notification_posted.connect(_on_notification)
 	EventBus.speed_changed.connect(_on_speed_changed)
 	EventBus.citizen_selected.connect(_on_citizen_selected)
@@ -249,6 +266,7 @@ func _build_top_bar() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	bar_panel.add_child(row)
+	_top_row = row
 	# Pueblo y época
 	var town := HBoxContainer.new()
 	town.add_theme_constant_override("separation", 6)
@@ -467,23 +485,55 @@ func _short_date() -> String:
 	var md := TimeManager.month_day()
 	var full := TimeManager.date_string(true)
 	var hour_part := full.get_slice("  ", 1) if full.contains("  ") else ""
+	if _bar_level >= 4:
+		hour_part = ""
 	return "%d %s %d%s" % [md[1], str(TimeManager.MONTH_NAMES[md[0] - 1]).substr(0, 3), TimeManager.year(), " · " + hour_part if hour_part != "" else ""]
 
 
-## En ventanas estrechas (1280 px lógicos) se ocultan textos secundarios: quedan iconos y tooltips.
+## Barra adaptable: si lo que hay no cabe en el ancho lógico, se compacta por niveles (y vuelve a
+## expandirse cuando sobra espacio). 1: tendencias y ciclo solo con icono · 2: país con su código ·
+## 3: sin clima ni nombre del personaje · 4: pueblo y fecha más cortos · 5: felicidad/salud solo icono.
+## Todo lo oculto sigue en los tooltips.
 func _adapt_top_bar() -> void:
-	var w := root.size.x
-	var compact := w < 1560.0
-	var tight := w < 1380.0
-	player_lbl.visible = not tight
-	cycle_indicator.custom_minimum_size.x = 34.0 if compact else 140.0
-	country_indicator.custom_minimum_size.x = 34.0 if compact else 150.0   # Fase 10
-	country_indicator.size.x = 0.0
-	cycle_indicator.size.x = 0.0
-	weather_lbl.visible = not tight
-	era_lbl.custom_minimum_size.x = 110.0 if tight else 150.0
+	if _top_row == null:
+		return
+	var avail := root.size.x - 22.0
+	if avail <= 100.0:
+		return
+	var need := _top_row.get_combined_minimum_size().x
+	if need > avail:
+		while need > avail and _bar_level < BAR_MAX_LEVEL:
+			_bar_level += 1
+			_apply_bar_level()
+			need = _top_row.get_combined_minimum_size().x
+		_bar_relax_t = 2.0
+	elif _bar_level > 0:
+		_bar_relax_t -= 0.25
+		if _bar_relax_t <= 0.0:
+			_bar_relax_t = 2.0
+			_bar_level -= 1
+			_apply_bar_level()
+			if _top_row.get_combined_minimum_size().x > avail:
+				_bar_level += 1
+				_apply_bar_level()
+
+
+func _apply_bar_level() -> void:
+	var lv := _bar_level
 	for id in ["money", "pop", "happy", "health"]:
-		(_chips[id]["trend"] as Label).visible = not tight or id == "money"
+		(_chips[id]["trend"] as Label).visible = lv < 1 or (id == "money" and lv < 5)
+	cycle_indicator.custom_minimum_size.x = 34.0 if lv >= 1 else 140.0
+	cycle_indicator.size.x = 0.0
+	country_indicator.compact = lv >= 2   # Fase 10: solo el código del país (nombre en el tooltip)
+	country_indicator.custom_minimum_size.x = 70.0 if lv >= 2 else 150.0
+	country_indicator.size.x = 0.0
+	weather_lbl.visible = lv < 3
+	player_lbl.visible = lv < 3
+	era_lbl.custom_minimum_size.x = 110.0 if lv >= 4 else 150.0
+	date_lbl.custom_minimum_size.x = 84.0 if lv >= 4 else 128.0
+	date_lbl.text = _short_date()
+	for id in ["happy", "health"]:
+		(_chips[id]["value"] as Label).visible = lv < 5
 
 
 func _on_speed_button(i: int) -> void:
@@ -1362,11 +1412,17 @@ func _build_modals() -> void:
 	pause_modal = UIKit.modal(root, "Menú", Vector2(420, 0), "menu")
 	var pb: VBoxContainer = pause_modal["body"]
 	pb.add_child(UIKit.primary(_menu_button("Continuar", "play", _close_pause)))
-	pb.add_child(_menu_button("Guardar partida", "save", func(): _close(pause_modal); _open_save()))
+	_save_now_btn = _menu_button("Guardar ahora", "save", _save_now)
+	pb.add_child(_save_now_btn)
+	_save_status = UIKit.label("", 12, UIKit.TEXT_DIM)
+	_save_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_save_status.custom_minimum_size.x = 380
+	pb.add_child(_save_status)
+	pb.add_child(_menu_button("Guardar y salir al menú", "town", _save_and_menu))
+	pb.add_child(_menu_button("Guardar en otra ranura…", "save", func(): _close(pause_modal); _open_save()))
 	pb.add_child(_menu_button("Cargar partida", "folder", func(): _close(pause_modal); _open_load()))
 	pb.add_child(_menu_button("Opciones", "settings", func(): _close(pause_modal); _open_options()))
-	pb.add_child(_menu_button("Menú principal", "town", _to_main_menu))
-	pb.add_child(UIKit.danger(_menu_button("Salir del juego", "exit", func(): get_tree().quit())))
+	pb.add_child(UIKit.danger(_menu_button("Salir del juego (guarda antes)", "exit", _save_and_quit)))
 	var controls := UIKit.label("Cámara: WASD/flechas o clic derecho para mover · Q/E o botón central para rotar · rueda o pellizco para zoom · Espacio pausa · 1-4 velocidades · 5 salto de años · R/T gira 15° y Shift+rueda gira libre al construir o mover.\nPaneles: P personaje · B construir · C empresas · V bienes raíces · K contratos · F finanzas · Y estadísticas · O catálogo · L logística · J transporte · U servicios · X comercio · Z población · G gobierno · I investigación · N notificaciones · F1-F5 categorías", 12, UIKit.TEXT_DIM)
 	controls.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	controls.custom_minimum_size.x = 400
@@ -1375,16 +1431,13 @@ func _build_modals() -> void:
 	options_modal = UIKit.modal(root, "Opciones", Vector2(500, 0), "settings")
 	_build_options(options_modal["body"])
 
-	save_modal = UIKit.modal(root, "Guardar partida", Vector2(460, 0), "save")
+	save_modal = UIKit.modal(root, "Guardar en una ranura", Vector2(520, 0), "save")
 	var sb: VBoxContainer = save_modal["body"]
-	sb.add_child(UIKit.label("Nombre de la partida:"))
-	save_name = LineEdit.new()
-	sb.add_child(save_name)
-	var srow := HBoxContainer.new()
-	srow.add_theme_constant_override("separation", 8)
-	sb.add_child(srow)
-	srow.add_child(UIKit.primary(UIKit.button("Guardar", _do_save, 120)))
-	srow.add_child(UIKit.button("Cancelar", func(): _close(save_modal), 120))
+	sb.add_child(UIKit.label("La partida seguirá guardándose sola en la ranura que elijas.", 13, UIKit.TEXT_DIM))
+	save_slots_box = VBoxContainer.new()
+	save_slots_box.add_theme_constant_override("separation", 6)
+	sb.add_child(save_slots_box)
+	sb.add_child(UIKit.button("Cancelar", func(): _close(save_modal); _after_save = Callable(), 120))
 
 	load_modal = UIKit.modal(root, "Cargar partida", Vector2(560, 0), "folder")
 	var lb: VBoxContainer = load_modal["body"]
@@ -1395,8 +1448,8 @@ func _build_modals() -> void:
 	lrow.add_theme_constant_override("separation", 8)
 	lb.add_child(lrow)
 	lrow.add_child(UIKit.primary(UIKit.button("Cargar", _do_load, 120)))
-	lrow.add_child(UIKit.danger(UIKit.button("Borrar", _do_delete, 120)))
 	lrow.add_child(UIKit.button("Cancelar", func(): _close(load_modal), 120))
+	lb.add_child(UIKit.label("Para borrar, renombrar o empezar una partida nueva, ve al menú principal.", 12, UIKit.TEXT_FAINT))
 
 	jump_modal = UIKit.modal(root, "Avance rápido", Vector2(460, 0), "jump")
 	var jb: VBoxContainer = jump_modal["body"]
@@ -1530,6 +1583,24 @@ func _build_options(body: VBoxContainer) -> void:
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.custom_minimum_size.x = 440
 	body.add_child(note)
+	# Autoguardado en la ranura de la partida.
+	body.add_child(HSeparator.new())
+	body.add_child(UIKit.label("Autoguardado", 16, UIKit.ACCENT))
+	var arow := HBoxContainer.new()
+	arow.add_theme_constant_override("separation", 10)
+	body.add_child(arow)
+	arow.add_child(UIKit.label("Guardar cada", 13, UIKit.TEXT_DIM))
+	var aopt := OptionButton.new()
+	var mins := [1, 3, 5, 10, 0]
+	for m in mins:
+		aopt.add_item("%d min de juego" % m if m > 0 else "solo al cambiar de mes y al salir", m)
+	aopt.select(maxi(0, mins.find(int(SaveManager.autosave_minutes()))))
+	aopt.item_selected.connect(func(i): SaveManager.set_autosave_minutes(float(aopt.get_item_id(i))))
+	arow.add_child(aopt)
+	var an := UIKit.label("También se guarda al empezar cada mes del juego y al cerrar la ventana.", 12, UIKit.TEXT_FAINT)
+	an.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	an.custom_minimum_size.x = 440
+	body.add_child(an)
 	# Calidad gráfica (Baja/Media/Alta): GraphicsSettings (scripts/world/graphics_settings.gd).
 	body.add_child(HSeparator.new())
 	body.add_child(UIKit.label("Gráficos", 16, UIKit.ACCENT))
@@ -1602,6 +1673,7 @@ func _open_research() -> void:
 func _open_pause() -> void:
 	_speed_before_menu = TimeManager.speed
 	TimeManager.set_speed(0)
+	_update_save_status()
 	_open(pause_modal)
 
 
@@ -1611,43 +1683,148 @@ func _close_pause() -> void:
 		TimeManager.set_speed(_speed_before_menu)
 
 
+## Selector de ranura (partida sin ranura, o "Guardar en otra ranura…").
 func _open_save() -> void:
-	save_name.text = "%s_%d" % [SaveManager.sanitize(str(GameState.settings.get("town_name", "partida"))), TimeManager.year()]
+	UIKit.clear(save_slots_box)
+	for info in SaveManager.list_slots():
+		var slot := int(info["slot"])
+		var empty: bool = info["status"] == "empty"
+		var cur := slot == SaveManager.active_slot
+		var txt := "Ranura %d — %s" % [slot, "Vacía" if empty else MainMenu.slot_title(info)]
+		if cur:
+			txt += "  (actual)"
+		elif not empty:
+			txt += "  · se reemplaza"
+		var b := _menu_button(txt, "plus" if empty else "save", func(): _save_to_slot(slot))
+		if not empty and not cur:
+			UIKit.danger(b)
+		save_slots_box.add_child(b)
 	_open(save_modal)
-	save_name.grab_focus()
 
 
-func _do_save() -> void:
-	var ok := SaveManager.save_game(save_name.text)
+func _save_to_slot(slot: int) -> void:
 	_close(save_modal)
-	toast("Partida guardada." if ok else "Error al guardar la partida.", "info" if ok else "jugador")
+	if slot != SaveManager.active_slot:
+		SaveManager.rename_slot(slot, "")
+		SaveManager.active_slot = slot
+	var ok: bool = await SaveManager.request_save("manual")
+	if _after_save.is_valid():
+		var cb := _after_save
+		_after_save = Callable()
+		if ok:
+			cb.call()
+
+
+func _save_now() -> void:
+	if SaveManager.active_slot <= 0:
+		_close(pause_modal)
+		_open_save()
+		return
+	_save_now_btn.disabled = true
+	await SaveManager.request_save("manual")
+	_save_now_btn.disabled = false
+	_update_save_status()
+
+
+func _save_and_menu() -> void:
+	if not GameState.running:
+		_to_main_menu()
+		return
+	if SaveManager.active_slot <= 0:
+		_after_save = _to_main_menu
+		_close(pause_modal)
+		_open_save()
+		return
+	var ok: bool = await SaveManager.request_save("menu")
+	if ok:
+		_to_main_menu()
+	else:
+		_update_save_status()
+
+
+func _save_and_quit() -> void:
+	SaveManager.quit_game()
+
+
+func _update_save_status() -> void:
+	if _save_status == null:
+		return
+	var slot := SaveManager.active_slot
+	_save_now_btn.text = "Guardar ahora (ranura %d)" % slot if slot > 0 else "Guardar ahora (elegir ranura)"
+	if slot <= 0:
+		_save_status.text = "Esta partida aún no tiene ranura: elige una para que se guarde sola."
+		return
+	var when := ""
+	if SaveManager.last_saved_unix > 0.0:
+		var mins := int((Time.get_unix_time_from_system() - SaveManager.last_saved_unix) / 60.0)
+		when = "hace menos de 1 min" if mins < 1 else "hace %d min" % mins
+	else:
+		when = MainMenu.saved_at_text(str(SaveManager.slot_info(slot).get("saved_at", "")))
+	var every := SaveManager.autosave_minutes()
+	_save_status.text = "Último guardado: %s · autoguardado %s, cada mes y al salir." % [when, "cada %d min" % int(every) if every > 0.0 else "desactivado por tiempo"]
+	if SaveManager.last_error != "":
+		_save_status.text += "\n⚠ " + SaveManager.last_error
+
+
+func _on_saved(slot: int, ok: bool, reason: String) -> void:
+	_save_toast_lbl.text = ("Guardado ✓" if reason != "salir" else "Guardado ✓ · saliendo") if ok else "No se pudo guardar (ranura %d)" % slot
+	_save_toast_lbl.add_theme_color_override("font_color", UIKit.GOOD if ok else UIKit.BAD)
+	_save_toast.visible = true
+	_save_toast.move_to_front()   # por encima de los menús abiertos
+	_save_toast.modulate.a = 1.0
+	_save_toast_t = 1.8 if ok else 5.0
+	if pause_modal["root"].visible:
+		_update_save_status()
+
+
+func _build_save_toast() -> void:
+	_save_toast = PanelContainer.new()
+	_save_toast.add_theme_stylebox_override("panel", UIKit._flat(Color(0.06, 0.07, 0.085, 0.82), 8, 12, 5, Color(UIKit.GOOD, 0.35), 1))
+	_save_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_save_toast)
+	_save_toast.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
+	_save_toast.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_save_toast.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_save_toast_lbl = UIKit.label("Guardado ✓", 13, UIKit.GOOD)
+	_save_toast_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_save_toast.add_child(_save_toast_lbl)
+	_save_toast.visible = false
 
 
 func _open_load() -> void:
 	load_list.clear()
-	for s in SaveManager.list_saves():
-		var sm: Dictionary = s["summary"]
-		var idx := load_list.add_item("%s — %s — %s · pobl. %d   [%s]" % [s["slot"], sm.get("town", ""), sm.get("date", ""), int(sm.get("population", 0)), s["saved_at"]], UIIcons.tex("save", 16))
-		load_list.set_item_metadata(idx, s["slot"])
+	for info in SaveManager.list_slots():
+		if info["status"] == "empty":
+			continue
+		var meta: Dictionary = info["meta"]
+		var idx := load_list.add_item("Ranura %d — %s — %s · pobl. %d   [%s]%s" % [info["slot"], MainMenu.slot_title(info), meta.get("date", ""), int(meta.get("population", 0)),
+			MainMenu.saved_at_text(str(info["saved_at"])), "  ⚠ dañada (se usará la copia)" if info["status"] == "damaged" else ""], UIIcons.tex("save", 16))
+		load_list.set_item_metadata(idx, int(info["slot"]))
+	if load_list.item_count == 0:
+		load_list.add_item("No hay partidas guardadas", null, false)
 	_open(load_modal)
 
 
-func _selected_slot() -> String:
+func _selected_slot() -> int:
 	var sel := load_list.get_selected_items()
-	return str(load_list.get_item_metadata(sel[0])) if sel.size() > 0 else ""
+	if sel.is_empty() or load_list.get_item_metadata(sel[0]) == null:
+		return 0
+	return int(load_list.get_item_metadata(sel[0]))
 
 
 func _do_load() -> void:
 	var slot := _selected_slot()
-	if slot != "" and SaveManager.load_game(slot):
+	if slot <= 0:
+		return
+	if SaveManager.active_slot > 0 and SaveManager.active_slot != slot and GameState.running:
+		SaveManager.save_slot(SaveManager.active_slot, "cambio")   # no perder lo jugado
+	var r := SaveManager.load_slot(slot)
+	if r["ok"]:
+		if bool(r.get("used_backup", false)):
+			SaveManager.pending_notice = "La partida principal estaba dañada: se cargó la copia de respaldo. El archivo dañado se conserva."
 		get_tree().change_scene_to_file("res://scenes/main.tscn")
-
-
-func _do_delete() -> void:
-	var slot := _selected_slot()
-	if slot != "":
-		SaveManager.delete_save(slot)
-		_open_load()
+	else:
+		toast("No se pudo cargar la ranura %d (no se ha borrado): %s. Desde el menú principal puedes cargar una copia." % [slot, r["error"]], "jugador")
 
 
 func _to_main_menu() -> void:
@@ -1881,6 +2058,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_tick_toasts(delta)
+	if _save_toast != null and _save_toast.visible:
+		_save_toast_t -= delta
+		_save_toast.modulate.a = clampf(_save_toast_t / 0.5, 0.0, 1.0)
+		if _save_toast_t <= 0.0:
+			_save_toast.visible = false
 	_refresh += delta
 	_slow_refresh -= delta
 	if _refresh >= 0.25:

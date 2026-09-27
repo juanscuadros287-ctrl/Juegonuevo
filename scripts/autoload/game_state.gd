@@ -3,7 +3,7 @@ extends Node
 ## La lógica vive en scripts/sim/ (PopulationSim, WeatherSim, BusinessSim,
 ## ConstructionSim, MarketSim, PlayerSim).
 
-const SAVE_VERSION := 7
+const SAVE_VERSION := 8   # = SaveMigrations.CURRENT (formato del archivo; ver docs/GUARDADO.md)
 const MAP_SIZE := 400.0
 const ZONE_GRID := 5
 const START_ZONE := [2, 2]
@@ -565,27 +565,47 @@ func to_dict() -> Dictionary:
 	}
 
 
+## Ajustes que toda partida debe tener (partidas viejas o incompletas: se completan con estos).
+const SETTINGS_FALLBACK := {"town_name": "San Rafael", "player_name": "Sebastián", "player_surname": "Cuadros",
+	"player_gender": "M", "player_age": 25, "difficulty": "normal", "map_type": "interior", "seed": 0}
+
+
+## Tolerante a partidas de otras versiones: claves que faltan → valor por defecto; claves que
+## sobran (de una versión más nueva) → se ignoran; tipos inesperados → valor por defecto.
 func load_dict(d: Dictionary) -> void:
 	_clear()
-	settings = d.get("settings", {})
+	settings = SETTINGS_FALLBACK.duplicate()
+	settings.merge(_dget(d, "settings"), true)
 	settings["seed"] = int(settings.get("seed", 0))
+	if not GameData.difficulties.has(str(settings["difficulty"])):
+		settings["difficulty"] = "normal"
+	if not GameData.map_types.has(str(settings["map_type"])):
+		settings["map_type"] = "interior"
 	money = float(d.get("money", 0.0))
 	cash = float(d.get("cash", 0.0))
-	informal = d.get("informal", {})
-	for cd in d.get("citizens", []):
-		var c := Citizen.from_dict(cd)
-		citizens[c.id] = c
+	informal = _dget(d, "informal")
+	for cd in _aget(d, "citizens"):
+		if cd is Dictionary:
+			var c := Citizen.from_dict(cd)
+			citizens[c.id] = c
 	next_citizen_id = int(d.get("next_citizen_id", 1))
+	for c in citizens.values():
+		next_citizen_id = maxi(next_citizen_id, c.id + 1)
 	buildings = []
-	for b in d.get("buildings", []):
-		buildings.append(ConstructionSim.normalize_building(b))
+	for b in _aget(d, "buildings"):
+		if b is Dictionary and b.has("id"):
+			buildings.append(ConstructionSim.normalize_building(b))
 	_reindex()
 	next_building_id = int(d.get("next_building_id", 1))
-	player = d.get("player", {})
+	for b in buildings:
+		next_building_id = maxi(next_building_id, int(b["id"]) + 1)
+	player = _dget(d, "player")
 	player_id = int(d.get("player_id", -1))
-	techs = d.get("techs", [])
+	techs = _aget(d, "techs")
 	loans = []
-	for l in d.get("loans", []):
+	for l in _aget(d, "loans"):
+		if not (l is Dictionary and l.has("id")):
+			continue
 		var ld: Dictionary = l
 		ld["id"] = int(ld["id"])
 		ld["months_paid"] = int(ld.get("months_paid", 0))
@@ -593,42 +613,48 @@ func load_dict(d: Dictionary) -> void:
 		ld["term_months"] = int(ld.get("term_months", 12))
 		loans.append(ld)
 	next_loan_id = int(d.get("next_loan_id", 1))
-	weather = d.get("weather", {})
+	weather = _dget(d, "weather")
 	season = str(d.get("season", ""))
-	unlocked_zones = d.get("unlocked_zones", [START_ZONE.duplicate()])
-	for k in d.get("graveyard", {}):
-		graveyard[int(k)] = d["graveyard"][k]
-	history = d.get("history", [])
-	month_counters = d.get("month_counters", {})
-	notifications_log = d.get("notifications_log", [])
-	rng.seed = int(str(d.get("rng_seed", "0")))
-	rng.state = int(str(d.get("rng_state", "0")))
+	unlocked_zones = _aget(d, "unlocked_zones")
+	if unlocked_zones.is_empty():
+		unlocked_zones = [START_ZONE.duplicate()]
+	var gy := _dget(d, "graveyard")
+	for k in gy:
+		graveyard[int(k)] = gy[k]
+	history = _aget(d, "history")
+	month_counters = _dget(d, "month_counters")
+	notifications_log = _aget(d, "notifications_log")
+	rng.seed = int(str(d.get("rng_seed", str(settings["seed"]))))
+	if d.has("rng_state"):
+		rng.state = int(str(d.get("rng_state", "0")))
 	running = bool(d.get("running", true))
-	economy = d.get("economy", {})
+	economy = _dget(d, "economy")
 	if economy.is_empty():
 		EconomySim.init_state(self)
-	research = d.get("research", {})
+	research = _dget(d, "research")
 	if research.is_empty():
 		TechSim.init_state(self)
 	research["era"] = int(research.get("era", 1))
-	problems = d.get("problems", {})
+	problems = _dget(d, "problems")
 	if problems.is_empty():
 		EventsSim.init_state(self)
-	government = d.get("government", {})
+	government = _dget(d, "government")
 	if government.is_empty():
 		GovSim.init_state(self)
-	logistics = d.get("logistics", {})
-	trade = d.get("trade", {})
-	tourism = d.get("tourism", {})
-	market = d.get("market", {})
-	realestate = d.get("realestate", {})
-	utilities = d.get("utilities", {})
-	labor = d.get("labor", {})
-	world_events = d.get("world_events", {})
-	map = d.get("map", {})   # Partida sin mapa (antes de la Fase 9A): MapSim la convierte en país.
-	transit = d.get("transit", {})
-	world_econ = d.get("world_econ", {})
-	countries = CountriesSim.from_save(d.get("countries", {}))   # Fase 10 (partida vieja: un solo país).
+	logistics = _dget(d, "logistics")
+	trade = _dget(d, "trade")
+	tourism = _dget(d, "tourism")
+	market = _dget(d, "market")
+	realestate = _dget(d, "realestate")
+	utilities = _dget(d, "utilities")
+	labor = _dget(d, "labor")
+	world_events = _dget(d, "world_events")
+	map = _dget(d, "map")   # Partida sin mapa (antes de la Fase 9A): MapSim la convierte en país.
+	transit = _dget(d, "transit")
+	world_econ = _dget(d, "world_econ")
+	if weather.is_empty():
+		WeatherSim.init_weather(self)
+	countries = CountriesSim.from_save(_dget(d, "countries"))   # Fase 10 (partida vieja: un solo país).
 	_init_expansions()
 	CountriesSim.init_state(self)
 	if not d.has("utilities"):
@@ -637,3 +663,13 @@ func load_dict(d: Dictionary) -> void:
 	if player_id < 0:
 		# Partida de la Fase 1: el jugador aún no era un ciudadano.
 		PlayerSim.migrate_v1_player(self, d.get("player", {}))
+
+
+func _dget(d: Dictionary, key: String) -> Dictionary:
+	var v = d.get(key, {})
+	return v if v is Dictionary else {}
+
+
+func _aget(d: Dictionary, key: String) -> Array:
+	var v = d.get(key, [])
+	return v if v is Array else []
