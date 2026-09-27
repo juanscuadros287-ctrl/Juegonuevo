@@ -92,8 +92,18 @@ notificaciones y controles.
   Se reconstruye al seleccionar o tras una acción; el refresco periódico solo toca las barras.
 - **Población**: tabla (`DataTable`) ordenable por columna, con búsqueda, barras de salud y
   felicidad y clic para abrir la ficha.
-- Modales con icono; Menú con Continuar/Guardar/Cargar/**Opciones**/Menú principal/Salir y lista
-  de atajos. Reporte de salto de años en tabla coloreada.
+- Modales con icono; Menú (Esc) con Continuar, **Guardar ahora** (en su ranura), indicador del
+  último guardado, **Guardar y salir al menú**, Guardar en otra ranura…, Cargar, **Opciones**
+  (tamaño, autoguardado, gráficos) y **Salir del juego (guarda antes)**, más la lista de atajos. Cada
+  guardado muestra un aviso discreto «Guardado ✓» abajo a la derecha. Ver docs/GUARDADO.md.
+- **Barra superior adaptable** (`_adapt_top_bar`): mide el ancho mínimo de la fila y, si no cabe, la
+  compacta por niveles (1: tendencias y ciclo solo con icono · 2: país con su código ISO, p. ej.
+  «COL» · 3: sin clima ni nombre del personaje · 4: pueblo y fecha más cortos · 5: felicidad/salud
+  solo icono); cuando sobra espacio vuelve a expandirse. Lo oculto sigue en los tooltips. Capturas a
+  1600 y 1280 px en `docs/capturas/app/`.
+- **Pantalla principal** (`main_menu.gd`): 5 ranuras con miniatura, pueblo y personaje, país, fecha
+  del juego, dinero, población, tiempo jugado y último guardado; botones Continuar/Nueva/Renombrar/
+  Borrar (con confirmación), «Continuar última partida» y «Partidas antiguas» para importar. Reporte de salto de años en tabla coloreada.
 
 ## 4. Paneles
 Todos usan `UIKit.header()` (icono + título + ↻ + cerrar). Destacados:

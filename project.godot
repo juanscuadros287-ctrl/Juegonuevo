@@ -5,9 +5,17 @@ config_version=5
 
 [application]
 
+; Nombre FIJO de la app: de él dependen la carpeta de partidas (user://) y el nombre del .app.
+; No cambiarlo entre versiones o el juego no encontrará las partidas guardadas.
+; Partidas en: macOS ~/Library/Application Support/Dinastía/ · Linux ~/.local/share/Dinastía/
+; · Windows %APPDATA%/Dinastía/ (use_custom_user_dir). Ver docs/GUARDADO.md.
 config/name="Dinastía"
 config/description="Simulación económica y construcción de pueblo desde 1700."
-config/version="0.1.0"
+config/version="0.10.1"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="Dinastía"
+config/icon="res://icon.png"
+config/macos_native_icon="res://icon.icns"
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 
@@ -26,6 +34,8 @@ window/size/viewport_height=900
 window/stretch/aspect="expand"
 
 [rendering]
+
+textures/vram_compression/import_etc2_astc=true
 
 anti_aliasing/quality/msaa_3d=2
 environment/defaults/default_clear_color=Color(0.53, 0.7, 0.85, 1)
