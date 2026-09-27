@@ -43,3 +43,9 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
 - Venta de trenes, camiones, aviones y barcos a empresas NPC y gobiernos **por contrato** (ContractSim), con fabricación real (automotriz, aeronáutica, astillero).
 - Empresas NPC compran sus vehículos en puntos especializados (concesionario, astillero, fábrica) si existen; si no, importan.
 - Usar `VehicleCatalog.models(gs, tipo)` (modelos por investigación) del agente de rutas.
+
+## H. Inmobiliaria como compañía especializada (con el agente de Terrenos)
+- Para hacer negocio inmobiliario hay que crear una **compañía inmobiliaria**. Desde ella: botón "Comprar terreno a nombre de la compañía", y ver opciones de **proyectos** (casas, apartamentos, edificios) con presupuesto, costo, precio aproximado de venta o renta por unidad y rentabilidad.
+- Los apartamentos se venden **1 a 1 según la demanda**; al vender, la unidad (y su parte del terreno) pasa a ser propiedad del comprador. Casas vendidas: el terreno queda del comprador.
+- Se puede volver a comprar cualquier terreno o propiedad **negociando con su dueño**, como en la vida real: unos piden muy alto, otros bajo y otros no quieren vender (personalidad, apego, necesidad de dinero, valor de mercado).
+- Aplica a todos los terrenos (Estado, particulares, empresas).
