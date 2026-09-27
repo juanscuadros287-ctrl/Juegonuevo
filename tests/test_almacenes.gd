@@ -223,6 +223,10 @@ func _test_trucks_roads_fuel() -> void:
 	check(r0.has("error") and str(r0["error"]).find("Requiere") >= 0, "los camiones requieren la tecnología Automóvil")
 	for t in ["carretas", "caminos_empedrados", "maquina_vapor", "automovil"]:
 		gs.techs.append(t)
+	# Rutas y barcos: el depósito de camiones debe tocar una carretera para sacar vehículos.
+	var nc := LogisticsSim.buy_vehicle(gs, dep, "camion")
+	check(nc.has("error") and str(nc["error"]).contains("carretera"), "sin carretera el depósito no saca camiones: %s" % nc.get("error", ""))
+	check(RoadSim.build(gs, Vector2(-20, -20), Vector2(6, 4), "barro") == "", "camino del depósito a la plaza")
 	var truck: Dictionary = LogisticsSim.buy_vehicle(gs, dep, "camion").get("vehicle", {})
 	check(not truck.is_empty() and int(truck["base"]) == int(dep["id"]), "camión comprado en el depósito de camiones")
 	_hire(dep, 2)
@@ -270,6 +274,7 @@ func _test_planned_air() -> void:
 	_new()
 	gs.techs.append("aviacion")
 	var h := _place("hangar", -30, -25)
+	_place("aeropuerto", -30, -5)   # Rutas y barcos: el hangar va junto a la pista de un aeropuerto.
 	var r := LogisticsSim.buy_vehicle(gs, h, "avion")
 	check(r.has("vehicle"), "el hangar permite comprar aviones de carga")
 	var e := LogisticsSim.create_route(gs, {"from": LogisticsSim.PLAZA, "to": int(_place("almacen", 30, 25)["id"]), "good": "madera", "qty": 5, "vehicle": int(r.get("vehicle", {}).get("id", -1))})

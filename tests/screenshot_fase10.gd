@@ -77,7 +77,7 @@ func _ready() -> void:
 	gs.unlocked_zones.append([0, 0])
 	var a := _biz(gs, "aeropuerto", 150.0, 150.0, 3)
 	var a2 := _biz(gs, "aeropuerto", -150.0, -150.0, 3)
-	var h := _biz(gs, "hangar", 150.0, 118.0, 4)
+	var h := _biz(gs, "hangar", 150.0, 128.0, 4)
 	for i in range(3):
 		LogisticsSim.buy_vehicle(gs, h, "avion")
 	var per_ap = CountriesSim.with_country(gs, "PER", func(): return int(_biz(gs, "aeropuerto", 60.0, 60.0, 3)["id"]))

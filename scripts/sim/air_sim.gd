@@ -9,12 +9,16 @@ extends RefCounted
 ## - Vuelo comercial: sin aviones propios; se paga por unidad (según la distancia) y cada salida tiene
 ##   capacidad limitada. Sirve dentro del país y entre países.
 ## - ENTRE PAÍSES LA MERCANCÍA SOLO VA POR AVIÓN (propio o comercial). Al llegar se cobra el arancel del
+##   destino. Rutas y barcos (docs/RUTAS_BARCOS.md): ahora la carga entre países va por AVIÓN O BARCO
+##   (ShipSim.ship_intl: barco propio o naviera, más barato y más lento); los viajes en barco se guardan
+##   aquí con "ship": true y pagan el mismo arancel y tipo de cambio al llegar. Arancel del
 ##   destino (el mayor entre el tariff del país y import_mult de su gobierno − 1) sobre el valor del bien en el destino,
 ##   convertido a su moneda con el tipo de cambio de GlobalEconSim; se paga en tu moneda y va al tesoro
 ##   del destino. Combustible y fletes comerciales salen de la economía (proveedor extranjero).
 ## Estado: countries.air = {flights [], routes [], commercial {"de|a|día": usado}, next_id, stats {}}
 
 const MODES_INTL := ["avion", "comercial"]
+const MODES_SEA := ["barco", "naviera"]   # Rutas y barcos: ShipSim.ship_intl.
 
 
 static func cfg() -> Dictionary:
@@ -198,8 +202,10 @@ static func ship(gs, opts: Dictionary) -> Dictionary:
 	var qty := float(opts.get("qty", 0.0))
 	var mode := str(opts.get("mode", "comercial"))
 	var intl := from_iso != to_iso
+	if intl and MODES_SEA.has(mode):
+		return ShipSim.ship_intl(gs, opts)
 	if intl and not MODES_INTL.has(mode):
-		return {"error": "Entre países la mercancía solo va por avión (avión propio o vuelo comercial)"}
+		return {"error": "Entre países la mercancía solo va por avión o barco (avión propio, vuelo comercial, barco propio o naviera)"}
 	if not intl and mode == "avion":
 		return {"error": "Dentro del país los aviones propios usan las rutas de Logística → Transporte (entre aeropuertos)"}
 	if not MODES_INTL.has(mode):
@@ -346,7 +352,7 @@ static func _deliver(gs, f: Dictionary) -> void:
 	a["stats"]["tariffs"] = float(a["stats"]["tariffs"]) + float(f["tariff_money"])
 	a["stats"]["flights"] = float(a["stats"]["flights"]) + 1.0
 	a["stats"]["units"] = float(a["stats"]["units"]) + qty
-	var txt := "Llegó la carga aérea a %s: %s %s" % [CountriesSim.country_label(to_iso), _num(qty), GameData.good_label(good).to_lower()]
+	var txt := ("Llegó el barco a %s: %s %s" if bool(f.get("ship", false)) else "Llegó la carga aérea a %s: %s %s") % [CountriesSim.country_label(to_iso), _num(qty), GameData.good_label(good).to_lower()]
 	if intl:
 		txt += ". Arancel %d %%: %s %s (%s)" % [int(rate * 100.0), _num(snappedf(float(f["tariff_local"]), 0.01)), GlobalEconSim.currency_symbol(to_iso), Fmt.money2(float(f["tariff_money"]))]
 	if float(f["lost"]) > 0.0:
@@ -367,7 +373,7 @@ static func daily(gs) -> void:
 		if today >= int(f["arrive"]):
 			_deliver(gs, f)
 		elif today >= int(f["depart"]):
-			f["status"] = "en vuelo"
+			f["status"] = "navegando" if bool(f.get("ship", false)) else "en vuelo"
 	# Guarda solo los últimos vuelos entregados.
 	var keep := []
 	var done := []
@@ -382,6 +388,8 @@ static func daily(gs) -> void:
 			continue
 		var res := ship(gs, {"from_iso": r["from_iso"], "from": r["from"], "to_iso": r["to_iso"], "to": r["to"], "good": r["good"],
 				"qty": r["qty"], "mode": r["mode"], "vehicle": r.get("vehicle", -1), "route": r["id"]})
+		if not res.has("error"):
+			RouteSim.note_moved(r, float(res["flight"]["qty"]))
 		if res.has("error"):
 			r["status"] = str(res["error"])
 			r["next_day"] = today + 1
@@ -397,8 +405,8 @@ static func create_route(gs, opts: Dictionary) -> Dictionary:
 	var from_iso := str(opts.get("from_iso", ""))
 	var to_iso := str(opts.get("to_iso", ""))
 	var mode := str(opts.get("mode", "comercial"))
-	if from_iso != to_iso and not MODES_INTL.has(mode):
-		return {"error": "Entre países la mercancía solo va por avión (avión propio o vuelo comercial)"}
+	if from_iso != to_iso and not MODES_INTL.has(mode) and not MODES_SEA.has(mode):
+		return {"error": "Entre países la mercancía solo va por avión o barco (avión propio, vuelo comercial, barco propio o naviera)"}
 	if from_iso == to_iso and mode != "comercial":
 		return {"error": "Dentro del país usa las rutas de Logística → Transporte (aviones entre aeropuertos)"}
 	if float(opts.get("qty", 0.0)) <= 0.0 or not LogisticsSim.transportable_goods().has(str(opts.get("good", ""))):
@@ -410,6 +418,7 @@ static func create_route(gs, opts: Dictionary) -> Dictionary:
 			"good": str(opts["good"]), "qty": float(opts["qty"]), "mode": mode, "vehicle": int(opts.get("vehicle", -1)),
 			"every": maxi(1, int(opts.get("every", 7))), "next_day": gs.today(), "active": true, "status": "", "trips": 0}
 	a["routes"].append(r)
+	RouteSim.decorate(gs, "A%d" % id, r, opts)   # Nombre y color únicos (panel Rutas).
 	return {"route": r}
 
 

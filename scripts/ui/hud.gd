@@ -27,7 +27,7 @@ const CATEGORIES := [
 	{"id": "logistica", "label": "Logística y transporte", "icon": "logistics", "key": "F4", "items": [
 		["logistics", "Logística", "logistics", "L"], ["transit", "Transporte público", "transit", "J"],
 		["utilities", "Servicios públicos", "utilities", "U"], ["trade", "Comercio exterior", "trade", "X"],
-		["aviation", "Aviación", "logistics", ""]]},   # Fase 10
+		["aviation", "Aviación", "logistics", ""], ["routes", "Rutas", "trade", ""]]},   # Fase 10 · Rutas y barcos
 	{"id": "sociedad", "label": "Sociedad", "icon": "society", "key": "F5", "items": [
 		["population", "Población", "population", "Z"], ["towns", "Pueblos vecinos", "town", ""],
 		["government", "Gobierno", "government", "G"], ["tourism", "Turismo y publicidad", "tourism", ""]]},
@@ -652,6 +652,8 @@ func _item_active(item_id: String) -> bool:
 			return countries_window != null and countries_window.visible
 		"aviation":
 			return aviation_window != null and aviation_window.visible
+		"routes":
+			return RoutesWindow.is_open(self)   # Rutas y barcos (docs/RUTAS_BARCOS.md)
 		"population":
 			return population_modal.has("root") and population_modal["root"].visible
 		"towns":
@@ -682,6 +684,9 @@ func _open_item(item_id: String) -> void:
 		"aviation":
 			close_dock()
 			aviation_window.open()
+		"routes":
+			close_dock()
+			RoutesWindow.open_in(self)
 		"stocks":
 			close_dock()
 			global_econ.open(1)

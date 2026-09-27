@@ -23,6 +23,12 @@ static func build(gs, st: Dictionary, hud, on_change: Callable) -> Control:
 	v.add_child(UIKit.label(head, 14, UIKit.ACCENT))
 	if str(st.get("status", "")) != "activo":
 		v.add_child(UIKit.label("En obra: aún no opera.", 12, UIKit.TEXT_DIM))
+	var conn := GarageSim.status_text(gs, st)   # Rutas y barcos: garaje conectado a su red.
+	if conn != "":
+		var cl := UIKit.rich()
+		cl.fit_content = true
+		cl.text = conn
+		v.add_child(cl)
 	var pm: float = gs.price_mult()
 	for m in modes:
 		var mode := str(m)
@@ -39,6 +45,8 @@ static func build(gs, st: Dictionary, hud, on_change: Callable) -> Control:
 		if float(md.get("fuel_per_km", 0.0)) > 0.0:
 			cost_txt += " · combustible %s/km" % Fmt.money2(float(md["fuel_per_km"]) * pm)
 		var row := HBoxContainer.new()
+		if int(md.get("crew", 1)) > 1:
+			cost_txt += " · tripulación %d" % int(md["crew"])
 		var l := UIKit.label("%s: %d u./viaje · %s%s" % [str(md.get("unit", mode)), int(md.get("capacity", 0)), cost_txt,
 				" · PREVISTO (fase posterior)" if LogisticsSim.is_planned(mode) else ""], 13)
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -86,6 +94,15 @@ static func build(gs, st: Dictionary, hud, on_change: Callable) -> Control:
 				hud.toast(err if err != "" else "Vehículo vendido (40 % de su precio).", "jugador" if err != "" else "negocio")
 			on_change.call(), 70)
 		sell.disabled = busy
+		if LogisticsSim.mode_def(str(veh["mode"])).has("wagon_capacity"):
+			var wb := UIKit.button("+ vagón (%s) · %d u." % [Fmt.money(GarageSim.wagon_price(gs, str(veh["mode"]))), int(LogisticsSim.vehicle_capacity(gs, veh))], func():
+				var err := GarageSim.add_wagon(GameState, vid)
+				if hud:
+					hud.toast(err if err != "" else "Vagón agregado.", "jugador" if err != "" else "negocio")
+				on_change.call(), 150)
+			wb.disabled = GarageSim.add_wagon_block_reason(gs, vid) != ""
+			wb.tooltip_text = GarageSim.add_wagon_block_reason(gs, vid)
+			row.add_child(wb)
 		row.add_child(sell)
 		v.add_child(row)
 	return v

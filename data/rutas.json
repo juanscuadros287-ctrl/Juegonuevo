@@ -1,0 +1,39 @@
+{
+ "_nota": "Rutas punto X → punto Y, barcos, puertos, astilleros, trenes y garajes conectados (docs/RUTAS_BARCOS.md). Distancias en metros del juego; montos × price_mult.",
+ "palette": ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#42d4f4", "#f032e6", "#bfef45", "#fabed4", "#469990", "#dcbeff", "#9a6324", "#fffac8", "#800000", "#aaffc3"],
+ "walk_max": 250.0,
+ "mule_max": 1500.0,
+ "mule_bridge_max": 36.0,
+ "station_reach": 14.0,
+ "rail_reach": 10.0,
+ "port_reach": 12.0,
+ "garage": {
+  "road_reach": 6.0,
+  "rail_reach": 6.0,
+  "runway_gap": 16.0,
+  "water_reach": 10.0
+ },
+ "rail": {
+  "tech": "ferrocarril",
+  "cost_per_m": 5.0,
+  "sample_step": 4.0,
+  "snap": 5.0,
+  "touch": 2.0,
+  "bridge_max": 40.0,
+  "bridge_cost_mult": 4.0,
+  "max_points": 60
+ },
+ "water": {
+  "cell": 12.0,
+  "margin": 240.0,
+  "max_cells": 60000,
+  "shore_reach": 10.0
+ },
+ "ship_intl": {
+  "tech": "navegacion",
+  "fuel_per_km": 0.08,
+  "commercial": {"per_unit_base": 0.15, "per_unit_per_1000km": 0.18, "every_days": 7, "capacity": 600},
+  "min_days": 3
+ },
+ "dwell": 0.12
+}

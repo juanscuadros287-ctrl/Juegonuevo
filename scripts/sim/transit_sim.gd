@@ -773,6 +773,9 @@ static func buy_block_reason(gs, depot: Dictionary) -> String:
 		return "El edificio no está activo"
 	if buses_of(gs, int(depot["id"])).size() >= bus_garage(gs, depot):
 		return "No caben más buses (%d): mejora el edificio" % bus_garage(gs, depot)
+	var conn := GarageSim.disconnected_reason(gs, depot)   # Rutas y barcos: la terminal toca una carretera.
+	if conn != "":
+		return conn
 	if gs.money < bus_price(gs):
 		return "Dinero insuficiente (%s)" % Fmt.money(bus_price(gs))
 	return ""
@@ -932,6 +935,8 @@ static func route_status(gs, r: Dictionary, drivers_left := -1) -> Dictionary:
 		st["reason"] = "La empresa de buses no está activa"
 		return st
 	var why := route_block_reason(gs, int(r["depot"]), r["stops"])
+	if why == "":
+		why = GarageSim.disconnected_reason(gs, depot)
 	if why != "":
 		st["reason"] = why
 		return st

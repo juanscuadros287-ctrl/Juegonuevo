@@ -61,6 +61,7 @@ static func init_state(gs) -> void:
 		L["stats"] = {}
 	WarehouseSim._stores(gs)   # Crea los almacenes individuales (migra el almacén global antiguo).
 	WarehouseSim.relink_all(gs)
+	RouteSim.init_state(gs)   # Rutas punto X → Y: colores, nombres y garajes de partidas viejas.
 
 
 static func daily(gs) -> void:
@@ -454,6 +455,19 @@ static func crew_size(gs, b: Dictionary) -> int:
 	return n
 
 
+## Personas que necesita cada unidad del medio (tripulación de barcos, maquinista y fogonero del tren).
+static func crew_per(mode: String) -> int:
+	return maxi(1, int(mode_def(mode).get("crew", 1)))
+
+
+## Capacidad por viaje de un vehículo concreto (los trenes según sus vagones).
+static func vehicle_capacity(gs, v: Dictionary) -> float:
+	var md := mode_def(str(v.get("mode", "")))
+	if md.has("wagon_capacity"):
+		return float(md["wagon_capacity"]) * int(v.get("wagons", md.get("wagons_default", 1)))
+	return float(md.get("capacity", 10.0))
+
+
 # --- Vehículos individuales -------------------------------------------------------------------
 
 static func vehicles(gs) -> Array:
@@ -561,9 +575,9 @@ static func _free_vehicles(gs, st: Dictionary, mode: String, now: float) -> Arra
 
 ## Unidades (cargadores, o vehículos con su conductor) libres de un medio en una estación.
 static func free_units(gs, st: Dictionary, mode: String, now: float) -> int:
-	if not central_supports(gs, st, mode):
+	if not central_supports(gs, st, mode) or not GarageSim.linked(gs, st):
 		return 0
-	var people := _free_people(gs, st, now)
+	var people := _free_people(gs, st, now) / crew_per(mode)
 	if not is_vehicle(mode):
 		return people
 	var inc := maxi(0, included_at(gs, st, mode) - _included_busy(gs, int(st["id"]), mode, now))
@@ -585,7 +599,8 @@ static func carriers(gs, mode: String, now := -1.0) -> Dictionary:
 		var v := vehicles_at(gs, b, mode)
 		crew += n
 		veh += v if is_vehicle(mode) else 0
-		total += mini(n, v)
+		if GarageSim.linked(gs, b):
+			total += mini(n / crew_per(mode), v)
 		free += free_units(gs, b, mode, now)
 	return {"total": total, "free": free, "vehicles": veh, "crew": crew}
 
@@ -609,6 +624,9 @@ static func buy_block_reason(gs, st: Dictionary, mode: String) -> String:
 		return "El edificio no está activo"
 	if bought_vehicles(gs, st) >= garage_capacity(gs, st):
 		return "No caben más vehículos (%d): mejora el edificio" % garage_capacity(gs, st)
+	var conn := GarageSim.disconnected_reason(gs, st)   # Garaje conectado a su red (carretera, vía, agua, pista).
+	if conn != "":
+		return conn
 	if gs.money < vehicle_price(gs, mode):
 		return "Dinero insuficiente (%s)" % Fmt.money(vehicle_price(gs, mode))
 	return ""
@@ -628,6 +646,8 @@ static func buy_vehicle(gs, st: Dictionary, mode: String) -> Dictionary:
 			n += 1
 	var v := {"id": id, "mode": mode, "base": int(st["id"]), "name": "%s %d" % [str(mode_def(mode).get("unit", mode_label(mode))), n + 1],
 		"bought": gs.today(), "km": 0.0, "trips": 0}
+	if mode_def(mode).has("wagon_capacity"):
+		v["wagons"] = int(mode_def(mode).get("wagons_default", 1))
 	vehicles(gs).append(v)
 	return {"vehicle": v}
 
@@ -735,7 +755,7 @@ static func get_route(gs, id: int) -> Dictionary:
 
 
 ## Motivo por el que una ruta no puede operar con ese medio o vehículo ("" si puede).
-static func route_block_reason(gs, from_id: int, to_id: int, mode: String, vehicle_id := -1) -> String:
+static func route_block_reason(gs, from_id: int, to_id: int, mode: String, vehicle_id := -1, stops: Array = []) -> String:
 	if from_id == to_id:
 		return "Origen y destino son el mismo lugar"
 	if not endpoint_valid(gs, from_id) or not endpoint_valid(gs, to_id):
@@ -756,12 +776,18 @@ static func route_block_reason(gs, from_id: int, to_id: int, mode: String, vehic
 			return air
 	if not gs.has_tech(str(md.get("tech", ""))):
 		return "Requiere investigar: %s" % GameData.tech_label(str(md.get("tech", "")))
+	var geo := RouteSim.geo_block_reason(gs, from_id, to_id, mode, stops)   # Rutas con sentido: distancia, carretera, rieles, agua.
+	if geo != "":
+		return geo
 	if vehicle_id >= 0:
 		var st: Dictionary = gs.get_building(int(get_vehicle(gs, vehicle_id)["base"]))
 		if st.is_empty() or str(st.get("status", "")) != "activo":
 			return "El edificio de ese vehículo no está activo"
-		if crew_size(gs, st) <= 0:
-			return "Contrata %s en %s" % ["arrieros" if bool(md.get("animal", false)) else "conductores", gs.building_label(st)]
+		if crew_size(gs, st) < crew_per(mode):
+			return "Contrata %s en %s" % ["arrieros" if bool(md.get("animal", false)) else ("tripulación" if bool(md.get("water", false)) else "conductores"), gs.building_label(st)]
+		var conn := GarageSim.disconnected_reason(gs, st)
+		if conn != "":
+			return conn
 	else:
 		var c := carriers(gs, mode)
 		if int(c["total"]) <= 0:
@@ -775,12 +801,10 @@ static func route_block_reason(gs, from_id: int, to_id: int, mode: String, vehic
 						else "Necesitas una central de transporte con cargadores"
 			if is_vehicle(mode) and int(c["vehicles"]) <= 0:
 				return "No tienes %s: cómpralos en %s" % [mode_short(mode), base_label]
+			for b in stations(gs):
+				if central_supports(gs, b, mode) and not GarageSim.linked(gs, b):
+					return GarageSim.disconnected_reason(gs, b)
 			return "Contrata %s en la central de transporte o en %s" % ["cargadores" if not is_vehicle(mode) else "conductores", base_label]
-	if bool(md.get("road", false)) and not RoadSim.connected(gs, endpoint_pos(gs, from_id), endpoint_pos(gs, to_id), road_kinds(mode)):
-		var kinds := road_kinds(mode)
-		if kinds.is_empty():
-			return "%s necesitan carretera que una origen y destino" % mode_label(mode)
-		return "%s necesitan carretera de %s que una origen y destino" % [mode_label(mode), " o ".join(kinds.map(func(k): return RoadSim.kind_label(k).to_lower()))]
 	return ""
 
 
@@ -806,19 +830,23 @@ static func create_route(gs, opts: Dictionary) -> Dictionary:
 		return {"error": "La compra automática sale de la bodega de la plaza (salida del pueblo)"}
 	if buy and buy_unit_price(gs, good) <= 0.0:
 		return {"error": "%s no se puede comprar afuera" % GameData.good_label(good)}
-	var reason := route_block_reason(gs, from_id, to_id, mode, vid)
+	var stops: Array = []
+	for s in opts.get("stops", []):
+		stops.append(int(s))
+	var reason := route_block_reason(gs, from_id, to_id, mode, vid, stops)
 	if reason != "":
 		return {"error": reason}
 	var auto := bool(opts.get("auto", false))
 	if vid >= 0 and not auto:
-		qty = minf(qty, float(trip_info(gs, from_id, to_id, mode)["per_carrier"]))   # Un viaje.
+		qty = minf(qty, float(trip_info(gs, from_id, to_id, mode, vid, stops)["per_carrier"]))   # Un viaje.
 	var id := int(gs.logistics.get("next_route_id", 1))
 	gs.logistics["next_route_id"] = id + 1
 	var r := {"id": id, "from": from_id, "to": to_id, "good": good, "qty": qty, "mode": mode,
 		"auto": auto, "every": maxi(1, int(opts.get("every", 7))), "next_day": gs.today(),
 		"remaining": qty, "active": true, "moved": 0.0, "status": "", "trips": 0,
-		"vehicle": vid, "buy": buy, "max_stock": maxf(0.0, float(opts.get("max_stock", 0.0))), "spent": 0.0}
+		"vehicle": vid, "buy": buy, "max_stock": maxf(0.0, float(opts.get("max_stock", 0.0))), "spent": 0.0, "stops": stops}
 	routes(gs).append(r)
+	RouteSim.decorate(gs, "L%d" % id, r, opts)   # Nombre y color únicos.
 	# El primer envío sale de inmediato.
 	dispatch(gs, r, float(gs.today()) + maxf(TimeManager.hour_float(), float(tcfg().get("depart_hour", 7))) / 24.0)
 	return {"route": r}
@@ -841,17 +869,19 @@ static func set_route_active(gs, id: int, active: bool) -> void:
 
 
 ## Datos de un viaje: distancia, días de ida, vueltas por día, carga por unidad y combustible.
-static func trip_info(gs, from_id: int, to_id: int, mode: String) -> Dictionary:
+static func trip_info(gs, from_id: int, to_id: int, mode: String, vid := -1, stops: Array = []) -> Dictionary:
 	var md := mode_def(mode)
 	var p1 := endpoint_pos(gs, from_id)
 	var p2 := endpoint_pos(gs, to_id)
-	var dist := p1.distance_to(p2) * float(tcfg().get("route_factor", 1.25))
+	var dist := RouteSim.route_distance(gs, from_id, to_id, mode, stops)   # Riel y agua: largo del camino real.
 	var speed := float(md.get("speed", 180.0))
 	if bool(md.get("road", false)):
 		speed *= RoadSim.speed_mult(gs, p1, p2, road_kinds(mode))
 	var travel := maxf(0.02, dist / speed)
 	var trips := clampi(int(0.66 / (2.0 * travel)), 1, int(tcfg().get("max_trips_per_day", 4)))
 	var cap := float(md.get("capacity", 10.0))
+	if vid >= 0 and not get_vehicle(gs, vid).is_empty():
+		cap = vehicle_capacity(gs, get_vehicle(gs, vid))
 	# Combustible por vehículo: ida y vuelta de cada viaje.
 	var pm: float = gs.price_mult()
 	var km := dist / 1000.0 * 2.0 * trips
@@ -881,8 +911,8 @@ static func _allocate(gs, r: Dictionary, mode: String, need: int, depart: float)
 	if vid >= 0:
 		var v := get_vehicle(gs, vid)
 		var st: Dictionary = gs.get_building(int(v.get("base", -1)))
-		if not v.is_empty() and not st.is_empty() and not vehicle_busy(gs, vid, depart) and _free_people(gs, st, depart) > 0:
-			crew.append([int(st["id"]), 1])
+		if not v.is_empty() and not st.is_empty() and not vehicle_busy(gs, vid, depart) and _free_people(gs, st, depart) >= crew_per(mode) and GarageSim.linked(gs, st):
+			crew.append([int(st["id"]), crew_per(mode)])
 			vids.append(vid)
 			got = 1
 		return {"crew": crew, "vehicles": vids, "got": got}
@@ -899,7 +929,7 @@ static func _allocate(gs, r: Dictionary, mode: String, need: int, depart: float)
 			var from_own := maxi(0, use - inc)
 			for v in _free_vehicles(gs, b, mode, depart).slice(0, from_own):
 				vids.append(int(v["id"]))
-		crew.append([int(b["id"]), use])
+		crew.append([int(b["id"]), use * crew_per(mode)])
 		got += use
 	return {"crew": crew, "vehicles": vids, "got": got}
 
@@ -912,7 +942,8 @@ static func dispatch(gs, r: Dictionary, depart: float) -> float:
 	var good := str(r["good"])
 	var auto := bool(r.get("auto", false))
 	var buy := bool(r.get("buy", false))
-	var reason := route_block_reason(gs, from_id, to_id, mode, int(r.get("vehicle", -1)))
+	var stops: Array = r.get("stops", [])
+	var reason := route_block_reason(gs, from_id, to_id, mode, int(r.get("vehicle", -1)), stops)
 	if reason != "":
 		r["status"] = reason
 		return 0.0
@@ -934,7 +965,7 @@ static func dispatch(gs, r: Dictionary, depart: float) -> float:
 		if auto:
 			r["next_day"] = gs.today() + 1
 		return 0.0
-	var info := trip_info(gs, from_id, to_id, mode)
+	var info := trip_info(gs, from_id, to_id, mode, int(r.get("vehicle", -1)), stops)
 	var per_carrier := float(info["per_carrier"])
 	var alloc := _allocate(gs, r, mode, int(ceil(qty / per_carrier)), depart)
 	var got := int(alloc["got"])
@@ -978,7 +1009,7 @@ static func dispatch(gs, r: Dictionary, depart: float) -> float:
 	for pair in alloc["crew"]:
 		var st: Dictionary = gs.get_building(int(pair[0]))
 		if fpv > 0.0 and not st.is_empty():
-			var cost := fpv * int(pair[1]) * (1.0 - fuel_discount(gs, st))
+			var cost := fpv * (int(pair[1]) / crew_per(mode)) * (1.0 - fuel_discount(gs, st))
 			BusinessSim.pay(gs, st, cost, "insumos")
 			fuel_total += cost
 	if fuel_total > 0.0:
@@ -998,7 +1029,8 @@ static func dispatch(gs, r: Dictionary, depart: float) -> float:
 		"arrive": depart + (2.0 * trips - 1.0) * travel, "back": depart + 2.0 * trips * travel,
 		"ax": endpoint_pos(gs, from_id).x, "az": endpoint_pos(gs, from_id).y,
 		"bx": endpoint_pos(gs, to_id).x, "bz": endpoint_pos(gs, to_id).y, "delivered": false,
-		"fuel": fuel_total, "bought": bought,
+		"fuel": fuel_total, "bought": bought, "stops": stops,
+		"garage": int(alloc["crew"][0][0]) if not (alloc["crew"] as Array).is_empty() else -1,
 	})
 	r["trips"] = int(r.get("trips", 0)) + 1
 	var who := str(get_vehicle(gs, int(r["vehicle"])).get("name", "")) if int(r.get("vehicle", -1)) >= 0 else "%d %s" % [got, mode_short(mode)]
@@ -1045,6 +1077,7 @@ static func _complete_shipments(gs, now: float) -> void:
 			var r := get_route(gs, int(s["route"]))
 			if not r.is_empty():
 				r["moved"] = float(r.get("moved", 0.0)) + acc
+				RouteSim.note_moved(r, acc)
 				if not bool(r.get("auto", false)) and not bool(r.get("active", true)) and float(r.get("remaining", 0.0)) <= 0.01 and not _has_pending(gs, int(r["id"]), s):
 					gs.notify("Ruta completada: %s → %s (%s %s)." % [endpoint_label(gs, int(r["from"])), endpoint_label(gs, int(r["to"])),
 							_num(snappedf(float(r["moved"]), 0.1)), GameData.good_label(good).to_lower()], "negocio")
