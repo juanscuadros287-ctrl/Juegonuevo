@@ -50,6 +50,7 @@ var _rename: Dictionary
 var _rename_edit: LineEdit
 var _rename_slot := 0
 var _error: Dictionary
+var _options: Dictionary   # Opciones: sonido y gráficos
 var _error_text: Label
 var _error_box: VBoxContainer
 
@@ -120,6 +121,9 @@ func _ready() -> void:
 	var sp := Control.new()
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(sp)
+	var opt_b := _big_button("Opciones", "settings", _open_options)   # Sonido y gráficos (docs/AUDIO.md)
+	opt_b.custom_minimum_size.x = 150
+	bottom.add_child(opt_b)
 	var quit_b := _big_button("Salir", "exit", func(): get_tree().quit())
 	quit_b.custom_minimum_size.x = 130
 	bottom.add_child(quit_b)
@@ -456,6 +460,11 @@ func _build_load_panel(parent: Control) -> void:
 	row.add_child(_big_button("Importar", "save", _load_selected, true))
 
 
+func _open_options() -> void:
+	AudioManager.panel(true)
+	_options["root"].visible = true
+
+
 func _build_dialogs() -> void:
 	_confirm = UIKit.modal(self, "Confirmar", Vector2(440, 0), "alert")
 	_confirm_text = UIKit.label("", 14)
@@ -484,6 +493,12 @@ func _build_dialogs() -> void:
 	_rename["body"].add_child(rrow)
 	rrow.add_child(UIKit.button("Cancelar", func(): _rename["root"].visible = false, 120))
 	rrow.add_child(UIKit.primary(UIKit.button("Guardar nombre", _do_rename, 150)))
+
+	_options = UIKit.modal(self, "Opciones", Vector2(500, 0), "settings")
+	AudioSettings.build_ui(_options["body"])
+	_options["body"].add_child(HSeparator.new())
+	_options["body"].add_child(GraphicsSettings.make_selector())
+	_options["body"].add_child(UIKit.primary(UIKit.button("Listo", func(): _options["root"].visible = false)))
 
 	_error = UIKit.modal(self, "No se pudo cargar la partida", Vector2(500, 0), "alert")
 	_error_text = UIKit.label("", 13)
