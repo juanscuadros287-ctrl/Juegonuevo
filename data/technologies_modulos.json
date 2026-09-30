@@ -1,0 +1,43 @@
+{
+ "_nota": "Módulos de edificio (docs/MODULOS.md): almacén integrado, parqueadero con bahía de carga y flota propia. El árbol ubica cada tecnología por época y rama sin superponerlas.",
+ "bodegas_anexas": {
+  "label": "Bodegas anexas",
+  "era": 1,
+  "branch": "industria",
+  "cost": 520,
+  "requires": ["ladrillo"],
+  "effects": [],
+  "description": "Una bodega pegada al taller: guarda insumos y producción sin construir un almacén aparte.",
+  "future": "Módulo Almacén nivel 2 (300 espacios) en negocios productores y comercios"
+ },
+ "almacenes_industriales": {
+  "label": "Almacenes industriales",
+  "era": 2,
+  "branch": "industria",
+  "cost": 3300,
+  "requires": ["fabricas", "bodegas_anexas"],
+  "effects": [],
+  "description": "Naves de almacenaje integradas a la fábrica, con estanterías y montacargas manuales.",
+  "future": "Módulo Almacén nivel 3 (1.000 espacios)"
+ },
+ "logistica_integrada": {
+  "label": "Logística integrada",
+  "era": 3,
+  "branch": "transporte",
+  "cost": 11500,
+  "requires": ["electricidad", "almacenes_industriales"],
+  "effects": [],
+  "description": "Bodegas con montacargas eléctricos e inventario en fichas: el almacén de la fábrica crece a escala industrial.",
+  "future": "Módulo Almacén nivel 4 (3.000 espacios)"
+ },
+ "bahias_de_carga": {
+  "label": "Bahías de carga",
+  "era": 3,
+  "branch": "transporte",
+  "cost": 12500,
+  "requires": ["automovil"],
+  "effects": [],
+  "description": "Muelles de carga en el propio edificio: los vehículos de carga se estacionan y despachan desde la fábrica.",
+  "future": "Módulo Parqueadero y flota nivel 5 (camiones asignados al negocio, con bahía de carga)"
+ }
+}

@@ -74,7 +74,7 @@ static func _store(gs, wid: int) -> Dictionary:
 
 static func is_warehouse_building(gs, b: Dictionary) -> bool:
 	return not b.is_empty() and gs.owned_by_player(b) and str(b.get("status", "")) != "construccion" \
-			and float(gs.level_def(b).get("warehouse_capacity", 0.0)) > 0.0
+			and (float(gs.level_def(b).get("warehouse_capacity", 0.0)) > 0.0 or ModulesSim.warehouse_capacity(b) > 0.0)   # Módulos: almacén integrado.
 
 
 static func exists(gs, wid: int) -> bool:
@@ -115,7 +115,7 @@ static func capacity_of(gs, wid: int) -> float:
 	var b: Dictionary = gs.get_building(wid)
 	if not is_warehouse_building(gs, b):
 		return 0.0
-	return float(gs.level_def(b).get("warehouse_capacity", 0.0))
+	return float(gs.level_def(b).get("warehouse_capacity", 0.0)) + ModulesSim.warehouse_capacity(b)
 
 
 static func used_in(gs, wid: int) -> float:
@@ -303,6 +303,8 @@ static func nearest_for(gs, type_id: String, x: float, z: float, ignore_id := -1
 	for wid in ids(gs):
 		if wid == ignore_id and wid != PLAZA:
 			continue
+		if ModulesSim.is_private_warehouse(gs, wid):
+			continue   # Módulos: el almacén integrado de otro negocio es solo suyo.
 		var g := edge_gap(p, h, pos_of(gs, wid), half_of(gs, wid))
 		if g < best_gap:
 			best_gap = g
@@ -318,6 +320,18 @@ static func warehouse_for(gs, b: Dictionary) -> int:
 	var wid := int(n.get("id", NONE))
 	b["warehouse_id"] = wid
 	return wid
+
+
+## Almacenes de un negocio de la cadena en orden de uso: su almacén integrado (módulo, siempre
+## desde el nivel 1) y luego el almacén separado vinculado al lado (warehouse_for). [] si ninguno.
+static func chain_ids(gs, b: Dictionary) -> Array:
+	var out := []
+	if is_linkable(gs, b) and is_warehouse_building(gs, b):
+		out.append(int(b["id"]))
+	var adj := warehouse_for(gs, b)
+	if adj >= 0:
+		out.append(adj)
+	return out
 
 
 ## Negocios vinculados a un almacén.

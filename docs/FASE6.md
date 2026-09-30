@@ -1,5 +1,9 @@
 # Fase 6 — Recursos por región, almacén, cadenas de producción y transporte interno
 
+> **Actualización (docs/MODULOS.md):** todo negocio productor o comercio tiene ahora un **almacén integrado**
+> (100 espacios, ampliable en Mejorar → Almacén) que usa antes que el almacén separado de al lado. Ya no hay
+> «producción en el sitio» ni anillos verde/rojo; los almacenes separados son almacenamiento general.
+
 ## Resumen para el jugador
 1. **Elige dónde fundar** (menú *Nueva partida → Lugar de fundación*): 3-4 lugares según el tipo de mapa y la semilla.
    Cada uno es fuerte en ciertos recursos (oro, plata, carbón, hierro, madera, piedra, tierra fértil, pastos, pesca) y trae
