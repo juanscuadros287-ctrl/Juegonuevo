@@ -170,6 +170,9 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 	var mine_parts := MineSim.parts_block_reason(gs, x, z, fp, ignore_id)   # Minas: no encima de frentes ni escombreras.
 	if mine_parts != "":
 		return mine_parts
+	var shore := ShipSim.placement_block_reason(gs, type_id, x, z, level)   # Rutas y barcos: puerto y astillero tocan el agua.
+	if shore != "":
+		return shore
 	return WaterSim.placement_block_reason(gs, type_id, x, z)   # Redes: la toma de río va junto al agua dulce.
 
 
