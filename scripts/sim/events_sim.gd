@@ -184,7 +184,9 @@ static func _imprison(gs, c: Citizen) -> bool:
 		c.job_id = -1
 		c.job_kind = ""
 		c.wage = 0.0
-	c.money *= 0.5
+	var fine := maxf(0.0, c.money) * 0.5   # Multa/decomiso: va al tesoro (antes desaparecía).
+	c.money -= fine
+	GovSim.add_treasury(gs, fine)
 	gs.count("arrests")
 	return true
 
@@ -209,7 +211,7 @@ static func _fires(gs) -> void:
 		var label: String = gs.building_label(b)
 		if gs.owned_by_player(b):
 			var cost: float = float(gs.level_def(b).get("cost", 300)) * gs.price_mult() * ratio
-			BusinessSim.pay(gs, b, cost, "reparaciones")
+			BusinessSim.pay_out(gs, b, cost, "reparaciones")
 			for g in b["inventory"]:
 				b["inventory"][g] = float(b["inventory"][g]) * (0.9 if contained else 0.4)
 			gs.notify("Incendio en %s: %s. Reparación: %s." % [label, "controlado por los bomberos" if contained else "daños graves", Fmt.money(cost)], "jugador")

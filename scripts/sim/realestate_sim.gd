@@ -417,11 +417,14 @@ static func stage_defs() -> Array:
 
 
 static func _new_project(kind: String, level: int, tier: String, cost: Dictionary, from_level: int) -> Dictionary:
+	# Las etapas pagan materiales y obra; los jornales de la cuadrilla se pagan aparte, día a día
+	# (ConstructionSim.daily), así que no se cobran dos veces.
+	var basis := float(cost.get("upfront", cost["total"]))
 	var stages := []
 	for s in stage_defs():
 		stages.append({"id": str(s["id"]), "label": str(s["label"]), "share": float(s["share"]),
-			"amount": float(cost["total"]) * float(s["share"]), "paid": false})
-	return {"kind": kind, "level": level, "tier": tier, "from_level": from_level, "total": float(cost["total"]),
+			"amount": basis * float(s["share"]), "paid": false})
+	return {"kind": kind, "level": level, "tier": tier, "from_level": from_level, "total": basis,
 		"stages": stages, "paused": false, "credit_id": -1, "credit_ratio": 0.0,
 		"presale_received": 0.0, "paid_total": 0.0, "notified_pause": false}
 
@@ -452,6 +455,7 @@ static func _pay_stage(gs, b: Dictionary, idx: int) -> bool:
 	if got + 0.01 < amount - own and gs.money < amount - got:
 		return false
 	gs.add_money(-amount)
+	FlowSim.spend(gs, amount, "obras")   # Materiales y contratistas del pueblo (parte importada).
 	BusinessSim.ledger_add(b, "obras", amount)
 	st["paid"] = true
 	p["paid_total"] = float(p["paid_total"]) + amount
@@ -468,7 +472,7 @@ static func project_block_reason(gs, level: int, tier: String, credit_ratio := 0
 	if r != "":
 		return r
 	var cost := ConstructionSim.cost_for(gs, "vivienda", level, false, tier)
-	var first := float(cost["total"]) * float(stage_defs()[0]["share"]) * (1.0 - credit_ratio)
+	var first := float(cost.get("upfront", cost["total"])) * float(stage_defs()[0]["share"]) * (1.0 - credit_ratio)
 	if gs.money < first:
 		return "Necesitas %s para la cimentación" % Fmt.money(first)
 	return ""
@@ -530,7 +534,7 @@ static func start_project_upgrade(gs, b: Dictionary, opts := {}) -> String:
 		ratio = 0.0
 	var tier := str(b.get("tier", "normal"))
 	var cost := ConstructionSim.cost_for(gs, "vivienda", next, true, tier)
-	var first := float(cost["total"]) * float(stage_defs()[0]["share"]) * (1.0 - ratio)
+	var first := float(cost.get("upfront", cost["total"])) * float(stage_defs()[0]["share"]) * (1.0 - ratio)
 	if gs.money < first:
 		return "Necesitas %s para la cimentación" % Fmt.money(first)
 	var old_units: Array = b.get("units", [])

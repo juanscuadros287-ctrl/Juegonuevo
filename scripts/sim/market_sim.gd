@@ -4,10 +4,12 @@ extends RefCounted
 ## o se autoabastecen/importan si no hay oferta. Mercado de vivienda mensual.
 
 static var _offers := {}   # bien -> Array de edificios vendedores ordenados
+static var _memo := {}     # memo del día (se vacía en begin_day): calidad por negocio y precio de importación por bien
 
 
 static func begin_day(gs) -> void:
 	_offers = {}
+	_memo = {}
 	for b in gs.buildings:
 		# Libre mercado: las empresas NPC compiten con las tuyas por los mismos clientes.
 		if not (gs.owned_by_player(b) or NpcBusinessSim.is_npc(b)) or b["status"] != "activo":
@@ -25,7 +27,23 @@ static func begin_day(gs) -> void:
 
 
 static func _quality(gs, b: Dictionary) -> float:
-	return maxf(0.1, float(gs.level_def(b).get("quality", 1.0)))
+	var k := "q%d|%d|%s" % [int(b.get("id", -1)), int(b.get("level", 1)), str(b.get("type", ""))]
+	if _memo.has(k):
+		return float(_memo[k])
+	var q := maxf(0.1, float(gs.level_def(b).get("quality", 1.0)))
+	_memo[k] = q
+	return q
+
+
+## Precio de importación de un bien (memo del día: depende de precios, aranceles, cambio y guerras).
+static func import_price(gs, good: String) -> float:
+	var k := "imp|%d|%s" % [gs.today(), good]
+	if _memo.has(k):
+		return float(_memo[k])
+	var g: Dictionary = GameData.goods.get(good, {})
+	var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs) * GlobalEconSim.import_fx_mult(gs) * WarSim.import_mult(gs, good)   # Tipo de cambio · Mundo: guerra.
+	_memo[k] = imp
+	return imp
 
 
 static func sellers(good: String) -> Array:
@@ -50,6 +68,10 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 	for b in sellers(good):
 		if left <= 0.0001:
 			break
+		var inv: Dictionary = b["inventory"]
+		var stock := float(inv.get(good, 0.0))
+		if stock <= 0.0:
+			continue   # Sin existencias: se salta antes de calcular calidad y publicidad (rendimiento).
 		var price := float(b["price"])
 		var am := QualitySim.accept_mult(gs, b)   # Economía global: calidad y marca suben el precio aceptado.
 		if price > willing * am:
@@ -57,10 +79,6 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 		# Demanda elástica: por encima del precio de referencia compran menos (la publicidad ayuda).
 		var ad := AdvertisingSim.demand_mult(gs, b)
 		if price > ref_price * am and gs.rng.randf() < (price / (ref_price * am) - 1.0) / (willing / ref_price - 1.0) / ad:
-			continue
-		var inv: Dictionary = b["inventory"]
-		var stock := float(inv.get(good, 0.0))
-		if stock <= 0.0:
 			continue
 		var take := minf(stock, left)
 		var cost := take * price
@@ -78,10 +96,11 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 	var quality := 1.0
 	var g: Dictionary = GameData.goods.get(good, {})
 	if left > 0.0001:
-		var imp: float = float(g.get("import_price", 0.0)) * gs.price_mult() * GovSim.import_mult(gs) * GlobalEconSim.import_fx_mult(gs) * WarSim.import_mult(gs, good)   # Tipo de cambio · Mundo: guerra.
+		var imp: float = import_price(gs, good)
 		var well := good == WaterSim.GOOD   # Redes: el agua del pozo comunitario es gratis (no se importa).
 		if employed and imp > 0.0 and not well and PopulationSim.pay_with(gs, payers, left * imp):
 			imported = left  # El dinero sale del pueblo.
+			FlowSim.external_out(gs, left * imp, "importación de bienes")
 		else:
 			# Autoabastecimiento en especie: cultivar, buscar agua, cortar leña… sin dinero, peor calidad.
 			var ss := float(g.get("self_supply", 0.0))
@@ -230,6 +249,26 @@ static func monthly_housing(gs) -> void:
 		var wants_move: bool = homeless or crowded or gs.rng.randf() < 0.25
 		if not wants_move:
 			continue
+		# Renta real de la familia: por persona, los niños pagan la fracción de niño (como _pay_housing).
+		var rent_units := 0.0
+		var employed := false
+		for m in members:
+			rent_units += 1.0 if m.age_years(gs.today()) >= int(GameData.citizens.get("adult_age", 16)) else float(GameData.citizens.get("child_cost_factor", 0.4))
+			if m.job_kind == "empleo":
+				employed = true
+		# Sin techo con sueldo: basta con un mes ahorrado (el sueldo paga lo demás); si no, dos.
+		var months_needed := 1.0 if (homeless or crowded) and employed else 2.0
+		# 0) Choza del pueblo con espacio (gratis): primero lo que ya existe.
+		if homeless or crowded:
+			var free_hut := _free_town_hut(gs, occ, size, head.home_id)
+			if not free_hut.is_empty():
+				for m in members:
+					m.home_id = int(free_hut["id"])
+				occ[int(free_hut["id"])] = int(occ.get(int(free_hut["id"]), 0)) + size
+				if not homeless:
+					occ[int(cur["id"])] = int(occ.get(int(cur["id"]), 0)) - size
+				moved = true
+				continue
 		var best: Dictionary = {}
 		var best_score := -INF
 		for b in gs.buildings:
@@ -244,8 +283,8 @@ static func monthly_housing(gs) -> void:
 			var q := home_quality(gs, b)
 			if not homeless and not crowded and q <= cur_q:
 				continue
-			var monthly_cost := float(b["rent"]) * size
-			if money < monthly_cost * 2.0:
+			var monthly_cost := float(b["rent"]) * rent_units * GridSim.home_value_mult(gs, b)
+			if money < monthly_cost * months_needed:
 				continue
 			var score := q * 10.0 - monthly_cost / maxf(1.0, money) * 20.0
 			if score > best_score:
@@ -261,8 +300,12 @@ static func monthly_housing(gs) -> void:
 		elif homeless or crowded:
 			# 3) Autoconstrucción de una choza con sus ahorros.
 			var cost: float = float(GameData.citizens.get("self_build_cost", 150)) * gs.price_mult()
-			if money >= cost and gs.rng.randf() < float(GameData.citizens.get("self_build_monthly_chance", 0.25)):
-				PopulationSim.pay_with(gs, members, cost)
+			var roll: float = gs.rng.randf()
+			var by_hand: bool = money < cost and roll < float(GameData.citizens.get("self_build_in_kind_chance", 0.08))
+			if (money >= cost and roll < float(GameData.citizens.get("self_build_monthly_chance", 0.25))) or by_hand:
+				if not by_hand:
+					PopulationSim.pay_with(gs, members, cost)
+					FlowSim.spend(gs, cost, "vivienda autoconstruida")   # Barro, paja y ayuda de vecinos: el dinero queda en el pueblo.
 				var hut := PopulationSim.create_hut(gs)
 				hut["owner"] = "ciudadano"
 				hut["owner_id"] = head.id
@@ -274,6 +317,18 @@ static func monthly_housing(gs) -> void:
 				EventBus.building_changed.emit(int(hut["id"]))
 	if moved:
 		EventBus.citizens_moved.emit()
+
+
+## Choza del pueblo (sin dueño) con camas libres para `size` personas (o {}).
+static func _free_town_hut(gs, occ: Dictionary, size: int, exclude: int) -> Dictionary:
+	for b in gs.buildings:
+		if str(b.get("type", "")) != "vivienda" or str(b.get("owner", "")) != "pueblo" or str(b["status"]) != "activo":
+			continue
+		if int(b["id"]) == exclude:
+			continue
+		if gs.building_capacity(b) - int(occ.get(int(b["id"]), 0)) >= size:
+			return b
+	return {}
 
 
 static func _try_buy_home(gs, members: Array, money: float, occ: Dictionary) -> bool:
