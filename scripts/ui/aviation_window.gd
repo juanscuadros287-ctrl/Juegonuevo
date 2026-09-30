@@ -86,7 +86,7 @@ func refresh() -> void:
 		f_from_iso = CountriesSim.active_id(gs) if ids.has(CountriesSim.active_id(gs)) else str(ids[0])
 	if f_to_iso == "" or not ids.has(f_to_iso):
 		f_to_iso = str(ids[1]) if ids.size() > 1 else f_from_iso
-	var intro := UIKit.label("Entre países la mercancía solo va por avión: propio (hangar) o vuelo comercial. Al llegar se paga el arancel del destino, convertido con el tipo de cambio. Dentro del país, los aviones vuelan entre aeropuertos con las rutas de Logística → Transporte (más rápidas que los camiones y más caras). El aeropuerto es un almacén grande: los camiones distribuyen desde ahí.", 13, UIKit.TEXT_DIM)
+	var intro := UIKit.label("Entre países la mercancía va por avión (propio o vuelo comercial) o por barco (panel Rutas: barco propio o naviera, más barato y más lento). Al llegar se paga el arancel del destino, convertido con el tipo de cambio. Dentro del país, los aviones vuelan entre aeropuertos con las rutas de Logística → Transporte (más rápidas que los camiones y más caras). El aeropuerto es un almacén grande: los camiones distribuyen desde ahí.", 13, UIKit.TEXT_DIM)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(intro)
 	if not gs.has_tech("aviacion"):

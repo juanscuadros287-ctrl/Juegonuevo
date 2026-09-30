@@ -103,7 +103,7 @@ static func _reason(type_id: String, kind: String) -> String:
 	var label := str(GameData.building_def(type_id).get("label", type_id))
 	match kind:
 		"carretera":
-			return "%s sin conexión: debe tocar una carretera (a menos de %d m de su borde) para sacar vehículos" % [label, int(cfg().get("road_reach", 6.0))]
+			return "%s sin conexión: debe tocar una carretera (a menos de %d m de su borde); los camiones asignados aquí no podrán salir" % [label, int(cfg().get("road_reach", 6.0))]
 		"riel":
 			return "%s sin conexión: su salida debe quedar junto a una vía férrea (traza una vía por puntos)" % label
 		"pista":

@@ -70,21 +70,28 @@ func _ready() -> void:
 	_hire(yard, 8)
 	var sail: Dictionary = LogisticsSim.buy_vehicle(gs, yard, "velero").get("vehicle", {})
 	var steam: Dictionary = LogisticsSim.buy_vehicle(gs, yard, "vapor_barco").get("vehicle", {})
+	print("puertos ", p1s, p2s, " astillero ", ys, " velero ", sail.get("name", LogisticsSim.buy_block_reason(gs, yard, "velero")))
 	# Carretera y camiones.
 	TransitSim.build_road(gs, _pv([[6, 6], [24, -8], [40, -28], [p1s.x - 22, p1s.y + 2]]), "cemento")
-	var dep := _place("deposito_camiones", 18, -22, 0.6, 2)
+	var dep := _place("deposito_camiones", 27, -22, 0.6, 2)
 	_hire(dep, 4)
 	var truck: Dictionary = LogisticsSim.buy_vehicle(gs, dep, "camion").get("vehicle", {})
+	print("camion ", truck.get("name", LogisticsSim.buy_block_reason(gs, dep, "camion")))
 	# Vía férrea, estaciones y cochera.
-	RailSim.build(gs, _pv([[-40, 58], [-58, 20], [-56, -20], [-40, -62]]))
+	print("via ", RailSim.build(gs, _pv([[-40, 58], [-58, 20], [-56, -20], [-40, -62]])), " carretera ", TransitSim.road_plan(gs, _pv([[6, 6], [24, -8], [40, -28]]), "cemento")["reason"])
 	var sa := _place("estacion_tren", -32, 60)
 	var wa := _place("almacen", -20, 62)
 	var sb := _place("estacion_tren", -32, -64)
 	var wb := _place("almacen", -20, -66)
-	var ct := _place("cochera_tren", -48, 2, PI * 0.5)
+	var rq := RailSim.nearest_point(gs, Vector2(-48, 2))
+	var ct := _place("cochera_tren", rq.x + 8.0, rq.y, PI * 0.5)
 	_hire(ct, 4)
 	var train: Dictionary = LogisticsSim.buy_vehicle(gs, ct, "tren_vapor").get("vehicle", {})
 	FleetSim.add_wagons(gs, int(train.get("id", -1)), "granelero", 2)
+	print("tren ", train.get("name", LogisticsSim.buy_block_reason(gs, ct, "tren_vapor")))
+	if sail.is_empty() or truck.is_empty() or train.is_empty():
+		get_tree().quit()
+		return
 	# Cargadores a pie.
 	var cen := _place("central_transporte", -14, 26)
 	_hire(cen, 4)
@@ -115,7 +122,7 @@ func _ready() -> void:
 	var mid := Vector2(p1s.x, p1s.y)
 	await _shot("puerto_barco.png", Vector3(mid.x + 4, 2, mid.y + 20), 70.0, 60.0)
 	# 3) Cochera de tren conectada y un tren saliendo.
-	await _shot("cochera_tren.png", Vector3(-50, 2, 2), 48.0, 250.0)
+	await _shot("cochera_tren.png", Vector3(float(ct["x"]) - 4.0, 2, float(ct["z"])), 50.0, 250.0)
 	# 4) Panel Rutas.
 	var win := RoutesWindow.open_in(world.hud)
 	win.start_wizard()
