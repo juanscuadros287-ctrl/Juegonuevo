@@ -91,13 +91,13 @@ etapas**, **preventa sobre planos**, **crédito constructor**, créditos con ban
 - **Ciudadanos**: nombre, edad, salud, habilidades, experiencia, educación, dinero, deudas, familia, felicidad, trabajo y vivienda. Envejecen, enferman, mueren, se casan, tienen hijos (la población solo crece por nacimientos) y emigran si son infelices. Gastan según prioridad (comida → agua → vivienda → energía → ocio) con billetera familiar.
 - **Tu personaje** envejece y puede morir (herencia en Fase 7).
 - **Interfaz**: barra superior, notificaciones, panel de ciudadano/vivienda (clic sobre personas o casas), lista de población, registro de notificaciones.
-- **Guardado/carga** (JSON en `user://saves/`) + autoguardado anual.
+- **Guardado**: 5 ranuras en la pantalla principal, autoguardado (cada 3 min, cada mes y al salir), escritura atómica con copias de respaldo y migraciones entre versiones (ver [docs/GUARDADO.md](docs/GUARDADO.md)).
 
 ## Controles
 | Acción | Tecla |
 |---|---|
 | Pausa / velocidades | Espacio · 1 real · 2 x1 · 3 x2 · 4 x3 · 5 salto de años |
-| Menú (guardar/cargar) | Esc |
+| Menú (guardar ahora, guardar y salir, cargar, opciones) | Esc |
 | Seleccionar persona o edificio | Clic izquierdo |
 | Construir/mover: girar / cancelar | R-T (15°), Shift+rueda (libre) / clic derecho o Esc |
 | Interior: rotar / zoom / salir | Q-E / rueda / Esc |
@@ -106,10 +106,16 @@ etapas**, **preventa sobre planos**, **crédito constructor**, créditos con ban
 1. Instala **Godot 4.3+** (versión estándar, no .NET).
 2. Abre `project.godot` y presiona F5.
 
-## Exportar a macOS (Apple Silicon)
-1. Godot → *Editor → Manage Export Templates* → descargar.
-2. *Project → Export…* → preset **macOS** (universal, firma ad‑hoc) → *Export Project* → `build/Dinastia.zip`.
-3. Primera apertura en Mac: clic derecho → *Abrir* (app sin notarizar).
+## Partidas guardadas
+Al abrir el juego aparece la pantalla principal con **5 ranuras** (continuar, nueva, renombrar, borrar
+y «Continuar última partida»). La partida se guarda sola en su ranura. Las partidas viven fuera de
+la app (`~/Library/Application Support/Dinastía/` en Mac), así que actualizar el juego no las toca;
+si el formato cambia, se migran solas con copia de respaldo. Detalles: [docs/GUARDADO.md](docs/GUARDADO.md).
+
+## Exportar a macOS (doble clic)
+`godot --headless --export-release "macOS" build/Dinastia_macOS.zip` (necesita las export templates
+de Godot 4.3). Instalar: descomprimir, mover a Aplicaciones y la primera vez clic derecho → *Abrir*.
+Paso a paso en [docs/INSTALAR_MAC.md](docs/INSTALAR_MAC.md). Icono: `python3 tools/make_icon.py`.
 
 ## Estructura (contenido modular)
 ```
@@ -125,6 +131,7 @@ Para agregar contenido basta con editar los JSON de `data/` — `businesses.json
 ## Pruebas
 ```
 godot --headless res://tests/test_runner.tscn   # pruebas de simulación, guardado, mapas y salto x4
+godot --headless res://tests/test_guardado.tscn # ranuras, autoguardado, copias, migraciones, importación
 godot --headless res://tests/balance.tscn       # diagnóstico demográfico a 40 años
 godot --headless res://tests/ui_smoke.tscn      # abre todos los paneles de la interfaz
 godot --headless res://tests/economy_diag.tscn  # inflación y precios a 30 años

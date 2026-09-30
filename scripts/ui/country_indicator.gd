@@ -7,6 +7,12 @@ extends Button
 signal view_change(iso: String)
 
 var _t := 0.0
+## Barra estrecha: solo el código del país (p. ej. "COL"); el nombre completo va en el tooltip.
+var compact := false:
+	set(v):
+		if v != compact:
+			compact = v
+			refresh()
 
 
 func _ready() -> void:
@@ -52,5 +58,8 @@ func refresh() -> void:
 		text += " · viendo %s%s" % [CountriesSim.country_label(act), "" if ManagerSim.has_manager(gs, act) else " (remoto)"]
 		col = Color(0.95, 0.7, 0.4)
 	add_theme_color_override("font_color", col)
+	var full := text
+	if compact:
+		text = ("✈ " if TravelSim.traveling(gs) else "") + loc + ("*" if act != loc else "")
 	var n := CountriesSim.presence_ids(gs).size()
-	tooltip_text = "País donde está tu personaje. Presencia en %d país%s. Clic: mapa mundial y Mis países." % [n, "" if n == 1 else "es"]
+	tooltip_text = (full + "\n" if compact else "") + "País donde está tu personaje. Presencia en %d país%s. Clic: mapa mundial y Mis países." % [n, "" if n == 1 else "es"]
