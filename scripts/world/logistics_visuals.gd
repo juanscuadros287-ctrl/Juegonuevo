@@ -27,6 +27,7 @@ var _place_root: Node3D     # flechas del modo construir/mover
 var _place_text := ""
 var _deposit_nodes := {}    # id -> Node3D
 var _agents := {}           # clave de envío -> Array[Node3D]
+var _agent_paths := {}      # clave de envío -> {path, cum, total, garage}  (camino real y salida del garaje)
 var _show_deposits := true
 var _timer := 0.0
 # Modo carretera
@@ -55,6 +56,9 @@ func setup(p_world: Node3D) -> void:
 	rebuild_deposits()
 	rebuild_roads()
 	rebuild_links()
+	var rv := RouteVisuals.new()   # Rutas de colores, vías férreas y barcos (docs/RUTAS_BARCOS.md).
+	add_child(rv)
+	rv.setup(world)
 	EventBus.day_passed.connect(_on_day)
 	EventBus.building_changed.connect(func(_id):
 		_update_deposit_visibility()
@@ -287,6 +291,11 @@ static func link_ghost_mat() -> StandardMaterial3D:
 	return _flat_mat("ghost_ok", Color(0.1, 1.0, 0.25), 0.62)
 
 
+## Ghost rojo: garaje sin conexión a su red (no podrá sacar vehículos).
+static func garage_red_mat() -> StandardMaterial3D:
+	return _flat_mat("ghost_red", Color(1.0, 0.2, 0.15), 0.55)
+
+
 ## Ghost ámbar: posición válida pero SIN almacén al lado.
 static func nolink_ghost_mat() -> StandardMaterial3D:
 	return _flat_mat("ghost_nolink", Color(1.0, 0.72, 0.15), 0.5)
@@ -426,6 +435,30 @@ func placement_feedback(type_id: String, pos: Vector3, ignore_id: int, ok: bool,
 	var p := Vector2(pos.x, pos.z)
 	_place_root = Node3D.new()
 	add_child(_place_root)
+	if GarageSim.is_garage_type(type_id):
+		# Rutas y barcos: garaje conectado a su red (verde) o desconectado (rojo), como el vínculo de almacén.
+		var lvl := int(gs.get_building(ignore_id).get("level", 1)) if ignore_id >= 0 else 1
+		var c := GarageSim.connection(gs, type_id, pos.x, pos.z, lvl, ignore_id)
+		if bool(c["ok"]):
+			_place_root.add_child(_link_line(p, c["point"], _flat_mat("green", LINK_GREEN)))
+			_place_text = "   ✔ " + str(c["text"])
+			return link_ghost_mat() if ok else fallback
+		var fp := GameData.footprint(type_id, lvl)
+		var ring := _ring(fp * 0.62, "red", LINK_RED)
+		ring.position = Vector3(p.x, _h(p.x, p.y) + 0.15, p.y)
+		_place_root.add_child(ring)
+		_place_text = "   ✖ " + str(c["reason"])
+		return garage_red_mat() if ok else fallback
+	if ShipSim.is_port_type(type_id) and ok:
+		_place_text = "   ✔ Toca el agua: construye almacenes al lado (a menos de %d m) para la carga de los barcos" % int(GameData.extra("rutas").get("port_reach", 12))
+		return link_ghost_mat()
+	if WarehouseSim.type_is_warehouse(type_id):
+		for pb in ShipSim.ports(gs):
+			var pp := Vector2(float(pb["x"]), float(pb["z"]))
+			if WarehouseSim.edge_gap(p, WarehouseSim.half_size(type_id), pp, gs.footprint_of(pb) * 0.5) <= float(GameData.extra("rutas").get("port_reach", 12.0)):
+				_place_root.add_child(_link_line(p, pp, _flat_mat("green", LINK_GREEN)))
+				_place_text = "   ✔ Almacén del puerto «%s»: los barcos cargan y descargan aquí" % gs.building_label(pb)
+				return link_ghost_mat() if ok else fallback
 	if WarehouseSim.type_linkable(type_id):
 		var n := WarehouseSim.nearest_for(gs, type_id, pos.x, pos.z, ignore_id)
 		if not n.is_empty():
@@ -476,17 +509,28 @@ func _sync_agents() -> void:
 		live[k] = s
 		if not _agents.has(k):
 			var arr := []
-			for i in range(mini(int(s["carriers"]), MAX_AGENTS_PER_SHIPMENT)):
-				var m := _carrier_model(str(s["mode"]))
-				m.visible = false
-				_agents_root.add_child(m)
-				arr.append(m)
+			var mode := str(s["mode"])
+			if RouteSim.family(mode) == "riel":
+				var v := LogisticsSim.get_vehicle(GameState, int((s.get("vehicles", []) as Array)[0]) if not (s.get("vehicles", []) as Array).is_empty() else -1)
+				for part in RouteVisuals.train_parts(mode, VehicleCatalog.comp_of(v) if not v.is_empty() else VehicleCatalog.default_comp()):
+					part.visible = false
+					_agents_root.add_child(part)
+					arr.append(part)
+			else:
+				for i in range(mini(int(s["carriers"]), MAX_AGENTS_PER_SHIPMENT)):
+					var look: String = {"caballo": "mula", "camion_pesado": "camion", "jet_carga": "avion"}.get(mode, mode)
+					var m := RouteVisuals.ship_model(mode) if RouteSim.family(mode) == "agua" else _carrier_model(look)
+					m.visible = false
+					_agents_root.add_child(m)
+					arr.append(m)
 			_agents[k] = arr
+			_agent_paths[k] = _agent_path(s)
 	for k in _agents.keys():
 		if not live.has(k):
 			for m in _agents[k]:
 				m.queue_free()
 			_agents.erase(k)
+			_agent_paths.erase(k)
 	set_meta("live", live)
 
 
@@ -582,26 +626,112 @@ func _process(delta: float) -> void:
 		var s: Dictionary = live.get(k, {})
 		if s.is_empty():
 			continue
-		var travel := maxf(0.001, float(s["travel"]))
-		var t := now - float(s["depart"])
-		var leg := int(floor(t / travel))
-		var models: Array = _agents[k]
-		if t < 0.0 or leg >= 2 * int(s["trips"]):
-			for m in models:
-				m.visible = false
-			continue
-		var frac := fposmod(t, travel) / travel
-		var a := Vector2(float(s["ax"]), float(s["az"]))
-		var b := Vector2(float(s["bx"]), float(s["bz"]))
-		var going := leg % 2 == 0
-		var p := a.lerp(b, frac) if going else b.lerp(a, frac)
-		var dir := (b - a) if going else (a - b)
-		var side := Vector2(-dir.y, dir.x).normalized()
+		_place_agents(k, s, now)
+
+
+# --- Rutas y barcos: salida del garaje, camino real, pausa de descarga y regreso ------------------------
+
+## Camino real del envío (carretera, riel, agua o recto) y la salida del garaje de donde parte.
+func _agent_path(s: Dictionary) -> Dictionary:
+	var gs = GameState
+	var a := Vector2(float(s["ax"]), float(s["az"]))
+	var b := Vector2(float(s["bx"]), float(s["bz"]))
+	var path := PackedVector2Array([a, b])
+	if LogisticsSim.endpoint_valid(gs, int(s["from"])) and LogisticsSim.endpoint_valid(gs, int(s["to"])):
+		var p := RouteSim.path_for(gs, int(s["from"]), int(s["to"]), str(s["mode"]), s.get("stops", []))
+		if p.size() >= 2:
+			path = p
+	var gar := Vector2.INF
+	var gb: Dictionary = gs.get_building(int(s.get("garage", -1)))
+	if not gb.is_empty():
+		gar = FleetSim.exit_point(gs, gb, str(s["mode"]))   # Sale por la puerta de su compañía (su parqueadero).
+	var cum := TransitSim.poly_cum(path)
+	return {"path": path, "cum": cum, "total": cum[cum.size() - 1], "garage": gar}
+
+
+## Posición de los modelos de un envío. Cada tramo (ida o vuelta) = pausa de carga en la puerta, viaje por
+## el camino real y entrada al destino (descarga, oculto). El primer tramo sale de la puerta del garaje y el
+## último vuelve a entrar en él.
+func _place_agents(k: String, s: Dictionary, now: float) -> void:
+	var models: Array = _agents[k]
+	var info: Dictionary = _agent_paths.get(k, {})
+	if info.is_empty():
+		info = _agent_path(s)
+		_agent_paths[k] = info
+	var travel := maxf(0.001, float(s["travel"]))
+	var t := now - float(s["depart"])
+	var legs := 2 * int(s["trips"])
+	var leg := int(floor(t / travel))
+	if t < 0.0 or leg >= legs:
+		for m in models:
+			m.visible = false
+		return
+	var frac := fposmod(t, travel) / travel
+	var dw := float(GameData.extra("rutas").get("dwell", 0.12))
+	var path: PackedVector2Array = info["path"]
+	var cum: PackedFloat32Array = info["cum"]
+	var total := float(info["total"])
+	var going := leg % 2 == 0
+	var mode := str(s["mode"])
+	var fam := RouteSim.family(mode)
+	var gar: Vector2 = info["garage"]
+	var pos := Vector2.ZERO
+	var dir := Vector2(0, 1)
+	var show := true
+	var move_u := -1.0
+	var start_pt: Vector2 = path[0] if going else path[path.size() - 1]
+	if frac < dw:
+		if leg == 0 and gar != Vector2.INF:
+			pos = gar.lerp(start_pt, frac / dw)   # Sale por la puerta del garaje.
+			dir = start_pt - gar
+		else:
+			show = false   # Cargando adentro.
+	elif frac > 1.0 - dw:
+		var end_pt: Vector2 = path[path.size() - 1] if going else path[0]
+		if leg == legs - 1 and gar != Vector2.INF:
+			pos = end_pt.lerp(gar, (frac - (1.0 - dw)) / dw)   # Vuelve a entrar al garaje.
+			dir = gar - end_pt
+		else:
+			show = false   # Entró al destino: descarga con una pausa.
+	else:
+		move_u = (frac - dw) / (1.0 - 2.0 * dw)
+		var d := total * move_u if going else total * (1.0 - move_u)
+		pos = TransitSim.poly_point(path, cum, d)
+		var ahead := TransitSim.poly_point(path, cum, clampf(d + (1.0 if going else -1.0), 0.0, total))
+		dir = ahead - pos
+		if dir.length() < 0.01:
+			dir = (path[path.size() - 1] - path[0]) * (1.0 if going else -1.0)
+	var yaw := atan2(dir.x, dir.y)
+	if fam == "riel" and move_u >= 0.0:
+		# Cada vagón sigue la vía detrás de la locomotora.
+		var d0 := total * move_u if going else total * (1.0 - move_u)
 		for i in range(models.size()):
 			var m: Node3D = models[i]
-			var q := p + side * (i - (models.size() - 1) * 0.5) * 1.6 - dir.normalized() * i * 1.2
-			m.position = Vector3(q.x, _h(q.x, q.y), q.y)
-			if str(s["mode"]) == "avion":   # Fase 10: sube, cruza y aterriza.
-				m.position.y += 4.0 + 36.0 * sin(PI * clampf(frac, 0.0, 1.0))
-			m.rotation.y = atan2(dir.x, dir.y)
+			var di := clampf(d0 - (5.8 * i if going else -5.8 * i), 0.0, total)
+			var q := TransitSim.poly_point(path, cum, di)
+			var qa := TransitSim.poly_point(path, cum, clampf(di + (1.0 if going else -1.0), 0.0, total))
+			m.position = Vector3(q.x, _h(q.x, q.y) + 0.3, q.y)
+			if qa.distance_to(q) > 0.01:
+				m.rotation.y = atan2(qa.x - q.x, qa.y - q.y)
 			m.visible = true
+		return
+	for i in range(models.size()):
+		var m: Node3D = models[i]
+		if not show:
+			m.visible = false
+			continue
+		var side := Vector2(-dir.y, dir.x).normalized()
+		var q := pos
+		if fam != "riel":
+			q = pos + side * (i - (models.size() - 1) * 0.5) * 1.6 - dir.normalized() * i * 1.2
+		elif i > 0:
+			q = pos - dir.normalized() * 5.8 * i
+		m.position = Vector3(q.x, _h(q.x, q.y), q.y)
+		if fam == "aire" and move_u >= 0.0:   # Despega, cruza y aterriza.
+			m.position.y += 4.0 + 36.0 * sin(PI * clampf(move_u, 0.0, 1.0))
+		elif fam == "agua":
+			m.position.y = maxf(m.position.y, _terrain().water_level + 0.15) if _terrain() else m.position.y
+		elif mode == "pie":
+			m.position.y += absf(sin(now * 900.0 + i)) * 0.08   # Paso con la carga a la espalda.
+		m.rotation.y = yaw
+		m.visible = true

@@ -241,10 +241,10 @@ static func on_vehicle_bought(gs, st: Dictionary, v: Dictionary = {}) -> void:
 static func vehicle_count(gs, st: Dictionary) -> int:
 	if bool(gs.building_def(st).get("bus_company", false)):
 		return TransitSim.buses_of(gs, int(st["id"])).size()
-	var n := 0
+	var n := LogisticsSim.vehicles_of(gs, int(st["id"])).size()   # Rutas y barcos: vehículos de cualquier compañía (compra central).
 	for m in gs.level_def(st).get("transport_modes", []):
 		if LogisticsSim.is_vehicle(str(m)):
-			n += LogisticsSim.included_at(gs, st, str(m)) + LogisticsSim.vehicles_of(gs, int(st["id"]), str(m)).size()
+			n += LogisticsSim.included_at(gs, st, str(m))
 	return n
 
 
