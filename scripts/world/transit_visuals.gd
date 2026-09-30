@@ -440,6 +440,10 @@ func _label() -> String:
 			return "Vía férrea a %s" % str(TradeSim.town(GameState, trace_arg).get("name", ""))
 		"stop":
 			return "Paradero de bus"
+		"rail":
+			return "Vía férrea"
+		"rail_erase":
+			return "Borrar vía férrea"
 		_:
 			return "Borrar carretera o paradero"
 
@@ -460,7 +464,7 @@ func set_hover(pos: Vector2) -> void:
 			_ghost.position = Vector3(_hover.x, _h(_hover.x, _hover.y), _hover.y)
 			add_child(_ghost)
 			_hint = "Paradero de bus — %s   %s   (clic coloca · clic derecho/Esc termina)" % [Fmt.money(TransitSim.stop_cost(gs)), "✔" if _hover_ok else why]
-		"erase":
+		"erase", "rail_erase":
 			_hover_ok = true
 			_ghost = MeshLib.mesh_node(MeshLib.cylinder(3.5, 3.5, 0.2, 16), MeshLib.ghost_mat(false), Vector3(_hover.x, _h(_hover.x, _hover.y) + 0.2, _hover.y))
 			add_child(_ghost)
@@ -474,6 +478,8 @@ func set_hover(pos: Vector2) -> void:
 				var plan: Dictionary
 				if trace_kind == "road":
 					plan = TransitSim.road_plan(gs, pts, trace_arg)
+				elif trace_kind == "rail":
+					plan = RailSim.plan(gs, pts)   # Rutas y barcos: vía férrea interna para trenes.
 				else:
 					plan = TransitSim.trade_plan(gs, trace_arg, pts, trace_kind == "trade_rail")
 				var reason := str(plan["reason"])
@@ -482,7 +488,7 @@ func set_hover(pos: Vector2) -> void:
 				if line.size() < 2:
 					line = pts
 				var gm := MeshLib.ghost_mat(_hover_ok)
-				if trace_kind == "trade_rail":
+				if trace_kind == "trade_rail" or trace_kind == "rail":
 					_ghost = rail_node(t, line, 0.0, -1.0, gm)
 				else:
 					_ghost = _road_strip(t, line, trace_arg if trace_kind == "road" else "barro", gm)
@@ -490,7 +496,9 @@ func set_hover(pos: Vector2) -> void:
 					_ghost.add_child(MeshLib.mesh_node(MeshLib.cached("trace_dot", func(): return MeshLib.cylinder(0.5, 0.5, 0.6, 8)), MeshLib.ghost_mat(true), Vector3(p.x, _h(p.x, p.y) + 0.3, p.y)))
 				add_child(_ghost)
 				var info := ""
-				if trace_kind == "road":
+				if trace_kind == "rail":
+					info = "%d m · %s%s" % [int(float(plan["length"])), Fmt.money(float(plan["cost"])), " · puente %d m" % int(float(plan["bridge"])) if float(plan["bridge"]) > 0.5 else ""]
+				elif trace_kind == "road":
 					var c: Dictionary = plan["cost"]
 					info = "%d m · %s%s%s" % [int(float(plan["length"])), Fmt.money(float(c.get("total", 0.0))),
 						" (%d piedra)" % int(c.get("stone", 0.0)) if float(c.get("stone", 0.0)) > 0.0 else "",
@@ -527,6 +535,12 @@ func add_point() -> void:
 				_rebuild_stops()
 				_sync_buses()
 			return
+		"rail_erase":
+			var rm := RailSim.erase_at(gs, _hover)
+			_toast(rm if rm != "" else "No hay vía férrea ahí.", "construccion" if rm != "" else "jugador")
+			if RouteVisuals.instance:
+				RouteVisuals.instance.refresh()
+			return
 		"erase":
 			var msg := TransitSim.erase_at(gs, _hover)
 			_toast(msg if msg != "" else "No hay carretera ni paradero ahí.", "construccion" if msg != "" else "jugador")
@@ -549,12 +563,18 @@ func remove_last_point() -> void:
 
 ## Termina el trazado: construye con los puntos puestos (si hay menos de dos, cancela).
 func finish() -> void:
-	if trace_kind in ["stop", "erase"] or _points.size() < 2:
+	if trace_kind in ["stop", "erase", "rail_erase"] or _points.size() < 2:
 		cancel_trace()
 		return
 	var gs = GameState
 	var err := ""
 	match trace_kind:
+		"rail":
+			err = RailSim.build(gs, _points)
+			if err == "":
+				_toast("Vía férrea construida.", "construccion")
+				if RouteVisuals.instance:
+					RouteVisuals.instance.refresh()
 		"road":
 			err = TransitSim.build_road(gs, _points, trace_arg)
 			if err == "":

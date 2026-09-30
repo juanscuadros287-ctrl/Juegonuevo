@@ -49,3 +49,41 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
 - Los apartamentos se venden **1 a 1 según la demanda**; al vender, la unidad (y su parte del terreno) pasa a ser propiedad del comprador. Casas vendidas: el terreno queda del comprador.
 - Se puede volver a comprar cualquier terreno o propiedad **negociando con su dueño**, como en la vida real: unos piden muy alto, otros bajo y otros no quieren vender (personalidad, apego, necesidad de dinero, valor de mercado).
 - Aplica a todos los terrenos (Estado, particulares, empresas).
+
+## I. Jugabilidad (pedido del usuario, tras las tandas actuales)
+- **Misiones guía (ligeras, no hostigantes):** 5–8 misiones opcionales ("primera fábrica", "primer contrato", "primer vehículo"...), panel pequeño plegable, se pueden ocultar; pequeña recompensa. Sin pop-ups forzados.
+- **Rivales con personalidad (moderado):** 3–5 magnates NPC con carácter (agresivo/prudente/corrupto); guerras de precios, ofertas de compra, alianzas ocasionales; ranking de fortunas. Frecuencia baja.
+- **Eventos y crisis con decisiones (moderado):** huelga, incendio, escándalo, oportunidad única, expropiación… 2–3 opciones con consecuencias; pocos al año.
+- **Reputación y marca:** por empresa y de la familia; afecta ventas, créditos, política, matrimonios. Sube/baja con calidad, sobornos, trato laboral, contaminación.
+- **Publicidad y marketing por época y según investigación:** voceador/carteles → periódico → radio → TV → internet/redes; cada medio se desbloquea con puntos de laboratorio. Sube demanda de productos.
+- **Estadísticas históricas e informe anual:** fortuna por generación, árbol familiar, logros de cada heredero.
+- **Escenarios de inicio (se elige al crear partida):** empezar pobre, heredar empresa quebrada, otro país, otra época.
+- **Dificultad configurable y logros.**
+
+## J. Dinastía, sociedad y experiencia (pedido del usuario)
+- **Educación de herederos:** colegio, universidad, aprendiz en empresas propias; mejora habilidades de gestión del heredero.
+- **Filantropía:** fundaciones, becas, donaciones al pueblo → reputación y apoyo político.
+- **Lujo y estilo de vida:** mansión, arte, joyas, fiestas → estatus social, mejores matrimonios; costo de mantenimiento.
+- **Subastas:** terrenos, empresas quebradas, piezas únicas (esmeraldas famosas).
+- **Medios propios:** periódico → radio → TV (por época/investigación); publicidad barata e influencia política.
+- **Crimen organizado (moderado):** extorsión a negocios; se mitiga con seguridad privada o policía financiada.
+- **Modo foto y cámara libre.**
+- **Velocidades con pausa automática** ante eventos importantes (configurable).
+- **Legado final:** puntaje de la dinastía al terminar y museo familiar.
+
+## K. Negocios avanzados y sociedad (pedido del usuario)
+- **Contabilidad por empresa:** estado de resultados y balance general; alertas de empresas en pérdida.
+- **Adquisiciones y fusiones:** comprar acciones o empresas completas de rivales; fusionar o dividir las propias.
+- **Franquicias:** terceros abren negocios con tu marca, pagas/cobras regalías.
+- **Patentes:** registrar inventos del laboratorio, licenciarlos (cobro), demandar copias.
+- **Abogados y juicios:** demandas laborales, disputas de contratos, defensa en escándalos.
+- **Salud y ánimo de empleados:** accidentes, seguridad laboral, productividad según condiciones.
+- **Migración:** gente llega o se va de los pueblos según empleo y calidad de vida.
+- **Turismo:** hoteles, atracciones, visitantes extranjeros (compradores de esmeraldas).
+- **Consejero/asistente:** personaje que sugiere oportunidades y riesgos a pedido (no invasivo).
+
+## L. Variedad de vehículos y vagones (pedido del usuario, próxima tanda)
+- Cada modelo con propiedades distintas: especialidad (refrigerado, granel, líquidos, pasajeros, lujo, todoterreno…), capacidad, velocidad, consumo, mantenimiento, durabilidad.
+- Varios modelos por tipo y época (carretas, camiones, trenes/locomotoras, vagones, barcos, aviones), desbloqueados por investigación; tradeoffs reales (rápido pero poca carga, etc.).
+- Diseño 3D único y textura personalizada para cada modelo y vagón.
+- Rendimiento: LOD e instancing para que más detalle no cueste FPS.

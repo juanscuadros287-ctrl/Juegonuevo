@@ -135,7 +135,7 @@ personaje en él y todos sus edificios y ciudadanos marcados con ese `country_id
   `mis_paises.png`, `aviacion.png`, `avion_en_ruta.png`, `vista_remota_peru.png`.
 
 ## Límites conocidos
-- El puerto como vía de carga entre países (opcional) no está: entre países solo avión.
+- ~~El puerto como vía de carga entre países~~: hecho en docs/RUTAS_BARCOS.md — entre países la carga va por avión **o barco** (más barato y más lento, mismo arancel y tipo de cambio).
 - La vista remota sin gerente bloquea construir y comprar terreno; otras órdenes (precios, contratar) siguen
   disponibles en los paneles.
 - El efectivo y el IVA (Sección E, `informal`) son globales: el IVA de las ventas en otro país lo cobra el gobierno
