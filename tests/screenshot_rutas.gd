@@ -84,7 +84,7 @@ func _ready() -> void:
 	var ct := _place("cochera_tren", -48, 2, PI * 0.5)
 	_hire(ct, 4)
 	var train: Dictionary = LogisticsSim.buy_vehicle(gs, ct, "tren_vapor").get("vehicle", {})
-	GarageSim.add_wagon(gs, int(train.get("id", -1)))
+	FleetSim.add_wagons(gs, int(train.get("id", -1)), "granelero", 2)
 	# Cargadores a pie.
 	var cen := _place("central_transporte", -14, 26)
 	_hire(cen, 4)
@@ -124,6 +124,12 @@ func _ready() -> void:
 	win.wizard_set("to", int(wb["id"]))
 	win.refresh()
 	await _shot("panel_rutas.png", Vector3(4, 3, 0), 190.0, 20.0)
+	win.b_tipo = "tren"
+	win.b_mode = "tren_vapor"
+	win.b_company = int(ct["id"])
+	win.b_comp = {"granelero": 3, "cerrado": 2, "cisterna": 1}
+	win.show_tab("vehicles")
+	await _shot("panel_vehiculos.png", Vector3(4, 3, 0), 190.0, 20.0)
 	win.close()
 	# 5) Garaje en rojo desconectado (depósito de camiones lejos de la carretera).
 	var gp := Vector3(-10, 0, -40)
@@ -150,4 +156,4 @@ func _shot(file: String, target: Vector3, dist: float, yaw: float) -> void:
 		await get_tree().process_frame
 	var path := "%s/%s" % [out, file]
 	get_viewport().get_texture().get_image().save_png(path)
-	print("captura guardada en ", path)
+	print("captura guardada en ", path, " t=", Time.get_ticks_msec())

@@ -1,13 +1,13 @@
 class_name FleetTab
 extends RefCounted
-## Flota de una estación de transporte (Central de transporte, Caballeriza, Depósito de camiones,
-## Hangar): comprar y vender vehículos individuales, surtidor de combustible y estado de cada
-## vehículo. La usan el panel de Logística (pestaña Transporte) y el panel de edificio
-## (pestaña "Vehículos"). `on_change` se llama después de comprar/vender para refrescar.
+## Vehículos de una compañía (pestaña "Vehículos" del edificio y panel de Logística). Rutas y barcos
+## (docs/RUTAS_BARCOS.md): la compra, la venta y la asignación se hacen en el panel central «Vehículos»;
+## aquí se ven los vehículos que tienen su parqueadero en este negocio, su cupo (módulo Flota), el
+## surtidor de combustible y un botón para abrir el panel. `on_change` refresca tras un cambio.
 
 
 static func applies(gs, b: Dictionary) -> bool:
-	return gs.owned_by_player(b) and gs.level_def(b).has("transport_modes")
+	return gs.owned_by_player(b) and (gs.level_def(b).has("transport_modes") or not LogisticsSim.vehicles_of(gs, int(b["id"])).is_empty())
 
 
 static func build(gs, st: Dictionary, hud, on_change: Callable) -> Control:
@@ -15,53 +15,27 @@ static func build(gs, st: Dictionary, hud, on_change: Callable) -> Control:
 	v.add_theme_constant_override("separation", 4)
 	var sid := int(st["id"])
 	var ld: Dictionary = gs.level_def(st)
-	var modes: Array = ld.get("transport_modes", [])
 	var crew := LogisticsSim.crew_size(gs, st)
-	var head := "%s (%s) — %d empleados" % [gs.building_label(st), str(ld.get("label", "")), crew]
-	if LogisticsSim.garage_capacity(gs, st) > 0:
-		head += " · %d/%d vehículos comprados" % [LogisticsSim.bought_vehicles(gs, st), LogisticsSim.garage_capacity(gs, st)]
-	v.add_child(UIKit.label(head, 14, UIKit.ACCENT))
+	v.add_child(UIKit.label("%s (%s) — %d empleados · %d vehículos" % [gs.building_label(st), str(ld.get("label", "")), crew, LogisticsSim.vehicles_of(gs, sid).size()], 14, UIKit.ACCENT))
 	if str(st.get("status", "")) != "activo":
 		v.add_child(UIKit.label("En obra: aún no opera.", 12, UIKit.TEXT_DIM))
-	var conn := GarageSim.status_text(gs, st)   # Rutas y barcos: garaje conectado a su red.
-	if conn != "":
-		var cl := UIKit.rich()
-		cl.fit_content = true
-		cl.text = conn
-		v.add_child(cl)
-	var pm: float = gs.price_mult()
-	for m in modes:
+	var caps := []
+	for t in FleetSim.fleet_types(gs, st):
+		var lim := FleetSim.fleet_limit(gs, st, str(t))
+		if lim > 0:
+			caps.append("%s %d/%d" % [VehicleCatalog.tipo_label(str(t)).to_lower(), FleetSim.used(gs, st, str(t)), lim])
+	if not caps.is_empty():
+		v.add_child(_note("Cupos del parqueadero (módulo Flota): " + " · ".join(caps)))
+	for m in ld.get("transport_modes", []):
 		var mode := str(m)
-		var md := LogisticsSim.mode_def(mode)
 		if not LogisticsSim.is_vehicle(mode):
-			v.add_child(_note("%s: %d disponibles (cada empleado lleva %d u. por viaje)." % [LogisticsSim.mode_label(mode), crew, int(md.get("capacity", 10))]))
-			continue
-		var inc := LogisticsSim.included_at(gs, st, mode)
-		if inc > 0:
-			v.add_child(_note("%s incluidos con el nivel: %d (%d u./viaje)." % [LogisticsSim.mode_label(mode), inc, int(md.get("capacity", 0))]))
-		if str(st.get("type", "")) != LogisticsSim.mode_base(mode):
-			continue
-		var cost_txt := "%s %s/día" % ["alimento" if bool(md.get("animal", false)) else "mant.", Fmt.money2(float(md.get("upkeep", 0.0)) * pm)]
-		if float(md.get("fuel_per_km", 0.0)) > 0.0:
-			cost_txt += " · combustible %s/km" % Fmt.money2(float(md["fuel_per_km"]) * pm)
-		var row := HBoxContainer.new()
-		if int(md.get("crew", 1)) > 1:
-			cost_txt += " · tripulación %d" % int(md["crew"])
-		var l := UIKit.label("%s: %d u./viaje · %s%s" % [str(md.get("unit", mode)), int(md.get("capacity", 0)), cost_txt,
-				" · PREVISTO (fase posterior)" if LogisticsSim.is_planned(mode) else ""], 13)
-		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		row.add_child(l)
-		var reason := LogisticsSim.buy_block_reason(gs, st, mode)
-		var btn := UIKit.button("Comprar (%s)" % Fmt.money(LogisticsSim.vehicle_price(gs, mode)), func():
-			var r := LogisticsSim.buy_vehicle(GameState, GameState.get_building(sid), mode)
-			if hud:
-				hud.toast(str(r["error"]) if r.has("error") else "Compraste: %s." % str(r["vehicle"]["name"]), "jugador" if r.has("error") else "negocio")
-			on_change.call(), 140)
-		btn.disabled = reason != ""
-		btn.tooltip_text = reason
-		row.add_child(btn)
-		v.add_child(row)
+			v.add_child(_note("%s: %d disponibles (cada empleado lleva %d u. por viaje)." % [LogisticsSim.mode_label(mode), crew, int(LogisticsSim.mode_def(mode).get("capacity", 10))]))
+		elif LogisticsSim.included_at(gs, st, mode) > 0:
+			v.add_child(_note("%s incluidos con el nivel: %d." % [LogisticsSim.mode_label(mode), LogisticsSim.included_at(gs, st, mode)]))
+	var open := UIKit.primary(UIKit.button("Comprar, vender y asignar en el panel Vehículos", func():
+		if hud and hud.get("root"):
+			RoutesWindow.open_in(hud, "vehicles")))
+	v.add_child(open)
 	if LogisticsSim.fuel_pump_price(gs, st) > 0.0:
 		if bool(st.get("fuel_pump", false)):
 			v.add_child(_note("Surtidor propio instalado: combustible %d%% más barato." % int(LogisticsSim.fuel_discount(gs, st) * 100.0)))
@@ -76,35 +50,16 @@ static func build(gs, st: Dictionary, hud, on_change: Callable) -> Control:
 			v.add_child(pb)
 	var now: float = float(gs.today()) + TimeManager.hour_float() / 24.0
 	for veh in LogisticsSim.vehicles_of(gs, sid):
-		var vid := int(veh["id"])
-		var row := HBoxContainer.new()
-		var busy := LogisticsSim.vehicle_busy(gs, vid, now)
-		var rnames := []
-		for r in LogisticsSim.routes(gs):
-			if int(r.get("vehicle", -1)) == vid:
-				rnames.append("%s→%s" % [LogisticsSim.endpoint_label(gs, int(r["from"])).get_slice(" (", 0), LogisticsSim.endpoint_label(gs, int(r["to"])).get_slice(" (", 0)])
-		var l := UIKit.label("• %s — %s · %d viajes · %.1f km%s" % [str(veh["name"]), "de viaje" if busy else "libre", int(veh.get("trips", 0)), float(veh.get("km", 0.0)),
-				" · rutas: " + ", ".join(rnames) if not rnames.is_empty() else " · sin ruta"], 13, Color(0.95, 0.8, 0.45) if busy else Color(0.75, 0.95, 0.75))
-		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		l.clip_text = true
-		row.add_child(l)
-		var sell := UIKit.button("Vender", func():
-			var err := LogisticsSim.sell_vehicle(GameState, vid)
-			if hud:
-				hud.toast(err if err != "" else "Vehículo vendido (40 % de su precio).", "jugador" if err != "" else "negocio")
-			on_change.call(), 70)
-		sell.disabled = busy
-		if LogisticsSim.mode_def(str(veh["mode"])).has("wagon_capacity"):
-			var wb := UIKit.button("+ vagón (%s) · %d u." % [Fmt.money(GarageSim.wagon_price(gs, str(veh["mode"]))), int(LogisticsSim.vehicle_capacity(gs, veh))], func():
-				var err := GarageSim.add_wagon(GameState, vid)
-				if hud:
-					hud.toast(err if err != "" else "Vagón agregado.", "jugador" if err != "" else "negocio")
-				on_change.call(), 150)
-			wb.disabled = GarageSim.add_wagon_block_reason(gs, vid) != ""
-			wb.tooltip_text = GarageSim.add_wagon_block_reason(gs, vid)
-			row.add_child(wb)
-		row.add_child(sell)
-		v.add_child(row)
+		var busy := LogisticsSim.vehicle_busy(gs, int(veh["id"]), now)
+		var extra := ""
+		if VehicleCatalog.is_train(str(veh["mode"])):
+			extra = " · " + VehicleCatalog.comp_text(VehicleCatalog.comp_of(veh))
+		var why := FleetSim.base_reason(gs, st, str(veh["mode"]))
+		var l := UIKit.label("• %s (%s) — %s · %d u. · %d viajes · %.1f km%s%s" % [str(veh["name"]), LogisticsSim.mode_label(str(veh["mode"])), "de viaje" if busy else "libre",
+				int(LogisticsSim.vehicle_capacity(gs, veh)), int(veh.get("trips", 0)), float(veh.get("km", 0.0)), extra, " · " + why if why != "" else ""], 13,
+				UIKit.BAD if why != "" else (Color(0.95, 0.8, 0.45) if busy else Color(0.75, 0.95, 0.75)))
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(l)
 	return v
 
 

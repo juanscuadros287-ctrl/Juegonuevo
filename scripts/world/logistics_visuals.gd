@@ -512,13 +512,14 @@ func _sync_agents() -> void:
 			var mode := str(s["mode"])
 			if RouteSim.family(mode) == "riel":
 				var v := LogisticsSim.get_vehicle(GameState, int((s.get("vehicles", []) as Array)[0]) if not (s.get("vehicles", []) as Array).is_empty() else -1)
-				for part in RouteVisuals.train_parts(mode, int(v.get("wagons", LogisticsSim.mode_def(mode).get("wagons_default", 4)))):
+				for part in RouteVisuals.train_parts(mode, VehicleCatalog.comp_of(v) if not v.is_empty() else VehicleCatalog.default_comp()):
 					part.visible = false
 					_agents_root.add_child(part)
 					arr.append(part)
 			else:
 				for i in range(mini(int(s["carriers"]), MAX_AGENTS_PER_SHIPMENT)):
-					var m := RouteVisuals.ship_model(mode) if RouteSim.family(mode) == "agua" else _carrier_model(mode)
+					var look: String = {"caballo": "mula", "camion_pesado": "camion", "jet_carga": "avion"}.get(mode, mode)
+					var m := RouteVisuals.ship_model(mode) if RouteSim.family(mode) == "agua" else _carrier_model(look)
 					m.visible = false
 					_agents_root.add_child(m)
 					arr.append(m)
@@ -642,8 +643,8 @@ func _agent_path(s: Dictionary) -> Dictionary:
 			path = p
 	var gar := Vector2.INF
 	var gb: Dictionary = gs.get_building(int(s.get("garage", -1)))
-	if not gb.is_empty() and GarageSim.is_garage(gb):
-		gar = GarageSim.exit_point(gs, gb)
+	if not gb.is_empty():
+		gar = FleetSim.exit_point(gs, gb, str(s["mode"]))   # Sale por la puerta de su compañía (su parqueadero).
 	var cum := TransitSim.poly_cum(path)
 	return {"path": path, "cum": cum, "total": cum[cum.size() - 1], "garage": gar}
 

@@ -93,8 +93,8 @@ static func on_buildings_changed(gs) -> void:
 
 ## Antes de demoler: el stock de un almacén se reparte en los demás (lo que no cabe se pierde).
 static func before_demolish(gs, b: Dictionary) -> void:
-	if gs.level_def(b).has("transport_modes"):
-		_sell_fleet_of(gs, b)
+	if not vehicles_of(gs, int(b["id"])).is_empty():
+		_sell_fleet_of(gs, b)   # Rutas y barcos: pasan a la compañía más cercana que pueda recibirlos (o se venden).
 	if not WarehouseSim.is_warehouse_building(gs, b):
 		return
 	var wid := int(b["id"])
@@ -429,10 +429,14 @@ static func road_kinds(mode: String) -> Array:
 
 
 ## Estaciones de transporte activas (centrales, caballerizas, depósitos, hangares).
+## Rutas y barcos: también toda compañía con vehículos asignados (compra central, panel Vehículos).
 static func stations(gs) -> Array:
+	var bases := {}
+	for v in vehicles(gs):
+		bases[int(v["base"])] = true
 	var out := []
 	for b in gs.buildings:
-		if gs.owned_by_player(b) and b["status"] == "activo" and gs.level_def(b).has("transport_modes"):
+		if gs.owned_by_player(b) and b["status"] == "activo" and (gs.level_def(b).has("transport_modes") or bases.has(int(b["id"]))):
 			out.append(b)
 	return out
 
@@ -443,7 +447,12 @@ static func centrals(gs) -> Array:
 
 
 static func central_supports(gs, c: Dictionary, mode: String) -> bool:
-	return (gs.level_def(c).get("transport_modes", []) as Array).has(mode)
+	if (gs.level_def(c).get("transport_modes", []) as Array).has(mode):
+		return true
+	for v in vehicles(gs):
+		if int(v["base"]) == int(c["id"]) and str(v["mode"]) == mode:
+			return true
+	return false
 
 
 ## Trabajadores de una estación disponibles hoy (empleados, no enfermos): cargadores, arrieros y conductores.
@@ -461,11 +470,8 @@ static func crew_per(mode: String) -> int:
 
 
 ## Capacidad por viaje de un vehículo concreto (los trenes según sus vagones).
-static func vehicle_capacity(gs, v: Dictionary) -> float:
-	var md := mode_def(str(v.get("mode", "")))
-	if md.has("wagon_capacity"):
-		return float(md["wagon_capacity"]) * int(v.get("wagons", md.get("wagons_default", 1)))
-	return float(md.get("capacity", 10.0))
+static func vehicle_capacity(_gs, v: Dictionary, good := "") -> float:
+	return VehicleCatalog.capacity_of(v, good)
 
 
 # --- Vehículos individuales -------------------------------------------------------------------
@@ -575,7 +581,7 @@ static func _free_vehicles(gs, st: Dictionary, mode: String, now: float) -> Arra
 
 ## Unidades (cargadores, o vehículos con su conductor) libres de un medio en una estación.
 static func free_units(gs, st: Dictionary, mode: String, now: float) -> int:
-	if not central_supports(gs, st, mode) or not GarageSim.linked(gs, st):
+	if not central_supports(gs, st, mode) or not FleetSim.base_linked(gs, st, mode):
 		return 0
 	var people := _free_people(gs, st, now) / crew_per(mode)
 	if not is_vehicle(mode):
@@ -599,7 +605,7 @@ static func carriers(gs, mode: String, now := -1.0) -> Dictionary:
 		var v := vehicles_at(gs, b, mode)
 		crew += n
 		veh += v if is_vehicle(mode) else 0
-		if GarageSim.linked(gs, b):
+		if FleetSim.base_linked(gs, b, mode):
 			total += mini(n / crew_per(mode), v)
 		free += free_units(gs, b, mode, now)
 	return {"total": total, "free": free, "vehicles": veh, "crew": crew}
@@ -609,48 +615,19 @@ static func vehicle_price(gs, mode: String) -> float:
 	return float(mode_def(mode).get("price", 0.0)) * gs.price_mult()
 
 
-## Motivo por el que no se puede comprar un vehículo en esa estación ("" si se puede).
+## Motivo por el que no se puede comprar un vehículo para esa compañía ("" si se puede). Compra central:
+## FleetSim (panel Vehículos); se conserva esta API para la interfaz y las pruebas viejas.
 static func buy_block_reason(gs, st: Dictionary, mode: String) -> String:
-	var md := mode_def(mode)
-	if md.is_empty() or not is_vehicle(mode):
+	if mode_def(mode).is_empty() or not is_vehicle(mode):
 		return "Ese medio no usa vehículos"
-	if st.is_empty() or str(st.get("type", "")) != mode_base(mode):
-		return "Los %s se compran en: %s" % [mode_short(mode), str(GameData.building_def(mode_base(mode)).get("label", mode_base(mode)))]
-	if not gs.has_tech(str(md.get("tech", ""))):
-		return "Requiere investigar: %s" % GameData.tech_label(str(md.get("tech", "")))
-	if not central_supports(gs, st, mode):
-		return "%s no admite %s: mejóralo" % [gs.building_label(st), mode_short(mode)]
-	if str(st.get("status", "")) != "activo":
-		return "El edificio no está activo"
-	if bought_vehicles(gs, st) >= garage_capacity(gs, st):
-		return "No caben más vehículos (%d): mejora el edificio" % garage_capacity(gs, st)
-	var conn := GarageSim.disconnected_reason(gs, st)   # Garaje conectado a su red (carretera, vía, agua, pista).
-	if conn != "":
-		return conn
-	if gs.money < vehicle_price(gs, mode):
-		return "Dinero insuficiente (%s)" % Fmt.money(vehicle_price(gs, mode))
-	return ""
+	return FleetSim.buy_block_reason(gs, st, mode)
 
 
-## Compra un vehículo individual en su estación. Devuelve {"error"} o {"vehicle"}.
-static func buy_vehicle(gs, st: Dictionary, mode: String) -> Dictionary:
-	var reason := buy_block_reason(gs, st, mode)
-	if reason != "":
-		return {"error": reason}
-	BusinessSim.pay(gs, st, vehicle_price(gs, mode), "obras")
-	var id := int(gs.logistics.get("next_vehicle_id", 1))
-	gs.logistics["next_vehicle_id"] = id + 1
-	var n := 0
-	for v in vehicles(gs):
-		if str(v["mode"]) == mode:
-			n += 1
-	var v := {"id": id, "mode": mode, "base": int(st["id"]), "name": "%s %d" % [str(mode_def(mode).get("unit", mode_label(mode))), n + 1],
-		"bought": gs.today(), "km": 0.0, "trips": 0}
-	if mode_def(mode).has("wagon_capacity"):
-		v["wagons"] = int(mode_def(mode).get("wagons_default", 1))
-	vehicles(gs).append(v)
-	HiringSim.on_vehicle_bought(gs, st, v)   # Contrataciones: vacante de conductor.
-	return {"vehicle": v}
+## Compra un vehículo y lo asigna a la compañía `st` (aparece ahí). Devuelve {"error"} o {"vehicle"}.
+static func buy_vehicle(gs, st: Dictionary, mode: String, comp: Dictionary = {}) -> Dictionary:
+	if mode_def(mode).is_empty() or not is_vehicle(mode):
+		return {"error": "Ese medio no usa vehículos"}
+	return FleetSim.buy(gs, st, mode, comp)   # Incluye HiringSim.on_vehicle_bought (vacante de conductor).
 
 
 ## Vende un vehículo (40 % de su precio). No se vende uno que está de viaje.
@@ -710,7 +687,8 @@ static func _vehicle_upkeep(gs) -> void:
 		for m in modes():
 			if not is_vehicle(m):
 				continue
-			var cost := float(mode_def(m).get("upkeep", 0.0)) * vehicles_at(gs, b, m)
+			var own := vehicles_of(gs, int(b["id"]), m).size()
+			var cost := float(mode_def(m).get("upkeep", 0.0)) * (included_at(gs, b, m) + own * FleetSim.upkeep_mult(gs, b, m))
 			if bool(mode_def(m).get("animal", false)):
 				feed += cost
 			else:
@@ -723,15 +701,12 @@ static func _vehicle_upkeep(gs) -> void:
 
 ## Estaciones demolidas: sus vehículos se venden (40 %).
 static func _sell_fleet_of(gs, station: Dictionary) -> void:
-	var gone := vehicles_of(gs, int(station["id"]))
-	if gone.is_empty():
+	var n := vehicles_of(gs, int(station["id"])).size()
+	if n == 0:
 		return
-	var refund := 0.0
-	for v in gone:
-		refund += vehicle_price(gs, str(v["mode"])) * 0.4
-		_drop_vehicle(gs, v)
-	gs.add_money(refund)
-	gs.notify("Se vendieron %d vehículos de %s por %s." % [gone.size(), gs.building_label(station), Fmt.money(refund)], "negocio")
+	var sold := FleetSim.rehome_from(gs, station)
+	if sold > 0:
+		gs.notify("Se vendieron %d vehículos de %s: ninguna otra compañía podía recibirlos." % [sold, gs.building_label(station)], "negocio")
 
 
 # --- Rutas ------------------------------------------------------------------------------------
@@ -786,7 +761,7 @@ static func route_block_reason(gs, from_id: int, to_id: int, mode: String, vehic
 			return "El edificio de ese vehículo no está activo"
 		if crew_size(gs, st) < crew_per(mode):
 			return "Contrata %s en %s" % ["arrieros" if bool(md.get("animal", false)) else ("tripulación" if bool(md.get("water", false)) else "conductores"), gs.building_label(st)]
-		var conn := GarageSim.disconnected_reason(gs, st)
+		var conn := FleetSim.base_reason(gs, st, mode)
 		if conn != "":
 			return conn
 	else:
@@ -803,8 +778,8 @@ static func route_block_reason(gs, from_id: int, to_id: int, mode: String, vehic
 			if is_vehicle(mode) and int(c["vehicles"]) <= 0:
 				return "No tienes %s: cómpralos en %s" % [mode_short(mode), base_label]
 			for b in stations(gs):
-				if central_supports(gs, b, mode) and not GarageSim.linked(gs, b):
-					return GarageSim.disconnected_reason(gs, b)
+				if central_supports(gs, b, mode) and not FleetSim.base_linked(gs, b, mode):
+					return FleetSim.base_reason(gs, b, mode)
 			return "Contrata %s en la central de transporte o en %s" % ["cargadores" if not is_vehicle(mode) else "conductores", base_label]
 	return ""
 
@@ -839,7 +814,7 @@ static func create_route(gs, opts: Dictionary) -> Dictionary:
 		return {"error": reason}
 	var auto := bool(opts.get("auto", false))
 	if vid >= 0 and not auto:
-		qty = minf(qty, float(trip_info(gs, from_id, to_id, mode, vid, stops)["per_carrier"]))   # Un viaje.
+		qty = minf(qty, float(trip_info(gs, from_id, to_id, mode, vid, stops, good)["per_carrier"]))   # Un viaje.
 	var id := int(gs.logistics.get("next_route_id", 1))
 	gs.logistics["next_route_id"] = id + 1
 	var r := {"id": id, "from": from_id, "to": to_id, "good": good, "qty": qty, "mode": mode,
@@ -870,19 +845,22 @@ static func set_route_active(gs, id: int, active: bool) -> void:
 
 
 ## Datos de un viaje: distancia, días de ida, vueltas por día, carga por unidad y combustible.
-static func trip_info(gs, from_id: int, to_id: int, mode: String, vid := -1, stops: Array = []) -> Dictionary:
+static func trip_info(gs, from_id: int, to_id: int, mode: String, vid := -1, stops: Array = [], good := "") -> Dictionary:
 	var md := mode_def(mode)
 	var p1 := endpoint_pos(gs, from_id)
 	var p2 := endpoint_pos(gs, to_id)
 	var dist := RouteSim.route_distance(gs, from_id, to_id, mode, stops)   # Riel y agua: largo del camino real.
 	var speed := float(md.get("speed", 180.0))
+	var cap := float(md.get("capacity", 10.0))
+	var veh := get_vehicle(gs, vid) if vid >= 0 else {}
+	if not veh.is_empty():
+		cap = vehicle_capacity(gs, veh, good)
+		if VehicleCatalog.is_train(mode):
+			speed = VehicleCatalog.speed_of(veh, cap)   # El peso del tren cargado baja la velocidad.
 	if bool(md.get("road", false)):
 		speed *= RoadSim.speed_mult(gs, p1, p2, road_kinds(mode))
 	var travel := maxf(0.02, dist / speed)
 	var trips := clampi(int(0.66 / (2.0 * travel)), 1, int(tcfg().get("max_trips_per_day", 4)))
-	var cap := float(md.get("capacity", 10.0))
-	if vid >= 0 and not get_vehicle(gs, vid).is_empty():
-		cap = vehicle_capacity(gs, get_vehicle(gs, vid))
 	# Combustible por vehículo: ida y vuelta de cada viaje.
 	var pm: float = gs.price_mult()
 	var km := dist / 1000.0 * 2.0 * trips
@@ -912,7 +890,7 @@ static func _allocate(gs, r: Dictionary, mode: String, need: int, depart: float)
 	if vid >= 0:
 		var v := get_vehicle(gs, vid)
 		var st: Dictionary = gs.get_building(int(v.get("base", -1)))
-		if not v.is_empty() and not st.is_empty() and not vehicle_busy(gs, vid, depart) and _free_people(gs, st, depart) >= crew_per(mode) and GarageSim.linked(gs, st):
+		if not v.is_empty() and not st.is_empty() and not vehicle_busy(gs, vid, depart) and _free_people(gs, st, depart) >= crew_per(mode) and FleetSim.base_linked(gs, st, mode):
 			crew.append([int(st["id"]), crew_per(mode)])
 			vids.append(vid)
 			got = 1
@@ -966,8 +944,22 @@ static func dispatch(gs, r: Dictionary, depart: float) -> float:
 		if auto:
 			r["next_day"] = gs.today() + 1
 		return 0.0
-	var info := trip_info(gs, from_id, to_id, mode, int(r.get("vehicle", -1)), stops)
+	var info := trip_info(gs, from_id, to_id, mode, int(r.get("vehicle", -1)), stops, good)
 	var per_carrier := float(info["per_carrier"])
+	if per_carrier <= 0.0:
+		r["status"] = "El tren no tiene vagones para %s (agrega vagones del tipo adecuado)" % GameData.good_label(good).to_lower()
+		if auto:
+			r["next_day"] = gs.today() + 1
+		return 0.0
+	var sections := []
+	if RouteSim.family(mode) == "riel":   # Bloqueo por tramos: un tren por tramo (dos en vía doble).
+		sections = RailSim.sections_for(gs, RouteSim.path_for(gs, from_id, to_id, mode, stops))
+		var busy := RailSim.blocked_section(gs, sections, depart)
+		if busy != "":
+			r["status"] = "Esperando vía libre: %s ocupado por otro tren" % busy
+			if auto:
+				r["next_day"] = gs.today() + 1
+			return 0.0
 	var alloc := _allocate(gs, r, mode, int(ceil(qty / per_carrier)), depart)
 	var got := int(alloc["got"])
 	if got <= 0:
@@ -1030,7 +1022,7 @@ static func dispatch(gs, r: Dictionary, depart: float) -> float:
 		"arrive": depart + (2.0 * trips - 1.0) * travel, "back": depart + 2.0 * trips * travel,
 		"ax": endpoint_pos(gs, from_id).x, "az": endpoint_pos(gs, from_id).y,
 		"bx": endpoint_pos(gs, to_id).x, "bz": endpoint_pos(gs, to_id).y, "delivered": false,
-		"fuel": fuel_total, "bought": bought, "stops": stops,
+		"fuel": fuel_total, "bought": bought, "stops": stops, "rail_sections": sections,
 		"garage": int(alloc["crew"][0][0]) if not (alloc["crew"] as Array).is_empty() else -1,
 	})
 	r["trips"] = int(r.get("trips", 0)) + 1

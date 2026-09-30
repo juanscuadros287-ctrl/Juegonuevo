@@ -405,8 +405,8 @@ static func ship_intl(gs, opts: Dictionary) -> Dictionary:
 				var y: Dictionary = gs.get_building(int(v["base"]))
 				if y.is_empty() or not gs.is_active(y):
 					continue
-				if not GarageSim.linked(gs, y):
-					why = GarageSim.disconnected_reason(gs, y)
+				if not FleetSim.base_linked(gs, y, m):
+					why = FleetSim.base_reason(gs, y, m)
 					continue
 				if LogisticsSim.crew_size(gs, y) < LogisticsSim.crew_per(m):
 					why = "Contrata tripulación en %s (%d por barco)" % [gs.building_label(y), LogisticsSim.crew_per(m)]

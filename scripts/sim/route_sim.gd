@@ -49,7 +49,7 @@ static func init_state(gs) -> void:
 	var old: bool = not gs.logistics.has("rutas")
 	state(gs)
 	if old and not gs.buildings.is_empty():
-		var n := GarageSim.grandfather(gs)
+		var n := FleetSim.grandfather(gs)
 		if n > 0:
 			gs.notify("Rutas y garajes: %d garaje(s) de tu partida no quedan conectados a su red; siguen funcionando con conexión provisional. Conéctalos (carretera, vía, agua o pista) para no depender de ella." % n, "negocio")
 	ensure_colors(gs)
@@ -737,7 +737,7 @@ static func vehicles_for(gs, mode: String) -> Array:
 		if str(v.get("mode", "")) == mode or (mode == "barco" and ShipSim.is_ship_mode(str(v.get("mode", ""))) and bool(LogisticsSim.mode_def(str(v["mode"])).get("intl", false))):
 			var st: Dictionary = gs.get_building(int(v["base"]))
 			out.append({"id": int(v["id"]), "name": str(v.get("name", "")), "busy": LogisticsSim.vehicle_busy(gs, int(v["id"]), now),
-					"base": gs.building_label(st) if not st.is_empty() else "", "connected": GarageSim.linked(gs, st),
+					"base": gs.building_label(st) if not st.is_empty() else "", "connected": FleetSim.base_linked(gs, st, str(v["mode"])),
 					"capacity": LogisticsSim.vehicle_capacity(gs, v)})
 	return out
 

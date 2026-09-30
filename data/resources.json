@@ -1,15 +1,82 @@
 {
   "_nota": "Fase 6. Recursos por región, yacimientos, transporte interno y carreteras. Se lee con GameData.extra(\"resources\"). strengths = multiplicador de producción de los negocios que usan ese recurso (region_resource en el negocio o business_resource aquí). deposits = cuántos yacimientos de cada tipo genera la región (el primero queda en el terreno inicial). Para un yacimiento nuevo basta con agregarlo a 'resources' con deposit=true y usar requires_deposit en el nivel del negocio.",
   "resources": {
-    "oro": {"label": "Oro", "deposit": true, "amount": [1400, 2200], "color": [0.98, 0.8, 0.15], "order": 0},
-    "plata": {"label": "Plata", "deposit": true, "amount": [2500, 4000], "color": [0.86, 0.88, 0.92], "order": 1},
-    "carbon": {"label": "Carbón", "deposit": true, "amount": [12000, 18000], "color": [0.12, 0.12, 0.13], "order": 2},
-    "hierro": {"label": "Hierro", "deposit": true, "amount": [10000, 16000], "color": [0.62, 0.3, 0.2], "order": 3},
-    "madera": {"label": "Bosques (madera)", "order": 4},
-    "piedra": {"label": "Piedra", "order": 5},
-    "tierra_fertil": {"label": "Tierra fértil", "order": 6},
-    "pastos": {"label": "Pastos (lana)", "order": 7},
-    "pesca": {"label": "Pesca", "order": 8}
+    "oro": {
+      "label": "Oro",
+      "deposit": true,
+      "amount": [
+        1400,
+        2200
+      ],
+      "color": [
+        0.98,
+        0.8,
+        0.15
+      ],
+      "order": 0
+    },
+    "plata": {
+      "label": "Plata",
+      "deposit": true,
+      "amount": [
+        2500,
+        4000
+      ],
+      "color": [
+        0.86,
+        0.88,
+        0.92
+      ],
+      "order": 1
+    },
+    "carbon": {
+      "label": "Carbón",
+      "deposit": true,
+      "amount": [
+        12000,
+        18000
+      ],
+      "color": [
+        0.12,
+        0.12,
+        0.13
+      ],
+      "order": 2
+    },
+    "hierro": {
+      "label": "Hierro",
+      "deposit": true,
+      "amount": [
+        10000,
+        16000
+      ],
+      "color": [
+        0.62,
+        0.3,
+        0.2
+      ],
+      "order": 3
+    },
+    "madera": {
+      "label": "Bosques (madera)",
+      "order": 4
+    },
+    "piedra": {
+      "label": "Piedra",
+      "order": 5
+    },
+    "tierra_fertil": {
+      "label": "Tierra fértil",
+      "order": 6
+    },
+    "pastos": {
+      "label": "Pastos (lana)",
+      "order": 7
+    },
+    "pesca": {
+      "label": "Pesca",
+      "order": 8
+    }
   },
   "business_resource": {
     "granja": "tierra_fertil",
@@ -22,31 +89,228 @@
   "deposit_min_spacing": 40.0,
   "minor_deposit_chance": 0.5,
   "minor_deposit_amount": 0.35,
-  "place_names": ["San Isidro", "Santa Rosa", "La Esperanza", "El Carmen", "San Pedro", "Las Palmas", "Buenavista", "El Rosario", "San Miguel", "La Candelaria", "Piedras Blancas", "Los Alisos", "Santa Bárbara", "El Retiro", "Guayabal", "San Lorenzo"],
+  "place_names": [
+    "San Isidro",
+    "Santa Rosa",
+    "La Esperanza",
+    "El Carmen",
+    "San Pedro",
+    "Las Palmas",
+    "Buenavista",
+    "El Rosario",
+    "San Miguel",
+    "La Candelaria",
+    "Piedras Blancas",
+    "Los Alisos",
+    "Santa Bárbara",
+    "El Retiro",
+    "Guayabal",
+    "San Lorenzo"
+  ],
   "regions": {
     "interior": [
-      {"id": "valle_fertil", "label": "Valle fértil", "description": "Tierras negras y pastos: grandes cosechas de trigo, algodón y lana. Poco mineral.", "strengths": {"tierra_fertil": 1.4, "pastos": 1.25, "madera": 1.1}, "deposits": {"hierro": 1}},
-      {"id": "colinas_boscosas", "label": "Colinas boscosas", "description": "Bosques espesos y vetas de carbón entre las colinas.", "strengths": {"madera": 1.45, "piedra": 1.15}, "deposits": {"carbon": 2}},
-      {"id": "llanura_ferrera", "label": "Llanura ferrera", "description": "Hierro y carbón cerca de la superficie: tierra de herreros.", "strengths": {"piedra": 1.2}, "deposits": {"hierro": 2, "carbon": 1}},
-      {"id": "cerros_plata", "label": "Cerros de plata", "description": "Antiguas minas de plata y buena piedra de cantera.", "strengths": {"piedra": 1.3, "pastos": 1.1}, "deposits": {"plata": 2}}
+      {
+        "id": "valle_fertil",
+        "label": "Valle fértil",
+        "description": "Tierras negras y pastos: grandes cosechas de trigo, algodón y lana. Poco mineral.",
+        "strengths": {
+          "tierra_fertil": 1.4,
+          "pastos": 1.25,
+          "madera": 1.1
+        },
+        "deposits": {
+          "hierro": 1
+        }
+      },
+      {
+        "id": "colinas_boscosas",
+        "label": "Colinas boscosas",
+        "description": "Bosques espesos y vetas de carbón entre las colinas.",
+        "strengths": {
+          "madera": 1.45,
+          "piedra": 1.15
+        },
+        "deposits": {
+          "carbon": 2
+        }
+      },
+      {
+        "id": "llanura_ferrera",
+        "label": "Llanura ferrera",
+        "description": "Hierro y carbón cerca de la superficie: tierra de herreros.",
+        "strengths": {
+          "piedra": 1.2
+        },
+        "deposits": {
+          "hierro": 2,
+          "carbon": 1
+        }
+      },
+      {
+        "id": "cerros_plata",
+        "label": "Cerros de plata",
+        "description": "Antiguas minas de plata y buena piedra de cantera.",
+        "strengths": {
+          "piedra": 1.3,
+          "pastos": 1.1
+        },
+        "deposits": {
+          "plata": 2
+        }
+      }
     ],
     "costa": [
-      {"id": "bahia_pesquera", "label": "Bahía pesquera", "description": "Aguas ricas en peces y tierras de algodón junto al mar.", "strengths": {"pesca": 1.5, "tierra_fertil": 1.15}, "deposits": {"hierro": 1}},
-      {"id": "acantilados", "label": "Acantilados de hierro", "description": "Rocas de mineral de hierro y carbón expuestas por el mar.", "strengths": {"piedra": 1.35, "pesca": 1.1}, "deposits": {"hierro": 2, "carbon": 1}},
-      {"id": "playa_algodon", "label": "Llanura algodonera", "description": "Clima cálido y húmedo: algodón y pastos abundantes.", "strengths": {"tierra_fertil": 1.35, "pastos": 1.2, "pesca": 1.1}, "deposits": {"plata": 1}},
-      {"id": "cabo_dorado", "label": "Cabo dorado", "description": "Arenas con pepitas de oro y buena madera costera.", "strengths": {"madera": 1.2, "pesca": 1.15}, "deposits": {"oro": 1, "carbon": 1}}
+      {
+        "id": "bahia_pesquera",
+        "label": "Bahía pesquera",
+        "description": "Aguas ricas en peces y tierras de algodón junto al mar.",
+        "strengths": {
+          "pesca": 1.5,
+          "tierra_fertil": 1.15
+        },
+        "deposits": {
+          "hierro": 1
+        }
+      },
+      {
+        "id": "acantilados",
+        "label": "Acantilados de hierro",
+        "description": "Rocas de mineral de hierro y carbón expuestas por el mar.",
+        "strengths": {
+          "piedra": 1.35,
+          "pesca": 1.1
+        },
+        "deposits": {
+          "hierro": 2,
+          "carbon": 1
+        }
+      },
+      {
+        "id": "playa_algodon",
+        "label": "Llanura algodonera",
+        "description": "Clima cálido y húmedo: algodón y pastos abundantes.",
+        "strengths": {
+          "tierra_fertil": 1.35,
+          "pastos": 1.2,
+          "pesca": 1.1
+        },
+        "deposits": {
+          "plata": 1
+        }
+      },
+      {
+        "id": "cabo_dorado",
+        "label": "Cabo dorado",
+        "description": "Arenas con pepitas de oro y buena madera costera.",
+        "strengths": {
+          "madera": 1.2,
+          "pesca": 1.15
+        },
+        "deposits": {
+          "oro": 1,
+          "carbon": 1
+        }
+      }
     ],
     "montana": [
-      {"id": "veta_oro", "label": "Veta de oro", "description": "Una rica veta de oro en la cordillera. Poca tierra de cultivo.", "strengths": {"piedra": 1.3}, "deposits": {"oro": 2, "plata": 1}},
-      {"id": "valle_minero", "label": "Valle minero", "description": "Hierro y carbón en abundancia: el corazón de una futura industria.", "strengths": {"piedra": 1.25, "madera": 1.1}, "deposits": {"hierro": 2, "carbon": 2}},
-      {"id": "cumbre_plata", "label": "Cumbre de plata", "description": "Minas de plata en las alturas y pastos para ovejas.", "strengths": {"pastos": 1.35, "piedra": 1.2}, "deposits": {"plata": 2, "hierro": 1}},
-      {"id": "bosque_alto", "label": "Bosque alto", "description": "Bosques de montaña, piedra y algo de carbón.", "strengths": {"madera": 1.5, "piedra": 1.2}, "deposits": {"carbon": 1}}
+      {
+        "id": "veta_oro",
+        "label": "Veta de oro",
+        "description": "Una rica veta de oro en la cordillera. Poca tierra de cultivo.",
+        "strengths": {
+          "piedra": 1.3
+        },
+        "deposits": {
+          "oro": 2,
+          "plata": 1
+        }
+      },
+      {
+        "id": "valle_minero",
+        "label": "Valle minero",
+        "description": "Hierro y carbón en abundancia: el corazón de una futura industria.",
+        "strengths": {
+          "piedra": 1.25,
+          "madera": 1.1
+        },
+        "deposits": {
+          "hierro": 2,
+          "carbon": 2
+        }
+      },
+      {
+        "id": "cumbre_plata",
+        "label": "Cumbre de plata",
+        "description": "Minas de plata en las alturas y pastos para ovejas.",
+        "strengths": {
+          "pastos": 1.35,
+          "piedra": 1.2
+        },
+        "deposits": {
+          "plata": 2,
+          "hierro": 1
+        }
+      },
+      {
+        "id": "bosque_alto",
+        "label": "Bosque alto",
+        "description": "Bosques de montaña, piedra y algo de carbón.",
+        "strengths": {
+          "madera": 1.5,
+          "piedra": 1.2
+        },
+        "deposits": {
+          "carbon": 1
+        }
+      }
     ],
     "rio": [
-      {"id": "vega_fertil", "label": "Vega del río", "description": "Tierras de aluvión muy fértiles y buena pesca de río.", "strengths": {"tierra_fertil": 1.45, "pesca": 1.25}, "deposits": {}},
-      {"id": "arenas_auriferas", "label": "Arenas auríferas", "description": "El río arrastra oro: se puede lavar en sus orillas.", "strengths": {"pesca": 1.15, "tierra_fertil": 1.1}, "deposits": {"oro": 2}},
-      {"id": "meandro_carbon", "label": "Meandro del carbón", "description": "Carbón y hierro en las barrancas del río.", "strengths": {"madera": 1.15}, "deposits": {"carbon": 2, "hierro": 1}},
-      {"id": "praderas", "label": "Praderas ribereñas", "description": "Pastos y algodonales a lo largo del río, con plata en los cerros.", "strengths": {"pastos": 1.4, "tierra_fertil": 1.2}, "deposits": {"plata": 1}}
+      {
+        "id": "vega_fertil",
+        "label": "Vega del río",
+        "description": "Tierras de aluvión muy fértiles y buena pesca de río.",
+        "strengths": {
+          "tierra_fertil": 1.45,
+          "pesca": 1.25
+        },
+        "deposits": {}
+      },
+      {
+        "id": "arenas_auriferas",
+        "label": "Arenas auríferas",
+        "description": "El río arrastra oro: se puede lavar en sus orillas.",
+        "strengths": {
+          "pesca": 1.15,
+          "tierra_fertil": 1.1
+        },
+        "deposits": {
+          "oro": 2
+        }
+      },
+      {
+        "id": "meandro_carbon",
+        "label": "Meandro del carbón",
+        "description": "Carbón y hierro en las barrancas del río.",
+        "strengths": {
+          "madera": 1.15
+        },
+        "deposits": {
+          "carbon": 2,
+          "hierro": 1
+        }
+      },
+      {
+        "id": "praderas",
+        "label": "Praderas ribereñas",
+        "description": "Pastos y algodonales a lo largo del río, con plata en los cerros.",
+        "strengths": {
+          "pastos": 1.4,
+          "tierra_fertil": 1.2
+        },
+        "deposits": {
+          "plata": 1
+        }
+      }
     ]
   },
   "warehouse": {
@@ -66,21 +330,363 @@
     "max_trips_per_day": 4,
     "depart_hour": 7,
     "modes": {
-      "pie": {"unit": "Cargador", "label": "A pie (cargadores)", "short": "cargadores", "capacity": 10, "speed": 180, "road": false, "tech": "", "vehicle": false, "base": "central_transporte", "order": 0},
-      "mula": {"unit": "Mula", "label": "Mulas de carga", "short": "mulas", "capacity": 25, "speed": 260, "road": false, "tech": "", "vehicle": true, "animal": true, "base": "caballeriza", "price": 60, "upkeep": 0.12, "fuel_per_km": 0.0, "order": 1},
-      "carreta": {"unit": "Carreta", "label": "Carretas de caballos", "short": "carretas", "capacity": 60, "speed": 360, "road": true, "tech": "carretas", "vehicle": true, "animal": true, "base": "caballeriza", "price": 150, "upkeep": 0.35, "fuel_per_km": 0.0, "order": 2},
-      "carro_vapor": {"unit": "Carro de vapor", "label": "Carros de carga a vapor", "short": "carros de vapor", "capacity": 140, "speed": 650, "road": true, "road_kinds": ["empedrado", "cemento"], "tech": "maquina_vapor", "vehicle": true, "base": "deposito_camiones", "price": 1200, "upkeep": 0.6, "fuel_per_km": 3.0, "order": 3},
-      "camion": {"unit": "Camión", "label": "Camiones de carga", "short": "camiones", "capacity": 250, "speed": 1200, "road": true, "road_kinds": ["empedrado", "cemento"], "tech": "automovil", "vehicle": true, "base": "deposito_camiones", "price": 3000, "upkeep": 0.8, "fuel_per_km": 4.0, "order": 4},
-      "trailer": {"unit": "Tráiler", "label": "Camiones grandes (tráiler)", "short": "tráileres", "capacity": 600, "speed": 1100, "road": true, "road_kinds": ["cemento"], "tech": "industria_automotriz", "vehicle": true, "base": "deposito_camiones", "price": 8000, "upkeep": 1.6, "fuel_per_km": 7.0, "order": 5},
-      "avion": {"unit": "Avión", "label": "Aviones de carga", "short": "aviones", "capacity": 400, "speed": 20000, "road": false, "tech": "aviacion", "vehicle": true, "base": "hangar", "price": 60000, "upkeep": 12.0, "fuel_per_km": 30.0, "order": 6},
-      "tren_vapor": {"unit": "Tren de vapor", "label": "Trenes de vapor (locomotora y vagones)", "short": "trenes de vapor", "capacity": 320, "wagon_capacity": 80, "wagons_default": 4, "wagons_max": 10, "wagon_price": 250, "speed": 2400, "road": false, "rail": true, "tech": "ferrocarril", "vehicle": true, "base": "cochera_tren", "price": 6000, "upkeep": 2.0, "fuel_per_km": 10.0, "crew": 2, "order": 7},
-      "tren_diesel": {"unit": "Tren diésel", "label": "Trenes diésel (locomotora y vagones)", "short": "trenes diésel", "capacity": 800, "wagon_capacity": 100, "wagons_default": 8, "wagons_max": 16, "wagon_price": 400, "speed": 3600, "road": false, "rail": true, "tech": "industria_automotriz", "vehicle": true, "base": "cochera_tren", "price": 20000, "upkeep": 4.0, "fuel_per_km": 14.0, "crew": 2, "order": 8},
-      "balsa": {"unit": "Bote", "label": "Botes y balsas fluviales", "short": "botes", "capacity": 40, "speed": 500, "road": false, "water": true, "tech": "", "vehicle": true, "base": "astillero", "price": 300, "upkeep": 0.15, "fuel_per_km": 0.0, "crew": 1, "order": 9},
-      "velero": {"unit": "Velero", "label": "Veleros mercantes", "short": "veleros", "capacity": 150, "speed": 900, "road": false, "water": true, "intl": true, "km_day": 170, "tech": "navegacion", "vehicle": true, "base": "astillero", "price": 2500, "upkeep": 0.8, "fuel_per_km": 0.0, "crew": 3, "order": 10},
-      "vapor_barco": {"unit": "Vapor", "label": "Barcos de vapor", "short": "vapores", "capacity": 500, "speed": 1500, "road": false, "water": true, "intl": true, "km_day": 520, "tech": "maquina_vapor", "vehicle": true, "base": "astillero", "price": 12000, "upkeep": 3.0, "fuel_per_km": 6.0, "crew": 5, "order": 11},
-      "carguero": {"unit": "Carguero", "label": "Cargueros", "short": "cargueros", "capacity": 1500, "speed": 2200, "road": false, "water": true, "intl": true, "km_day": 700, "tech": "era_moderna", "vehicle": true, "base": "astillero", "price": 40000, "upkeep": 8.0, "fuel_per_km": 12.0, "crew": 6, "order": 12},
-      "portacontenedores": {"unit": "Portacontenedores", "label": "Buques portacontenedores", "short": "portacontenedores", "capacity": 4000, "speed": 2600, "road": false, "water": true, "intl": true, "km_day": 800, "tech": "electronica", "vehicle": true, "base": "astillero", "price": 120000, "upkeep": 20.0, "fuel_per_km": 25.0, "crew": 8, "order": 13}
-    }
+      "pie": {
+        "unit": "Cargador",
+        "label": "A pie (cargadores)",
+        "short": "cargadores",
+        "capacity": 10,
+        "speed": 180,
+        "road": false,
+        "tech": "",
+        "vehicle": false,
+        "base": "central_transporte",
+        "order": 0,
+        "tipo": "pie"
+      },
+      "mula": {
+        "unit": "Mula",
+        "label": "Mulas de carga",
+        "short": "mulas",
+        "capacity": 25,
+        "speed": 260,
+        "road": false,
+        "tech": "",
+        "vehicle": true,
+        "animal": true,
+        "base": "caballeriza",
+        "price": 60,
+        "upkeep": 0.12,
+        "fuel_per_km": 0.0,
+        "order": 1,
+        "tipo": "animal",
+        "role": "arriero"
+      },
+      "carreta": {
+        "unit": "Carreta",
+        "label": "Carretas de caballos",
+        "short": "carretas",
+        "capacity": 60,
+        "speed": 360,
+        "road": true,
+        "tech": "carretas",
+        "vehicle": true,
+        "animal": true,
+        "base": "caballeriza",
+        "price": 150,
+        "upkeep": 0.35,
+        "fuel_per_km": 0.0,
+        "order": 2,
+        "tipo": "carreta"
+      },
+      "carro_vapor": {
+        "unit": "Carro de vapor",
+        "label": "Carros de carga a vapor",
+        "short": "carros de vapor",
+        "capacity": 140,
+        "speed": 650,
+        "road": true,
+        "road_kinds": [
+          "empedrado",
+          "cemento"
+        ],
+        "tech": "maquina_vapor",
+        "vehicle": true,
+        "base": "deposito_camiones",
+        "price": 1200,
+        "upkeep": 0.6,
+        "fuel_per_km": 3.0,
+        "order": 3,
+        "tipo": "camion"
+      },
+      "camion": {
+        "unit": "Camión",
+        "label": "Camiones de carga",
+        "short": "camiones",
+        "capacity": 250,
+        "speed": 1200,
+        "road": true,
+        "road_kinds": [
+          "empedrado",
+          "cemento"
+        ],
+        "tech": "automovil",
+        "vehicle": true,
+        "base": "deposito_camiones",
+        "price": 3000,
+        "upkeep": 0.8,
+        "fuel_per_km": 4.0,
+        "order": 4,
+        "tipo": "camion"
+      },
+      "trailer": {
+        "unit": "Tráiler",
+        "label": "Camiones grandes (tráiler)",
+        "short": "tráileres",
+        "capacity": 600,
+        "speed": 1100,
+        "road": true,
+        "road_kinds": [
+          "cemento"
+        ],
+        "tech": "automatizacion",
+        "vehicle": true,
+        "base": "deposito_camiones",
+        "price": 8000,
+        "upkeep": 1.6,
+        "fuel_per_km": 7.0,
+        "order": 5,
+        "tipo": "camion"
+      },
+      "avion": {
+        "unit": "Avión de hélice",
+        "label": "Aviones de hélice de carga",
+        "short": "aviones",
+        "capacity": 400,
+        "speed": 20000,
+        "road": false,
+        "tech": "aviacion",
+        "vehicle": true,
+        "base": "hangar",
+        "price": 60000,
+        "upkeep": 12.0,
+        "fuel_per_km": 30.0,
+        "order": 6,
+        "tipo": "avion"
+      },
+      "tren_vapor": {
+        "unit": "Locomotora de vapor",
+        "label": "Locomotoras de vapor",
+        "short": "trenes de vapor",
+        "capacity": 400,
+        "speed": 2400,
+        "road": false,
+        "rail": true,
+        "tech": "ferrocarril",
+        "vehicle": true,
+        "base": "cochera_tren",
+        "price": 6000,
+        "upkeep": 2.0,
+        "fuel_per_km": 10.0,
+        "crew": 2,
+        "order": 7,
+        "tipo": "tren",
+        "power": 900,
+        "mass": 80,
+        "max_wagons": 10
+      },
+      "tren_diesel": {
+        "unit": "Locomotora diésel",
+        "label": "Locomotoras diésel",
+        "short": "trenes diésel",
+        "capacity": 800,
+        "speed": 3600,
+        "road": false,
+        "rail": true,
+        "tech": "industria_automotriz",
+        "vehicle": true,
+        "base": "cochera_tren",
+        "price": 20000,
+        "upkeep": 4.0,
+        "fuel_per_km": 14.0,
+        "crew": 2,
+        "order": 8,
+        "tipo": "tren",
+        "power": 2400,
+        "mass": 110,
+        "max_wagons": 20
+      },
+      "balsa": {
+        "unit": "Bote",
+        "label": "Botes y balsas fluviales",
+        "short": "botes",
+        "capacity": 40,
+        "speed": 500,
+        "road": false,
+        "water": true,
+        "tech": "",
+        "vehicle": true,
+        "base": "astillero",
+        "price": 300,
+        "upkeep": 0.15,
+        "fuel_per_km": 0.0,
+        "crew": 1,
+        "order": 9,
+        "tipo": "barco"
+      },
+      "velero": {
+        "unit": "Velero",
+        "label": "Veleros mercantes",
+        "short": "veleros",
+        "capacity": 150,
+        "speed": 900,
+        "road": false,
+        "water": true,
+        "intl": true,
+        "km_day": 170,
+        "tech": "navegacion",
+        "vehicle": true,
+        "base": "astillero",
+        "price": 2500,
+        "upkeep": 0.8,
+        "fuel_per_km": 0.0,
+        "crew": 3,
+        "order": 10,
+        "tipo": "barco"
+      },
+      "vapor_barco": {
+        "unit": "Vapor",
+        "label": "Barcos de vapor",
+        "short": "vapores",
+        "capacity": 500,
+        "speed": 1500,
+        "road": false,
+        "water": true,
+        "intl": true,
+        "km_day": 520,
+        "tech": "maquina_vapor",
+        "vehicle": true,
+        "base": "astillero",
+        "price": 12000,
+        "upkeep": 3.0,
+        "fuel_per_km": 6.0,
+        "crew": 5,
+        "order": 11,
+        "tipo": "barco"
+      },
+      "carguero": {
+        "unit": "Carguero",
+        "label": "Cargueros",
+        "short": "cargueros",
+        "capacity": 1500,
+        "speed": 2200,
+        "road": false,
+        "water": true,
+        "intl": true,
+        "km_day": 700,
+        "tech": "era_moderna",
+        "vehicle": true,
+        "base": "astillero",
+        "price": 40000,
+        "upkeep": 8.0,
+        "fuel_per_km": 12.0,
+        "crew": 6,
+        "order": 12,
+        "tipo": "barco"
+      },
+      "portacontenedores": {
+        "unit": "Portacontenedores",
+        "label": "Buques portacontenedores",
+        "short": "portacontenedores",
+        "capacity": 4000,
+        "speed": 2600,
+        "road": false,
+        "water": true,
+        "intl": true,
+        "km_day": 800,
+        "tech": "electronica",
+        "vehicle": true,
+        "base": "astillero",
+        "price": 120000,
+        "upkeep": 20.0,
+        "fuel_per_km": 25.0,
+        "crew": 8,
+        "order": 13,
+        "tipo": "barco"
+      },
+      "caballo": {
+        "unit": "Caballo de carga",
+        "label": "Caballos de carga",
+        "short": "caballos",
+        "capacity": 35,
+        "speed": 330,
+        "road": false,
+        "tech": "carretas",
+        "vehicle": true,
+        "animal": true,
+        "base": "caballeriza",
+        "price": 110,
+        "upkeep": 0.18,
+        "fuel_per_km": 0.0,
+        "order": 1.5,
+        "tipo": "animal",
+        "role": "jinete"
+      },
+      "carreta_grande": {
+        "unit": "Carreta grande",
+        "label": "Carretas grandes (tiro doble)",
+        "short": "carretas grandes",
+        "capacity": 110,
+        "speed": 380,
+        "road": true,
+        "tech": "caminos_empedrados",
+        "vehicle": true,
+        "animal": true,
+        "base": "caballeriza",
+        "price": 320,
+        "upkeep": 0.6,
+        "fuel_per_km": 0.0,
+        "order": 2.5,
+        "tipo": "carreta"
+      },
+      "camion_pesado": {
+        "unit": "Camión pesado",
+        "label": "Camiones pesados",
+        "short": "camiones pesados",
+        "capacity": 400,
+        "speed": 1150,
+        "road": true,
+        "road_kinds": [
+          "empedrado",
+          "cemento"
+        ],
+        "tech": "industria_automotriz",
+        "vehicle": true,
+        "base": "deposito_camiones",
+        "price": 5200,
+        "upkeep": 1.2,
+        "fuel_per_km": 5.5,
+        "order": 4.5,
+        "tipo": "camion"
+      },
+      "tren_electrico": {
+        "unit": "Locomotora eléctrica",
+        "label": "Locomotoras eléctricas",
+        "short": "trenes eléctricos",
+        "capacity": 1200,
+        "speed": 5200,
+        "power": 4200,
+        "mass": 100,
+        "max_wagons": 30,
+        "road": false,
+        "rail": true,
+        "tech": "electronica",
+        "vehicle": true,
+        "base": "cochera_tren",
+        "price": 45000,
+        "upkeep": 5.0,
+        "fuel_per_km": 6.0,
+        "crew": 1,
+        "order": 8.5,
+        "tipo": "tren"
+      },
+      "jet_carga": {
+        "unit": "Jet de carga",
+        "label": "Jets de carga",
+        "short": "jets de carga",
+        "capacity": 1200,
+        "speed": 45000,
+        "road": false,
+        "tech": "aeronautica",
+        "vehicle": true,
+        "base": "hangar",
+        "price": 180000,
+        "upkeep": 30.0,
+        "fuel_per_km": 55.0,
+        "order": 6.5,
+        "tipo": "avion"
+      }
+    },
+    "_nota_catalogo": "Rutas y barcos: 'tipo' agrupa los modelos del catálogo de vehículos (VehicleCatalog). Los trenes se arman por composición: locomotora (power, mass, speed máx., max_wagons) + vagones (rutas.json wagon_types). 'base' = edificio que sirve de base de flota opcional (mantenimiento más barato)."
   },
   "roads": {
     "snap": 3.0,
@@ -88,9 +694,45 @@
     "min_length": 3.0,
     "max_length": 80.0,
     "kinds": {
-      "barro": {"label": "Camino de barro", "cost_per_unit": 1.2, "stone_per_unit": 0.0, "speed": 1.0, "tech": "", "color": [0.52, 0.4, 0.26], "width": 2.2},
-      "empedrado": {"label": "Camino empedrado", "cost_per_unit": 2.5, "stone_per_unit": 0.15, "speed": 1.4, "tech": "caminos_empedrados", "color": [0.55, 0.55, 0.53], "width": 2.6},
-      "cemento": {"label": "Carretera de cemento", "cost_per_unit": 6.0, "stone_per_unit": 0.3, "speed": 2.0, "tech": "automovil", "color": [0.72, 0.72, 0.7], "width": 3.2}
+      "barro": {
+        "label": "Camino de barro",
+        "cost_per_unit": 1.2,
+        "stone_per_unit": 0.0,
+        "speed": 1.0,
+        "tech": "",
+        "color": [
+          0.52,
+          0.4,
+          0.26
+        ],
+        "width": 2.2
+      },
+      "empedrado": {
+        "label": "Camino empedrado",
+        "cost_per_unit": 2.5,
+        "stone_per_unit": 0.15,
+        "speed": 1.4,
+        "tech": "caminos_empedrados",
+        "color": [
+          0.55,
+          0.55,
+          0.53
+        ],
+        "width": 2.6
+      },
+      "cemento": {
+        "label": "Carretera de cemento",
+        "cost_per_unit": 6.0,
+        "stone_per_unit": 0.3,
+        "speed": 2.0,
+        "tech": "automovil",
+        "color": [
+          0.72,
+          0.72,
+          0.7
+        ],
+        "width": 3.2
+      }
     }
   }
 }

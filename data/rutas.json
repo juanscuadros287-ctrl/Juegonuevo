@@ -1,6 +1,23 @@
 {
  "_nota": "Rutas punto X → punto Y, barcos, puertos, astilleros, trenes y garajes conectados (docs/RUTAS_BARCOS.md). Distancias en metros del juego; montos × price_mult.",
- "palette": ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#42d4f4", "#f032e6", "#bfef45", "#fabed4", "#469990", "#dcbeff", "#9a6324", "#fffac8", "#800000", "#aaffc3"],
+ "palette": [
+  "#e6194b",
+  "#3cb44b",
+  "#ffe119",
+  "#4363d8",
+  "#f58231",
+  "#911eb4",
+  "#42d4f4",
+  "#f032e6",
+  "#bfef45",
+  "#fabed4",
+  "#469990",
+  "#dcbeff",
+  "#9a6324",
+  "#fffac8",
+  "#800000",
+  "#aaffc3"
+ ],
  "walk_max": 250.0,
  "mule_max": 1500.0,
  "mule_bridge_max": 36.0,
@@ -32,8 +49,117 @@
  "ship_intl": {
   "tech": "navegacion",
   "fuel_per_km": 0.08,
-  "commercial": {"per_unit_base": 0.15, "per_unit_per_1000km": 0.18, "every_days": 7, "capacity": 600},
+  "commercial": {
+   "per_unit_base": 0.15,
+   "per_unit_per_1000km": 0.18,
+   "every_days": 7,
+   "capacity": 600
+  },
   "min_days": 3
  },
- "dwell": 0.12
+ "dwell": 0.12,
+ "empty_speed_bonus": {
+  "pie": 0.1,
+  "animal": 0.2,
+  "carreta": 0.15,
+  "camion": 0.15,
+  "barco": 0.08,
+  "avion": 0.05
+ },
+ "default_fleet": {
+  "_nota": "Cupos por compañía y tipo si ModulesSim.fleet_limit no existe: por nivel del negocio (× nivel). Las bases de flota (caballeriza, depósito, cochera, astillero, hangar) usan su 'garage'.",
+  "per_level": {
+   "pie": 0,
+   "animal": 3,
+   "carreta": 2,
+   "camion": 2,
+   "tren": 1,
+   "barco": 1,
+   "avion": 1
+  }
+ },
+ "fleet_base_discount": 0.25,
+ "wagon_types": {
+  "granelero": {
+   "label": "Granelero",
+   "capacity": 100,
+   "tare": 22,
+   "price": 280,
+   "goods": [
+    "hierro",
+    "carbon",
+    "cobre",
+    "oro",
+    "plata",
+    "uranio",
+    "piedra",
+    "arcilla",
+    "trigo",
+    "harina",
+    "algodon",
+    "lana",
+    "lena"
+   ]
+  },
+  "cisterna": {
+   "label": "Cisterna",
+   "capacity": 90,
+   "tare": 25,
+   "price": 380,
+   "goods": [
+    "petroleo",
+    "combustible",
+    "quimicos",
+    "gas_natural",
+    "agua"
+   ]
+  },
+  "cerrado": {
+   "label": "Cerrado (bienes)",
+   "capacity": 80,
+   "tare": 20,
+   "price": 300,
+   "goods": "*"
+  },
+  "frigorifico": {
+   "label": "Frigorífico",
+   "capacity": 70,
+   "tare": 28,
+   "price": 450,
+   "goods": [
+    "carne",
+    "comida",
+    "embutidos",
+    "conservas",
+    "pan",
+    "ganado"
+   ]
+  },
+  "plataforma": {
+   "label": "Plataforma",
+   "capacity": 110,
+   "tare": 18,
+   "price": 260,
+   "goods": [
+    "acero",
+    "maquinaria",
+    "motor",
+    "automovil_bien",
+    "avion_bien",
+    "madera",
+    "piedra",
+    "vidrio"
+   ]
+  },
+  "pasajeros": {
+   "label": "Pasajeros",
+   "capacity": 0,
+   "passengers": 60,
+   "tare": 24,
+   "price": 500,
+   "goods": []
+  }
+ },
+ "unit_mass": 0.1,
+ "min_speed_ratio": 0.3
 }

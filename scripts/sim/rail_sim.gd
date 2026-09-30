@@ -227,3 +227,78 @@ static func path(gs, a: Vector2, b: Vector2) -> PackedVector2Array:
 		for i in range(pts.size() - 1):
 			segs.append([pts[i], pts[i + 1]])
 	return RouteSim.graph_path(segs, a, b)
+
+
+# --- Bloqueo por tramos ----------------------------------------------------------------------------
+# Cada vía trazada (y cada vía a otro pueblo) es un TRAMO. Un tren ocupa los tramos de su camino desde que
+# sale hasta que vuelve; en un tramo cabe un tren (dos si es vía doble). Si un tramo está ocupado, el
+# despacho espera ("Esperando vía libre"). Para más tráfico: vía doble o un desvío (otra vía paralela).
+
+static func line_label(gs, key: String) -> String:
+	if key.begins_with("t:"):
+		return "vía a %s" % str(TradeSim.town(gs, key.substr(2)).get("name", key.substr(2)))
+	var n := 0
+	for r in rails(gs):
+		n += 1
+		if "r:%d" % int(r["id"]) == key:
+			return "tramo %d%s" % [n, " (vía doble)" if bool(r.get("double", false)) else ""]
+	return key
+
+
+static func capacity_of(gs, key: String) -> int:
+	for r in rails(gs):
+		if "r:%d" % int(r["id"]) == key:
+			return 2 if bool(r.get("double", false)) else 1
+	return 1
+
+
+## Tramos que recorre un camino.
+static func sections_for(gs, path: PackedVector2Array) -> Array:
+	var out := []
+	for l in lines(gs):
+		var pts: PackedVector2Array = l["pts"]
+		for i in range(path.size() - 1):
+			if TransitSim.dist_to_poly(path[i].lerp(path[i + 1], 0.5), pts) <= 1.5:
+				out.append(str(l["key"]))
+				break
+	return out
+
+
+## Trenes en cada tramo en un instante (desde que salen hasta que vuelven): {clave: n}.
+static func occupancy(gs, t := -1.0) -> Dictionary:
+	if t < 0.0:
+		t = float(gs.today()) + TimeManager.hour_float() / 24.0
+	var occ := {}
+	for s in LogisticsSim.shipments(gs):
+		if float(s.get("back", 0.0)) <= t:
+			continue
+		for k in s.get("rail_sections", []):
+			occ[str(k)] = int(occ.get(str(k), 0)) + 1
+	return occ
+
+
+## Primer tramo lleno (su etiqueta) o "".
+static func blocked_section(gs, sections: Array, t: float) -> String:
+	if sections.is_empty():
+		return ""
+	var occ := occupancy(gs, t)
+	for k in sections:
+		if int(occ.get(str(k), 0)) >= capacity_of(gs, str(k)):
+			return line_label(gs, str(k))
+	return ""
+
+
+## Convierte una vía en vía doble (60 % del costo por metro). Devuelve "" o el motivo.
+static func make_double(gs, id: int) -> String:
+	for r in rails(gs):
+		if int(r["id"]) == id:
+			if bool(r.get("double", false)):
+				return "Ya es vía doble"
+			var cost: float = float(r.get("length", 0.0)) * float(cfg().get("cost_per_m", 5.0)) * gs.price_mult() * 0.6
+			if gs.money < cost:
+				return "Dinero insuficiente (%s)" % Fmt.money(cost)
+			gs.add_money(-cost)
+			r["double"] = true
+			_bump(gs)
+			return ""
+	return "Esa vía no existe"

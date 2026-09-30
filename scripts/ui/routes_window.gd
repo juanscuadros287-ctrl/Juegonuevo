@@ -4,7 +4,10 @@ extends Control
 ## y caminos a otros pueblos) con su color, nombre, medio, origen → destino, vehículo, frecuencia, estado y
 ## carga del mes; leyenda de colores, mostrar u ocultar la capa del mapa, trazar vías férreas y el
 ## asistente «Nueva ruta» (medio → origen → destino → validación → vehículo → frecuencia).
-## Se abre desde Logística y transporte → Rutas (Hud.CATEGORIES).
+## Pestaña «Vehículos»: compra central (modelo del catálogo según la investigación → compañía donde queda su
+## parqueadero), con velocidad vacío / a tope y capacidad antes de comprar; trenes por composición; vender y
+## asignar a rutas. Pestaña «Vías»: tramos de vía férrea con su ocupación (bloqueo por tramos) y vía doble.
+## Se abre desde Logística y transporte → Rutas / Vehículos (Hud.CATEGORIES).
 
 signal message(text: String, category: String)
 
@@ -14,10 +17,16 @@ var _rows := 0
 var _wizard_open := false
 # Asistente
 var w := {}
+var tab := "routes"            # routes | vehicles | rails
+# Compra de vehículos
+var b_tipo := "camion"
+var b_mode := ""
+var b_company := -1
+var b_comp := {"cerrado": 4}
 
 
 ## Abre (o crea) el panel colgado de la raíz del HUD.
-static func open_in(hud) -> RoutesWindow:
+static func open_in(hud, which := "routes") -> RoutesWindow:
 	var win: RoutesWindow = hud.root.get_node_or_null("RoutesWindow")
 	if win == null:
 		win = RoutesWindow.new()
@@ -25,13 +34,19 @@ static func open_in(hud) -> RoutesWindow:
 		hud.root.add_child(win)
 		win.setup()
 		win.message.connect(hud.toast)
+	win.tab = which
 	win.open()
 	return win
 
 
-static func is_open(hud) -> bool:
+static func is_open(hud, which := "") -> bool:
 	var win = hud.root.get_node_or_null("RoutesWindow") if hud.root else null
-	return win != null and win.visible
+	return win != null and win.visible and (which == "" or str(win.tab) == which)
+
+
+func show_tab(which: String) -> void:
+	tab = which
+	refresh()
 
 
 func setup() -> void:
@@ -56,7 +71,7 @@ func setup() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
 	panel.add_child(v)
-	UIKit.header(v, "logistics", "Rutas: punto X → punto Y", close, [UIKit.icon_button("refresh", refresh, "Actualizar")])
+	UIKit.header(v, "logistics", "Rutas y vehículos", close, [UIKit.icon_button("refresh", refresh, "Actualizar")])
 	var sc := ScrollContainer.new()
 	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -102,6 +117,20 @@ func refresh() -> void:
 		return
 	var gs := GameState
 	UIKit.clear(body)
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 6)
+	body.add_child(tabs)
+	for t in [["routes", "Rutas"], ["vehicles", "Vehículos"], ["rails", "Vías férreas"]]:
+		var tb := UIKit.button(str(t[1]), show_tab.bind(str(t[0])), 120)
+		tb.toggle_mode = true
+		tb.button_pressed = tab == str(t[0])
+		tabs.add_child(tb)
+	if tab == "vehicles":
+		_build_vehicles(gs)
+		return
+	if tab == "rails":
+		_build_rails(gs)
+		return
 	var sm := RouteSim.summary(gs)
 	var tools := HFlowContainer.new()
 	tools.add_theme_constant_override("h_separation", 8)
@@ -427,3 +456,205 @@ func _opt(items: Array, sel: int, cb: Callable) -> OptionButton:
 		o.select(sel)
 	o.item_selected.connect(cb)
 	return o
+
+
+# --- Vehículos: compra central, venta y asignación ------------------------------------------------------
+
+func vehicle_count() -> int:
+	return LogisticsSim.vehicles(GameState).size()
+
+
+func _build_vehicles(gs) -> void:
+	var sec := UIKit.section(body, "Comprar un vehículo", "plus", true, "veh_buy")
+	var intro := UIKit.label("Elige el tipo, el modelo (según tu investigación) y la COMPAÑÍA donde quedará su parqueadero: de ahí sale y ahí vuelve. Si la compañía no toca la carretera, la vía o el agua que pide el vehículo, o llegó a su cupo (módulo Flota), no se compra y no se cobra nada.", 12, UIKit.TEXT_DIM)
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sec.add_child(intro)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 10)
+	sec.add_child(grid)
+	var tipos: Array = VehicleCatalog.TIPOS
+	grid.add_child(UIKit.label("Tipo", 13, UIKit.ACCENT))
+	grid.add_child(_opt(tipos.map(func(t): return VehicleCatalog.tipo_label(str(t))), tipos.find(b_tipo), func(i):
+		b_tipo = str(tipos[i])
+		b_mode = ""
+		refresh()))
+	if b_tipo == "pie":
+		var cs := []
+		for b in LogisticsSim.stations(gs):
+			if str(b.get("type", "")) == "central_transporte":
+				cs.append(b)
+		var note := UIKit.label("A pie (flota nivel 1) no se compra nada: se abre la vacante de cargador en la central de transporte.", 13)
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		sec.add_child(note)
+		for b in cs:
+			var bid := int(b["id"])
+			sec.add_child(UIKit.button("Abrir vacante de cargador en %s" % gs.building_label(b), func(): _say(_or_ok(FleetSim.open_porter(GameState, GameState.get_building(bid)), "Vacante de cargador publicada."))))
+		if cs.is_empty():
+			sec.add_child(UIKit.button("Construir una central de transporte", func(): EventBus.build_mode_requested.emit("central_transporte", "normal")))
+		_vehicle_list(gs)
+		return
+	var ms := VehicleCatalog.models(gs, b_tipo, true)
+	if b_mode == "" or not ms.any(func(x): return str(x["id"]) == b_mode):
+		b_mode = ""
+		for x in ms:
+			if bool(x["unlocked"]):
+				b_mode = str(x["id"])
+		if b_mode == "" and not ms.is_empty():
+			b_mode = str(ms[0]["id"])
+	var idx := 0
+	for i in range(ms.size()):
+		if str(ms[i]["id"]) == b_mode:
+			idx = i
+	grid.add_child(UIKit.label("Modelo", 13, UIKit.ACCENT))
+	grid.add_child(_opt(ms.map(func(x): return VehicleCatalog.stats_text(x)), idx, func(i):
+		b_mode = str(ms[i]["id"])
+		refresh()))
+	if b_mode == "":
+		return
+	if VehicleCatalog.is_train(b_mode):
+		grid.add_child(UIKit.label("Vagones", 13, UIKit.ACCENT))
+		var wv := VBoxContainer.new()
+		for wt in VehicleCatalog.wagon_types():
+			var wh := HBoxContainer.new()
+			var d: Dictionary = VehicleCatalog.wagon_types()[wt]
+			var wl := UIKit.label("%s (%s u., %s)" % [str(d.get("label", wt)), Fmt.thousands(float(d.get("capacity", 0))) if float(d.get("capacity", 0)) > 0 else "%d pasajeros" % int(d.get("passengers", 0)),
+					Fmt.money(float(d.get("price", 0)) * gs.price_mult())], 12)
+			wl.custom_minimum_size.x = 240
+			wh.add_child(wl)
+			var key := str(wt)
+			wh.add_child(UIKit.spin(0, 30, 1, float(b_comp.get(key, 0)), func(val):
+				b_comp[key] = int(val)
+				if int(val) <= 0:
+					b_comp.erase(key)))
+			wv.add_child(wh)
+		wv.add_child(UIKit.button("Recalcular estimación", refresh))
+		grid.add_child(wv)
+	var st := VehicleCatalog.stats(gs, b_mode, b_comp)
+	grid.add_child(UIKit.label("Estimación", 13, UIKit.ACCENT))
+	var est := "Capacidad %s u. · velocidad vacío %s m/día, a tope %s m/día · mantenimiento %s/día%s · precio %s" % [
+		Fmt.thousands(float(st["capacity"])), Fmt.thousands(float(st["speed_empty"])), Fmt.thousands(float(st["speed_full"])), Fmt.money2(float(st["upkeep"])),
+		(" · combustible %s/km" % Fmt.money2(float(st["fuel_per_km"]))) if float(st["fuel_per_km"]) > 0.0 else "", Fmt.money(FleetSim.total_price(gs, b_mode, b_comp))]
+	if st.has("capacity_by_type"):
+		var parts := []
+		for wt in st["capacity_by_type"]:
+			parts.append("%s %s" % [VehicleCatalog.wagon_label(str(wt)).to_lower(), Fmt.thousands(float(st["capacity_by_type"][wt]))])
+		est += "\nPor tipo de carga: " + (", ".join(parts) if not parts.is_empty() else "sin vagones de carga")
+	var el := UIKit.label(est, 12)
+	el.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	el.custom_minimum_size.x = 560
+	grid.add_child(el)
+	grid.add_child(UIKit.label("Compañía", 13, UIKit.ACCENT))
+	var cs2 := FleetSim.companies(gs, b_mode)
+	var labels := ["(elige la compañía)"]
+	var ci := 0
+	for i in range(cs2.size()):
+		var c: Dictionary = cs2[i]
+		labels.append("%s · %d/%d%s" % [c["label"], int(c["used"]), int(c["limit"]), "" if str(c["reason"]) == "" else " · ✖ " + str(c["reason"]).left(60)])
+		if int(c["id"]) == b_company:
+			ci = i + 1
+	grid.add_child(_opt(labels, ci, func(i):
+		b_company = int(cs2[i - 1]["id"]) if i > 0 else -1
+		refresh()))
+	var comp: Dictionary = gs.get_building(b_company) if b_company >= 0 else {}
+	var why := "Elige la compañía donde quedará el vehículo" if comp.is_empty() else FleetSim.buy_block_reason(gs, comp, b_mode, b_comp)
+	var wl2 := UIKit.label("✔ Se puede comprar" if why == "" else "✖ " + why, 13, UIKit.GOOD if why == "" else UIKit.BAD)
+	wl2.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sec.add_child(wl2)
+	var buy := UIKit.primary(UIKit.button("Comprar", func():
+		var r := FleetSim.buy(GameState, GameState.get_building(b_company), b_mode, b_comp)
+		_say(str(r["error"]) if r.has("error") else "Compraste %s: aparece en %s." % [str(r["vehicle"]["name"]), GameState.building_label(GameState.get_building(b_company))])
+		refresh()))
+	buy.disabled = why != ""
+	sec.add_child(buy)
+	_vehicle_list(gs)
+
+
+func _or_ok(err: String, ok: String) -> String:
+	return err if err != "" else ok
+
+
+func _vehicle_list(gs) -> void:
+	var sec := UIKit.section(body, "Mis vehículos (%d)" % LogisticsSim.vehicles(gs).size(), "logistics", true, "veh_list")
+	if LogisticsSim.vehicles(gs).is_empty():
+		sec.add_child(UIKit.label("Aún no tienes vehículos.", 13, UIKit.TEXT_DIM))
+		return
+	var now := float(gs.today()) + TimeManager.hour_float() / 24.0
+	var grid := GridContainer.new()
+	grid.columns = 6
+	grid.add_theme_constant_override("h_separation", 10)
+	sec.add_child(grid)
+	for h in ["Vehículo", "Compañía (parqueadero)", "Capacidad", "Estado", "Ruta asignada", ""]:
+		grid.add_child(UIKit.label(h, 12, UIKit.TEXT_FAINT))
+	for v in LogisticsSim.vehicles(gs):
+		var vid := int(v["id"])
+		var mode := str(v["mode"])
+		var base: Dictionary = gs.get_building(int(v["base"]))
+		var nm := "%s · %s" % [str(v["name"]), LogisticsSim.mode_label(mode)]
+		if VehicleCatalog.is_train(mode):
+			nm += " (%s)" % VehicleCatalog.comp_text(VehicleCatalog.comp_of(v))
+		var nl := UIKit.label(nm, 13)
+		nl.custom_minimum_size.x = 240
+		nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		grid.add_child(nl)
+		grid.add_child(UIKit.label(gs.building_label(base) if not base.is_empty() else "—", 13, UIKit.TEXT_DIM))
+		grid.add_child(UIKit.label("%s u." % Fmt.thousands(LogisticsSim.vehicle_capacity(gs, v)), 13))
+		var why := FleetSim.base_reason(gs, base, mode) if not base.is_empty() else "sin compañía"
+		var state := "de viaje" if LogisticsSim.vehicle_busy(gs, vid, now) else "libre"
+		if why != "":
+			state = why.left(50)
+		elif not base.is_empty() and LogisticsSim.crew_size(gs, base) < LogisticsSim.crew_per(mode):
+			state = "sin conductor (vacante abierta)"
+		grid.add_child(UIKit.label(state, 12, UIKit.BAD if why != "" else UIKit.TEXT_DIM))
+		var rs := []
+		var cur := 0
+		for r in LogisticsSim.routes(gs):
+			if RouteSim.family(str(r["mode"])) == RouteSim.family(mode):
+				rs.append(r)
+				if int(r.get("vehicle", -1)) == vid:
+					cur = rs.size()
+		grid.add_child(_opt(["(ninguna)"] + rs.map(func(r): return str(r.get("name", "Ruta"))), cur, func(i):
+			_say(_or_ok(FleetSim.assign(GameState, vid, int(rs[i - 1]["id"]) if i > 0 else -1), "Asignación actualizada."))
+			refresh()))
+		var h := HBoxContainer.new()
+		if VehicleCatalog.is_train(mode):
+			var wts: Array = VehicleCatalog.wagon_types().keys()
+			var add := _opt(["+ vagón…"] + wts.map(func(x): return VehicleCatalog.wagon_label(str(x))), 0, func(i):
+				if i > 0:
+					_say(_or_ok(FleetSim.add_wagons(GameState, vid, str(wts[i - 1]), 1), "Vagón agregado."))
+					refresh())
+			add.custom_minimum_size.x = 120
+			h.add_child(add)
+		h.add_child(UIKit.danger(UIKit.button("Vender", func():
+			_say(_or_ok(FleetSim.sell(GameState, vid), "Vehículo vendido (40 % de su precio)."))
+			refresh())))
+		grid.add_child(h)
+
+
+# --- Vías férreas: tramos y ocupación ----------------------------------------------------------------------
+
+func _build_rails(gs) -> void:
+	var sec := UIKit.section(body, "Tramos de vía férrea (un tren por tramo; dos en vía doble)", "logistics", true, "rails_list")
+	var tools := HBoxContainer.new()
+	tools.add_child(UIKit.button("Vía férrea por puntos", func(): _trace("rail")))
+	tools.add_child(UIKit.button("Borrar vía", func(): _trace("rail_erase")))
+	sec.add_child(tools)
+	var occ := RailSim.occupancy(gs)
+	var rails: Array = RailSim.rails(gs)
+	if rails.is_empty():
+		sec.add_child(UIKit.label("Sin vías internas. Traza una vía por puntos entre tus estaciones y la cochera.", 13, UIKit.TEXT_DIM))
+	for r in rails:
+		var key := "r:%d" % int(r["id"])
+		var h := HBoxContainer.new()
+		var n := int(occ.get(key, 0))
+		var cap := RailSim.capacity_of(gs, key)
+		var l := UIKit.label("%s · %d m · ocupación %d/%d%s" % [RailSim.line_label(gs, key), int(float(r.get("length", 0.0))), n, cap, " · LLENO" if n >= cap else ""], 13,
+				UIKit.BAD if n >= cap else UIKit.GOOD)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(l)
+		if not bool(r.get("double", false)):
+			var rid := int(r["id"])
+			h.add_child(UIKit.button("Hacer vía doble", func():
+				_say(_or_ok(RailSim.make_double(GameState, rid), "Vía doble lista: caben dos trenes en el tramo."))
+				refresh()))
+		sec.add_child(h)
