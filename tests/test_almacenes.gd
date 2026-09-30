@@ -98,7 +98,8 @@ func _test_adjacency() -> void:
 	var smith := _place("herreria", 30, 15)
 	var far := _place("tejeduria", -30, 30)
 	check(WarehouseSim.warehouse_for(gs, smith) == int(a["id"]) and int(smith.get("warehouse_id", -9)) == int(a["id"]), "la herrería al lado del almacén queda vinculada (warehouse_id guardado)")
-	check(WarehouseSim.warehouse_for(gs, far) == -1 and LogisticsSim.output_target(gs, far) == "local", "una fábrica lejos de todo almacén no queda vinculada")
+	# Módulos (docs/MODULOS.md): sin almacén al lado no hay vínculo, pero guarda en su almacén integrado.
+	check(WarehouseSim.warehouse_for(gs, far) == -1 and LogisticsSim.output_target(gs, far) == "warehouse" and WarehouseSim.chain_ids(gs, far) == [int(far["id"])], "una fábrica lejos de todo almacén no queda vinculada (usa su almacén integrado)")
 	check(WarehouseSim.linked_to(gs, int(a["id"])).size() == 1, "el almacén sabe a qué negocios abastece")
 	var gap := WarehouseSim.edge_gap(Vector2(30, 15), 2.5, Vector2(30, 25), 3.0)
 	check(gap > 4.0 and gap < 5.0, "distancia entre bordes calculada (%.1f m)" % gap)
@@ -124,8 +125,8 @@ func _test_production_rules() -> void:
 	WarehouseSim.add_to(gs, wid, "hierro", 20.0)
 	WarehouseSim.add_to(gs, wid, "carbon", 20.0)
 	BusinessSim.produce(gs)
-	var made := WarehouseSim.stock_in(gs, wid, "herramientas")
-	check(made > 0.5 and WarehouseSim.stock_in(gs, WarehouseSim.PLAZA, "herramientas") <= 0.001, "produce con insumos de SU almacén y guarda ahí (%.1f herramientas)" % made)
+	var made := WarehouseSim.stock_in(gs, wid, "herramientas") + WarehouseSim.stock_in(gs, int(smith["id"]), "herramientas")
+	check(made > 0.5 and WarehouseSim.stock_in(gs, WarehouseSim.PLAZA, "herramientas") <= 0.001, "produce con insumos de SU almacén y guarda en su integrado y el vinculado (%.1f herramientas)" % made)
 	check(WarehouseSim.stock_in(gs, WarehouseSim.PLAZA, "hierro") >= 49.99, "no tocó los insumos de la plaza")
 	# Almacén lleno: se detiene con aviso claro.
 	WarehouseSim.remove_from(gs, wid, "hierro", 100.0)   # Sin insumos la herrería no libera espacio.
@@ -134,6 +135,7 @@ func _test_production_rules() -> void:
 	var farm := _place("rebano", 38, 25)   # Sin temporada: produce todo el año.
 	_hire(farm, 4)
 	check(WarehouseSim.warehouse_for(gs, farm) == wid, "el campo al lado del almacén queda vinculado")
+	WarehouseSim.add_to(gs, int(farm["id"]), "piedra", WarehouseSim.free_in(gs, int(farm["id"])))   # Módulos: su integrado también lleno.
 	gs.suppress_notifications = false
 	var n0: int = gs.notifications_log.size()
 	BusinessSim.produce(gs)
@@ -148,7 +150,8 @@ func _test_production_rules() -> void:
 	var far_farm := _place("trigal", -30, 30)
 	_hire(far_farm, 2)
 	BusinessSim.produce(gs)
-	check(float(far_farm["inventory"].get("trigo", 0.0)) > 1.0 and LogisticsSim.pending_at_sites(gs).has(int(far_farm["id"])), "sin almacén al lado la cosecha queda en el sitio y espera transporte")
+	# Módulos: sin almacén al lado la cosecha va a su almacén integrado (ya no queda en el patio).
+	check(WarehouseSim.stock_in(gs, int(far_farm["id"]), "trigo") > 1.0 and not LogisticsSim.pending_at_sites(gs).has(int(far_farm["id"])), "sin almacén al lado la cosecha va a su almacén integrado")
 
 
 func _test_move_and_demolish() -> void:
@@ -306,18 +309,15 @@ func _test_ui() -> void:
 	add_child(world)
 	await get_tree().process_frame
 	var vis: LogisticsVisuals = LogisticsVisuals.instance
-	var ring: Node3D = vis._links_root.get_node_or_null("link_%d" % int(smith["id"]))
-	check(ring != null and int(ring.get_meta("warehouse")) == int(a["id"]), "la herrería vinculada muestra el indicador verde")
-	check(vis._links_root.get_node_or_null("line_%d" % int(smith["id"])) != null, "flecha verde de la fábrica a su almacén")
-	var ring2: Node3D = vis._links_root.get_node_or_null("link_%d" % int(far["id"]))
-	check(ring2 != null and int(ring2.get_meta("warehouse")) == -1, "la fábrica sin almacén muestra indicador rojo")
+	# Módulos: con almacén integrado ya no se dibujan anillos ni flechas de vínculo.
+	check(vis._links_root.get_node_or_null("link_%d" % int(smith["id"])) == null and vis._links_root.get_node_or_null("link_%d" % int(far["id"])) == null, "sin anillos verde/rojo: todo negocio tiene almacén integrado")
 	check(vis._wh_labels.has(int(a["id"])) and str((vis._wh_labels[int(a["id"])] as Label3D).text).find("abastece 1") >= 0, "el almacén muestra cuántos negocios abastece")
 	var fallback := MeshLib.ghost_mat(true)
 	var m1 := vis.placement_feedback("molino", Vector3(38, 0, 16), -1, true, fallback)
 	check(m1 == LogisticsVisuals.link_ghost_mat() and vis.placement_text().find("Al lado") >= 0, "ghost verde brillante junto a un almacén: '%s'" % vis.placement_text().strip_edges())
 	check(vis._place_root != null and vis._place_root.get_child_count() > 0, "se dibuja la flecha hacia el almacén durante la colocación")
 	var m2 := vis.placement_feedback("molino", Vector3(-30, 0, -5), -1, true, fallback)
-	check(m2 == LogisticsVisuals.nolink_ghost_mat() and vis.placement_text().find("Sin almacén") >= 0, "ghost ámbar si no queda al lado de un almacén")
+	check(m2 == fallback and vis.placement_text().find("almacén integrado") >= 0, "lejos de un almacén: ghost normal, guardará en su almacén integrado")
 	var m3 := vis.placement_feedback("molino", Vector3(-30, 0, -5), -1, false, fallback)
 	check(m3 == fallback, "si no se puede construir, sigue en rojo")
 	var m4 := vis.placement_feedback("almacen", Vector3(-30, 0, 20), -1, true, fallback)
@@ -335,10 +335,10 @@ func _test_ui() -> void:
 	check(hud.building_panel.summary.text.find("abastece") >= 0, "el resumen del almacén muestra a quién abastece")
 	hud.open_building(int(smith["id"]))
 	await get_tree().process_frame
-	check(hud.building_panel.summary.text.find("Almacén vinculado") >= 0 and hud.building_panel.summary.text.find("5fd35f") >= 0, "la fábrica muestra 'Almacén vinculado' en verde")
+	check(hud.building_panel.summary.text.find("Almacén vinculado") >= 0 and hud.building_panel.summary.text.find("Almacén integrado") >= 0, "la fábrica muestra su almacén integrado y el vinculado")
 	hud.open_building(int(far["id"]))
 	await get_tree().process_frame
-	check(hud.building_panel.summary.text.find("ninguno") >= 0, "la fábrica sin almacén muestra 'ninguno' en rojo")
+	check(hud.building_panel.summary.text.find("usa su almacén integrado") >= 0, "la fábrica sin almacén al lado usa su almacén integrado")
 	hud.open_building(int(st["id"]))
 	await get_tree().process_frame
 	names.clear()
@@ -359,8 +359,7 @@ func _test_ui() -> void:
 	WarehouseSim.relink_all(gs)
 	vis.rebuild_links()
 	await get_tree().process_frame
-	var ring3: Node3D = vis._links_root.get_node_or_null("link_%d" % int(smith["id"]))
-	check(ring3 != null and int(ring3.get_meta("warehouse")) == -1, "al alejarla del almacén su indicador pasa a rojo")
+	check(WarehouseSim.warehouse_for(gs, smith) == -1 and WarehouseSim.chain_ids(gs, smith) == [int(smith["id"])], "al alejarla del almacén queda solo con su almacén integrado")
 	world.queue_free()
 	await get_tree().process_frame
 	ui_done = true

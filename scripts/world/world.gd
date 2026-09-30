@@ -483,7 +483,7 @@ func _update_placement() -> void:
 	var place_level := int(GameState.get_building(move_id).get("level", 1)) if move_id >= 0 else int(place_project.get("level", 1))
 	var fp := GameData.footprint(place_type, place_level)
 	place_pos = Vector3(p.x, _ground(p.x, p.z, fp), p.z)
-	place_reason = ConstructionSim.placement_block_reason(GameState, place_type, p.x, p.z, move_id, place_level, true)
+	place_reason = ConstructionSim.placement_block_reason(GameState, place_type, p.x, p.z, move_id, place_level, move_id < 0)   # Módulos: al colocar se reserva espacio para crecer.
 	if place_reason == "":
 		place_reason = terrain.footprint_ok(p.x, p.z, fp)
 	if place_reason == "" and move_id < 0 and not place_project.is_empty():

@@ -316,25 +316,22 @@ static func nearest_for(gs, type_id: String, x: float, z: float, ignore_id := -1
 static func warehouse_for(gs, b: Dictionary) -> int:
 	if not is_linkable(gs, b):
 		return NONE
-	if is_warehouse_building(gs, b):
-		b["warehouse_id"] = int(b["id"])   # Módulos: su almacén integrado va primero.
-		return int(b["id"])
 	var n := nearest_for(gs, str(b["type"]), float(b["x"]), float(b["z"]), int(b["id"]), int(b.get("level", 1)))
 	var wid := int(n.get("id", NONE))
 	b["warehouse_id"] = wid
 	return wid
 
 
-## Almacenes de un negocio en orden de uso: su almacén integrado (módulo) y luego el separado que
-## tenga al lado. [] si no tiene ninguno.
+## Almacenes de un negocio de la cadena en orden de uso: su almacén integrado (módulo, siempre
+## desde el nivel 1) y luego el almacén separado vinculado al lado (warehouse_for). [] si ninguno.
 static func chain_ids(gs, b: Dictionary) -> Array:
-	var first := warehouse_for(gs, b)
-	if first < 0:
-		return []
-	if first != int(b["id"]):
-		return [first]
-	var n := nearest_for(gs, str(b["type"]), float(b["x"]), float(b["z"]), int(b["id"]), int(b.get("level", 1)))
-	return [first] if n.is_empty() else [first, int(n["id"])]
+	var out := []
+	if is_linkable(gs, b) and is_warehouse_building(gs, b):
+		out.append(int(b["id"]))
+	var adj := warehouse_for(gs, b)
+	if adj >= 0:
+		out.append(adj)
+	return out
 
 
 ## Negocios vinculados a un almacén.

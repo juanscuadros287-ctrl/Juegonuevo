@@ -541,7 +541,9 @@ func _home_tab(b: Dictionary, mine: bool) -> Control:
 # --- Mejorar ------------------------------------------------------------------------------------
 
 func _upgrade_tab(b: Dictionary) -> Control:
-	var v := VBoxContainer.new()
+	var outer := VBoxContainer.new()
+	var modular := ModulesSim.applies_any(GameState, b)   # Módulos: secciones Edificio, Almacén, Parqueadero y flota.
+	var v: VBoxContainer = UIKit.section(outer, "Edificio (nivel %d)" % int(b["level"]), "", true, "modulo_edificio") if modular else outer
 	var next := int(b["level"]) + 1
 	var nd := GameData.level_def(b["type"], next)
 	if next > GameData.max_level(b["type"]):
@@ -589,7 +591,9 @@ func _upgrade_tab(b: Dictionary) -> Control:
 				rebuild())
 			rb.disabled = not GameState.is_active(b)
 			v.add_child(rb)
-	return v
+	if modular:
+		ModulesTab.add_sections(outer, GameState, b, rebuild, func(t: String): _msg(t, "jugador"))
+	return outer
 
 
 # --- Banco ------------------------------------------------------------------------------------------

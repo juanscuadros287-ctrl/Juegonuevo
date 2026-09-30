@@ -145,14 +145,14 @@ static func warehouse_distance(gs, x: float, z: float) -> float:
 
 ## ¿Tiene un almacén al lado? (queda vinculado y descarga directo).
 static func in_reach(gs, b: Dictionary) -> bool:
-	return WarehouseSim.warehouse_for(gs, b) >= 0
+	return not WarehouseSim.chain_ids(gs, b).is_empty()   # Módulos: el almacén integrado cuenta.
 
 
 ## Dónde queda la producción de un negocio de la cadena: "warehouse" (su almacén vinculado) o "local".
 static func output_target(gs, b: Dictionary) -> String:
 	if not outputs_to_warehouse(gs.building_def(b), gs.level_def(b)):
 		return "local"
-	return "warehouse" if WarehouseSim.warehouse_for(gs, b) >= 0 else "local"
+	return "warehouse" if not WarehouseSim.chain_ids(gs, b).is_empty() else "local"   # Módulos: integrado o al lado.
 
 
 static func local_capacity(gs, b: Dictionary) -> float:
@@ -186,7 +186,8 @@ static func produce_chain(gs, b: Dictionary, product: String, out: float) -> flo
 	var def: Dictionary = gs.building_def(b)
 	var ld: Dictionary = gs.level_def(b)
 	var inputs := recipe_inputs(def, ld)
-	var wid := WarehouseSim.warehouse_for(gs, b)
+	var chain := WarehouseSim.chain_ids(gs, b)   # Módulos: almacén integrado y luego el de al lado.
+	var wid: int = int(chain[chain.size() - 1]) if not chain.is_empty() else -1   # El último que recibe (para avisos).
 	var target := output_target(gs, b)
 	var inv: Dictionary = b["inventory"]
 	var wname := WarehouseSim.label_of(gs, wid) if wid >= 0 else ""
@@ -198,7 +199,7 @@ static func produce_chain(gs, b: Dictionary, product: String, out: float) -> flo
 		for g in inputs:
 			per_unit_in += float(inputs[g])
 		var free := 0.0
-		for w in WarehouseSim.chain_ids(gs, b):   # Módulos: almacén integrado + el de al lado.
+		for w in chain:
 			free += WarehouseSim.free_in(gs, w)
 		room = free / maxf(0.0001, 1.0 - per_unit_in) if per_unit_in < 1.0 else INF
 	elif bool(GameData.goods.get(product, {}).get("storable", true)):
@@ -250,7 +251,7 @@ static func produce_chain(gs, b: Dictionary, product: String, out: float) -> flo
 	var stored := out
 	if target == "warehouse":
 		stored = 0.0
-		for w in WarehouseSim.chain_ids(gs, b):   # Módulos: primero el integrado, luego el de al lado.
+		for w in chain:
 			stored += WarehouseSim.add_to(gs, w, product, out - stored)
 		if stored < out - 0.001:
 			b["chain_status"] = "almacén lleno"
@@ -352,7 +353,8 @@ static func endpoints(gs) -> Array:
 
 static func endpoint_stock(gs, id: int, good: String) -> float:
 	if is_warehouse_endpoint(gs, id):
-		return WarehouseSim.stock_in(gs, id, good)
+		# Módulos: un negocio con almacén integrado también despacha lo que quedó en su patio.
+		return WarehouseSim.stock_in(gs, id, good) + (float(gs.get_building(id).get("inventory", {}).get(good, 0.0)) if id != PLAZA else 0.0)
 	return float(gs.get_building(id).get("inventory", {}).get(good, 0.0))
 
 
@@ -367,7 +369,14 @@ static func endpoint_room(gs, id: int, good: String) -> float:
 
 static func endpoint_take(gs, id: int, good: String, qty: float) -> float:
 	if is_warehouse_endpoint(gs, id):
-		return WarehouseSim.remove_from(gs, id, good, qty)
+		var got := WarehouseSim.remove_from(gs, id, good, qty)
+		if got < qty - 0.0001 and id != PLAZA:   # Módulos: y luego de su patio (inventario local).
+			var inv: Dictionary = gs.get_building(id).get("inventory", {})
+			var more := minf(qty - got, float(inv.get(good, 0.0)))
+			if more > 0.0:
+				inv[good] = float(inv[good]) - more
+				got += more
+		return got
 	var b: Dictionary = gs.get_building(id)
 	if b.is_empty():
 		return 0.0

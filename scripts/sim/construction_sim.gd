@@ -178,7 +178,7 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 static func start_construction(gs, type_id: String, x: float, z: float, rot: float, bname := "", legal := "sas", tier := "normal") -> Dictionary:
 	var reason := build_block_reason(gs, type_id, tier)
 	if reason == "":
-		reason = placement_block_reason(gs, type_id, x, z, -1, 1, true)
+		reason = placement_block_reason(gs, type_id, x, z)
 	if reason != "":
 		return {"error": reason}
 	var cost := cost_for(gs, type_id, 1, false, tier)
@@ -477,7 +477,7 @@ static func move_cost(gs, b: Dictionary, x: float, z: float) -> float:
 static func move_building(gs, b: Dictionary, x: float, z: float, rot: float) -> String:
 	if not gs.owned_by_player(b):
 		return "Solo puedes mover tus edificios"
-	var reason := placement_block_reason(gs, str(b["type"]), x, z, int(b["id"]), int(b["level"]), true)
+	var reason := placement_block_reason(gs, str(b["type"]), x, z, int(b["id"]), int(b["level"]))
 	if reason != "":
 		return reason
 	var cost := move_cost(gs, b, x, z)

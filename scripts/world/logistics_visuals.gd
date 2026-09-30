@@ -372,8 +372,8 @@ func rebuild_links() -> void:
 		var p := Vector2(float(b["x"]), float(b["z"]))
 		var fp := float(gs.building_def(b).get("footprint", 4.0))
 		var wid := WarehouseSim.warehouse_for(gs, b)
-		if wid == int(b["id"]):
-			continue   # Módulos: con almacén integrado no hace falta anillo ni flecha.
+		if WarehouseSim.is_warehouse_building(gs, b):
+			continue   # Módulos: con almacén integrado (siempre) no hace falta anillo ni flecha.
 		var node := Node3D.new()
 		node.position = Vector3(p.x, _h(p.x, p.y) + 0.12, p.y)
 		node.name = "link_%d" % int(b["id"])
@@ -387,6 +387,8 @@ func rebuild_links() -> void:
 			_links_root.add_child(line)
 	# Etiqueta sobre cada almacén: ocupación y cuántos negocios abastece.
 	for wid in WarehouseSim.ids(gs):
+		if ModulesSim.is_private_warehouse(gs, wid):
+			continue   # Módulos: el almacén integrado se ve en el panel del negocio, no con etiqueta 3D.
 		var wp := WarehouseSim.pos_of(gs, wid)
 		var lab := Label3D.new()
 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
