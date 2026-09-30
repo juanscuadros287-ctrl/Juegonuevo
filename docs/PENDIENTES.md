@@ -81,3 +81,9 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
 - **Migración:** gente llega o se va de los pueblos según empleo y calidad de vida.
 - **Turismo:** hoteles, atracciones, visitantes extranjeros (compradores de esmeraldas).
 - **Consejero/asistente:** personaje que sugiere oportunidades y riesgos a pedido (no invasivo).
+
+## L. Variedad de vehículos y vagones (pedido del usuario, próxima tanda)
+- Cada modelo con propiedades distintas: especialidad (refrigerado, granel, líquidos, pasajeros, lujo, todoterreno…), capacidad, velocidad, consumo, mantenimiento, durabilidad.
+- Varios modelos por tipo y época (carretas, camiones, trenes/locomotoras, vagones, barcos, aviones), desbloqueados por investigación; tradeoffs reales (rápido pero poca carga, etc.).
+- Diseño 3D único y textura personalizada para cada modelo y vagón.
+- Rendimiento: LOD e instancing para que más detalle no cueste FPS.
