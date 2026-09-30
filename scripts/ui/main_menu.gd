@@ -1,7 +1,9 @@
+class_name MainMenu
 extends Control
 ## Menú principal: fondo ilustrado (cielo, colinas y pueblo dibujados con código), título, nueva
 ## partida (personaje, pueblo, dificultad con iconos, país con descripción y ventajas, tipo de mapa y
-## lugar de fundación con mini-mapa), cargar y salir.
+## lugar de fundación con mini-mapa), 5 ranuras de partida (continuar, nueva, renombrar, borrar),
+## partidas antiguas para importar y salir.
 
 const DIFF_ICONS := {"facil": "sprout", "normal": "shield", "dificil": "alert", "extremo": "skull"}
 const DIFF_COLORS := {"facil": Color(0.4, 0.83, 0.5), "normal": Color(0.45, 0.66, 0.96), "dificil": Color(0.97, 0.72, 0.28), "extremo": Color(0.95, 0.4, 0.38)}
@@ -33,6 +35,23 @@ var region_list: Array = []
 var region_preview: RegionPreview
 var _country_card: VBoxContainer
 var _title_box: VBoxContainer
+var _subtitle: Label
+# Ranuras de partida
+var slots_box: VBoxContainer
+var continue_btn: Button
+var legacy_btn: Button
+var legacy_slot_opt: OptionButton
+var _pending_slot := 0              # ranura donde se creará la partida nueva
+var _confirm: Dictionary
+var _confirm_text: Label
+var _confirm_ok: Button
+var _confirm_cb: Callable
+var _rename: Dictionary
+var _rename_edit: LineEdit
+var _rename_slot := 0
+var _error: Dictionary
+var _error_text: Label
+var _error_box: VBoxContainer
 
 
 func _ready() -> void:
@@ -61,6 +80,7 @@ func _ready() -> void:
 	title.add_theme_constant_override("shadow_offset_y", 4)
 	_title_box.add_child(title)
 	var sub := UIKit.label(str(GameData.game.get("subtitle", "")), 18, Color(0.95, 0.92, 0.85))
+	_subtitle = sub
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
 	sub.add_theme_constant_override("outline_size", 5)
@@ -71,18 +91,51 @@ func _ready() -> void:
 	mp.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	col.add_child(mp)
 	main_box = VBoxContainer.new()
-	main_box.add_theme_constant_override("separation", 8)
+	main_box.add_theme_constant_override("separation", 10)
 	mp.add_child(main_box)
-	main_box.add_child(_big_button("Nueva partida", "play", _show_new, true))
-	main_box.add_child(_big_button("Cargar partida", "folder", _show_load))
-	main_box.add_child(_big_button("Salir", "exit", func(): get_tree().quit()))
-	var ver := UIKit.label("v" + str(GameData.game.get("version", "")), 12, UIKit.TEXT_FAINT)
-	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	main_box.add_child(ver)
 	main_box.set_meta("panel", mp)
+	# Pantalla principal: 5 ranuras de partida (guardado automático en la ranura elegida).
+	if DisplayServer.get_name() != "headless":
+		SaveManager.auto_import_legacy()   # primera vez: partidas del sistema anterior → ranuras
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 8)
+	head.add_child(UIKit.icon("save", 18, UIKit.ACCENT))
+	var ht := UIKit.label("Tus partidas", 17, UIKit.ACCENT)
+	ht.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(ht)
+	head.add_child(UIKit.label("Se guardan solas en su ranura", 12, UIKit.TEXT_FAINT))
+	main_box.add_child(head)
+	slots_box = VBoxContainer.new()
+	slots_box.add_theme_constant_override("separation", 6)
+	main_box.add_child(slots_box)
+	var bottom := HBoxContainer.new()
+	bottom.add_theme_constant_override("separation", 10)
+	main_box.add_child(bottom)
+	continue_btn = _big_button("Continuar última partida", "play", _continue_last, true)
+	continue_btn.custom_minimum_size.x = 300
+	bottom.add_child(continue_btn)
+	legacy_btn = _big_button("Partidas antiguas", "folder", _show_load)
+	legacy_btn.custom_minimum_size.x = 230
+	bottom.add_child(legacy_btn)
+	var sp := Control.new()
+	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom.add_child(sp)
+	var quit_b := _big_button("Salir", "exit", func(): get_tree().quit())
+	quit_b.custom_minimum_size.x = 130
+	bottom.add_child(quit_b)
+	var ver := UIKit.label("v%s · partidas en %s" % [SaveManager.game_version(), ProjectSettings.globalize_path(SaveManager.slots_dir)], 11, UIKit.TEXT_FAINT)
+	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ver.clip_text = true
+	ver.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	ver.custom_minimum_size.x = 860
+	main_box.add_child(ver)
 
 	_build_new_panel(col)
 	_build_load_panel(col)
+	_build_dialogs()
+	refresh_slots()
+	_fit_height()
+	get_viewport().size_changed.connect(_fit_height)
 	UIKit.animate_in(mp, Vector2.ZERO, 0.4)
 
 
@@ -373,6 +426,8 @@ func _update_country_card() -> void:
 		v.add_child(UIKit.chip("Inflación base %s/año" % Fmt.pct_1(infl * 100.0), UIKit.WARN if infl > 0.045 else UIKit.TEXT_DIM, "inflation", 11))
 
 
+## Panel "Partidas antiguas": partidas del sistema anterior (saves/, nombres libres) para importar a
+## una ranura libre. Los archivos originales no se tocan.
 func _build_load_panel(parent: Control) -> void:
 	load_panel = PanelContainer.new()
 	load_panel.add_theme_stylebox_override("panel", UIKit.float_style(Color(0.07, 0.078, 0.095, 0.93), 16, 18))
@@ -381,54 +436,375 @@ func _build_load_panel(parent: Control) -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
 	load_panel.add_child(v)
-	_group_title(v, "Cargar partida", "folder")
+	_group_title(v, "Partidas antiguas", "folder")
+	var note := UIKit.label("Partidas guardadas con versiones anteriores del juego. Al importarlas se copian a una ranura (el archivo original se conserva).", 12, UIKit.TEXT_DIM)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size.x = 560
+	v.add_child(note)
 	load_list = ItemList.new()
-	load_list.custom_minimum_size = Vector2(560, 300)
+	load_list.custom_minimum_size = Vector2(560, 280)
 	load_list.item_activated.connect(func(_i): _load_selected())
 	v.add_child(load_list)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	v.add_child(row)
 	row.add_child(_big_button("Volver", "chevron_left", _show_main))
-	row.add_child(_big_button("Cargar", "folder", _load_selected, true))
+	row.add_child(UIKit.label("Importar a:", 14, UIKit.TEXT_DIM))
+	legacy_slot_opt = OptionButton.new()
+	legacy_slot_opt.custom_minimum_size.x = 150
+	row.add_child(legacy_slot_opt)
+	row.add_child(_big_button("Importar", "save", _load_selected, true))
+
+
+func _build_dialogs() -> void:
+	_confirm = UIKit.modal(self, "Confirmar", Vector2(440, 0), "alert")
+	_confirm_text = UIKit.label("", 14)
+	_confirm_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_confirm_text.custom_minimum_size.x = 400
+	_confirm["body"].add_child(_confirm_text)
+	var crow := HBoxContainer.new()
+	crow.add_theme_constant_override("separation", 8)
+	crow.alignment = BoxContainer.ALIGNMENT_END
+	_confirm["body"].add_child(crow)
+	crow.add_child(UIKit.button("Cancelar", func(): _confirm["root"].visible = false, 120))
+	_confirm_ok = UIKit.button("Aceptar", func():
+		_confirm["root"].visible = false
+		_confirm_cb.call(), 150)
+	crow.add_child(_confirm_ok)
+
+	_rename = UIKit.modal(self, "Renombrar partida", Vector2(420, 0), "save")
+	_rename_edit = LineEdit.new()
+	_rename_edit.max_length = 48
+	_rename_edit.placeholder_text = "Nombre de la partida (vacío = pueblo y personaje)"
+	_rename_edit.text_submitted.connect(func(_t): _do_rename())
+	_rename["body"].add_child(_rename_edit)
+	var rrow := HBoxContainer.new()
+	rrow.add_theme_constant_override("separation", 8)
+	rrow.alignment = BoxContainer.ALIGNMENT_END
+	_rename["body"].add_child(rrow)
+	rrow.add_child(UIKit.button("Cancelar", func(): _rename["root"].visible = false, 120))
+	rrow.add_child(UIKit.primary(UIKit.button("Guardar nombre", _do_rename, 150)))
+
+	_error = UIKit.modal(self, "No se pudo cargar la partida", Vector2(500, 0), "alert")
+	_error_text = UIKit.label("", 13)
+	_error_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_error_text.custom_minimum_size.x = 460
+	_error["body"].add_child(_error_text)
+	_error_box = VBoxContainer.new()
+	_error_box.add_theme_constant_override("separation", 6)
+	_error["body"].add_child(_error_box)
+
+
+## Con poca altura (1280×720) se ocultan el subtítulo y la corona para que quepan las 5 ranuras.
+func _fit_height() -> void:
+	if _title_box == null:
+		return
+	var h := get_viewport_rect().size.y
+	_subtitle.visible = h >= 820.0
+	_title_box.get_child(0).visible = h >= 860.0
+
+
+# --- Ranuras ---------------------------------------------------------------------------------------
+
+func refresh_slots() -> void:
+	if slots_box == null:
+		return
+	UIKit.clear(slots_box)
+	for info in SaveManager.list_slots():
+		slots_box.add_child(_slot_row(info))
+	continue_btn.disabled = SaveManager.last_slot() == 0
+	var n := SaveManager.list_legacy().size()
+	legacy_btn.text = "Partidas antiguas (%d)" % n
+	legacy_btn.visible = n > 0
+
+
+static func play_time_text(sec: float) -> String:
+	var m := int(sec / 60.0)
+	if m < 60:
+		return "%d min" % m
+	return "%d h %02d min" % [m / 60, m % 60]
+
+
+## "2026-09-26T14:03:10" → "26/09/2026 14:03".
+static func saved_at_text(iso: String) -> String:
+	if iso.length() < 16:
+		return iso
+	return "%s/%s/%s %s" % [iso.substr(8, 2), iso.substr(5, 2), iso.substr(0, 4), iso.substr(11, 5)]
+
+
+static func slot_title(info: Dictionary) -> String:
+	var meta: Dictionary = info.get("meta", {})
+	if str(info.get("name", "")) != "":
+		return str(info["name"])
+	var t := str(meta.get("town", ""))
+	var p := str(meta.get("player", ""))
+	return "%s — %s" % [t, p] if p != "" else (t if t != "" else "Partida")
+
+
+static func thumb_texture(meta: Dictionary) -> Texture2D:
+	var png = meta.get("thumbnail", PackedByteArray())
+	if not (png is PackedByteArray) or (png as PackedByteArray).is_empty():
+		return null
+	var img := Image.new()
+	if img.load_png_from_buffer(png) != OK:
+		return null
+	return ImageTexture.create_from_image(img)
+
+
+func _slot_row(info: Dictionary) -> Control:
+	var slot := int(info["slot"])
+	var status := str(info["status"])
+	if status == "empty":
+		var b := Button.new()
+		b.text = "Ranura %d   ·   Vacío — Nueva partida" % slot
+		b.icon = UIIcons.tex("plus", 20)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.custom_minimum_size = Vector2(880, 58)
+		b.add_theme_font_size_override("font_size", 16)
+		b.add_theme_color_override("font_color", UIKit.TEXT_DIM)
+		b.add_theme_constant_override("h_separation", 14)
+		b.add_theme_stylebox_override("normal", UIKit._flat(Color(1, 1, 1, 0.025), 10, 16, 6, Color(1, 1, 1, 0.12), 1))
+		b.add_theme_stylebox_override("hover", UIKit._flat(Color(UIKit.ACCENT, 0.1), 10, 16, 6, Color(UIKit.ACCENT, 0.5), 1))
+		b.pressed.connect(func(): _new_in(slot))
+		return b
+	var meta: Dictionary = info.get("meta", {})
+	var damaged := status == "damaged"
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UIKit._flat(Color(0.12, 0.13, 0.16, 0.92), 10, 10, 8, Color(UIKit.BAD, 0.6) if damaged else Color(UIKit.ACCENT, 0.22), 1))
+	p.custom_minimum_size.x = 880
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 12)
+	p.add_child(h)
+	# Miniatura
+	var frame := PanelContainer.new()
+	frame.add_theme_stylebox_override("panel", UIKit._flat(Color(0.05, 0.06, 0.08), 6, 0, 0, UIKit.BORDER, 1))
+	frame.custom_minimum_size = Vector2(144, 81)
+	h.add_child(frame)
+	var tex := thumb_texture(meta)
+	if tex != null:
+		var tr := TextureRect.new()
+		tr.texture = tex
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		tr.custom_minimum_size = Vector2(144, 81)
+		frame.add_child(tr)
+	else:
+		var ic := UIKit.icon("dynasty", 34, Color(UIKit.ACCENT, 0.45))
+		ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		frame.add_child(ic)
+	# Datos
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 3)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(v)
+	var t1 := HBoxContainer.new()
+	t1.add_theme_constant_override("separation", 8)
+	v.add_child(t1)
+	t1.add_child(UIKit.chip("Ranura %d" % slot, UIKit.TEXT_DIM, "", 11))
+	var title := UIKit.label(slot_title(info), 18, UIKit.ACCENT)
+	title.clip_text = true
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	t1.add_child(title)
+	var line2 := []
+	if str(info.get("name", "")) != "":
+		line2.append("%s · %s" % [meta.get("town", ""), meta.get("player", "")])
+	elif str(meta.get("player", "")) == "":
+		line2.append(str(meta.get("town", "")))
+	if str(meta.get("country", "")) != "":
+		line2.append(str(meta["country"]))
+	line2.append(str(meta.get("date", "")))
+	v.add_child(UIKit.label("  ·  ".join(line2.filter(func(x): return str(x) != "")), 13, UIKit.TEXT))
+	var chips := HBoxContainer.new()
+	chips.add_theme_constant_override("separation", 6)
+	v.add_child(chips)
+	chips.add_child(UIKit.chip(Fmt.money(float(meta.get("money", 0.0))), UIKit.ACCENT, "money", 11))
+	chips.add_child(UIKit.chip("%s hab." % Fmt.thousands(int(meta.get("population", 0))), UIKit.ACCENT_2, "population", 11))
+	chips.add_child(UIKit.chip("Jugado %s" % play_time_text(float(meta.get("play_seconds", 0.0))), UIKit.TEXT_DIM, "realtime", 11))
+	chips.add_child(UIKit.chip("Guardado %s" % saved_at_text(str(info.get("saved_at", ""))), UIKit.TEXT_DIM, "save", 11))
+	if damaged:
+		var el := UIKit.label("Partida dañada (%s). No se ha borrado. %s" % [info.get("error", ""), "Hay copias de respaldo." if not (info["backups"] as Array).is_empty() or str(info.get("source", "")) != "" else "No hay copias legibles."], 11, UIKit.BAD)
+		el.clip_text = true
+		el.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		el.custom_minimum_size.x = 420
+		v.add_child(el)
+	elif SaveMigrations.version_of(info) < SaveMigrations.CURRENT:
+		v.add_child(UIKit.label("Guardada con una versión anterior: se actualizará al cargarla (con copia de respaldo).", 11, UIKit.INFO))
+	# Botones
+	var g := GridContainer.new()
+	g.columns = 2
+	g.add_theme_constant_override("h_separation", 6)
+	g.add_theme_constant_override("v_separation", 6)
+	h.add_child(g)
+	var cont := UIKit.primary(UIKit.button("Cargar respaldo" if damaged else "Continuar", func(): continue_slot(slot), 124))
+	cont.icon = UIIcons.tex("play", 16)
+	g.add_child(cont)
+	var nb := UIKit.button("Nueva", func(): _new_in(slot), 104)
+	nb.icon = UIIcons.tex("plus", 16)
+	g.add_child(nb)
+	var rb := UIKit.button("Renombrar", func(): _open_rename(slot), 124)
+	rb.icon = UIIcons.tex("edit", 16)
+	g.add_child(rb)
+	var db := UIKit.danger(UIKit.button("Borrar", func(): _ask_delete(slot), 104))
+	db.icon = UIIcons.tex("trash", 16)
+	g.add_child(db)
+	return p
+
+
+func _ask(title: String, text: String, ok_text: String, cb: Callable, danger := false) -> void:
+	_confirm["title"].text = title
+	_confirm_text.text = text
+	_confirm_ok.text = ok_text
+	_confirm_ok.remove_theme_stylebox_override("normal")
+	if danger:
+		UIKit.danger(_confirm_ok)
+	else:
+		UIKit.primary(_confirm_ok)
+	_confirm_cb = cb
+	_confirm["root"].visible = true
+
+
+func _new_in(slot: int) -> void:
+	var info := SaveManager.slot_info(slot)
+	if info["status"] == "empty":
+		_pending_slot = slot
+		_show_new()
+		return
+	_ask("Nueva partida en la ranura %d" % slot,
+		"La ranura %d tiene «%s». Si empiezas una partida nueva aquí, la anterior se reemplazará (quedará solo como copia de respaldo hasta los siguientes guardados).\n\n¿Seguro?" % [slot, slot_title(info)],
+		"Empezar de nuevo", func():
+			_pending_slot = slot
+			_show_new(), true)
+
+
+func _ask_delete(slot: int) -> void:
+	var info := SaveManager.slot_info(slot)
+	_ask("Borrar partida", "¿Borrar «%s» de la ranura %d? Se borran también sus copias de respaldo. No se puede deshacer." % [slot_title(info), slot],
+		"Borrar", func():
+			SaveManager.delete_slot(slot)
+			refresh_slots(), true)
+
+
+func _open_rename(slot: int) -> void:
+	_rename_slot = slot
+	var info := SaveManager.slot_info(slot)
+	_rename_edit.text = str(info.get("name", ""))
+	if _rename_edit.text == "":
+		_rename_edit.text = slot_title(info)
+	_rename["root"].visible = true
+	_rename_edit.grab_focus()
+	_rename_edit.select_all()
+
+
+func _do_rename() -> void:
+	SaveManager.rename_slot(_rename_slot, _rename_edit.text)
+	_rename["root"].visible = false
+	refresh_slots()
+
+
+func _continue_last() -> void:
+	var s := SaveManager.last_slot()
+	if s > 0:
+		continue_slot(s)
+
+
+## Carga una ranura (con respaldo automático si la principal está dañada) y entra al juego.
+func continue_slot(slot: int) -> void:
+	var r := SaveManager.load_slot(slot)
+	if r["ok"]:
+		if bool(r.get("used_backup", false)):
+			SaveManager.pending_notice = "La partida principal estaba dañada: se cargó la copia de respaldo (%s). El archivo dañado se conserva." % str(r["source"]).get_file()
+		elif int(r.get("from_version", SaveMigrations.CURRENT)) < SaveMigrations.CURRENT:
+			SaveManager.pending_notice = "Partida actualizada al formato nuevo. Copia de la versión anterior en slot_%d.v%d.backup." % [slot, int(r["from_version"])]
+		_enter_game()
+		return
+	_show_load_error(slot, str(r["error"]))
+
+
+func _show_load_error(slot: int, err: String) -> void:
+	_error_text.text = "La partida de la ranura %d no se pudo cargar. No se ha borrado ni modificado.\n\nDetalle: %s" % [slot, err]
+	UIKit.clear(_error_box)
+	for f in SaveManager._candidates(slot).slice(1):
+		if not FileAccess.file_exists(f):
+			continue
+		var h := SaveManager.read_header(f)
+		var path: String = f
+		var b := UIKit.button("Cargar copia %s (%s)" % [f.get_extension(), saved_at_text(str(h["data"].get("saved_at", ""))) if h["ok"] else "ilegible"], func():
+			var r := SaveManager.load_file(path, slot)
+			if r["ok"]:
+				_error["root"].visible = false
+				_enter_game()
+			else:
+				_error_text.text += "\n%s: %s" % [path.get_file(), r["error"]])
+		b.disabled = not h["ok"]
+		_error_box.add_child(b)
+	_error_box.add_child(UIKit.button("Cerrar", func(): _error["root"].visible = false))
+	_error["root"].visible = true
+
+
+func _enter_game() -> void:
+	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 
 func _show_main() -> void:
+	_pending_slot = 0
 	main_box.get_meta("panel").visible = true
 	_title_box.visible = true
 	new_panel.visible = false
 	load_panel.visible = false
+	refresh_slots()
 
 
 func _show_new() -> void:
+	if _pending_slot == 0:
+		_pending_slot = SaveManager.first_empty_slot()
 	main_box.get_meta("panel").visible = false
 	_title_box.visible = false
 	new_panel.visible = true
 	UIKit.pop_in(new_panel)
 
 
+## Partidas antiguas (sistema anterior) para importar a una ranura libre.
 func _show_load() -> void:
 	main_box.get_meta("panel").visible = false
 	load_panel.visible = true
 	UIKit.pop_in(load_panel)
 	load_list.clear()
-	for s in SaveManager.list_saves():
+	for s in SaveManager.list_legacy():
 		var sm: Dictionary = s["summary"]
-		var idx := load_list.add_item("%s — %s — %s · pobl. %d" % [s["slot"], sm.get("town", ""), sm.get("date", ""), int(sm.get("population", 0))], UIIcons.tex("save", 16))
+		var idx := load_list.add_item("%s — %s — %s · pobl. %d   [%s]" % [s["slot"], sm.get("town", ""), sm.get("date", ""), int(sm.get("population", 0)), saved_at_text(str(s["saved_at"]))], UIIcons.tex("save", 16))
 		load_list.set_item_metadata(idx, s["slot"])
 	if load_list.item_count == 0:
-		load_list.add_item("No hay partidas guardadas", null, false)
+		load_list.add_item("No hay partidas antiguas por importar", null, false)
+	legacy_slot_opt.clear()
+	for i in range(1, SaveManager.SLOT_COUNT + 1):
+		if not SaveManager.slot_exists(i):
+			legacy_slot_opt.add_item("Ranura %d" % i, i)
+	if legacy_slot_opt.item_count == 0:
+		legacy_slot_opt.add_item("Sin ranuras libres", 0)
+		legacy_slot_opt.disabled = true
+	else:
+		legacy_slot_opt.disabled = false
 
 
 func _load_selected() -> void:
 	var sel := load_list.get_selected_items()
 	if sel.is_empty() or load_list.get_item_metadata(sel[0]) == null:
 		return
-	if SaveManager.load_game(str(load_list.get_item_metadata(sel[0]))):
-		get_tree().change_scene_to_file("res://scenes/main.tscn")
+	var slot := legacy_slot_opt.get_selected_id()
+	if slot <= 0:
+		return
+	if SaveManager.import_legacy(str(load_list.get_item_metadata(sel[0])), slot):
+		_show_main()
+	else:
+		_show_load_error(slot, SaveManager.last_error)
 
 
 func _start() -> void:
+	if _pending_slot == 0:
+		_pending_slot = SaveManager.first_empty_slot()
+	SaveManager.begin_slot(_pending_slot)
 	GameState.new_game({
 		"town_name": town_edit.text.strip_edges() if town_edit.text.strip_edges() != "" else "San Rafael",
 		"player_name": player_edit.text.strip_edges() if player_edit.text.strip_edges() != "" else "Sebastián",
@@ -441,4 +817,8 @@ func _start() -> void:
 		"country_id": _country(),
 		"region": str(region_list[region_opt.selected].get("id", "")) if not region_list.is_empty() else "",
 	})
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	if _pending_slot > 0:
+		SaveManager.rename_slot(_pending_slot, "")
+		SaveManager.save_slot(_pending_slot, "nueva")
+		SaveManager.save_soon(3.0)   # con la miniatura del mundo, ya dentro del juego
+	_enter_game()
