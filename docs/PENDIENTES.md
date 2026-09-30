@@ -59,3 +59,14 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
 - **Estadísticas históricas e informe anual:** fortuna por generación, árbol familiar, logros de cada heredero.
 - **Escenarios de inicio (se elige al crear partida):** empezar pobre, heredar empresa quebrada, otro país, otra época.
 - **Dificultad configurable y logros.**
+
+## J. Dinastía, sociedad y experiencia (pedido del usuario)
+- **Educación de herederos:** colegio, universidad, aprendiz en empresas propias; mejora habilidades de gestión del heredero.
+- **Filantropía:** fundaciones, becas, donaciones al pueblo → reputación y apoyo político.
+- **Lujo y estilo de vida:** mansión, arte, joyas, fiestas → estatus social, mejores matrimonios; costo de mantenimiento.
+- **Subastas:** terrenos, empresas quebradas, piezas únicas (esmeraldas famosas).
+- **Medios propios:** periódico → radio → TV (por época/investigación); publicidad barata e influencia política.
+- **Crimen organizado (moderado):** extorsión a negocios; se mitiga con seguridad privada o policía financiada.
+- **Modo foto y cámara libre.**
+- **Velocidades con pausa automática** ante eventos importantes (configurable).
+- **Legado final:** puntaje de la dinastía al terminar y museo familiar.
