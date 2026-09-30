@@ -209,6 +209,7 @@ func simulate_country_day(new_month: bool, primary: bool) -> void:
 	TourismSim.daily(self)
 	RealEstateSim.daily(self)   # Bienes raíces: pago por etapas / pausa de obras.
 	ConstructionSim.daily(self)
+	ModulesSim.daily(self)   # Módulos: obras de almacén, parqueadero y flota (el negocio sigue facturando).
 	MineSim.daily(self)   # Minas: obras de frentes, mantenimiento y cierre al agotarse.
 	GridSim.daily(self)   # Redes: tormentas, reparaciones y acometidas (antes del reparto eléctrico).
 	MarketSim.begin_day(self)
@@ -233,6 +234,7 @@ func simulate_country_day(new_month: bool, primary: bool) -> void:
 		if primary:
 			BankSim.monthly(self)
 		EducationSim.monthly(self)
+		ModulesSim.monthly(self)   # Módulos: mantenimiento mensual (en el mes que cierra).
 		BusinessSim.monthly(self)
 		GovSim.monthly(self)
 		MapSim.monthly(self)   # Fase 9B: precios de la tierra, comercio NPC de tierras, alcaldes y misiones regionales.
@@ -386,7 +388,7 @@ func building_def(b: Dictionary) -> Dictionary:
 
 ## Huella actual del edificio según su nivel.
 func footprint_of(b: Dictionary) -> float:
-	return GameData.footprint(str(b.get("type", "")), int(b.get("level", 1)))
+	return GameData.footprint(str(b.get("type", "")), int(b.get("level", 1))) + ModulesSim.footprint_extra(b)   # Módulos: anexos.
 
 
 func level_def(b: Dictionary) -> Dictionary:

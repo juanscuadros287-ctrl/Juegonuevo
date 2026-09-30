@@ -1,0 +1,30 @@
+{
+ "_nota": "Módulos o submejoras por edificio (docs/MODULOS.md). Cada línea tiene su PROPIO nivel, independiente del nivel del edificio. Costos × price_mult. min_building_level se acota al nivel máximo del tipo de edificio. upkeep = mantenimiento MENSUAL (× price_mult). days = días de obra (el negocio sigue facturando). footprint_add = metros que crece la huella del edificio. El almacén integrado nivel 1 viene incluido (base) en todos los negocios productores y comercios.",
+ "order": ["almacen", "parqueadero"],
+ "modules": {
+  "almacen": {
+   "label": "Almacén",
+   "base_level": 1,
+   "description": "Almacén integrado: todo negocio productor o comercio guarda aquí sus insumos y su producción (primero aquí y luego en el almacén separado que tenga al lado). Cuesta más por espacio que un almacén separado, pero no ocupa terreno aparte.",
+   "levels": [
+    {"label": "Depósito del negocio", "capacity": 100, "tech": "", "min_building_level": 1, "cost": 0, "materials": {}, "days": 0, "upkeep": 0.0, "footprint_add": 0.0},
+    {"label": "Bodega anexa", "capacity": 300, "tech": "bodegas_anexas", "min_building_level": 1, "cost": 650, "materials": {"madera": 30, "piedra": 10}, "days": 8, "upkeep": 6.0, "footprint_add": 0.5},
+    {"label": "Nave de almacenaje", "capacity": 1000, "tech": "almacenes_industriales", "min_building_level": 2, "cost": 2400, "materials": {"madera": 20, "piedra": 50}, "days": 16, "upkeep": 14.0, "footprint_add": 1.0},
+    {"label": "Almacén industrial integrado", "capacity": 3000, "tech": "logistica_integrada", "min_building_level": 3, "cost": 7800, "materials": {"madera": 30, "piedra": 140}, "days": 28, "upkeep": 36.0, "footprint_add": 1.5},
+    {"label": "Centro de distribución integrado", "capacity": 8000, "tech": "automatizacion", "min_building_level": 3, "cost": 19000, "materials": {"madera": 40, "piedra": 320}, "days": 45, "upkeep": 90.0, "footprint_add": 2.0}
+   ]
+  },
+  "parqueadero": {
+   "label": "Parqueadero y flota",
+   "description": "Donde la empresa guarda SUS vehículos de carga: define cuántos y de qué tipo puede tener asignados (se compran en el panel central de Vehículos y se asignan a la compañía; la conexión que exige cada tipo se valida al asignar). El nivel 1 habilita cargadores a pie (solo vacantes).",
+   "levels": [
+    {"label": "Cargadores a pie", "limits": {"pie": 4}, "tech": "", "min_building_level": 1, "cost": 180, "materials": {"madera": 5}, "days": 3, "upkeep": 1.5, "footprint_add": 0.0},
+    {"label": "Corral de mulas", "limits": {"pie": 6, "mula": 3}, "tech": "", "min_building_level": 1, "cost": 420, "materials": {"madera": 15}, "days": 5, "upkeep": 3.0, "footprint_add": 0.3},
+    {"label": "Patio de carretas", "limits": {"pie": 8, "mula": 4, "carreta": 3}, "tech": "carretas", "min_building_level": 2, "cost": 900, "materials": {"madera": 30}, "days": 8, "upkeep": 5.0, "footprint_add": 0.6},
+    {"label": "Cochera de vapor", "limits": {"pie": 8, "mula": 4, "carreta": 4, "carro_vapor": 2}, "tech": "maquina_vapor", "min_building_level": 2, "cost": 2200, "materials": {"madera": 20, "piedra": 40}, "days": 12, "upkeep": 9.0, "footprint_add": 0.9},
+    {"label": "Parqueadero de camiones con bahía de carga", "limits": {"pie": 10, "mula": 4, "carreta": 4, "carro_vapor": 3, "camion": 3}, "tech": "bahias_de_carga", "min_building_level": 3, "cost": 3600, "materials": {"piedra": 60}, "days": 14, "upkeep": 14.0, "footprint_add": 1.2},
+    {"label": "Patio de tráileres", "limits": {"pie": 12, "mula": 4, "carreta": 4, "carro_vapor": 3, "camion": 5, "trailer": 3}, "tech": "industria_automotriz", "min_building_level": 3, "cost": 7200, "materials": {"piedra": 120}, "days": 20, "upkeep": 24.0, "footprint_add": 1.5}
+   ]
+  }
+ }
+}

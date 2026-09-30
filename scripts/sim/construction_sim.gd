@@ -143,7 +143,8 @@ static func build_block_reason(gs, type_id: String, tier := "normal") -> String:
 
 
 ## Validez de ubicación (sin terreno: el mundo 3D verifica agua y pendiente).
-static func placement_block_reason(gs, type_id: String, x: float, z: float, ignore_id := -1, level := 1) -> String:
+## `reserve`: el jugador coloca o mueve un negocio o vivienda → se deja espacio para crecer (módulos).
+static func placement_block_reason(gs, type_id: String, x: float, z: float, ignore_id := -1, level := 1, reserve := false) -> String:
 	var fp := GameData.footprint(type_id, level)
 	if Vector2(x, z).length() < MIN_TOWN_CENTER_DIST + fp * 0.5:
 		return "Demasiado cerca de la plaza"
@@ -153,12 +154,16 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 		return "Fuera del país"
 	if not gs.is_zone_unlocked(zc.x, zc.y):
 		return "Terreno del gobierno: cómpralo primero (Construir → Comprar terreno)"
+	var rfp := maxf(fp, ModulesSim.reserve_footprint(type_id)) if reserve else 0.0   # Módulos: espacio para crecer (nivel y módulos al máximo).
 	for b in gs.buildings:
 		if int(b["id"]) == ignore_id:
 			continue
 		var ofp: float = gs.footprint_of(b)
-		if Vector2(x, z).distance_to(Vector2(float(b["x"]), float(b["z"]))) < (fp + ofp) * 0.5 + 0.8:
+		var p2 := Vector2(float(b["x"]), float(b["z"]))
+		if Vector2(x, z).distance_to(p2) < (fp + ofp) * 0.5 + 0.8:
 			return "Se superpone con otro edificio"
+		if reserve and Vector2(x, z).distance_to(p2) < (rfp + maxf(ofp, ModulesSim.reserve_footprint(str(b.get("type", ""))))) * 0.5 + 0.8:
+			return "Muy cerca de %s: deja espacio para que ambos crezcan (%.0f m al máximo)" % [gs.building_label(b), rfp]
 	var dep := RegionSim.deposit_block_reason(gs, type_id, x, z)   # Fase 6: minas dentro del área de su yacimiento.
 	if dep != "":
 		return dep
@@ -173,7 +178,7 @@ static func placement_block_reason(gs, type_id: String, x: float, z: float, igno
 static func start_construction(gs, type_id: String, x: float, z: float, rot: float, bname := "", legal := "sas", tier := "normal") -> Dictionary:
 	var reason := build_block_reason(gs, type_id, tier)
 	if reason == "":
-		reason = placement_block_reason(gs, type_id, x, z)
+		reason = placement_block_reason(gs, type_id, x, z, -1, 1, true)
 	if reason != "":
 		return {"error": reason}
 	var cost := cost_for(gs, type_id, 1, false, tier)
@@ -215,7 +220,7 @@ static func days_left(gs, b: Dictionary) -> int:
 
 ## Al mejorar, el edificio crece: debe quedar espacio libre alrededor para el nuevo tamaño.
 static func upgrade_space_reason(gs, b: Dictionary, next: int) -> String:
-	var fp := GameData.footprint(str(b["type"]), next)
+	var fp := GameData.footprint(str(b["type"]), next) + ModulesSim.footprint_extra(b)   # Módulos: anexos.
 	var p := Vector2(float(b["x"]), float(b["z"]))
 	for o in gs.buildings:
 		if int(o["id"]) == int(b["id"]):
@@ -472,7 +477,7 @@ static func move_cost(gs, b: Dictionary, x: float, z: float) -> float:
 static func move_building(gs, b: Dictionary, x: float, z: float, rot: float) -> String:
 	if not gs.owned_by_player(b):
 		return "Solo puedes mover tus edificios"
-	var reason := placement_block_reason(gs, str(b["type"]), x, z, int(b["id"]), int(b["level"]))
+	var reason := placement_block_reason(gs, str(b["type"]), x, z, int(b["id"]), int(b["level"]), true)
 	if reason != "":
 		return reason
 	var cost := move_cost(gs, b, x, z)

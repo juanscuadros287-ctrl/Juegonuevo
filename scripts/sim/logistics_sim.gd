@@ -163,8 +163,10 @@ static func local_capacity(gs, b: Dictionary) -> float:
 
 ## Insumo disponible para un negocio: su inventario local + su almacén vinculado.
 static func input_available(gs, b: Dictionary, good: String) -> float:
-	var wid := WarehouseSim.warehouse_for(gs, b)
-	return float(b["inventory"].get(good, 0.0)) + (WarehouseSim.stock_in(gs, wid, good) if wid >= 0 else 0.0)
+	var total := float(b["inventory"].get(good, 0.0))
+	for wid in WarehouseSim.chain_ids(gs, b):   # Módulos: almacén integrado y luego el de al lado.
+		total += WarehouseSim.stock_in(gs, wid, good)
+	return total
 
 
 static func take_input(gs, b: Dictionary, good: String, qty: float) -> void:
@@ -172,9 +174,11 @@ static func take_input(gs, b: Dictionary, good: String, qty: float) -> void:
 	var local := minf(float(inv.get(good, 0.0)), qty)
 	if local > 0.0:
 		inv[good] = float(inv[good]) - local
-	var wid := WarehouseSim.warehouse_for(gs, b)
-	if qty - local > 0.0 and wid >= 0:
-		WarehouseSim.remove_from(gs, wid, good, qty - local)
+	var left := qty - local
+	for wid in WarehouseSim.chain_ids(gs, b):   # Módulos: almacén integrado y luego el de al lado.
+		if left <= 0.0:
+			break
+		left -= WarehouseSim.remove_from(gs, wid, good, left)
 
 
 ## Produce `out` unidades con receta/yacimiento/almacén. Devuelve lo realmente producido.
@@ -193,7 +197,10 @@ static func produce_chain(gs, b: Dictionary, product: String, out: float) -> flo
 		var per_unit_in := 0.0
 		for g in inputs:
 			per_unit_in += float(inputs[g])
-		room = WarehouseSim.free_in(gs, wid) / maxf(0.0001, 1.0 - per_unit_in) if per_unit_in < 1.0 else INF
+		var free := 0.0
+		for w in WarehouseSim.chain_ids(gs, b):   # Módulos: almacén integrado + el de al lado.
+			free += WarehouseSim.free_in(gs, w)
+		room = free / maxf(0.0001, 1.0 - per_unit_in) if per_unit_in < 1.0 else INF
 	elif bool(GameData.goods.get(product, {}).get("storable", true)):
 		room = maxf(0.0, local_capacity(gs, b) - float(inv.get(product, 0.0)))
 	if out > room:
@@ -242,7 +249,9 @@ static func produce_chain(gs, b: Dictionary, product: String, out: float) -> flo
 	RegionSim.deplete(gs, dep, out)
 	var stored := out
 	if target == "warehouse":
-		stored = WarehouseSim.add_to(gs, wid, product, out)
+		stored = 0.0
+		for w in WarehouseSim.chain_ids(gs, b):   # Módulos: primero el integrado, luego el de al lado.
+			stored += WarehouseSim.add_to(gs, w, product, out - stored)
 		if stored < out - 0.001:
 			b["chain_status"] = "almacén lleno"
 			_warn(gs, b, "full", "%s: el almacén «%s» está lleno; se detuvo la producción." % [gs.building_label(b), wname])

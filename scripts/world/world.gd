@@ -169,6 +169,9 @@ func _rebuild_building(id: int) -> void:
 	holder.rotation.y = float(b.get("rot", 0.0))
 	root.add_child(holder)
 	var parts: Array = Housing.exterior_parts(b) if Housing.is_home(b) else ld.get("model", [])
+	if b.get("modules", null) is Dictionary and not (b["modules"] as Dictionary).is_empty():
+		# Módulos: anexo de bodega, patio con la flota y andén de carga (niveles efectivos).
+		parts = parts + MeshLib.module_parts(parts, {"almacen": ModulesSim.level(b, "almacen"), "parqueadero": ModulesSim.level(b, "parqueadero")})
 	var height := MeshLib.model_height(parts)
 	var tint := float(Housing.tier_def(b).get("tint", 1.0)) if Housing.is_home(b) else 1.0
 	match str(b.get("status", "activo")):
@@ -388,6 +391,7 @@ func start_placement(type_id: String, tier: String) -> void:
 	place_tier = tier
 	var parts: Array = Housing.exterior_parts({"type": type_id, "level": 1, "tier": tier}) if type_id == "vivienda" else GameData.level_def(type_id, 1).get("model", [])
 	_ghost = MeshLib.build_model(parts, 1.0, MeshLib.ghost_mat(true))
+	_ghost.add_child(MeshLib.reserve_outline(ModulesSim.reserve_footprint(type_id)))   # Módulos: tamaño máximo (tenue).
 	add_child(_ghost)
 	EventBus.citizen_selected.emit(-1)
 
@@ -419,6 +423,7 @@ func start_move(bid: int) -> void:
 	place_rot = float(b.get("rot", 0.0))
 	var parts: Array = Housing.exterior_parts(b) if Housing.is_home(b) else GameState.level_def(b).get("model", [])
 	_ghost = MeshLib.build_model(parts, 1.0, MeshLib.ghost_mat(true))
+	_ghost.add_child(MeshLib.reserve_outline(ModulesSim.reserve_footprint(place_type)))   # Módulos: tamaño máximo (tenue).
 	add_child(_ghost)
 	if building_nodes.has(bid):
 		building_nodes[bid].visible = false
@@ -478,7 +483,7 @@ func _update_placement() -> void:
 	var place_level := int(GameState.get_building(move_id).get("level", 1)) if move_id >= 0 else int(place_project.get("level", 1))
 	var fp := GameData.footprint(place_type, place_level)
 	place_pos = Vector3(p.x, _ground(p.x, p.z, fp), p.z)
-	place_reason = ConstructionSim.placement_block_reason(GameState, place_type, p.x, p.z, move_id, place_level)
+	place_reason = ConstructionSim.placement_block_reason(GameState, place_type, p.x, p.z, move_id, place_level, true)
 	if place_reason == "":
 		place_reason = terrain.footprint_ok(p.x, p.z, fp)
 	if place_reason == "" and move_id < 0 and not place_project.is_empty():
