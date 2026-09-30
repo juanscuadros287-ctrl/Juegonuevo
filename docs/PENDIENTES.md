@@ -70,3 +70,14 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
 - **Modo foto y cámara libre.**
 - **Velocidades con pausa automática** ante eventos importantes (configurable).
 - **Legado final:** puntaje de la dinastía al terminar y museo familiar.
+
+## K. Negocios avanzados y sociedad (pedido del usuario)
+- **Contabilidad por empresa:** estado de resultados y balance general; alertas de empresas en pérdida.
+- **Adquisiciones y fusiones:** comprar acciones o empresas completas de rivales; fusionar o dividir las propias.
+- **Franquicias:** terceros abren negocios con tu marca, pagas/cobras regalías.
+- **Patentes:** registrar inventos del laboratorio, licenciarlos (cobro), demandar copias.
+- **Abogados y juicios:** demandas laborales, disputas de contratos, defensa en escándalos.
+- **Salud y ánimo de empleados:** accidentes, seguridad laboral, productividad según condiciones.
+- **Migración:** gente llega o se va de los pueblos según empleo y calidad de vida.
+- **Turismo:** hoteles, atracciones, visitantes extranjeros (compradores de esmeraldas).
+- **Consejero/asistente:** personaje que sugiere oportunidades y riesgos a pedido (no invasivo).
