@@ -312,6 +312,7 @@ static func hire(gs, b: Dictionary, c: Citizen, wage: float) -> String:
 
 
 static func fire(gs, c: Citizen, message := "") -> void:
+	HiringSim.note_left(gs, c, c.job_id, message)   # Contrataciones: "fue despedido o dejó otro empleo".
 	c.job_id = -1
 	c.job_kind = ""
 	c.wage = 0.0

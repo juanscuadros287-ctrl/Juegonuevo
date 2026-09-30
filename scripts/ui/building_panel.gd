@@ -354,6 +354,7 @@ func _employees_tab(b: Dictionary) -> Control:
 	req.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	req.custom_minimum_size.x = 380
 	v.add_child(req)
+	v.add_child(HiringPanel.building_section(GameState, b, _after_hiring, _msg))   # Contrataciones: vacantes y postulantes.
 	_labor_box(v, b)   # Trabajo: sindicato (aceptar / contraoferta / rechazar) y ofertas de la competencia.
 	for c in GameState.employees_of(bid):
 		if c.job_kind != "empleo":
@@ -414,6 +415,11 @@ func _labor_box(v: VBoxContainer, b: Dictionary) -> void:
 			rebuild()
 			tabs.current_tab = 1, 90))
 		v.add_child(row2)
+
+
+func _after_hiring() -> void:
+	rebuild()
+	tabs.current_tab = 1
 
 
 func _change_wage(cid: int, delta: float) -> void:

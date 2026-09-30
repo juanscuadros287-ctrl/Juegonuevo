@@ -794,6 +794,7 @@ static func buy_bus(gs, depot: Dictionary) -> Dictionary:
 			break
 	var v := {"id": id, "depot": int(depot["id"]), "route": rid, "name": "%s %d" % [str(sub("bus").get("unit", "Bus")), buses(gs).size() + 1], "bought": gs.today()}
 	buses(gs).append(v)
+	HiringSim.on_vehicle_bought(gs, depot, v)   # Contrataciones: vacante de conductor.
 	return {"bus": v}
 
 

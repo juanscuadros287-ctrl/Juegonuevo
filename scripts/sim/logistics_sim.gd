@@ -649,6 +649,7 @@ static func buy_vehicle(gs, st: Dictionary, mode: String) -> Dictionary:
 	if mode_def(mode).has("wagon_capacity"):
 		v["wagons"] = int(mode_def(mode).get("wagons_default", 1))
 	vehicles(gs).append(v)
+	HiringSim.on_vehicle_bought(gs, st, v)   # Contrataciones: vacante de conductor.
 	return {"vehicle": v}
 
 
