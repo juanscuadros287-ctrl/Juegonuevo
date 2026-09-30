@@ -49,3 +49,13 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
 - Los apartamentos se venden **1 a 1 según la demanda**; al vender, la unidad (y su parte del terreno) pasa a ser propiedad del comprador. Casas vendidas: el terreno queda del comprador.
 - Se puede volver a comprar cualquier terreno o propiedad **negociando con su dueño**, como en la vida real: unos piden muy alto, otros bajo y otros no quieren vender (personalidad, apego, necesidad de dinero, valor de mercado).
 - Aplica a todos los terrenos (Estado, particulares, empresas).
+
+## I. Jugabilidad (pedido del usuario, tras las tandas actuales)
+- **Misiones guía (ligeras, no hostigantes):** 5–8 misiones opcionales ("primera fábrica", "primer contrato", "primer vehículo"...), panel pequeño plegable, se pueden ocultar; pequeña recompensa. Sin pop-ups forzados.
+- **Rivales con personalidad (moderado):** 3–5 magnates NPC con carácter (agresivo/prudente/corrupto); guerras de precios, ofertas de compra, alianzas ocasionales; ranking de fortunas. Frecuencia baja.
+- **Eventos y crisis con decisiones (moderado):** huelga, incendio, escándalo, oportunidad única, expropiación… 2–3 opciones con consecuencias; pocos al año.
+- **Reputación y marca:** por empresa y de la familia; afecta ventas, créditos, política, matrimonios. Sube/baja con calidad, sobornos, trato laboral, contaminación.
+- **Publicidad y marketing por época y según investigación:** voceador/carteles → periódico → radio → TV → internet/redes; cada medio se desbloquea con puntos de laboratorio. Sube demanda de productos.
+- **Estadísticas históricas e informe anual:** fortuna por generación, árbol familiar, logros de cada heredero.
+- **Escenarios de inicio (se elige al crear partida):** empezar pobre, heredar empresa quebrada, otro país, otra época.
+- **Dificultad configurable y logros.**
