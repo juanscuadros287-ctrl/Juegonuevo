@@ -53,16 +53,26 @@ compañía; la conexión que exige cada tipo (carretera, rieles, agua o pista) l
 | Nivel | Nombre | Cupos por tipo | Tecnología | Edificio mín. | Costo | Días | Mant./mes |
 |---|---|---|---|---|---|---|---|
 | 1 | Cargadores a pie | pie 4 (solo vacantes) | — | 1 | $180 + madera 5 | 3 | $1,5 |
-| 2 | Corral de mulas | pie 6, mula 3 | — | 1 | $420 + madera 15 | 5 | $3 |
-| 3 | Patio de carretas | pie 8, mula 4, carreta 3 | Carretas de tiro | 2 | $900 + madera 30 | 8 | $5 |
-| 4 | Cochera de vapor | … + carro de vapor 2 | Máquina de vapor | 2 | $2.200 + madera 20, piedra 40 | 12 | $9 |
-| 5 | Parqueadero de camiones con bahía de carga | … + camión 3 | Bahías de carga (nueva, moderna) | 3 | $3.600 + piedra 60 | 14 | $14 |
-| 6 | Patio de tráileres | … camión 5, tráiler 3 | Industria automotriz | 3 | $7.200 + piedra 120 | 20 | $24 |
+| 2 | Corral de mulas y caballos | pie 6, animal 3 | — | 1 | $420 + madera 15 | 5 | $3 |
+| 3 | Patio de carretas | pie 8, animal 4, carreta 3 | Carretas de tiro | 2 | $900 + madera 30 | 8 | $5 |
+| 4 | Cochera de carros de vapor | … + camión 2 | Máquina de vapor | 2 | $2.200 + madera 20, piedra 40 | 12 | $9 |
+| 5 | Parqueadero de camiones con bahía de carga | … camión 4 | Bahías de carga (nueva, moderna) | 3 | $3.600 + piedra 60 | 14 | $14 |
+| 6 | Patio de camiones pesados y tráileres | … carreta 5, camión 6 | Industria automotriz | 3 | $7.200 + piedra 120 | 20 | $24 |
+
+Los tipos son los de `VehicleCatalog.TIPOS` (`pie, animal, carreta, camion, tren, barco, avion`); el tipo
+«camion» agrupa carros de vapor, camiones, camiones pesados y tráileres (qué modelo se compra depende de
+la investigación). Trenes, barcos y aviones no van en este módulo: se guardan en cocheras, astilleros y
+hangares.
 
 API para el agente de rutas:
-- `ModulesSim.fleet_limit(gs, b, tipo) -> int`: cupos de ese tipo (`pie`, `mula`, `carreta`,
-  `carro_vapor`, `camion`, `trailer`…); 0 = no lo admite.
-- `ModulesSim.fleet_types(gs, b) -> Array`: tipos admitidos, en el orden de los medios.
+- `ModulesSim.fleet_limit(gs, b, tipo) -> int`: cupos de ese tipo en la compañía; 0 = no lo admite
+  (y sin el módulo, ninguno). `FleetSim.fleet_limit/fleet_types` lo consumen (docs/RUTAS_BARCOS.md).
+- `ModulesSim.fleet_types(gs, b) -> Array`: tipos admitidos, en el orden de `VehicleCatalog.TIPOS`.
+- En edificios sin este módulo (estaciones de transporte: caballeriza, depósito, cochera, astillero,
+  hangar; servicios) devuelve la regla por defecto de FleetSim: su `garage` si es la base natural del
+  tipo, o `rutas.json default_fleet.per_level × nivel`; tipos: todos menos `pie`.
+- `tests/test_rutas_barcos.gd` se ajustó: el aserradero de la prueba recibe Parqueadero y flota nivel 5
+  para comprar camiones, y barcos/aviones se rechazan también por «no admite» (módulo).
 
 El parqueadero **no** cuenta para el trayecto de los empleados: la penalización moderna ×0,95 de
 `TransitSim` sigue igual, con los parqueaderos públicos y los paraderos.

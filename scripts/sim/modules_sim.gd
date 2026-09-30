@@ -131,25 +131,48 @@ static func is_private_warehouse(gs, wid: int) -> bool:
 	return not b.is_empty() and float(gs.level_def(b).get("warehouse_capacity", 0.0)) <= 0.0 and warehouse_capacity(b) > 0.0
 
 
-## Cuántos vehículos (o cargadores, "pie") de ese tipo puede tener asignados el negocio según su
-## módulo Parqueadero y flota. 0 = no admite ese tipo. La conexión la valida quien asigna.
+## Tipos de vehículo de FleetSim (VehicleCatalog.TIPOS), en orden.
+const FLEET_TIPOS := ["pie", "animal", "carreta", "camion", "tren", "barco", "avion"]
+
+
+## Contrato con FleetSim (docs/RUTAS_BARCOS.md): cuántos vehículos de ese tipo ("pie", "animal",
+## "carreta", "camion", "tren", "barco", "avion") puede tener asignados la compañía `b`. En negocios
+## productores y comercios lo pone el módulo Parqueadero y flota (0 = no admite ese tipo; sin el
+## módulo, ninguno). En los demás (estaciones de transporte, servicios) se usa la regla por defecto de
+## FleetSim: su garaje si es la base natural del tipo o rutas.json default_fleet × nivel.
 static func fleet_limit(gs, b: Dictionary, tipo: String) -> int:
-	if not applies(gs, b, PARQUEADERO) or level(b, PARQUEADERO) <= 0:
+	if b.is_empty():
+		return 0
+	if not applies(gs, b, PARQUEADERO):
+		return _default_limit(gs, b, tipo)
+	if level(b, PARQUEADERO) <= 0:
 		return 0
 	return int(cur(b, PARQUEADERO).get("limits", {}).get(tipo, 0))
 
 
-## Tipos que admite el negocio (en el orden de los medios de transporte).
+## Contrato con FleetSim: tipos admitidos por la compañía (en el orden de VehicleCatalog.TIPOS).
 static func fleet_types(gs, b: Dictionary) -> Array:
-	if not applies(gs, b, PARQUEADERO) or level(b, PARQUEADERO) <= 0:
+	if b.is_empty():
+		return []
+	if not applies(gs, b, PARQUEADERO):
+		return FLEET_TIPOS.filter(func(t): return t != "pie")
+	if level(b, PARQUEADERO) <= 0:
 		return []
 	var lim: Dictionary = cur(b, PARQUEADERO).get("limits", {})
-	var out := []
-	for k in lim:
-		if int(lim[k]) > 0:
-			out.append(str(k))
-	out.sort_custom(func(a, c): return int(LogisticsSim.mode_def(a).get("order", 99)) < int(LogisticsSim.mode_def(c).get("order", 99)))
-	return out
+	return FLEET_TIPOS.filter(func(t): return int(lim.get(t, 0)) > 0)
+
+
+static func _default_limit(gs, b: Dictionary, tipo: String) -> int:
+	var garage := int(gs.level_def(b).get("garage", 0))
+	if garage > 0 and FleetSim.is_base_for(b, tipo):
+		return garage
+	var per := int(GameData.extra("rutas").get("default_fleet", {}).get("per_level", {}).get(tipo, 1))
+	return per * maxi(1, int(b.get("level", 1)))
+
+
+static func fleet_tipo_label(tipo: String) -> String:
+	return {"pie": "cargadores", "animal": "animales de carga", "carreta": "carretas", "camion": "camiones",
+		"tren": "trenes", "barco": "barcos", "avion": "aviones"}.get(tipo, tipo)
 
 
 ## Metros que crece la huella del edificio por sus módulos (GameState.footprint_of).
@@ -397,11 +420,10 @@ static func benefits_text(gs, b: Dictionary, m: String, lvl: int) -> String:
 			return "%s espacios propios (toma insumos y guarda la producción aquí)" % Fmt.thousands(float(ld.get("capacity", 0)))
 		PARQUEADERO:
 			var lim: Dictionary = ld.get("limits", {})
-			var keys := lim.keys()
-			keys.sort_custom(func(a, c): return int(LogisticsSim.mode_def(str(a)).get("order", 99)) < int(LogisticsSim.mode_def(str(c)).get("order", 99)))
 			var names := []
-			for k in keys:
-				names.append("%d %s" % [int(lim[k]), LogisticsSim.mode_short(str(k))])
+			for k in FLEET_TIPOS:
+				if int(lim.get(k, 0)) > 0:
+					names.append("%d %s" % [int(lim[k]), fleet_tipo_label(str(k))])
 			return "puede tener asignados: " + ", ".join(names)
 	return ""
 
