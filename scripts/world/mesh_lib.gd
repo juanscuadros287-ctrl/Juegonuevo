@@ -1019,3 +1019,128 @@ static func scaffold(footprint: float, height: float) -> Node3D:
 	mi.mesh = mesh
 	root.add_child(mi)
 	return root
+
+
+# --- Módulos de edificio (docs/MODULOS.md) ----------------------------------------------------------
+
+## Medio lado (x, z) del modelo según sus piezas (rot 90 intercambia ejes).
+static func model_half_extent(parts: Array) -> Vector2:
+	var hx := 1.0
+	var hz := 1.0
+	for p in parts:
+		var size := _vec(p.get("size", [1, 1, 1]), Vector3.ONE)
+		var pos := _vec(p.get("pos", [0, 0, 0]), Vector3.ZERO)
+		if absf(fposmod(float(p.get("rot", 0.0)), 180.0) - 90.0) < 1.0:
+			size = Vector3(size.z, size.y, size.x)
+		if str(p.get("s", "box")) == "cyl":
+			size = Vector3(maxf(size.x, size.z) * 2.0, size.y, maxf(size.x, size.z) * 2.0)
+		hx = maxf(hx, absf(pos.x) + size.x * 0.5)
+		hz = maxf(hz, absf(pos.z) + size.z * 0.5)
+	return Vector2(hx, hz)
+
+
+## Piezas extra (mismo formato JSON que los modelos) para los módulos de un edificio: anexo de bodega
+## (+X, desde el almacén nivel 2), patio de vehículos (−Z) con la flota del nivel del parqueadero y
+## andén de carga (−X, desde el nivel 5). `mods` = {"almacen": nivel, "parqueadero": nivel}
+## (niveles efectivos). Se unen a la malla del edificio (una sola llamada de dibujo).
+static func module_parts(parts: Array, mods: Dictionary) -> Array:
+	var out := []
+	var ext := model_half_extent(parts)
+	var wh := clampi(int(mods.get("almacen", 0)) - 1, 0, 4)   # El nivel 1 es el depósito interno.
+	var fl := clampi(int(mods.get("parqueadero", 0)), 0, 6)
+	if wh > 0:
+		var w := 1.8 + 0.6 * wh
+		var d := minf(ext.y * 2.0, 2.6 + 0.9 * wh)
+		var h := 2.0 + 0.55 * wh
+		var x := ext.x + w * 0.5 - 0.15
+		var wall: Array = [[0.55, 0.4, 0.25], [0.62, 0.3, 0.22], [0.66, 0.66, 0.64], [0.58, 0.6, 0.64]][wh - 1]
+		var m: String = ["madera", "ladrillo", "concreto", "metal"][wh - 1]
+		out.append({"s": "box", "size": [w, h, d], "pos": [x, h * 0.5, 0], "c": wall, "m": m})
+		out.append({"s": "prism", "size": [w + 0.3, 0.7 + 0.1 * wh, d + 0.3], "pos": [x, h + 0.35 + 0.05 * wh, 0], "c": [0.35, 0.36, 0.4] if wh >= 3 else [0.5, 0.28, 0.2]})
+		var door_h := minf(2.2, h - 0.3)
+		out.append({"s": "box", "size": [0.08, door_h, minf(d - 0.6, 1.6 + 0.3 * wh)], "pos": [x + w * 0.5 + 0.02, door_h * 0.5, 0], "c": [0.25, 0.22, 0.2], "m": "metal"})
+		for i in range(mini(wh + 1, 4)):
+			out.append({"s": "box", "size": [0.6, 0.6, 0.6], "pos": [x + w * 0.5 + 0.55, 0.3, -d * 0.5 + 0.5 + i * 0.75], "c": [0.62, 0.48, 0.3], "m": "madera"})
+		if wh >= 2:
+			out.append({"s": "box", "size": [0.06, 0.5, d * 0.7], "pos": [x + w * 0.5 + 0.04, h - 0.45, 0], "c": [0.3, 0.45, 0.6], "m": "vidrio"})
+	if fl >= 1 and fl <= 2:
+		# Carretillas de los cargadores y fardos (y un abrevadero para las mulas).
+		var sx := -(ext.x + 0.7)
+		out.append({"s": "box", "size": [0.6, 0.35, 1.0], "pos": [sx, 0.45, ext.y * 0.5], "c": [0.5, 0.35, 0.2], "m": "madera"})
+		out.append({"s": "cyl", "size": [0.22, 0.08, 0.22], "pos": [sx, 0.22, ext.y * 0.5 - 0.45], "c": [0.3, 0.22, 0.14], "rz": 90, "m": "madera"})
+		out.append({"s": "box", "size": [0.55, 0.45, 0.55], "pos": [sx, 0.22, ext.y * 0.5 - 1.1], "c": [0.7, 0.6, 0.4], "m": "liso"})
+		if fl == 2:
+			out.append({"s": "box", "size": [0.5, 0.4, 1.6], "pos": [sx, 0.2, -ext.y * 0.4], "c": [0.45, 0.32, 0.2], "m": "madera"})
+			out.append({"s": "fence", "size": [0.1, 0.9, ext.y * 1.4], "pos": [sx - 0.6, 0.45, 0], "c": [0.5, 0.36, 0.22]})
+	if fl >= 3:
+		# Patio de vehículos: piso (tierra, empedrado o concreto) con la flota estacionada.
+		var kinds: Array = [["carreta"], ["carreta", "vapor"], ["carreta", "vapor", "camion"], ["vapor", "camion", "camion", "trailer"]][fl - 3]
+		var slot := 2.4
+		var width := maxf(ext.x * 2.0, kinds.size() * slot + 0.6)
+		var depth := 4.6 if fl >= 6 else 3.8
+		var z := -(ext.y + depth * 0.5 + 0.1)
+		var floor_c: Array = [0.45, 0.38, 0.28] if fl == 3 else ([0.5, 0.5, 0.48] if fl == 4 else [0.26, 0.26, 0.28])
+		out.append({"s": "box", "size": [width, 0.06, depth], "pos": [0, 0.03, z], "c": floor_c, "m": "piedra" if fl == 4 else "concreto"})
+		for i in range(kinds.size() + 1):
+			if fl >= 5:
+				out.append({"s": "box", "size": [0.06, 0.02, depth * 0.8], "pos": [-width * 0.5 + 0.3 + i * (width - 0.6) / kinds.size(), 0.07, z], "c": [0.92, 0.92, 0.88], "m": "liso"})
+		for i in range(kinds.size()):
+			var cx := -width * 0.5 + 0.3 + (i + 0.5) * (width - 0.6) / kinds.size()
+			out.append_array(_vehicle_parts(str(kinds[i]), cx, z))
+	if fl >= 5:
+		# Bahía de carga: andén elevado con portones en la cara −X y alero.
+		var dw := 2.2
+		var dl := minf(ext.y * 2.0, 3.0 + 0.8 * (fl - 4))
+		var dx := -(ext.x + dw * 0.5 - 0.1)
+		out.append({"s": "box", "size": [dw, 0.9, dl], "pos": [dx, 0.45, 0], "c": [0.55, 0.55, 0.52], "m": "concreto"})
+		out.append({"s": "box", "size": [0.15, 0.25, dl], "pos": [dx - dw * 0.5, 0.78, 0], "c": [0.85, 0.7, 0.1], "m": "liso"})
+		for i in range(fl - 3):
+			out.append({"s": "box", "size": [0.08, 1.9, 1.3], "pos": [-ext.x - 0.02, 1.85, -dl * 0.5 + (i + 0.5) * dl / (fl - 3)], "c": [0.32, 0.34, 0.38], "m": "metal"})
+		out.append({"s": "box", "size": [dw + 0.4, 0.12, dl + 0.3], "pos": [dx + 0.2, 3.0, 0], "c": [0.4, 0.4, 0.42], "m": "metal"})
+	return out
+
+
+## Contorno tenue (cuatro listones a ras del suelo) del tamaño máximo que se reserva al colocar.
+static func reserve_outline(size: float) -> Node3D:
+	var root := Node3D.new()
+	root.name = "ReserveOutline"
+	if size <= 0.0:
+		return root
+	var h := size * 0.5
+	var unit := cached("__reserve_unit", func(): return box(Vector3.ONE))
+	for side in [[Vector3(0, 0.06, -h), Vector3(size, 0.06, 0.12)], [Vector3(0, 0.06, h), Vector3(size, 0.06, 0.12)],
+			[Vector3(-h, 0.06, 0), Vector3(0.12, 0.06, size)], [Vector3(h, 0.06, 0), Vector3(0.12, 0.06, size)]]:
+		var mi := mesh_node(unit, mat(Color(1, 1, 1, 0.35)), side[0])
+		mi.scale = side[1]
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		root.add_child(mi)
+	return root
+
+
+## Vehículo de carga estacionado (a lo largo de Z) centrado en (x, z): carreta, vapor, camión, tráiler.
+static func _vehicle_parts(kind: String, x: float, z: float) -> Array:
+	var out := []
+	match kind:
+		"carreta":
+			out.append({"s": "box", "size": [1.3, 0.5, 2.0], "pos": [x, 0.75, z], "c": [0.5, 0.35, 0.2], "m": "madera"})
+			for wz: float in [-0.5, 0.5]:
+				for sx: float in [-0.72, 0.72]:
+					out.append({"s": "cyl", "size": [0.5, 0.12, 0.5], "pos": [x + sx, 0.5, z + wz], "c": [0.35, 0.25, 0.15], "rz": 90, "m": "madera"})
+			out.append({"s": "box", "size": [0.08, 0.08, 1.4], "pos": [x, 0.6, z - 1.6], "c": [0.35, 0.25, 0.15], "m": "madera"})
+		"vapor":
+			out.append({"s": "cyl", "size": [0.45, 1.3, 0.45], "pos": [x, 1.15, z - 0.7], "c": [0.2, 0.2, 0.22], "rx": 90, "m": "metal"})
+			out.append({"s": "box", "size": [1.4, 0.7, 1.6], "pos": [x, 0.9, z + 0.7], "c": [0.45, 0.3, 0.2], "m": "madera"})
+			out.append({"s": "cyl", "size": [0.1, 1.0, 0.1], "pos": [x, 1.9, z - 1.1], "c": [0.15, 0.15, 0.15], "m": "metal"})
+			for wz: float in [-0.9, 0.9]:
+				for sx: float in [-0.75, 0.75]:
+					out.append({"s": "cyl", "size": [0.42, 0.18, 0.42], "pos": [x + sx, 0.42, z + wz], "c": [0.15, 0.15, 0.15], "rz": 90, "m": "liso"})
+		"camion", "trailer":
+			var long := 3.4 if kind == "trailer" else 2.2
+			out.append({"s": "box", "size": [1.7, 1.5, long], "pos": [x, 1.25, z + 0.55], "c": [0.85, 0.85, 0.82] if kind == "camion" else [0.3, 0.45, 0.65], "m": "metal"})
+			out.append({"s": "box", "size": [1.6, 1.1, 1.0], "pos": [x, 0.95, z + 0.55 - long * 0.5 - 0.55], "c": [0.7, 0.15, 0.12], "m": "metal"})
+			out.append({"s": "box", "size": [1.4, 0.4, 0.06], "pos": [x, 1.2, z + 0.55 - long * 0.5 - 1.06], "c": [0.2, 0.28, 0.35], "m": "vidrio"})
+			for wz: float in [-long * 0.5 - 0.5, 0.0, long * 0.5 - 0.2]:
+				for sx: float in [-0.85, 0.85]:
+					out.append({"s": "cyl", "size": [0.34, 0.26, 0.34], "pos": [x + sx, 0.34, z + 0.55 + wz], "c": [0.12, 0.12, 0.12], "rz": 90, "m": "liso"})
+	return out
+
