@@ -338,6 +338,8 @@ func _test_dynasty() -> void:
 	# Sin herederos: fin de la dinastía, registro cerrado.
 	GameState.player["inheritance_debt"] = 0.0
 	var p2 := GameState.player_citizen()
+	# Sin nadie a quien pasar la familia (ni cónyuge, hermanos, sobrinos ni adoptado): se vacía el pueblo.
+	GameState.citizens = {p2.id: p2}
 	PopulationSim.die(GameState, p2, "vejez")
 	check(not GameState.running and int(DynastySim.heads(GameState)[1]["end_year"]) > 0, "sin herederos termina la dinastía y se cierra el registro")
 

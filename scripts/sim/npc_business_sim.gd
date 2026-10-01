@@ -154,7 +154,11 @@ static func fill_jobs(gs, b: Dictionary, target: int) -> int:
 	var have := staff_of(b).size()
 	if have >= target:
 		return 0
-	for c in candidates(gs, skill):
+	var cands := candidates(gs, skill)
+	if min_edu == 0:
+		# Oficios sin estudios: primero quienes no tienen estudios (los educados son escasos).
+		cands.sort_custom(func(a, bb): return a.education < bb.education or (a.education == bb.education and float(a.skills.get(skill, 0.0)) > float(bb.skills.get(skill, 0.0))))
+	for c in cands:
 		if have + hired >= target:
 			break
 		if c.education < min_edu:
@@ -209,6 +213,9 @@ static var _suppliers: Array = []
 static func _pay_local(gs, amount: float) -> void:
 	if amount <= 0.0:
 		return
+	# La lista es del día: si es de otra partida o país (o alguien murió), se rehace.
+	if _sup_key != _supplier_key(gs):
+		_refresh_suppliers(gs)
 	if _suppliers.is_empty():
 		GovSim.add_treasury(gs, amount)   # Sin vecinos que vendan: lo cobra el mercado municipal.
 		return
@@ -219,14 +226,26 @@ static func _pay_local(gs, amount: float) -> void:
 		c.money += amount / n
 
 
-static func produce(gs) -> void:
-	staff_index(gs)
+static var _sup_key := ""
+
+
+static func _supplier_key(gs) -> String:
+	return "%d|%d|%d|%d" % [gs.get_instance_id(), gs.today(), gs.citizens.size(), gs.next_citizen_id]
+
+
+static func _refresh_suppliers(gs) -> void:
+	_sup_key = _supplier_key(gs)
 	_suppliers = []
 	var today: int = gs.today()
 	var adult := int(GameData.citizens.get("adult_age", 16))
 	for c in gs.citizens.values():
 		if c.job_id < 0 and not gs.is_player(c.id) and c.prison_until < 0 and c.age_years(today) >= adult:
 			_suppliers.append(c)
+
+
+static func produce(gs) -> void:
+	staff_index(gs)
+	_refresh_suppliers(gs)
 	var pm: float = gs.price_mult()
 	for b in gs.buildings:
 		if not is_npc(b) or str(b["status"]) != "activo":
@@ -824,6 +843,13 @@ static func _spontaneous_exports(gs) -> void:
 ## Artesanos del pueblo desde el inicio: 2–4 talleres NPC ya construidos (granja, leñador,
 ## aguatero, taberna) con dueños del pueblo y parte de su personal. Solo en partidas nuevas.
 static func seed_initial(gs) -> void:
+	# Usa el generador del mercado pero lo deja como estaba: la siembra no altera el resto de la partida.
+	var rng_state = gs.market.get("rng_state", "1")
+	_seed_initial(gs)
+	gs.market["rng_state"] = rng_state
+
+
+static func _seed_initial(gs) -> void:
 	var c := cfg()
 	staff_index(gs)
 	var n := clampi(int(gs.citizens.size() / maxf(1.0, float(c.get("seed_citizens_per_business", 10)))), int(c.get("seed_min", 2)), int(c.get("seed_max", 4)))
@@ -876,7 +902,9 @@ static func _seed_owner(gs, type_id: String) -> Citizen:
 		var age: int = c.age_years(today)
 		if age < int(cfg().get("min_age", 22)) or age > int(cfg().get("max_age", 60)):
 			continue
-		if best == null or float(c.skills.get(skill, 0.0)) > float(best.skills.get(skill, 0.0)):
+		# Los pocos vecinos con estudios se reservan para escuelas, laboratorios y hospitales.
+		var sc: float = float(c.skills.get(skill, 0.0)) - c.education * 30.0
+		if best == null or sc > float(best.skills.get(skill, 0.0)) - best.education * 30.0:
 			best = c
 	return best
 

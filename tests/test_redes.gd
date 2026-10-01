@@ -60,6 +60,9 @@ func _hire(b: Dictionary, n: int) -> int:
 	var ld: Dictionary = gs.level_def(b)
 	var prof := str(ld.get("required_profession", ""))
 	var hired := 0
+	# El pueblo ya tiene artesanos NPC que emplean gente: si faltan candidatos, llegan jornaleros.
+	while BusinessSim.candidates(gs, b).filter(func(x): return x.job_kind != "obra").size() < n:
+		PopulationSim.create_citizen(gs, "M", 30, "Jornalero")
 	for c in BusinessSim.candidates(gs, b):
 		if hired >= n:
 			break

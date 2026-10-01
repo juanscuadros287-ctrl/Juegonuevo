@@ -343,6 +343,9 @@ static func demolish(gs, b: Dictionary) -> void:
 		if c.home_id == id:
 			c.home_id = -1
 	LogisticsSim.before_demolish(gs, b)   # El stock de un almacén pasa a los demás.
+	if float(b.get("reserve", 0.0)) != 0.0 and gs.owned_by_player(b):
+		gs.add_money(float(b["reserve"]))   # La reserva de una fundación demolida vuelve a tu cuenta.
+		b["reserve"] = 0.0
 	gs.remove_building(id)
 	LogisticsSim.on_buildings_changed(gs)
 	gs.notify("Demoliste %s." % gs.building_label(b), "construccion")

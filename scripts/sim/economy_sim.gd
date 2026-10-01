@@ -179,6 +179,7 @@ static func stock_of(gs, good: String) -> float:
 
 ## Cierre mensual: ajusta precios por escasez/exceso e inflación.
 static func monthly(gs) -> void:
+	FlowSim.close_month(gs)   # Cuenta externa: guarda las entradas y salidas del mes.
 	var pf: Dictionary = cfg().get("price_factor", {})
 	var scarcity := 0.0
 	var weight := 0.0

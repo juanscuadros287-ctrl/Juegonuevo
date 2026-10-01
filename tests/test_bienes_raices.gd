@@ -220,10 +220,11 @@ func _test_rent_and_sale() -> void:
 	check(rented.size() == 1 and int(rented[0]["tenant_id"]) == head.id and head.home_id == int(b["id"]), "una familia sin techo arrienda una unidad")
 	check(is_equal_approx(_money_in_town(), before), "arrendar no crea ni destruye dinero")
 	var pm := GameState.money
-	var hm := head.money
+	var r0 := BusinessSim.period_value(b, "month", "alquileres")
 	TimeManager.advance_days(1)
 	var unit: Dictionary = rented[0] if not rented.is_empty() else {}
-	var paid := hm - head.money
+	# Se mide lo que cobró el edificio (el inquilino también compra comida a los artesanos NPC).
+	var paid := BusinessSim.period_value(b, "month", "alquileres") - r0
 	check(not unit.is_empty() and absf(paid - float(unit["rent"]) / 30.0) < 0.2, "el inquilino paga la renta diaria de su unidad (%.2f)" % paid)
 	check(BusinessSim.period_value(b, "month", "alquileres") > 0.0, "el edificio registra ingresos por arriendo")
 	# Venta de contado.
@@ -265,7 +266,8 @@ func _test_stage_payment() -> void:
 	print("-- pago por etapas que pausa la obra sin dinero")
 	_town(506)
 	var cost := ConstructionSim.cost_for(GameState, "vivienda", 4, false, "normal")
-	var first := float(cost["total"]) * 0.2
+	# Las etapas cobran materiales y obra; los jornales de la cuadrilla se pagan aparte (sin doble cobro).
+	var first := float(cost["upfront"]) * 0.2
 	GameState.money = first + 10.0
 	var b := _project(4, -30, -14)
 	check(not b.is_empty(), "alcanza para la cimentación")
@@ -288,7 +290,7 @@ func _test_stage_payment() -> void:
 	check(bool(b["re_project"]["stages"][1]["paid"]), "la etapa de estructura quedó pagada")
 	_finish(b)
 	check(b["status"] == "activo", "la obra termina tras pagar las 3 etapas")
-	check(absf(float(b["re_done"]["paid_total"]) - float(cost["total"])) < 1.0, "lo pagado en etapas = costo total")
+	check(absf(float(b["re_done"]["paid_total"]) - float(cost["upfront"])) < 1.0, "lo pagado en etapas = costo sin jornales (los jornales se pagan día a día)")
 
 
 # --- 5. Preventa ---------------------------------------------------------------------------------------
@@ -343,6 +345,8 @@ func _test_presale() -> void:
 			fam2 = members
 			break
 	var b2uy: Citizen = fam2[0]
+	for c in GameState.citizens.values():
+		c.money = 0.0   # Solo esta familia compra en preventa (los demás ya tienen ahorros de sus sueldos).
 	b2uy.money = 100000.0
 	b2uy.job_kind = "empleo"
 	b2uy.wage = 3.0

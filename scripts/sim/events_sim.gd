@@ -218,6 +218,15 @@ static func _fires(gs) -> void:
 		elif not contained and gs.rng.randf() < float(fc.get("destroy_chance_uncovered", 0.25)):
 			for c in gs.residents_of(int(b["id"])):
 				c.home_id = -1
+			# La caja del negocio (empresa NPC) no se quema: vuelve a su dueño o, sin dueño, al tesoro.
+			var cash := float(b.get("reserve", 0.0))
+			if cash != 0.0:
+				var owner: Citizen = gs.citizens.get(int(b.get("owner_id", -1)))
+				if owner != null and not gs.is_player(owner.id):
+					owner.money += cash
+				else:
+					GovSim.add_treasury(gs, cash)
+				b["reserve"] = 0.0
 			gs.remove_building(int(b["id"]))
 			EventBus.building_removed.emit(int(b["id"]))
 			EventBus.citizens_moved.emit()

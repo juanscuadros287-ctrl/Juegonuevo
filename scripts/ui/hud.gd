@@ -424,6 +424,10 @@ func _update_top_bar() -> void:
 	var has_prev := not last.is_empty()
 	money_lbl.text = Fmt.money(gs.money)
 	money_lbl.add_theme_color_override("font_color", UIKit.BAD if gs.money < 0 else UIKit.TEXT)
+	var debt_warn := CreditSim.bar_warning(gs)   # Deuda: saldo en rojo con cuenta regresiva, mora o bancarrota.
+	if debt_warn != "":
+		money_lbl.text += "  ⚠ " + debt_warn
+	money_lbl.tooltip_text = debt_warn if debt_warn != "" else "Dinero (banco + efectivo)"
 	_set_trend("money", gs.money, float(last.get("money", 0.0)), has_prev)
 	pop_lbl.text = Fmt.thousands(gs.citizens.size())
 	_set_trend("pop", gs.citizens.size(), float(last.get("population", 0)), has_prev)

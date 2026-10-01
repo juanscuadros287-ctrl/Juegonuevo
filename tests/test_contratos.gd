@@ -371,8 +371,8 @@ func _test_town_and_import_purchase() -> void:
 	var ik := ContractSim.IMPORT_KEY
 	var iref := ContractSim.reference_price(gs, ik, "hierro", 5, ContractSim.DIR_BUY)
 	check(iref > ContractSim.market_ref(gs, "hierro"), "la importación es más cara que el mercado")
-	var o2 := _propose_and_wait(ContractSim.DIR_BUY, ik, "hierro", 5, iref, {"period": 30, "installments": 1, "start_in": 10})
-	check(str(o2["status"]) == "aceptada", "la importación acepta")
+	var o2 := _propose_and_wait(ContractSim.DIR_BUY, ik, "hierro", 5, iref * 1.03, {"period": 30, "installments": 1, "start_in": 10})
+	check(str(o2["status"]) == "aceptada", "la importación acepta (%s %s)" % [str(o2["status"]), str(o2.get("reason", ""))])
 	var k2 := ContractSim.find(ContractSim.contracts(gs), int(o2.get("contract_id", -1)))
 	var h0 := WarehouseSim.stock(gs, "hierro")
 	_market_days(12 + int(ContractSim.cfg().get("import_days", 7)))

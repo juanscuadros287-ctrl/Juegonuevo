@@ -242,7 +242,10 @@ static func pay_with(gs, payers: Array, amount: float) -> bool:
 	if total < amount:
 		if player_payer == null:
 			return false
-		# La familia del jugador nunca pasa hambre: se endeuda (saldo negativo → embargo).
+		# La familia del jugador se endeuda (sobregiro con el banco) hasta el tope; pasado el tope
+		# o en bancarrota, ya no hay crédito: se autoabastece como cualquier familia.
+		if gs.player.get("bankruptcy") is Dictionary or gs.money - (amount - total) < -CreditSim.overdraft_limit(gs):
+			return false
 		var rest := amount
 		for p in payers:
 			if not gs.is_player(p.id):

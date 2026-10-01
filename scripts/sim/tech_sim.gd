@@ -176,7 +176,7 @@ static var _wc_epoch := 0
 ## sin esas marcas (una obra pública que termina, un evento nuevo) llaman a invalidate_world_cache.
 static func _world_cache(gs) -> Dictionary:
 	var key := "%d|%d|%d|%d|%d|%d" % [gs.get_instance_id(), gs.today(), gs.buildings.size(), gs.techs.size(),
-		gs.problems.get("events", []).size(), _wc_epoch]
+		gs.problems.get("events", []).hash(), _wc_epoch]
 	if key != _wc_key:
 		_wc_key = key
 		_wc = {}
