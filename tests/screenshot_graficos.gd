@@ -9,6 +9,7 @@ var prefix := "g"
 var world: Node3D
 var rig: CameraRig
 var perf := []
+var only: PackedStringArray = []   # 3er argumento "vista1,vista2": solo esas capturas (iterar rápido)
 
 
 func _pv(arr: Array) -> PackedVector2Array:
@@ -42,6 +43,8 @@ func _cam(pos: Vector3, dist: float, yaw: float) -> void:
 
 
 func _shot(name: String, frames := 45) -> void:
+	if not only.is_empty() and not only.has(name):
+		return
 	for i in range(frames):
 		await get_tree().process_frame
 	# Tiempo de frame promedio (20 frames) y carga de la escena (llamadas de dibujo, objetos, primitivas).
@@ -62,6 +65,8 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	out = args[0] if args.size() > 0 else "user://"
 	prefix = args[1] if args.size() > 1 else "g"
+	if args.size() > 2 and args[2] != "rapido":
+		only = args[2].split(",")
 	var gs = GameState
 	gs.new_game({"map_type": "rio", "seed": 2024, "difficulty": "facil"})
 	gs.suppress_notifications = true
@@ -158,12 +163,20 @@ func _ready() -> void:
 	_set_hour(21.5)
 	_cam(plaza, 55.0, 35.0)
 	await _shot("pueblo_noche")
+	if OS.get_environment("GFX_CENSUS") != "":
+		_census()
 	if rapido:
 		print("RENDIMIENTO rapido (%s):" % prefix)
 		for l in perf:
 			print("  " + l)
 		get_tree().quit()
 		return
+	# Pulido (docs/GRAFICOS.md §10): cruce de carreteras con la plaza de cerca y el pueblo de lejos.
+	_set_hour(15.0)
+	_cam(Vector3(-8, terrain.height_at(-8, 1), 1), 16.0, 60.0)
+	await _shot("cruce_cerca")
+	_cam(plaza, 320.0, 35.0)
+	await _shot("pueblo_lejos")
 	# 3) Zona industrial con carreteras, rieles y mina.
 	_set_hour(11.0)
 	_cam(Vector3(-62, terrain.height_at(-62, -10), -10), 85.0, 20.0)
@@ -200,3 +213,28 @@ func _ready() -> void:
 	if f:
 		f.store_string("\n".join(perf) + "\n")
 	get_tree().quit()
+
+
+## Diagnóstico (GFX_CENSUS=1): instancias de geometría visibles por rama del mundo y materiales distintos.
+func _census() -> void:
+	var by := {}
+	var mats := {}
+	var stack: Array = [world]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		for ch in n.get_children():
+			stack.append(ch)
+		if n is GeometryInstance3D and (n as Node3D).is_visible_in_tree():
+			var top: Node = n
+			while top.get_parent() != world and top.get_parent() != null:
+				top = top.get_parent()
+			var k := "%s/%s" % [top.name, n.get_class()]
+			by[k] = int(by.get(k, 0)) + 1
+			var gi := n as GeometryInstance3D
+			if gi.material_override:
+				mats[gi.material_override.get_instance_id()] = true
+	var keys := by.keys()
+	keys.sort_custom(func(a, b): return by[a] > by[b])
+	for k in keys.slice(0, 25):
+		print("CENSO %6d  %s" % [by[k], k])
+	print("CENSO materiales distintos (override): %d" % mats.size())

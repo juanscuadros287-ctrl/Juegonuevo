@@ -31,6 +31,7 @@ const K_METAL := 8
 const K_GLASS := 9
 const K_GLOW := 10
 const K_SHUTTER := 11     # postigo de madera: de noche deja ver luz cálida
+const PERSON_RANGE := 170.0   # m: distancia de dibujo de las personas (LOD)
 const KIND_NAMES := {"liso": 0, "estuco": 1, "adobe": 1, "ladrillo": 2, "madera": 3, "piedra": 4, "teja": 5,
 		"paja": 6, "concreto": 7, "metal": 8, "vidrio": 9, "luz": 10}
 
@@ -916,13 +917,21 @@ static func make_person(cloth: Color, skin: Color, hair: Color, female: bool) ->
 	var b := MeshInstance3D.new()
 	b.name = "Body"
 	b.mesh = meshes[0]
+	# Pulido (docs/GRAFICOS.md §10): LOD de personas. A más de PERSON_RANGE m una persona mide 1–2 px:
+	# no se dibuja (5 llamadas de dibujo menos por persona y por pasada). Solo el cuerpo proyecta
+	# sombra (las piernas y brazos, de 10 cm, no se notaban en la sombra y costaban una pasada por
+	# cascada cada uno).
+	b.visibility_range_end = PERSON_RANGE
+	b.visibility_range_end_margin = PERSON_RANGE * 0.1
 	root.add_child(b)
 	for side in [["LegL", -0.065, 1], ["LegR", 0.065, 1], ["ArmL", -0.19, 2], ["ArmR", 0.19, 2]]:
 		var mi := MeshInstance3D.new()
 		mi.name = side[0]
 		mi.mesh = meshes[side[2]]
 		mi.position = Vector3(float(side[1]), 0.5 if side[2] == 1 else 0.95, 0)
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if side[2] == 2 else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.visibility_range_end = PERSON_RANGE
+		mi.visibility_range_end_margin = PERSON_RANGE * 0.1
 		root.add_child(mi)
 	return root
 

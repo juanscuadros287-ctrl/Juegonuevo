@@ -26,7 +26,7 @@ de la niebla, que solo existen en Forward+.
   El sol sale a las 6 y se pone a las 18 (altura máxima ~62°). De noche la misma luz direccional
   hace de luna (azulada y tenue); el cambio ocurre con la energía en cero, sin saltos.
 - Tonemapping ACES con exposición que sube un poco de noche; luz ambiental del cielo.
-- Sombras direccionales: sesgo 0,03 y sesgo normal 1,1 (sin acné ni peter-panning), desenfoque
+- Sombras direccionales: sesgo 0,04 y sesgo normal 2,0 (sin acné ni peter-panning; §10), desenfoque
   suave; calidad Alta = 4 cascadas mezcladas, Media = 2 cascadas.
 - Solo Forward+: SSAO (Alta), glow suave (Media/Alta; los emisivos de noche florecen) y dispersión
   del sol en la niebla. En Compatibility se omiten (no existen en ese renderer).
@@ -60,9 +60,9 @@ Por defecto: Alta en Forward+ (Mac M1), Media en Compatibility.
 | | Baja | Media | Alta |
 |---|---|---|---|
 | Sombras | no | 2 cascadas, 160 m | 4 cascadas, 260 m, suaves |
-| SSAO | no | no | sí (Forward+) |
+| SSAO | no | media resolución (Forward+) | sí (Forward+) |
 | Glow | no | sí (Forward+) | sí (Forward+) |
-| Antialias | FXAA | MSAA 2× | MSAA 4× (Forward+) |
+| Antialias | FXAA | MSAA 2× | MSAA 4× + TAA (Forward+); MSAA 2× + FXAA en Compatibility |
 | Edificios (distancia) | 260 m | 480 m | 900 m |
 | Detalles de fachada | 60 m | 110 m | 180 m |
 | Árboles del pueblo | 240 m | 420 m | 800 m |
@@ -273,6 +273,67 @@ CPU, 4 núcleos compartidos con otros agentes: el tiempo de frame es orientativo
   presupuesto de subida por frame (5 ms). Textura de ríos: 70–150 ms una vez al iniciar el país.
 - Si hiciera falta bajar el costo: `MAX_LOW` (150) y `LOW_DIST_MAX` (7,5 km) en `terrain.gd`, o
   quitar las copas de la tesela lejana (`forest` en el shader).
+
+
+## 10. Pulido — capas limpias, sin parpadeo ni dientes de sierra
+
+Pedido: "que la calidad sea mejor, puliendo texturas que están encima de las otras, se corren o así".
+Capturas antes/después y recortes ampliados en `docs/capturas/pulido/` (`antes_*.png`, `despues_*.png`,
+`recorte_*.png`: arriba antes, abajo después). Se regeneran con:
+
+```
+xvfb-run -a -s "-screen 0 1600x900x24" godot --rendering-driver opengl3 --resolution 1600x900 \
+    res://tests/screenshot_graficos.tscn -- <carpeta> <prefijo> [vista1,vista2…]
+xvfb-run -a -s "-screen 0 1600x900x24" godot --rendering-driver opengl3 --resolution 1600x900 \
+    res://tests/screenshot_mapa_v2.tscn -- <carpeta>
+```
+
+`screenshot_graficos` tiene dos vistas nuevas (`cruce_cerca`: cruce de carreteras con la plaza a 16 m;
+`pueblo_lejos`: el pueblo a 320 m con la costura del chunk central), un tercer argumento opcional con
+la lista de vistas para iterar rápido, y `GFX_CENSUS=1` imprime las instancias de geometría visibles
+por rama del mundo (para cazar llamadas de dibujo).
+
+### 10.1 Problemas encontrados y arreglo
+
+| # | Problema (antes) | Causa | Arreglo |
+|---|---|---|---|
+| 1 | Orillas y laderas del pueblo en **dientes de sierra blancos y grises** | `terrain.gd` pintaba cada triángulo de un color plano (arena, roca, pasto) según su centro | Color **por vértice** con la normal suave de la rejilla (`_build_town_mesh`); la luz sigue plana (low-poly). La arena de orilla es menos blanca y las lomas > 34 m ya no son "nieve" (roca clara) |
+| 2 | **Charcos blancos** dentados en zonas bajas (zona industrial, junto al almacén) | El agua de < 0,55 m se pintaba entera de espuma y el corte plano-terreno dibujaba los triángulos | `water.gdshader`: orilla suave (alfa → 0 en los últimos 18 cm), espuma solo en una franja fina, y si la profundidad máxima en ~6 m es baja es un charco: sin espuma y casi transparente |
+| 3 | Carreteras de **distinto tipo** que se cruzan parpadeaban; líneas de asfalto y juntas con **dientes** y moiré | Mismo sesgo de profundidad para todos los tipos; `step()` duros | `road.gdshader`: sesgo por **rango** (tierra < balasto < empedrado < asfalto < madera), así siempre gana el mismo; líneas, bordes, juntas y discontinua con antialias analítico (`fwidth`), y las líneas finas se funden con el asfalto a lo lejos en vez de titilar |
+| 4 | Plaza con un "bordillo" liso de 1 m | El UV radial bajaba linealmente | Anillo exterior de 0,45 m en `_plaza_mesh` (bordillo fino) |
+| 5 | Área de yacimiento a +7 cm (altura mágica) que podía pelear con el terreno y quedar sobre las carreteras; **pintas cuadradas** pixeladas | — | `deposit_area.gdshader`: +2 cm y sesgo de profundidad en el vértice menor que el de las carreteras (orden terreno → yacimiento → carreteras → charcos de luz); pintas redondas con borde suave |
+| 6 | Charcos de luz de los faroles **hundidos** en laderas | Disco horizontal a +5 cm | Disco inclinado con la normal del terreno (`street_lights.gd`) y sesgo mayor que las carreteras (la luz cae también sobre la calzada) |
+| 7 | Ladrillos, piedra, teja, paja y ventanas **se deslizaban** sobre lo que se mueve y se estiraban en edificios girados | Patrones en espacio del **mundo** con proyección por eje | `building.gdshader`: patrones en espacio del **objeto** con la tangente real de la cara; juntas con `fwidth` y corrugado que se apaga antes del moiré |
+| 8 | **Fronteras de municipio en escalera** (bordes de chunk de 400 m) | El shader marcaba los lados del chunk | Curva de nivel 0,5 del indicador "mismo municipio" interpolado entre las 4 celdas vecinas (marching squares suavizado): esquinas en curva, ancho uniforme en metros, antialias por píxel |
+| 9 | **Líneas punteadas oscuras** a lo largo de los bordes de chunk | Faldones oscurecidos vistos por las rendijas entre resoluciones | Faldones del mismo color que el borde (`terrain.gd`) |
+| 10 | **Tramado "sal y pimienta"** en la banda de transición entre LOD | Umbral de ruido blanco por píxel | Tramado ordenado Bayer 4×4 (se lee como tono intermedio; con MSAA/TAA se funde) |
+| 11 | **Bosque** con borde poligonal (forma de la malla) y copas con borde dentado; bosque que empezaba de golpe en el borde recto del chunk del pueblo | Umbral sobre la densidad interpolada por vértice; cúpula con `sqrt` (borde vertical) | Umbral con ruido (borde orgánico); borde de cada copa suavizado al tamaño del píxel; las copas entran con la mezcla de colores del pueblo (claro orgánico, sin costura recta) |
+| 12 | Rayas finas de **acné de sombra** en el terreno casi plano | Sesgo normal 1,1 | Sesgo 0,04 y sesgo normal 2,0 |
+| 13 | Sombras que **"nadaban"** sin parar con el paso del tiempo | El sol giraba un poco cada frame y el mapa de sombras se re-rasterizaba | Dirección del sol en pasos de 0,25° (`SkyRig.SUN_STEP`): la sombra queda quieta entre saltos de centímetros |
+| 14 | Precisión de profundidad desperdiciada | `near` = 0,3 m con la cámara a 60 m | `near` = mín(1,2 % de la distancia, ½ altura libre sobre el suelo): ~0,7 m en el pueblo, ×2–3 de precisión sin recortar nada |
+| 15 | Pasto verde chillón con ACES | Gradación | `terrain_grade`: un poco menos saturado y más cálido |
+| 16 | Camino de mina con tablas planas de 2 m que flotaban/se hundían; rieles y tubos con 3–4 nodos por tramo | Cajas sueltas | Franja de `RoadMesh` que sigue el terreno; rieles, durmientes y tubos unidos en una malla con el material compartido |
+
+### 10.2 Antialias, sombras, ambiente y LOD por calidad
+
+| | Baja | Media | Alta |
+|---|---|---|---|
+| Antialias | FXAA | MSAA 2× | MSAA 4× + **TAA** (Forward+); en Compatibility MSAA 2× + FXAA |
+| SSAO | no | **sí, media resolución, calidad baja** (Forward+) | sí, calidad alta (Forward+) |
+| Glow suave / debanding | no | sí / sí (Forward+) | sí / sí (Forward+) |
+| Niebla de distancia | exponencial | + dispersión del sol (Forward+) | igual |
+| Sombras | no | 2 cascadas | 4 cascadas mezcladas; en todas sesgo 0,04/2,0 y sol en pasos de 0,25° |
+
+LOD e instancing: edificios en 1–2 mallas unidas con un material compartido y distancia de dibujo por
+calidad (§2–3); árboles, pasto y faroles en `MultiMesh` por celdas; terreno con 4 niveles (§9.1).
+Nuevo: **personas** con distancia de dibujo (`MeshLib.PERSON_RANGE` = 170 m) y solo el cuerpo proyecta
+sombra (piernas y brazos no), y conexiones de mina unidas (16). El censo (`GFX_CENSUS=1`) muestra 40
+materiales distintos con override en toda la escena del pueblo: no hay materiales duplicados por
+instancia (todos salen de cachés: `MeshLib.mat`, `RoadMesh.material`, `building_mat`).
+
+### 10.3 Rendimiento
+
+PENDIENTE_TABLA
 
 ## Archivos
 

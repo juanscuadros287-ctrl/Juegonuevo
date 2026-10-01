@@ -112,11 +112,11 @@ func _build_area(d: Dictionary) -> void:
 			var z0 := -half + j * cell
 			if Vector2(x0 + cell * 0.5 - cx, z0 + cell * 0.5 - cz).length() > reach:
 				continue
-			var v00 := Vector3(x0, _h(x0, z0) + 0.07, z0)
-			var v10 := Vector3(x0 + cell, _h(x0 + cell, z0) + 0.07, z0)
-			var v01 := Vector3(x0, _h(x0, z0 + cell) + 0.07, z0 + cell)
-			var v11 := Vector3(x0 + cell, _h(x0 + cell, z0 + cell) + 0.07, z0 + cell)
-			if minf(minf(v00.y, v10.y), minf(v01.y, v11.y)) < water + 0.1:
+			var v00 := Vector3(x0, _h(x0, z0) + 0.02, z0)
+			var v10 := Vector3(x0 + cell, _h(x0 + cell, z0) + 0.02, z0)
+			var v01 := Vector3(x0, _h(x0, z0 + cell) + 0.02, z0 + cell)
+			var v11 := Vector3(x0 + cell, _h(x0 + cell, z0 + cell) + 0.02, z0 + cell)
+			if minf(minf(v00.y, v10.y), minf(v01.y, v11.y)) < water + 0.05:
 				continue
 			for tri in [[v00, v10, v01], [v10, v11, v01]]:
 				var a: Vector3 = tri[0]
@@ -316,9 +316,20 @@ func _link_node(a: Vector2, b: Vector2, kind: String, skip_a: float, skip_b: flo
 		style = "rieles"
 	elif MineSim.kind_def(kind).get("set", "mina") == "pozo":
 		style = "tubo"
-	var dirt := MeshLib.mat(Color(0.5, 0.4, 0.28))
-	var iron := MeshLib.mat(Color(0.22, 0.22, 0.24), 0.5)
-	var wood := MeshLib.mat(Color(0.36, 0.25, 0.15))
+	# Pulido (docs/GRAFICOS.md §10): el camino de tierra es una franja de RoadMesh que sigue el terreno
+	# (antes tablas planas de 2 m que flotaban o se hundían en las lomas y parpadeaban con el suelo); los
+	# rieles, durmientes y tubos se unen en UNA malla con el material compartido de los modelos (antes
+	# 3–4 nodos y llamadas de dibujo por cada tramo de 2 m).
+	if style == "camino":
+		var t := _terrain()
+		if t:
+			var path := MeshLib.mesh_node(RoadMesh.strip(t, PackedVector2Array([start, end]), 0.0, 1.8, 0.05), RoadMesh.material("barro"))
+			path.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			root.add_child(path)
+		return root
+	var iron := Color(0.22, 0.22, 0.24)
+	var wood := Color(0.36, 0.25, 0.15)
+	var buf := MeshLib.Buf.new()
 	var side := Vector2(-u.y, u.x)
 	for i in range(n):
 		var p0 := start + seg * (float(i) / n)
@@ -328,24 +339,19 @@ func _link_node(a: Vector2, b: Vector2, kind: String, skip_a: float, skip_b: flo
 		var h0 := _h(p0.x, p0.y)
 		var h1 := _h(p1.x, p1.y)
 		var pitch := atan2(h1 - h0, l)
-		match style:
-			"camino":
-				var piece := MeshLib.mesh_node(MeshLib.cached("mine_path_%.2f" % l, func(): return MeshLib.box(Vector3(1.8, 0.06, l + 0.1))), dirt, Vector3(m.x, (h0 + h1) * 0.5 + 0.06, m.y))
-				piece.rotation = Vector3(-pitch, yaw, 0)
-				root.add_child(piece)
-			"rieles":
-				for s in [-0.4, 0.4]:
-					var q: Vector2 = m + side * s
-					var rail := MeshLib.mesh_node(MeshLib.cached("mine_rail_%.2f" % l, func(): return MeshLib.box(Vector3(0.08, 0.1, l + 0.05))), iron, Vector3(q.x, (h0 + h1) * 0.5 + 0.16, q.y))
-					rail.rotation = Vector3(-pitch, yaw, 0)
-					root.add_child(rail)
-				var sl := MeshLib.mesh_node(MeshLib.cached("mine_sleeper", func(): return MeshLib.box(Vector3(1.2, 0.08, 0.25))), wood, Vector3(m.x, (h0 + h1) * 0.5 + 0.06, m.y))
-				sl.rotation.y = yaw
-				root.add_child(sl)
-			_:
-				var pipe := MeshLib.mesh_node(MeshLib.cached("mine_pipe_%.2f" % l, func(): return MeshLib.cylinder(0.14, 0.14, l + 0.05, 6)), iron, Vector3(m.x, (h0 + h1) * 0.5 + 0.35, m.y))
-				pipe.rotation = Vector3(PI * 0.5 - pitch, yaw, 0)
-				root.add_child(pipe)
+		var hm := (h0 + h1) * 0.5
+		if style == "rieles":
+			var basis := Basis.from_euler(Vector3(-pitch, yaw, 0))
+			for sd: float in [-0.4, 0.4]:
+				var q: Vector2 = m + side * sd
+				buf.box(Vector3.ZERO, Vector3(0.08, 0.1, l + 0.05), Transform3D(basis, Vector3(q.x, hm + 0.16, q.y)), iron, MeshLib.K_PLAIN)
+			buf.box(Vector3.ZERO, Vector3(1.2, 0.08, 0.25), Transform3D(Basis(Vector3.UP, yaw), Vector3(m.x, hm + 0.06, m.y)), wood, MeshLib.K_WOOD)
+		else:
+			buf.add(MeshLib.cached("mine_pipe_%.2f" % l, func(): return MeshLib.cylinder(0.14, 0.14, l + 0.05, 6)),
+					Transform3D(Basis.from_euler(Vector3(PI * 0.5 - pitch, yaw, 0)), Vector3(m.x, hm + 0.35, m.y)), iron, MeshLib.K_PLAIN)
+	var mi := MeshInstance3D.new()
+	mi.mesh = buf.commit()
+	root.add_child(mi)
 	return root
 
 

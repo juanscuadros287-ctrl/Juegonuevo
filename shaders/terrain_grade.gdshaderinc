@@ -18,7 +18,8 @@ float tg_noise(vec2 p) {
 vec3 terrain_grade(vec3 c, float grass, vec3 wpos, float dist) {
 	float lum = dot(c, vec3(0.3, 0.59, 0.11));
 	// Pasto: menos saturado y un poco más oscuro, con manchas secas (ocre) y húmedas.
-	vec3 g = mix(vec3(lum), c, 0.6) * vec3(0.9, 0.84, 0.8);
+	// Pulido (§10): un poco menos saturado y más cálido (el verde seguía chillón con ACES).
+	vec3 g = mix(vec3(lum), c, 0.5) * vec3(0.93, 0.87, 0.78);
 	// Las manchas finas se apagan a distancia (sin moiré ni "ruido" en la vista de país).
 	float near_k = 1.0 - smoothstep(60.0, 260.0, dist);
 	float mid_k = 1.0 - smoothstep(300.0, 1400.0, dist);

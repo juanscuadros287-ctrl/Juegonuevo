@@ -29,6 +29,9 @@ func _ready() -> void:
 	add_to_group(GraphicsSettings.GROUP)
 
 
+const SUN_STEP := 0.25   # grados
+
+
 func build() -> void:
 	sky_mat = ProceduralSkyMaterial.new()
 	sky_mat.sun_angle_max = 18.0
@@ -87,8 +90,10 @@ func build() -> void:
 	sun.directional_shadow_fade_start = 0.85
 	sun.directional_shadow_pancake_size = 30.0
 	# Sesgos pequeños: sin acné en caras planas ni "peter-panning" en la base de los edificios.
-	sun.shadow_bias = 0.03
-	sun.shadow_normal_bias = 1.1
+	# Pulido (§10): con 0,03/1,1 aparecían rayas finas de acné en el terreno casi plano (sobre todo con
+	# 2 cascadas en Media). El sesgo normal mayor las quita sin despegar la sombra de la base.
+	sun.shadow_bias = 0.04
+	sun.shadow_normal_bias = 2.0
 	sun.shadow_blur = 1.2
 	sun.light_angular_distance = 0.6
 	add_child(sun)
@@ -121,6 +126,14 @@ func apply_graphics(p: Dictionary) -> void:
 	if vp:
 		vp.msaa_3d = int(p.get("msaa", Viewport.MSAA_2X))
 		vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if bool(p.get("fxaa", false)) else Viewport.SCREEN_SPACE_AA_DISABLED
+		if fp:
+			vp.use_taa = bool(p.get("taa", false))
+			vp.use_debanding = bool(p.get("debanding", false))
+	if fp and env.ssao_enabled:
+		# Media: SSAO a media resolución y calidad baja; Alta: calidad alta.
+		var half := bool(p.get("ssao_half", false))
+		RenderingServer.environment_set_ssao_quality(RenderingServer.ENV_SSAO_QUALITY_LOW if half else RenderingServer.ENV_SSAO_QUALITY_HIGH,
+				half, 0.5, 2, 50.0, 300.0)
 	if is_inside_tree():
 		MeshLib.apply_ranges(get_tree(), p)
 
@@ -159,7 +172,10 @@ func update(hour: float, dim: float) -> void:
 	night_factor = 1.0 - smoothstep(-0.1, 0.12, elev)
 	if elev > -0.04:
 		# Sol: luz cálida a baja altura, blanca a mediodía.
-		sun.rotation = Vector3(-deg_to_rad(maxf(sun_elev_deg, 3.0)), deg_to_rad(az), 0)
+		# Pulido: la dirección del sol avanza en pasos de 0,25° (SUN_STEP). Si giraba un poco cada frame
+		# el mapa de sombras se re-rasterizaba en otra orientación y los bordes "nadaban" sin parar;
+		# con pasos la sombra queda quieta entre saltos imperceptibles (unos centímetros).
+		sun.rotation = Vector3(-deg_to_rad(snappedf(maxf(sun_elev_deg, 3.0), SUN_STEP)), deg_to_rad(snappedf(az, SUN_STEP)), 0)
 		sun.light_color = keys[2]
 		sun.light_energy = lerpf(0.0, 1.1, day) * (1.0 - dim * 0.55)
 		sky_mat.sky_energy_multiplier = 1.0

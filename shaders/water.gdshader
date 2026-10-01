@@ -47,8 +47,17 @@ void fragment() {
 	float depth = far_depth;
 	float real_d = -1.0;
 	float coast = 0.0;
-	if (uv.x > 0.0 && uv.y > 0.0 && uv.x < 1.0 && uv.y < 1.0) {
+	float pond = 1.0;   // 0 = charco o encharcamiento plano (sin espuma, casi transparente)
+	bool baked = uv.x > 0.0 && uv.y > 0.0 && uv.x < 1.0 && uv.y < 1.0;
+	if (baked) {
 		depth = max(water_level - texture(height_tex, uv).r, 0.0);
+		// Pulido: profundidad máxima en un radio de ~6 m. Si todo alrededor es muy bajo es un charco
+		// del terreno low-poly (no un río): antes se pintaba entero de espuma blanca con bordes en
+		// dientes de sierra.
+		vec2 o = vec2(6.0) / height_rect.zw;
+		float dn = max(max(water_level - texture(height_tex, uv + vec2(o.x, 0.0)).r, water_level - texture(height_tex, uv - vec2(o.x, 0.0)).r),
+				max(water_level - texture(height_tex, uv + vec2(0.0, o.y)).r, water_level - texture(height_tex, uv - vec2(0.0, o.y)).r));
+		pond = smoothstep(0.35, 0.9, max(dn, depth));
 	} else if (has_geo) {
 		vec2 guv = (wpos.xz - geo_rect.xy) / geo_rect.zw;
 		if (guv.x > 0.0 && guv.y > 0.0 && guv.x < 1.0 && guv.y < 1.0) {
@@ -80,15 +89,22 @@ void fragment() {
 		d01 = max(smoothstep(0.0, 0.3, k), 0.35);
 	}
 	// Espuma en la orilla: bandas que avanzan y se deshacen con ruido.
-	float shore = 1.0 - smoothstep(0.0, 0.55, depth);
-	float bands = smoothstep(0.55, 0.9, sin(depth * 14.0 - t * 1.8) * 0.5 + 0.5) * (1.0 - smoothstep(0.1, 0.6, depth));
-	float foam = clamp(shore * 0.75 + bands * 0.5, 0.0, 1.0) * smoothstep(0.35, 0.65, vnoise(wpos.xz * 1.8 + t * 0.3) + shore * 0.4);
-	foam *= 1.0 - smoothstep(80.0, 180.0, dist);
+	// Pulido: franja de espuma más fina y rota (antes cubría toda el agua de menos de 0,55 m).
+	float shore = 1.0 - smoothstep(0.0, 0.28, depth);
+	float bands = smoothstep(0.6, 0.9, sin(depth * 14.0 - t * 1.8) * 0.5 + 0.5) * (1.0 - smoothstep(0.1, 0.45, depth));
+	float foam = clamp(shore * 0.6 + bands * 0.35, 0.0, 1.0) * smoothstep(0.4, 0.7, vnoise(wpos.xz * 1.8 + t * 0.3) + shore * 0.3);
+	foam *= (1.0 - smoothstep(80.0, 180.0, dist)) * pond;
 	col = mix(col, foam_color, foam);
 	float fres = pow(1.0 - clamp(dot(normalize(-VERTEX), NORMAL), 0.0, 1.0), 4.0);
 	ALBEDO = col;
 	ROUGHNESS = mix(0.06, 0.5, foam);
 	METALLIC = 0.0;
 	SPECULAR = 0.6;
-	ALPHA = clamp(mix(0.55, 0.92, d01) + fres * 0.3 + foam, 0.0, 1.0);
+	float a = clamp(mix(0.55, 0.92, d01) + fres * 0.3 + foam, 0.0, 1.0);
+	if (baked) {
+		// Orilla suave: el agua se desvanece en los últimos centímetros, así el corte del plano con
+		// los triángulos del terreno (dientes de sierra) no se ve. Los charcos quedan como suelo mojado.
+		a *= smoothstep(0.0, 0.18, depth) * mix(0.45, 1.0, pond);
+	}
+	ALPHA = a;
 }

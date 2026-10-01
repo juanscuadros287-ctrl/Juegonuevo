@@ -193,6 +193,19 @@ func _build_town_mesh() -> void:
 	normals.resize(n_tris * 3)
 	colors.resize(n_tris * 3)
 	var w := RES + 1
+	# Pulido (docs/GRAFICOS.md §10): color POR VÉRTICE (normal suave de la rejilla), no por triángulo.
+	# Antes cada triángulo tomaba un color plano (arena, roca, pasto) según su centro y las orillas y
+	# laderas se veían como dientes de sierra blancos y grises. La luz sigue siendo plana (low-poly).
+	var vcols := PackedColorArray()
+	vcols.resize(w * w)
+	for j in range(w):
+		for i in range(w):
+			var x := -half + i * cell
+			var z := -half + j * cell
+			var dx := (heights[j * w + mini(i + 1, RES)] - heights[j * w + maxi(i - 1, 0)]) / (cell * float(mini(i + 1, RES) - maxi(i - 1, 0)))
+			var dz := (heights[mini(j + 1, RES) * w + i] - heights[maxi(j - 1, 0) * w + i]) / (cell * float(mini(j + 1, RES) - maxi(j - 1, 0)))
+			var ny := 1.0 / sqrt(1.0 + dx * dx + dz * dz)
+			vcols[j * w + i] = _color_for(Vector3(x, heights[j * w + i], z), ny, not is_unlocked(x, z))
 	var k := 0
 	for j in range(RES):
 		for i in range(RES):
@@ -202,20 +215,23 @@ func _build_town_mesh() -> void:
 			var v10 := Vector3(x0 + cell, heights[j * w + i + 1], z0)
 			var v01 := Vector3(x0, heights[(j + 1) * w + i], z0 + cell)
 			var v11 := Vector3(x0 + cell, heights[(j + 1) * w + i + 1], z0 + cell)
-			var locked := not is_unlocked(x0 + cell * 0.5, z0 + cell * 0.5)
-			for tri in [[v00, v10, v01], [v10, v11, v01]]:
+			var c00 := vcols[j * w + i]
+			var c10 := vcols[j * w + i + 1]
+			var c01 := vcols[(j + 1) * w + i]
+			var c11 := vcols[(j + 1) * w + i + 1]
+			for tri in [[v00, v10, v01, c00, c10, c01], [v10, v11, v01, c10, c11, c01]]:
 				var a: Vector3 = tri[0]
 				var b: Vector3 = tri[1]
 				var c: Vector3 = tri[2]
 				var nrm := (c - a).cross(b - a).normalized()
-				var center := (a + b + c) / 3.0
-				var col := _color_for(center, nrm.y, locked)
 				verts[k] = a
 				verts[k + 1] = b
 				verts[k + 2] = c
+				colors[k] = tri[3]
+				colors[k + 1] = tri[4]
+				colors[k + 2] = tri[5]
 				for q in range(3):
 					normals[k + q] = nrm
-					colors[k + q] = col
 				k += 3
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
@@ -1175,7 +1191,9 @@ func _grid_mesh(x0: float, z0: float, step: float, n: int, hs: PackedFloat32Arra
 			var g := _edge_vertex(e, t, n)
 			verts[base + e * n + t] = verts[g] - Vector3(0, drop, 0)
 			normals[base + e * n + t] = normals[g]
-			cols[base + e * n + t] = cols[g].darkened(0.1)
+			# Pulido: mismo color que el borde (antes oscurecido): por las rendijas entre chunks de distinta
+			# resolución se veían líneas punteadas oscuras a lo largo de los bordes de chunk.
+			cols[base + e * n + t] = cols[g]
 			uvs[base + e * n + t] = uvs[g]
 	return {"verts": verts, "normals": normals, "cols": cols, "uvs": uvs}
 

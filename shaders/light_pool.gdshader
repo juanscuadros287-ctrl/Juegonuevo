@@ -9,7 +9,8 @@ uniform vec3 light_color : source_color = vec3(1.0, 0.72, 0.4);
 void vertex() {
 	VERTEX = (MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	float d = length(VERTEX);
-	VERTEX -= VERTEX / max(d, 0.001) * min(0.08 + d * 0.003, 4.0);
+	// Sesgo mayor que el de las carreteras (road.gdshader): la luz se ve también sobre la calzada.
+	VERTEX -= VERTEX / max(d, 0.001) * min(0.12 + d * 0.0036, 6.0);
 }
 
 void fragment() {

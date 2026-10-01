@@ -533,11 +533,13 @@ func old_color(x: float, z: float, h: float, ny: float) -> Color:
 	if h < water_level - 0.2:
 		c = Color(0.62, 0.58, 0.44)
 	elif h < water_level + 0.8:
-		c = Color(0.86, 0.8, 0.58)
+		c = Color(0.74, 0.68, 0.5)   # arena de orilla (pulido: antes 0.86/0.8/0.58, se veía blanca al sol)
 	elif ny < 0.72:
 		c = Color(0.5 + v, 0.47 + v, 0.44 + v)
 	elif h > 34.0:
-		c = Color(0.94, 0.95, 0.98)
+		# Cumbres del pueblo: roca clara (pulido: antes blanco nieve en lomas de 35 m, manchas que se
+		# leían como errores; la nieve de verdad la pone la estación o el snow_line del país).
+		c = Color(0.62 + v, 0.6 + v, 0.55 + v)
 	elif h > 22.0:
 		c = Color(0.52 + v, 0.49 + v, 0.4 + v)
 	else:

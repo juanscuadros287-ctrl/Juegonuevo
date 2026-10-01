@@ -101,7 +101,12 @@ func rebuild() -> void:
 	for x in xs:
 		_spots.append(x * Vector3(0.5, 3.2, 0))
 		var g := x * Vector3(0.5, 0, 0)
-		pool_x.append(Transform3D(Basis(), Vector3(g.x, t.height_at(g.x, g.z) + 0.05, g.z)))
+		# Pulido: el charco se inclina con el terreno (antes era horizontal y en laderas se hundía a un
+		# lado); la separación con el suelo la da el sesgo de profundidad del shader, no una altura.
+		var e := 2.0
+		var nrm := Vector3(t.height_at(g.x - e, g.z) - t.height_at(g.x + e, g.z), 2.0 * e, t.height_at(g.x, g.z - e) - t.height_at(g.x, g.z + e)).normalized()
+		var bx := Vector3.RIGHT.slide(nrm).normalized()
+		pool_x.append(Transform3D(Basis(bx, nrm, bx.cross(nrm)), Vector3(g.x, t.height_at(g.x, g.z) + 0.02, g.z)))
 	_pools.multimesh = _mm(MeshLib.cached("__pool", func():
 		var pm := PlaneMesh.new()
 		pm.size = Vector2(9.0, 9.0)

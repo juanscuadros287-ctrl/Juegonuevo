@@ -2,7 +2,10 @@ shader_type spatial;
 // Área de un yacimiento (MiningVisuals): tinte del suelo con vetas (oro, hierro, carbón…) o
 // manchas (petróleo, gas), borde irregular (12 radios, igual que MineSim.radius_at) y un
 // contorno que se ilumina al colocar una mina o un frente.
-render_mode blend_mix, depth_draw_never, cull_disabled, specular_disabled;
+render_mode blend_mix, depth_draw_never, cull_disabled, specular_disabled, skip_vertex_transform;
+// Pulido (docs/GRAFICOS.md §10): capa "decal" del suelo. La malla va casi pegada al terreno (+2 cm) y
+// el vértice se acerca a la cámara un sesgo proporcional a la distancia (menor que el de las
+// carreteras): nunca pelea con el terreno y las carreteras siempre quedan encima.
 
 uniform vec3 ore_color = vec3(0.6, 0.3, 0.2);
 uniform vec3 soil_color = vec3(0.42, 0.35, 0.27);
@@ -19,6 +22,10 @@ varying vec3 wpos;
 
 void vertex() {
 	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	VERTEX = (MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	float d = length(VERTEX);
+	VERTEX -= VERTEX / max(d, 0.001) * min(0.03 + d * 0.0012, 2.5);
+	NORMAL = normalize((MODELVIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
 }
 
 float hash(vec2 p) {
@@ -57,7 +64,11 @@ void fragment() {
 		float m = n * 0.62 + vnoise(p * 0.8) * 0.38;
 		mask = smoothstep(0.58, 0.66, m);
 	}
-	float speck = step(0.93, hash(floor(p * 1.6)));
+	// Pintas redondas con borde suave (antes cuadraditos de píxel duro).
+	vec2 sp = p * 1.6;
+	float sfw = max(fwidth(sp.x), fwidth(sp.y));
+	float speck = step(0.93, hash(floor(sp))) * (1.0 - smoothstep(0.28 - sfw, 0.28 + sfw, length(fract(sp) - 0.5)));
+	speck *= 1.0 - smoothstep(0.3, 0.7, sfw);
 	vec3 soil = soil_color * (0.85 + 0.3 * vnoise(p * 0.9));
 	vec3 col = mix(soil, ore_color, clamp(mask + speck * 0.6, 0.0, 1.0));
 	col = mix(col, soil_color, depleted * 0.6);

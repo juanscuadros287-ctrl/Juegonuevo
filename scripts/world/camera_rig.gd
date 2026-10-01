@@ -139,7 +139,15 @@ func _update_camera() -> void:
 	camera.look_at(global_position + Vector3(0, 0.8, 0), Vector3.UP)
 	# Plano lejano y cercano según la altura (evita parpadeo del agua a 10 km).
 	camera.far = maxf(2500.0, distance * 4.0)
-	camera.near = clampf(distance * 0.004, 0.3, 40.0)
+	# Pulido (docs/GRAFICOS.md §10): el plano cercano sube con el zoom pero nunca pasa de la mitad de la
+	# altura libre de la cámara sobre el suelo. Con la cámara del pueblo (≈60 m) queda en ~0,7 m en
+	# lugar de 0,3: la precisión del buffer de profundidad mejora ×2–3 (menos parpadeo de capas
+	# coplanares) sin recortar nada cercano.
+	var clear := 1e9
+	if terrain:
+		var cg := camera.global_position
+		clear = cg.y - maxf(terrain.height_at(cg.x, cg.z), terrain.water_level)
+	camera.near = clampf(minf(distance * 0.012, clear * 0.5), 0.3, 60.0)
 	if env:
 		# Igual que antes en el pueblo; sobre el país solo una bruma leve en el horizonte.
 		env.fog_density = BASE_FOG * pow(minf(1.0, TOWN_MAX_DIST / maxf(distance, 1.0)), 1.6)

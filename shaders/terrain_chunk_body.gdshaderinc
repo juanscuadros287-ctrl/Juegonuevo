@@ -37,6 +37,11 @@ uniform float snow_line = 150.0;
 uniform float relief = 1.0;
 uniform float fade_near = 100000.0;
 uniform float fade_far = 100001.0;
+// Pulido: el pueblo (chunk central, terreno viejo sin copas) está en el origen. Las copas del bosque
+// entran con la misma mezcla de colores que CountryGen.blend_at (HALF_CHUNK..HALF_CHUNK + BLEND):
+// antes el bosque empezaba de golpe en el borde del chunk del pueblo (costura recta).
+uniform float town_half = 200.0;
+uniform float town_blend = 480.0;
 
 varying vec3 world_pos;
 varying vec3 world_nrm;
@@ -103,7 +108,7 @@ float tc_ridges(vec2 p, float wave, float fp) {
 }
 
 // Copas de árboles: una por celda con probabilidad `dens`. Devuelve la altura de la copa (0 = claro).
-float tc_canopy(vec2 p, float dens) {
+float tc_canopy(vec2 p, float dens, float aa) {
 	vec2 i = floor(p);
 	vec2 f = fract(p);
 	float best = 0.0;
@@ -117,17 +122,30 @@ float tc_canopy(vec2 p, float dens) {
 			}
 			float r = 0.5 + 0.3 * pres / max(dens, 0.01);
 			float d = length(g + 0.15 + h * 0.7 - f) / r;
-			best = max(best, sqrt(max(1.0 - d * d, 0.0)));
+			// Cúpula con borde suavizado al tamaño del píxel (antes el borde era un escalón dentado).
+			best = max(best, sqrt(max(1.0 - d * d, 0.0)) * (1.0 - smoothstep(1.0 - aa, 1.0, d)));
 		}
 	}
 	return best;
+}
+
+// Tramado ordenado (Bayer 4×4): umbral estable y repartido de forma uniforme. El ruido blanco de antes
+// dejaba "sal y pimienta" visible en la banda de transición entre LOD; con Bayer la mezcla se lee como
+// un tono intermedio (y con TAA/MSAA se funde del todo).
+float tc_bayer2(vec2 a) {
+	a = floor(a);
+	return fract(a.x / 2.0 + a.y * a.y * 0.75);
+}
+
+float tc_bayer4(vec2 a) {
+	return tc_bayer2(0.5 * a) * 0.25 + tc_bayer2(a);
 }
 
 void fragment() {
 	vec2 cuv = (world_pos.xz - map_origin) / chunk_size;
 	float dist = length(VERTEX);
 	// Tramado complementario entre la malla detallada y la tesela lejana (banda fade_near..fade_far).
-	float dither = tc_hash(floor(FRAGCOORD.xy));
+	float dither = tc_bayer4(FRAGCOORD.xy) + 1.0 / 32.0;
 	float fade = smoothstep(fade_near, fade_far, dist);
 	if (is_far) {
 		if (texture(detail_tex, cuv / map_texels).r > 0.5 && dither >= fade) {
@@ -152,10 +170,21 @@ void fragment() {
 	float n_macro = tc_fbm(p, 2400.0, fp);
 	float n_mid = tc_fbm(p + 311.0, 380.0, fp);
 	float n_fine = tc_fbm(p + 57.0, 45.0, fp);
+	// Claro alrededor del pueblo con borde orgánico (ruido) para que no se lea como un cuadrado.
+	dens *= smoothstep(town_half, town_half + town_blend * 0.8, max(abs(p.x), abs(p.y)) + n_mid * 260.0) * smoothstep(town_half, town_half + 80.0, max(abs(p.x), abs(p.y)));
 
 	vec3 c = COLOR.rgb;
 	float grass = COLOR.a;
 	c = mix(c, c * season_tint, grass);
+	// Pulido: junto al pueblo el color se calcula como en el chunk del pueblo (terrain_plus) y el
+	// detalle del país entra con la misma mezcla que los colores (CountryGen.blend_at): sin el cuadrado
+	// claro con borde recto alrededor del pueblo.
+	vec3 c_town = mix(c, vec3(0.92, 0.94, 0.97) * max(max(COLOR.r, COLOR.g), 0.45) * 1.6, grass * snow_amount);
+#ifdef TERRAIN_GRADE
+	c_town = terrain_grade(c_town, grass, world_pos, dist);
+#endif
+	float cheb = max(abs(world_pos.x), abs(world_pos.z));
+	float town_k = smoothstep(town_half, town_half + town_blend, cheb + n_mid * 200.0) * smoothstep(town_half, town_half + 80.0, cheb);
 	// Variación por bioma: pasto y bosque con zonas más secas o más húmedas; tierra y roca con manchas.
 	float lum0 = dot(c, vec3(0.3, 0.59, 0.11));
 	vec3 warm = c * vec3(1.12, 1.04, 0.78);
@@ -191,7 +220,8 @@ void fragment() {
 	c = mix(c, vec3(0.84, 0.78, 0.6) * (0.95 + n_fine * 0.3), sand * (1.0 - rock));
 	// Copas de árboles (bosque, selva): celdas de 9 m cerca que crecen con la distancia (≥ ~6 px).
 	float bump = n_fine * 2.0 + n_mid * 6.0;
-	float forest = smoothstep(0.04, 0.3, dens) * (1.0 - sand) * (1.0 - rock * 0.7);
+	// Pulido: borde del bosque orgánico (umbral con ruido) en lugar del polígono de la malla.
+	float forest = smoothstep(0.1, 0.4, dens + n_mid * 0.5 + n_fine * 0.25) * (1.0 - sand) * (1.0 - rock * 0.7);
 	if (forest > 0.001) {
 		float cs = max(9.0, fp * 6.5);
 		float lv = log2(cs / 9.0);
@@ -199,7 +229,8 @@ void fragment() {
 		float s0 = 9.0 * exp2(l0);
 		float t = fract(lv);
 		float cd = clamp(dens * 1.05 + n_mid * 0.35, 0.0, 1.0);
-		float ch = mix(tc_canopy(p / s0, cd), tc_canopy(p / (s0 * 2.0) + 17.3, cd), t);
+		float aa0 = clamp(fp / s0 * 2.5, 0.08, 0.6);
+		float ch = mix(tc_canopy(p / s0, cd, aa0), tc_canopy(p / (s0 * 2.0) + 17.3, cd, aa0 * 0.5), t);
 		float sc = mix(s0, s0 * 2.0, t);
 		vec3 crown = c * (0.62 + 0.5 * ch) * mix(vec3(1.0), vec3(0.92, 1.06, 0.9), tc_hash(floor(p / s0)));
 		c = mix(c, crown, forest);
@@ -218,6 +249,7 @@ void fragment() {
 	// Sombreado cartográfico suave (luz del noroeste) que se suma al sol real desde lejos.
 	float hs = dot(wn_ex, normalize(vec3(-0.55, 0.7, -0.45)));
 	c *= mix(1.0, clamp(0.5 + 0.6 * hs, 0.55, 1.12), (0.55 + 0.25 * mtn) * far_k);
+	c = mix(c_town, c, town_k);
 
 	// Normal: plana de cerca (low-poly), suave y exagerada lejos, más microrelieve por bump.
 	vec3 fn = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
@@ -264,18 +296,32 @@ void fragment() {
 		}
 	}
 	// Fronteras de municipio (tenues; más cálidas alrededor del tuyo).
+	// Pulido (docs/GRAFICOS.md §10): la frontera es la curva de nivel 0,5 de un indicador "mismo
+	// municipio que mi celda" interpolado entre los centros de las 4 celdas vecinas (marching squares
+	// suavizado). Antes seguía los bordes de los chunks y se veía en escalera; ahora las esquinas se
+	// cortan en diagonal/curva y la línea tiene ancho uniforme en metros con antialias por píxel.
 	if (border_alpha > 0.001) {
 		ivec2 ci = ivec2(floor(cuv));
-		vec2 f = cuv - floor(cuv);
 		float id = zone_id(ci);
-		float w = border_width / chunk_size;
-		float e = 0.0;
 		float mine = texelFetch(zone_tex, clamp(ci, ivec2(0), ivec2(int(map_texels) - 1)), 0).g;
-		if (f.x < w && abs(zone_id(ci + ivec2(-1, 0)) - id) > 0.001) { e = max(e, 1.0 - f.x / w); }
-		if (f.x > 1.0 - w && abs(zone_id(ci + ivec2(1, 0)) - id) > 0.001) { e = max(e, 1.0 - (1.0 - f.x) / w); }
-		if (f.y < w && abs(zone_id(ci + ivec2(0, -1)) - id) > 0.001) { e = max(e, 1.0 - f.y / w); }
-		if (f.y > 1.0 - w && abs(zone_id(ci + ivec2(0, 1)) - id) > 0.001) { e = max(e, 1.0 - (1.0 - f.y) / w); }
-		e = smoothstep(0.0, 0.5, e);
+		vec2 q = cuv - 0.5;
+		ivec2 b = ivec2(floor(q));
+		vec2 t = q - floor(q);
+		float i00 = abs(zone_id(b) - id) < 0.001 ? 1.0 : 0.0;
+		float i10 = abs(zone_id(b + ivec2(1, 0)) - id) < 0.001 ? 1.0 : 0.0;
+		float i01 = abs(zone_id(b + ivec2(0, 1)) - id) < 0.001 ? 1.0 : 0.0;
+		float i11 = abs(zone_id(b + ivec2(1, 1)) - id) < 0.001 ? 1.0 : 0.0;
+		float e = 0.0;
+		if (i00 + i10 + i01 + i11 < 3.99) {
+			float v = mix(mix(i00, i10, t.x), mix(i01, i11, t.x), t.y);
+			vec2 g = vec2(mix(i10 - i00, i11 - i01, t.y), mix(i01 - i00, i11 - i10, t.x));
+			// Distancia (en metros) a la curva v = 0,5.
+			float dm = abs(v - 0.5) / max(length(g), 0.25) * chunk_size;
+			float hw = max(border_width * 0.75, fp * 1.2);
+			float aa = max(fp * 1.2, 1.0);
+			e = 1.0 - smoothstep(hw - aa, hw + aa, dm);
+			e *= 0.55 + 0.45 * (1.0 - smoothstep(0.0, hw, dm));   // centro más marcado
+		}
 		vec3 bc = mix(vec3(1.0), vec3(1.0, 0.82, 0.35), mine);
 		c = mix(c, bc, e * border_alpha * (1.0 + 0.5 * mine));
 	}

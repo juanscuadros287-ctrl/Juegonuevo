@@ -346,10 +346,18 @@ func _update_daylight() -> void:
 func _plaza_mesh(r: float, seg: int) -> Mesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Pulido: anillo exterior de 0,45 m para el bordillo (UV.x < 0,06 en road.gdshader). Antes el UV
+	# bajaba linealmente del centro al borde y el "bordillo" era una franja lisa de 1 m.
+	var r1 := r - 0.45
 	for i in range(seg):
 		var a0 := TAU * i / seg
 		var a1 := TAU * (i + 1) / seg
-		for v in [[Vector3.ZERO, 0.5], [Vector3(sin(a1) * r, 0, cos(a1) * r), 0.0], [Vector3(sin(a0) * r, 0, cos(a0) * r), 0.0]]:
+		var d0 := Vector3(sin(a0), 0, cos(a0))
+		var d1 := Vector3(sin(a1), 0, cos(a1))
+		var tris := [[Vector3.ZERO, 0.5], [d1 * r1, 0.075], [d0 * r1, 0.075],
+				[d0 * r1, 0.075], [d1 * r1, 0.075], [d1 * r, 0.0],
+				[d0 * r1, 0.075], [d1 * r, 0.0], [d0 * r, 0.0]]
+		for v in tris:
 			st.set_normal(Vector3.UP)
 			st.set_uv(Vector2(float(v[1]), 0.0))
 			st.add_vertex(v[0])

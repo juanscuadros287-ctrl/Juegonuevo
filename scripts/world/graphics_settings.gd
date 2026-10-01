@@ -62,11 +62,17 @@ static func profile(lv := -1) -> Dictionary:
 		"shadow_distance": [0.0, 160.0, 260.0][l],
 		"shadow_atlas": [1024, 2048, 4096][l],
 		"soft_shadows": [0, 1, 2][l],
-		"ssao": fp and l >= HIGH,
+		# Pulido (docs/GRAFICOS.md §10): SSAO también en Media (media resolución, más barato); TAA
+		# opcional en Alta (funde el tramado de LOD y el titileo de bordes finos); debanding del cielo.
+		"ssao": fp and l >= MEDIUM,
+		"ssao_half": l < HIGH,
+		"taa": fp and l >= HIGH,
+		"debanding": fp and l >= MEDIUM,
 		"glow": fp and l >= MEDIUM,
 		"fog_depth": fp and l >= MEDIUM,
 		"msaa": [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X][l] if fp else [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_2X][l],
-		"fxaa": l == LOW,
+		# FXAA en Baja (sin MSAA) y en Compatibility Alta además del MSAA 2× (bordes de follaje y rieles).
+		"fxaa": l == LOW or (not fp and l >= HIGH),
 		"building_range": [260.0, 480.0, 900.0][l],
 		"detail_range": [60.0, 110.0, 180.0][l],
 		"tree_range": [240.0, 420.0, 800.0][l],
@@ -89,7 +95,7 @@ static func make_selector() -> Control:
 	for i in range(LABELS.size()):
 		ob.add_item(LABELS[i], i)
 	ob.selected = level()
-	ob.tooltip_text = "Baja: sin sombras ni efectos, menos distancia de dibujo.\nMedia: sombras suaves y brillo.\nAlta: sombras finas, oclusión ambiental (SSAO) y más distancia."
+	ob.tooltip_text = "Baja: sin sombras ni efectos, menos distancia de dibujo.\nMedia: sombras suaves, brillo y oclusión ambiental ligera.\nAlta: sombras finas, oclusión ambiental (SSAO) completa, antialias temporal (TAA) y más distancia."
 	ob.item_selected.connect(func(i: int): apply(i))
 	row.add_child(ob)
 	return row
