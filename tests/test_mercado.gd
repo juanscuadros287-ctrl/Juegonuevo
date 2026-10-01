@@ -484,7 +484,9 @@ func _test_long_simulation() -> void:
 	for p in GovPlansSim.plans(gs):
 		print("      · plan %s: %s" % [p["label"], p["status"]])
 	check(gs.citizens.size() >= int(pop0 * 0.7), "la población no colapsa")
-	check(int(st.get("npc_opened", 0)) >= 1, "los ciudadanos abren negocios con el tiempo")
+	# El pueblo ya empieza con artesanos NPC (NpcBusinessSim.seed_initial): si cubren la demanda,
+	# no hace falta abrir más. Se exige que haya empresas NPC vivas, sembradas o abiertas.
+	check(npcs.size() >= 1 and int(st.get("npc_opened", 0)) + int(st.get("npc_seeded", 0)) >= 1, "hay empresarios NPC en el pueblo (sembrados %d, abiertos %d)" % [int(st.get("npc_seeded", 0)), int(st.get("npc_opened", 0))])
 	check(int(st.get("npc_opened", 0)) <= 8 * 2 + 2, "ritmo lento de aperturas")
 	check(GovPlansSim.plans(gs).size() >= 1, "el gobierno ejecuta planes")
 	var bad := 0
