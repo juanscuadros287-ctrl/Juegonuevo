@@ -6,8 +6,8 @@ extends Node3D
 ##   el panel Rutas.
 ## - Vías férreas internas (RailSim) con balasto, durmientes y rieles (RoadMesh.rail).
 ## - Barcos de viajes internacionales: zarpan del puerto hacia el mar abierto y llegan desde él.
-## - Modelos 3D de trenes (locomotora + vagones) y barcos (bote, velero, vapor, carguero,
-##   portacontenedores) que usa LogisticsVisuals para los envíos.
+## - Modelos 3D de trenes (locomotora + vagones) y barcos: cada modelo con su diseño propio en
+##   VehicleModels (docs/VEHICULOS.md), que usa LogisticsVisuals para los envíos.
 ## LogisticsVisuals.setup lo crea como hijo (sin tocar world.gd).
 
 static var instance: RouteVisuals
@@ -263,90 +263,19 @@ static func _box(key: String, size: Vector3, col: Color, pos: Vector3) -> MeshIn
 
 ## Barco según el medio (el casco apunta a +Z).
 static func ship_model(mode: String) -> Node3D:
-	var root := Node3D.new()
-	match mode:
-		"balsa":
-			root.add_child(_box("sh_raft", Vector3(1.6, 0.35, 3.2), Color(0.5, 0.36, 0.2), Vector3(0, 0.15, 0)))
-			root.add_child(_box("sh_raft_load", Vector3(1.0, 0.5, 1.4), Color(0.62, 0.5, 0.32), Vector3(0, 0.55, -0.3)))
-			var p := MeshLib.make_person(Color(0.5, 0.42, 0.3), Color(0.8, 0.6, 0.45), Color(0.15, 0.1, 0.08), false)
-			p.position = Vector3(0, 0.3, 1.0)
-			root.add_child(p)
-		"velero":
-			root.add_child(_box("sh_sail_hull", Vector3(2.6, 1.2, 8.0), Color(0.42, 0.28, 0.16), Vector3(0, 0.4, 0)))
-			root.add_child(_box("sh_sail_deck", Vector3(2.4, 0.15, 7.6), Color(0.62, 0.48, 0.3), Vector3(0, 1.05, 0)))
-			root.add_child(_box("sh_sail_mast", Vector3(0.18, 7.0, 0.18), Color(0.35, 0.25, 0.15), Vector3(0, 4.5, 0.5)))
-			root.add_child(_box("sh_sail_cloth", Vector3(0.08, 4.6, 3.4), Color(0.95, 0.93, 0.85), Vector3(0.2, 4.6, 0.3)))
-			root.add_child(_box("sh_sail_cargo", Vector3(1.6, 0.8, 2.0), Color(0.62, 0.5, 0.32), Vector3(0, 1.5, -2.2)))
-		"carguero":
-			root.add_child(_box("sh_cargo_hull", Vector3(4.2, 2.4, 18.0), Color(0.55, 0.12, 0.1), Vector3(0, 0.6, 0)))
-			root.add_child(_box("sh_cargo_deck", Vector3(4.0, 0.2, 17.6), Color(0.3, 0.32, 0.35), Vector3(0, 1.9, 0)))
-			root.add_child(_box("sh_cargo_bridge", Vector3(3.6, 3.0, 3.0), Color(0.92, 0.92, 0.9), Vector3(0, 3.4, -7.0)))
-			root.add_child(_box("sh_cargo_hold", Vector3(3.4, 1.2, 10.0), Color(0.25, 0.4, 0.3), Vector3(0, 2.6, 1.5)))
-			root.add_child(_box("sh_cargo_crane", Vector3(0.3, 4.0, 0.3), Color(0.95, 0.75, 0.1), Vector3(1.2, 4.0, 3.5)))
-		"portacontenedores":
-			root.add_child(_box("sh_box_hull", Vector3(5.0, 2.8, 24.0), Color(0.12, 0.2, 0.35), Vector3(0, 0.7, 0)))
-			root.add_child(_box("sh_box_bridge", Vector3(4.6, 4.0, 3.0), Color(0.95, 0.95, 0.93), Vector3(0, 4.2, -10.0)))
-			var cols := [Color(0.8, 0.25, 0.2), Color(0.2, 0.45, 0.7), Color(0.25, 0.6, 0.3), Color(0.9, 0.7, 0.2)]
-			for zi in range(6):
-				for yi in range(2):
-					root.add_child(MeshLib.mesh_node(MeshLib.cached("sh_container", func(): return MeshLib.box(Vector3(4.4, 1.2, 2.6))), _m(cols[(zi + yi) % 4]), Vector3(0, 2.8 + yi * 1.25, -6.0 + zi * 3.0)))
-		_:   # vapor
-			root.add_child(_box("sh_steam_hull", Vector3(3.2, 1.6, 12.0), Color(0.15, 0.15, 0.17), Vector3(0, 0.5, 0)))
-			root.add_child(_box("sh_steam_deck", Vector3(3.0, 0.2, 11.6), Color(0.6, 0.5, 0.36), Vector3(0, 1.35, 0)))
-			root.add_child(_box("sh_steam_cabin", Vector3(2.4, 1.6, 4.0), Color(0.92, 0.9, 0.85), Vector3(0, 2.2, -1.0)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("sh_steam_stack", func(): return MeshLib.cylinder(0.45, 0.45, 2.6, 10)), _m(Color(0.75, 0.15, 0.1)), Vector3(0, 4.0, 0.3)))
-			root.add_child(_box("sh_steam_cargo", Vector3(2.2, 0.9, 3.0), Color(0.62, 0.5, 0.32), Vector3(0, 1.9, 3.6)))
-	return root
+	return VehicleModels.node(mode if VehicleModels.has_model(mode) else "vapor_barco")
 
 
 ## Locomotora (el frente apunta a +Z).
 static func locomotive_model(mode: String) -> Node3D:
-	var root := Node3D.new()
-	if mode in ["tren_diesel", "tren_electrico"]:
-		root.add_child(_box("tr_diesel_body", Vector3(2.2, 2.4, 6.0), Color(0.85, 0.55, 0.1), Vector3(0, 1.7, 0)))
-		root.add_child(_box("tr_diesel_cab", Vector3(2.2, 0.8, 1.6), Color(0.2, 0.3, 0.4), Vector3(0, 2.6, 2.1)))
-		root.add_child(_box("tr_diesel_band", Vector3(2.24, 0.25, 6.04), Color(0.9, 0.9, 0.88), Vector3(0, 1.3, 0)))
-	else:
-		var boiler := MeshLib.mesh_node(MeshLib.cached("tr_boiler", func(): return MeshLib.cylinder(0.85, 0.85, 4.2, 12)), _m(Color(0.12, 0.12, 0.13), 0.5), Vector3(0, 1.8, 0.6))
-		boiler.rotation.x = PI * 0.5
-		root.add_child(boiler)
-		root.add_child(_box("tr_cab", Vector3(2.0, 2.2, 1.8), Color(0.45, 0.12, 0.1), Vector3(0, 2.1, -2.2)))
-		root.add_child(MeshLib.mesh_node(MeshLib.cached("tr_stack", func(): return MeshLib.cylinder(0.3, 0.22, 1.2, 8)), _m(Color(0.1, 0.1, 0.1)), Vector3(0, 3.1, 2.2)))
-		root.add_child(_box("tr_chassis", Vector3(2.0, 0.5, 6.0), Color(0.2, 0.2, 0.22), Vector3(0, 0.75, 0)))
-	for z in [-2.0, 0.0, 2.0]:
-		for x in [-0.9, 0.9]:
-			var wl := MeshLib.mesh_node(MeshLib.cached("tr_wheel", func(): return MeshLib.wheel(0.5, 0.15)), _m(Color(0.3, 0.1, 0.08)), Vector3(x, 0.5, z))
-			wl.rotation.z = PI * 0.5
-			root.add_child(wl)
-	return root
-
+	return VehicleModels.node(mode)
 
 const WAGON_COLORS := {"granelero": Color(0.4, 0.3, 0.22), "cisterna": Color(0.75, 0.75, 0.78), "cerrado": Color(0.5, 0.25, 0.2),
 		"frigorifico": Color(0.92, 0.92, 0.95), "plataforma": Color(0.35, 0.35, 0.38), "pasajeros": Color(0.2, 0.45, 0.35)}
 
 
 static func wagon_model(wt: String) -> Node3D:
-	var root := Node3D.new()
-	var col: Color = WAGON_COLORS.get(wt, Color(0.5, 0.25, 0.2))
-	root.add_child(_box("tr_wagon_bed", Vector3(2.0, 0.4, 5.0), Color(0.2, 0.2, 0.22), Vector3(0, 0.8, 0)))
-	match wt:
-		"cisterna":
-			var tank := MeshLib.mesh_node(MeshLib.cached("tr_tank", func(): return MeshLib.cylinder(0.9, 0.9, 4.6, 12)), _m(col, 0.4), Vector3(0, 1.9, 0))
-			tank.rotation.x = PI * 0.5
-			root.add_child(tank)
-		"plataforma":
-			root.add_child(_box("tr_flat_load", Vector3(1.6, 0.6, 3.6), Color(0.55, 0.55, 0.6), Vector3(0, 1.3, 0)))
-		"granelero":
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("tr_hopper", func(): return MeshLib.box(Vector3(2.0, 1.3, 4.8))), _m(col), Vector3(0, 1.65, 0)))
-			root.add_child(_box("tr_hopper_load", Vector3(1.8, 0.3, 4.4), Color(0.15, 0.13, 0.12), Vector3(0, 2.4, 0)))
-		_:
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("tr_wagon_box", func(): return MeshLib.box(Vector3(2.0, 1.8, 4.8))), _m(col), Vector3(0, 1.9, 0)))
-	for z in [-1.8, 1.8]:
-		for x in [-0.9, 0.9]:
-			var wl := MeshLib.mesh_node(MeshLib.cached("tr_wheel_s", func(): return MeshLib.wheel(0.4, 0.12)), _m(Color(0.15, 0.15, 0.15)), Vector3(x, 0.4, z))
-			wl.rotation.z = PI * 0.5
-			root.add_child(wl)
-	return root
+	return VehicleModels.node(wt)
 
 
 ## Tren completo: [locomotora, vagones...] como nodos separados (cada uno sigue la vía por su cuenta).

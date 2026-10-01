@@ -628,8 +628,9 @@ func _collect_vehicles(w: Node, focus: Vector3) -> Array:
 			if agents is Dictionary:
 				for k in agents:
 					var mode := str((live.get(k, {}) as Dictionary).get("mode", ""))
-					var sfx: String = VEHICLE_LOOPS.get(mode, "")
-					if mode == "avion":
+					var sfx: String = VEHICLE_LOOPS.get(mode, {"animal": "cart_loop", "carreta": "cart_loop", "camion": "truck_loop",
+							"tren": "train_loop"}.get(VehicleCatalog.tipo_of(mode), ""))   # Modelos nuevos: sonido de su tipo.
+					if RouteSim.family(mode) == "aire":
 						sfx = ""
 					for m in agents[k]:
 						if sfx != "" and m is Node3D and (m as Node3D).visible:

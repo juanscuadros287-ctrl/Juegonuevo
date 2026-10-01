@@ -492,6 +492,7 @@ func _build_vehicles(gs) -> void:
 			sec.add_child(UIKit.button("Abrir vacante de cargador en %s" % gs.building_label(b), func(): _say(_or_ok(FleetSim.open_porter(GameState, GameState.get_building(bid)), "Vacante de cargador publicada."))))
 		if cs.is_empty():
 			sec.add_child(UIKit.button("Construir una central de transporte", func(): EventBus.build_mode_requested.emit("central_transporte", "normal")))
+		_gear_card(gs, sec)
 		_vehicle_list(gs)
 		return
 	var ms := VehicleCatalog.models(gs, b_tipo, true)
@@ -512,28 +513,34 @@ func _build_vehicles(gs) -> void:
 		refresh()))
 	if b_mode == "":
 		return
+	_model_card(gs, sec, ms)
 	if VehicleCatalog.is_train(b_mode):
 		grid.add_child(UIKit.label("Vagones", 13, UIKit.ACCENT))
 		var wv := VBoxContainer.new()
-		for wt in VehicleCatalog.wagon_types():
+		for wt in VehicleCatalog.wagon_ids(gs, true):
 			var wh := HBoxContainer.new()
-			var d: Dictionary = VehicleCatalog.wagon_types()[wt]
-			var wl := UIKit.label("%s (%s u., %s)" % [str(d.get("label", wt)), Fmt.thousands(float(d.get("capacity", 0))) if float(d.get("capacity", 0)) > 0 else "%d pasajeros" % int(d.get("passengers", 0)),
-					Fmt.money(float(d.get("price", 0)) * gs.price_mult())], 12)
-			wl.custom_minimum_size.x = 240
+			var d: Dictionary = VehicleCatalog.wagon_def(str(wt))
+			var unlocked := VehicleCatalog.wagon_unlocked(gs, str(wt))
+			var wl := UIKit.label("%s [%s] (%s, %s)%s" % [str(d.get("label", wt)), VehicleCatalog.spec_short(str(d.get("spec", "general"))),
+					("%s u." % Fmt.thousands(float(d.get("capacity", 0)))) if float(d.get("capacity", 0)) > 0 else "%d pasajeros" % int(d.get("passengers", 0)),
+					Fmt.money(float(d.get("price", 0)) * gs.price_mult()), "" if unlocked else " · requiere %s" % GameData.tech_label(str(d.get("tech", "")))],
+					12, UIKit.TEXT if unlocked else UIKit.TEXT_FAINT)
+			wl.custom_minimum_size.x = 340
 			wh.add_child(wl)
 			var key := str(wt)
-			wh.add_child(UIKit.spin(0, 30, 1, float(b_comp.get(key, 0)), func(val):
+			var sp := UIKit.spin(0, 30, 1, float(b_comp.get(key, 0)), func(val):
 				b_comp[key] = int(val)
 				if int(val) <= 0:
-					b_comp.erase(key)))
+					b_comp.erase(key))
+			sp.editable = unlocked
+			wh.add_child(sp)
 			wv.add_child(wh)
 		wv.add_child(UIKit.button("Recalcular estimación", refresh))
 		grid.add_child(wv)
 	var st := VehicleCatalog.stats(gs, b_mode, b_comp)
 	grid.add_child(UIKit.label("Estimación", 13, UIKit.ACCENT))
-	var est := "Capacidad %s u. · velocidad vacío %s m/día, a tope %s m/día · mantenimiento %s/día%s · precio %s" % [
-		Fmt.thousands(float(st["capacity"])), Fmt.thousands(float(st["speed_empty"])), Fmt.thousands(float(st["speed_full"])), Fmt.money2(float(st["upkeep"])),
+	var est := "Especialidad %s · capacidad %s u. · velocidad vacío %s m/día, a tope %s m/día · mantenimiento %s/día%s · precio %s" % [
+		VehicleCatalog.spec_label(str(st.get("spec", "general"))), Fmt.thousands(float(st["capacity"])), Fmt.thousands(float(st["speed_empty"])), Fmt.thousands(float(st["speed_full"])), Fmt.money2(float(st["upkeep"])),
 		(" · combustible %s/km" % Fmt.money2(float(st["fuel_per_km"]))) if float(st["fuel_per_km"]) > 0.0 else "", Fmt.money(FleetSim.total_price(gs, b_mode, b_comp))]
 	if st.has("capacity_by_type"):
 		var parts := []
@@ -568,6 +575,114 @@ func _build_vehicles(gs) -> void:
 	buy.disabled = why != ""
 	sec.add_child(buy)
 	_vehicle_list(gs)
+
+
+## Ficha comparativa del modelo elegido: miniatura 3D, especialidad y sus efectos, y la tabla de todos los
+## modelos del tipo (capacidad, velocidad vacío y a tope, consumo, mantenimiento, durabilidad y precio).
+func _model_card(gs, parent: Control, ms: Array) -> void:
+	var sh := VehicleCatalog.sheet(gs, b_mode, b_comp)
+	var spec := str(sh.get("spec", "general"))
+	var card := UIKit.card(VehicleCatalog.spec_color(spec), 10)
+	card["panel"].name = "ModelCard"
+	parent.add_child(card["panel"])
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	card["box"].add_child(row)
+	var thumb := VehicleThumb.make(b_mode, Vector2i(260, 160))
+	thumb.name = "Thumb"
+	row.add_child(thumb)
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(info)
+	info.add_child(UIKit.label(str(sh["label"]), 17, UIKit.ACCENT))
+	var chips := HFlowContainer.new()
+	chips.add_theme_constant_override("h_separation", 6)
+	chips.add_child(UIKit.chip(VehicleCatalog.spec_label(spec), VehicleCatalog.spec_color(spec), "logistics"))
+	for fx in sh.get("effects", []):
+		chips.add_child(UIKit.chip(str(fx), UIKit.NEUTRAL))
+	info.add_child(chips)
+	var desc := UIKit.label(str(sh.get("spec_desc", "")), 12, UIKit.TEXT_DIM)
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.add_child(desc)
+	var kv := GridContainer.new()
+	kv.columns = 4
+	kv.add_theme_constant_override("h_separation", 14)
+	info.add_child(kv)
+	for pair in [["Capacidad", "%s u." % Fmt.thousands(float(sh["capacity"]))], ["Velocidad vacío", "%s m/día" % Fmt.thousands(float(sh["speed_empty"]))],
+			["Velocidad a tope", "%s m/día" % Fmt.thousands(float(sh["speed_full"]))], ["Consumo", ("%s/km" % Fmt.money2(float(sh["fuel_per_km"]))) if float(sh["fuel_per_km"]) > 0.0 else "sin combustible"],
+			["Mantenimiento", "%s/día" % Fmt.money2(float(sh["upkeep"]))], ["Durabilidad", ("%s km" % Fmt.thousands(float(sh["durability"]))) if float(sh["durability"]) > 0.0 else "—"],
+			["Precio", Fmt.money(FleetSim.total_price(gs, b_mode, b_comp))], ["Tripulación", str(int(sh["crew"]))]]:
+		kv.add_child(UIKit.label(str(pair[0]), 11, UIKit.TEXT_FAINT))
+		kv.add_child(UIKit.label(str(pair[1]), 13))
+	# Tabla comparativa del tipo (lo mejor de cada columna en verde).
+	var tbl := GridContainer.new()
+	tbl.name = "Compare"
+	tbl.columns = 9
+	tbl.add_theme_constant_override("h_separation", 12)
+	card["box"].add_child(tbl)
+	for h in ["Modelo", "Especialidad", "Capacidad", "Vacío", "A tope", "Consumo/km", "Mant./día", "Durabilidad", "Precio"]:
+		tbl.add_child(UIKit.label(h, 11, UIKit.TEXT_FAINT))
+	var best_cap := 0.0
+	var best_spd := 0.0
+	for x in ms:
+		best_cap = maxf(best_cap, float(x["capacity"]))
+		best_spd = maxf(best_spd, float(x["speed_full"]))
+	for x in ms:
+		var id := str(x["id"])
+		var sel := id == b_mode
+		var col := UIKit.ACCENT if sel else (UIKit.TEXT if bool(x["unlocked"]) else UIKit.TEXT_FAINT)
+		var nb := UIKit.button(("▶ " if sel else "") + str(x["label"]) + ("" if bool(x["unlocked"]) else " (requiere %s)" % str(x["tech_label"])), func():
+			b_mode = id
+			refresh())
+		nb.flat = true
+		nb.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		nb.add_theme_color_override("font_color", col)
+		nb.add_theme_font_size_override("font_size", 12)
+		tbl.add_child(nb)
+		var sp := str(x.get("spec", "general"))
+		tbl.add_child(UIKit.label(VehicleCatalog.spec_label(sp), 12, VehicleCatalog.spec_color(sp)))
+		tbl.add_child(UIKit.label(Fmt.thousands(float(x["capacity"])), 12, UIKit.GOOD if float(x["capacity"]) >= best_cap else col))
+		tbl.add_child(UIKit.label(Fmt.thousands(float(x["speed_empty"])), 12, col))
+		tbl.add_child(UIKit.label(Fmt.thousands(float(x["speed_full"])), 12, UIKit.GOOD if float(x["speed_full"]) >= best_spd else col))
+		tbl.add_child(UIKit.label(Fmt.money2(float(x["fuel_per_km"])) if float(x["fuel_per_km"]) > 0.0 else "—", 12, col))
+		tbl.add_child(UIKit.label(Fmt.money2(float(x["upkeep"])), 12, col))
+		tbl.add_child(UIKit.label((Fmt.thousands(float(x.get("durability", 0.0))) + " km") if float(x.get("durability", 0.0)) > 0.0 else "—", 12, col))
+		tbl.add_child(UIKit.label(Fmt.money(float(x["price"])), 12, col))
+
+
+## A pie: equipo de los cargadores (mecapal, carretilla, bicicleta de carga, motocarro).
+func _gear_card(gs, parent: Control) -> void:
+	var cur := VehicleCatalog.gear_id(gs)
+	var card := UIKit.card(UIKit.ACCENT, 10)
+	card["panel"].name = "GearCard"
+	parent.add_child(card["panel"])
+	card["box"].add_child(UIKit.label("Equipo de los cargadores (todos a la vez; precio × %d cargadores)" % VehicleCatalog.porters(gs), 14, UIKit.ACCENT))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	card["box"].add_child(row)
+	row.add_child(VehicleThumb.make("pie_" + cur, Vector2i(200, 150)))
+	var tbl := GridContainer.new()
+	tbl.columns = 7
+	tbl.add_theme_constant_override("h_separation", 12)
+	row.add_child(tbl)
+	for h in ["Equipo", "Especialidad", "Capacidad", "Velocidad", "Consumo/km", "Precio", ""]:
+		tbl.add_child(UIKit.label(h, 11, UIKit.TEXT_FAINT))
+	for gid in VehicleCatalog.gear_ids():
+		var g := VehicleCatalog.gear_def(str(gid))
+		var ok: bool = gs.has_tech(str(g.get("tech", "")))
+		var col := UIKit.ACCENT if str(gid) == cur else (UIKit.TEXT if ok else UIKit.TEXT_FAINT)
+		tbl.add_child(UIKit.label(str(g.get("label", gid)) + ("" if ok else " (requiere %s)" % GameData.tech_label(str(g.get("tech", "")))), 12, col))
+		tbl.add_child(UIKit.label(VehicleCatalog.spec_label(str(g.get("spec", "general"))), 12, VehicleCatalog.spec_color(str(g.get("spec", "general")))))
+		tbl.add_child(UIKit.label("%d u." % int(g.get("capacity", 10)), 12, col))
+		tbl.add_child(UIKit.label("%s m/día" % Fmt.thousands(float(g.get("speed", 180))), 12, col))
+		tbl.add_child(UIKit.label(Fmt.money2(float(g.get("fuel_per_km", 0.0)) * gs.price_mult()) if float(g.get("fuel_per_km", 0.0)) > 0.0 else "—", 12, col))
+		tbl.add_child(UIKit.label(Fmt.money(VehicleCatalog.gear_price(gs, str(gid))), 12, col))
+		var key := str(gid)
+		var b := UIKit.button("En uso" if key == cur else "Equipar", func():
+			_say(_or_ok(FleetSim.buy_gear(GameState, key), "Cargadores equipados: %s." % str(VehicleCatalog.gear_def(key).get("label", key))))
+			refresh())
+		b.disabled = FleetSim.gear_block_reason(gs, key) != ""
+		tbl.add_child(b)
 
 
 func _or_ok(err: String, ok: String) -> String:
@@ -618,13 +733,24 @@ func _vehicle_list(gs) -> void:
 			refresh()))
 		var h := HBoxContainer.new()
 		if VehicleCatalog.is_train(mode):
-			var wts: Array = VehicleCatalog.wagon_types().keys()
+			var wts: Array = VehicleCatalog.wagon_ids(gs, false)
 			var add := _opt(["+ vagón…"] + wts.map(func(x): return VehicleCatalog.wagon_label(str(x))), 0, func(i):
 				if i > 0:
 					_say(_or_ok(FleetSim.add_wagons(GameState, vid, str(wts[i - 1]), 1), "Vagón agregado."))
 					refresh())
 			add.custom_minimum_size.x = 120
 			h.add_child(add)
+		var wear := VehicleCatalog.wear_of(v)
+		if VehicleCatalog.durability_of(mode) > 0.0:
+			var wb := UIKit.button("Revisión %d %%" % int(round(wear * 100.0)), func():
+				_say(_or_ok(FleetSim.overhaul(GameState, vid), "Revisión hecha: queda como nuevo."))
+				refresh())
+			wb.tooltip_text = "Desgaste %d %% de su durabilidad (%s km). Pasado el 100 %%: más mantenimiento y −10 %% de velocidad. Revisión: %s" % [
+					int(round(wear * 100.0)), Fmt.thousands(VehicleCatalog.durability_of(mode)), Fmt.money(VehicleCatalog.overhaul_price(gs, v))]
+			if wear > 1.0:
+				wb.add_theme_color_override("font_color", UIKit.BAD)
+			wb.disabled = FleetSim.overhaul_block_reason(gs, vid) != ""
+			h.add_child(wb)
 		h.add_child(UIKit.danger(UIKit.button("Vender", func():
 			_say(_or_ok(FleetSim.sell(GameState, vid), "Vehículo vendido (40 % de su precio)."))
 			refresh())))

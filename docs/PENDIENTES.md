@@ -82,8 +82,6 @@ Orden sugerido. Cada bloque se hace con un agente cuando no choque con los que e
 - **Turismo:** hoteles, atracciones, visitantes extranjeros (compradores de esmeraldas).
 - **Consejero/asistente:** personaje que sugiere oportunidades y riesgos a pedido (no invasivo).
 
-## L. Variedad de vehículos y vagones (pedido del usuario, próxima tanda)
-- Cada modelo con propiedades distintas: especialidad (refrigerado, granel, líquidos, pasajeros, lujo, todoterreno…), capacidad, velocidad, consumo, mantenimiento, durabilidad.
-- Varios modelos por tipo y época (carretas, camiones, trenes/locomotoras, vagones, barcos, aviones), desbloqueados por investigación; tradeoffs reales (rápido pero poca carga, etc.).
-- Diseño 3D único y textura personalizada para cada modelo y vagón.
-- Rendimiento: LOD e instancing para que más detalle no cueste FPS.
+## L. Variedad de vehículos y vagones — HECHO (docs/VEHICULOS.md)
+- Hecho: 41 modelos comprables, 15 vagones y 4 equipos de cargador, con especialidad, capacidad, velocidad, consumo, mantenimiento, durabilidad y precio; desbloqueo por investigación; especialidades con efecto (capacidad por carga, merma, todoterreno, express, locomotora pesada); desgaste y revisión; diseño 3D único con LOD; ficha comparativa; migración de partidas viejas.
+- Pendiente: los vagones de pasajeros y el coche salón no tienen demanda de viajeros simulada (solo pesan y cuestan); no hay merma en los viajes internacionales en barco ni en avión.
