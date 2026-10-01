@@ -522,8 +522,7 @@ func _sync_agents() -> void:
 					arr.append(part)
 			else:
 				for i in range(mini(int(s["carriers"]), MAX_AGENTS_PER_SHIPMENT)):
-					var look: String = {"caballo": "mula", "camion_pesado": "camion", "jet_carga": "avion"}.get(mode, mode)
-					var m := RouteVisuals.ship_model(mode) if RouteSim.family(mode) == "agua" else _carrier_model(look)
+					var m := _carrier_model(mode)   # Diseño propio de cada modelo (VehicleModels).
 					m.visible = false
 					_agents_root.add_child(m)
 					arr.append(m)
@@ -538,80 +537,11 @@ func _sync_agents() -> void:
 	set_meta("live", live)
 
 
+## Modelo 3D del vehículo: cada modelo tiene su diseño (VehicleModels); a pie, el cargador con su equipo.
 func _carrier_model(mode: String) -> Node3D:
-	var root := Node3D.new()
-	match mode:
-		"pie":
-			var p := MeshLib.make_person(Color(0.55, 0.45, 0.3), Color(0.8, 0.6, 0.45), Color(0.15, 0.1, 0.08), false)
-			root.add_child(p)
-			# Bulto a la espalda.
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("bundle", func(): return MeshLib.box(Vector3(0.4, 0.45, 0.3))), MeshLib.mat(Color(0.62, 0.5, 0.32)), Vector3(0, 0.75, -0.22)))
-		"mula":
-			# Mula con alforjas y un arriero al lado.
-			var mule := MeshLib.mat(Color(0.45, 0.36, 0.28))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("mule_body", func(): return MeshLib.box(Vector3(0.4, 0.45, 1.1))), mule, Vector3(0, 0.85, 0)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("mule_head", func(): return MeshLib.box(Vector3(0.24, 0.45, 0.28))), mule, Vector3(0, 1.2, 0.6)))
-			for lx in [-0.13, 0.13]:
-				for lz in [-0.4, 0.4]:
-					root.add_child(MeshLib.mesh_node(MeshLib.cached("mule_leg", func(): return MeshLib.box(Vector3(0.09, 0.65, 0.09))), mule, Vector3(lx, 0.32, lz)))
-			for px in [-0.32, 0.32]:
-				root.add_child(MeshLib.mesh_node(MeshLib.cached("mule_pack", func(): return MeshLib.box(Vector3(0.25, 0.4, 0.55))), MeshLib.mat(Color(0.62, 0.5, 0.32)), Vector3(px, 0.9, -0.05)))
-			var driver := MeshLib.make_person(Color(0.5, 0.42, 0.3), Color(0.8, 0.6, 0.45), Color(0.15, 0.1, 0.08), false)
-			driver.position = Vector3(0.7, 0, 0.5)
-			root.add_child(driver)
-		"carro_vapor":
-			# Locomóvil: caldera negra con chimenea y plataforma de carga.
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("steam_bed", func(): return MeshLib.box(Vector3(1.4, 0.3, 2.2))), MeshLib.mat(Color(0.4, 0.3, 0.2)), Vector3(0, 0.75, -0.5)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("steam_load", func(): return MeshLib.box(Vector3(1.2, 0.6, 1.6))), MeshLib.mat(Color(0.6, 0.5, 0.32)), Vector3(0, 1.2, -0.6)))
-			var boiler := MeshLib.mesh_node(MeshLib.cached("steam_boiler", func(): return MeshLib.cylinder(0.5, 0.5, 1.4, 10)), MeshLib.mat(Color(0.15, 0.15, 0.16), 0.5), Vector3(0, 1.1, 1.2))
-			boiler.rotation.x = PI * 0.5
-			root.add_child(boiler)
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("steam_stack", func(): return MeshLib.cylinder(0.14, 0.14, 1.0, 6)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(0, 2.0, 1.6)))
-			for w in [Vector3(-0.75, 0.45, 1.2), Vector3(0.75, 0.45, 1.2), Vector3(-0.75, 0.45, -0.9), Vector3(0.75, 0.45, -0.9)]:
-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_v", func(): return MeshLib.wheel(0.45, 0.14)), MeshLib.mat(Color(0.35, 0.1, 0.08)), w)
-				wheel.rotation.z = PI * 0.5
-				root.add_child(wheel)
-		"trailer":
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("trailer_box", func(): return MeshLib.box(Vector3(1.6, 1.6, 4.4))), MeshLib.mat(Color(0.85, 0.85, 0.82)), Vector3(0, 1.35, -1.4)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("trailer_cab", func(): return MeshLib.box(Vector3(1.5, 1.3, 1.3))), MeshLib.mat(Color(0.15, 0.3, 0.65)), Vector3(0, 1.1, 1.6)))
-			for z in [1.5, -0.2, -2.6]:
-				for x in [-0.8, 0.8]:
-					var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), Vector3(x, 0.35, z))
-					wheel.rotation.z = PI * 0.5
-					root.add_child(wheel)
-		"avion":
-			# Fase 10: avión de carga low-poly (fuselaje, alas, cola y motores).
-			var hull := MeshLib.mat(Color(0.88, 0.89, 0.9))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_body", func(): return MeshLib.box(Vector3(2.2, 2.2, 14.0))), hull, Vector3(0, 0, 0)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_nose", func(): return MeshLib.box(Vector3(1.6, 1.5, 2.0))), MeshLib.mat(Color(0.2, 0.3, 0.5)), Vector3(0, 0.2, 7.6)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_wing", func(): return MeshLib.box(Vector3(18.0, 0.35, 3.2))), hull, Vector3(0, 0.3, 0.6)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_tail_h", func(): return MeshLib.box(Vector3(6.5, 0.3, 1.8))), hull, Vector3(0, 0.8, -6.2)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_tail_v", func(): return MeshLib.box(Vector3(0.3, 3.2, 2.2))), MeshLib.mat(Color(0.75, 0.2, 0.15)), Vector3(0, 2.4, -6.0)))
-			for ex in [-4.5, 4.5]:
-				root.add_child(MeshLib.mesh_node(MeshLib.cached("plane_engine", func(): return MeshLib.box(Vector3(0.9, 0.9, 2.2))), MeshLib.mat(Color(0.3, 0.32, 0.35)), Vector3(ex, -0.4, 1.2)))
-		"camion":
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("truck_cargo", func(): return MeshLib.box(Vector3(1.4, 1.2, 2.4))), MeshLib.mat(Color(0.3, 0.4, 0.3)), Vector3(0, 1.0, -0.4)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("truck_cab", func(): return MeshLib.box(Vector3(1.3, 1.0, 1.0))), MeshLib.mat(Color(0.7, 0.2, 0.15)), Vector3(0, 0.9, 1.4)))
-			for w in [Vector3(-0.7, 0.35, 1.2), Vector3(0.7, 0.35, 1.2), Vector3(-0.7, 0.35, -1.0), Vector3(0.7, 0.35, -1.0)]:
-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_s", func(): return MeshLib.wheel(0.35, 0.2)), MeshLib.mat(Color(0.1, 0.1, 0.1)), w)
-				wheel.rotation.z = PI * 0.5
-				root.add_child(wheel)
-		_:
-			# Caballo + carreta con carga.
-			var horse := MeshLib.mat(Color(0.42, 0.27, 0.15))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("horse_body", func(): return MeshLib.box(Vector3(0.45, 0.55, 1.3))), horse, Vector3(0, 1.0, 1.3)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("horse_head", func(): return MeshLib.box(Vector3(0.28, 0.55, 0.3))), horse, Vector3(0, 1.45, 2.0)))
-			for lx in [-0.15, 0.15]:
-				for lz in [0.8, 1.8]:
-					root.add_child(MeshLib.mesh_node(MeshLib.cached("horse_leg", func(): return MeshLib.box(Vector3(0.1, 0.75, 0.1))), horse, Vector3(lx, 0.37, lz)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("cart_bed", func(): return MeshLib.box(Vector3(1.3, 0.35, 1.6))), MeshLib.mat(Color(0.5, 0.36, 0.2)), Vector3(0, 0.75, -0.4)))
-			root.add_child(MeshLib.mesh_node(MeshLib.cached("cart_load", func(): return MeshLib.box(Vector3(1.0, 0.5, 1.2))), MeshLib.mat(Color(0.62, 0.52, 0.34)), Vector3(0, 1.15, -0.4)))
-			for wx in [-0.72, 0.72]:
-				var wheel := MeshLib.mesh_node(MeshLib.cached("wheel_c", func(): return MeshLib.wheel(0.45, 0.1)), MeshLib.mat(Color(0.3, 0.2, 0.12)), Vector3(wx, 0.45, -0.4))
-				wheel.rotation.z = PI * 0.5
-				root.add_child(wheel)
-	return root
-
+	if mode == "pie":
+		return VehicleModels.porter_node(VehicleCatalog.gear_id(GameState))
+	return VehicleModels.node(mode)
 
 func _process(delta: float) -> void:
 	if road_mode:

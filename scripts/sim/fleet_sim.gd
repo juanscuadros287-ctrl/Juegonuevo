@@ -60,6 +60,22 @@ static func fleet_limit(gs, b: Dictionary, tipo: String) -> int:
 	return per * maxi(1, int(b.get("level", 1)))
 
 
+## Nivel del módulo «Parqueadero y flota» que pide el modelo (resources.json parking_level, docs/MODULOS.md):
+## 2 animales, 3 carretas, 4 carros de vapor, 5 camiones y especializados, 6 pesados y tráileres.
+## Solo se mira en compañías donde ModulesSim aplica ese módulo (lectura de ModulesSim.level/applies).
+static func parking_reason(gs, b: Dictionary, mode: String) -> String:
+	var need := int(LogisticsSim.mode_def(mode).get("parking_level", 0))
+	var M = _modules()
+	if need <= 0 or not _has_static(M, "applies") or not _has_static(M, "level"):
+		return ""
+	if not bool(M.call("applies", gs, b, "parqueadero")):
+		return ""
+	var have := int(M.call("level", b, "parqueadero"))
+	if have >= need:
+		return ""
+	return "%s pide Parqueadero y flota nivel %d (%s tiene nivel %d)" % [LogisticsSim.mode_label(mode), need, gs.building_label(b), have]
+
+
 ## Tipos de vehículo que admite la compañía.
 static func fleet_types(gs, b: Dictionary) -> Array:
 	var M = _modules()
@@ -170,11 +186,20 @@ static func buy_block_reason(gs, b: Dictionary, mode: String, comp: Dictionary =
 	var net := network_reason(gs, b, mode)
 	if net != "":
 		return net
+	var park := parking_reason(gs, b, mode)
+	if park != "":
+		return park
 	var lim := fleet_limit(gs, b, tipo)
 	if used(gs, b, tipo) >= lim:
 		return "No caben más vehículos (%d): %s llegó a su cupo de %s" % [lim, gs.building_label(b), VehicleCatalog.tipo_label(tipo).to_lower()]
 	if VehicleCatalog.is_train(mode) and VehicleCatalog.comp_wagons(comp) > int(md.get("max_wagons", 10)):
 		return "Máximo %d vagones para esa locomotora" % int(md.get("max_wagons", 10))
+	if VehicleCatalog.is_train(mode):
+		for wt in comp:
+			if int(comp[wt]) > 0 and not VehicleCatalog.wagon_types().has(str(wt)):
+				return "Tipo de vagón desconocido"
+			if int(comp[wt]) > 0 and not VehicleCatalog.wagon_unlocked(gs, str(wt)):
+				return "El vagón %s requiere investigar: %s" % [VehicleCatalog.wagon_label(str(wt)).to_lower(), GameData.tech_label(str(VehicleCatalog.wagon_def(str(wt)).get("tech", "")))]
 	var price := total_price(gs, mode, comp)
 	if gs.money < price:
 		return "Dinero insuficiente (%s)" % Fmt.money(price)
@@ -203,7 +228,7 @@ static func buy(gs, b: Dictionary, mode: String, comp: Dictionary = {}) -> Dicti
 		if str(v["mode"]) == mode:
 			n += 1
 	var v := {"id": id, "mode": mode, "base": int(b["id"]), "name": "%s %d" % [str(LogisticsSim.mode_def(mode).get("unit", LogisticsSim.mode_label(mode))), n + 1],
-		"bought": gs.today(), "km": 0.0, "trips": 0}
+		"bought": gs.today(), "km": 0.0, "trips": 0, "serviced_km": 0.0}
 	if VehicleCatalog.is_train(mode):
 		v["comp"] = comp.duplicate()
 	LogisticsSim.vehicles(gs).append(v)
@@ -249,6 +274,8 @@ static func add_wagons_block_reason(gs, vid: int, wt: String, n := 1) -> String:
 		return "Solo los trenes llevan vagones"
 	if not VehicleCatalog.wagon_types().has(wt):
 		return "Tipo de vagón desconocido"
+	if not VehicleCatalog.wagon_unlocked(gs, wt):
+		return "Requiere investigar: %s" % GameData.tech_label(str(VehicleCatalog.wagon_def(wt).get("tech", "")))
 	var md := LogisticsSim.mode_def(str(v["mode"]))
 	if VehicleCatalog.comp_wagons(VehicleCatalog.comp_of(v)) + n > int(md.get("max_wagons", 10)):
 		return "Máximo %d vagones para esa locomotora" % int(md.get("max_wagons", 10))
@@ -389,8 +416,76 @@ static func exit_point(gs, b: Dictionary, mode: String) -> Vector2:
 ## Migración: vehículos cuya base ya no existe → compañía más cercana; trenes con vagones sin tipo.
 static func migrate(gs) -> void:
 	for v in LogisticsSim.vehicles(gs).duplicate():
+		VehicleCatalog.migrate_vehicle(v)   # Modelos viejos → actuales; desgaste y vagones con valores por defecto.
 		if VehicleCatalog.is_train(str(v.get("mode", ""))):
 			VehicleCatalog.comp_of(v)
 		var b: Dictionary = gs.get_building(int(v.get("base", -1)))
 		if b.is_empty():
 			rehome_from(gs, {"id": int(v.get("base", -1)), "x": 0.0, "z": 0.0})
+
+
+# --- Desgaste y revisión; equipo de los cargadores (docs/VEHICULOS.md) --------------------------------
+
+static func overhaul_block_reason(gs, vid: int) -> String:
+	var v := LogisticsSim.get_vehicle(gs, vid)
+	if v.is_empty():
+		return "Ese vehículo no existe"
+	if VehicleCatalog.wear_of(v) < 0.05:
+		return "%s está como nuevo" % str(v["name"])
+	var now: float = float(gs.today()) + TimeManager.hour_float() / 24.0
+	if LogisticsSim.vehicle_busy(gs, vid, now):
+		return "%s está de viaje" % str(v["name"])
+	var p := VehicleCatalog.overhaul_price(gs, v)
+	if gs.money < p:
+		return "Dinero insuficiente (%s)" % Fmt.money(p)
+	return ""
+
+
+## Revisión general: cuesta una fracción del precio y deja el vehículo como nuevo (desgaste 0).
+static func overhaul(gs, vid: int) -> String:
+	var why := overhaul_block_reason(gs, vid)
+	if why != "":
+		return why
+	var v := LogisticsSim.get_vehicle(gs, vid)
+	var p := VehicleCatalog.overhaul_price(gs, v)
+	var st: Dictionary = gs.get_building(int(v.get("base", -1)))
+	if st.is_empty():
+		gs.add_money(-p)
+	else:
+		BusinessSim.pay(gs, st, p, "mantenimiento")
+	v["serviced_km"] = float(v.get("km", 0.0))
+	return ""
+
+
+static func gear_block_reason(gs, id: String) -> String:
+	var g := VehicleCatalog.gear_def(id)
+	if not VehicleCatalog.gear_defs().has(id):
+		return "Equipo desconocido"
+	if VehicleCatalog.gear_id(gs) == id:
+		return "Tus cargadores ya usan ese equipo"
+	if not gs.has_tech(str(g.get("tech", ""))):
+		return "Requiere investigar: %s" % GameData.tech_label(str(g.get("tech", "")))
+	var p := VehicleCatalog.gear_price(gs, id)
+	if gs.money < p:
+		return "Dinero insuficiente (%s)" % Fmt.money(p)
+	return ""
+
+
+## Cambia el equipo de TODOS los cargadores (a pie). Se paga desde la primera central de transporte.
+static func buy_gear(gs, id: String) -> String:
+	var why := gear_block_reason(gs, id)
+	if why != "":
+		return why
+	var p := VehicleCatalog.gear_price(gs, id)
+	if p > 0.0:
+		var payer := {}
+		for b in LogisticsSim.stations(gs):
+			if LogisticsSim.central_supports(gs, b, "pie"):
+				payer = b
+				break
+		if payer.is_empty():
+			gs.add_money(-p)
+		else:
+			BusinessSim.pay(gs, payer, p, "obras")
+	gs.logistics["porter_gear"] = id
+	return ""

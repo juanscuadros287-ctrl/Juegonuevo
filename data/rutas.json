@@ -81,7 +81,7 @@
  "fleet_base_discount": 0.25,
  "wagon_types": {
   "granelero": {
-   "label": "Granelero",
+   "label": "Granelero (tolva de madera)",
    "capacity": 100,
    "tare": 22,
    "price": 280,
@@ -99,7 +99,10 @@
     "algodon",
     "lana",
     "lena"
-   ]
+   ],
+   "clase": "granelero",
+   "tech": "",
+   "spec": "granel"
   },
   "cisterna": {
    "label": "Cisterna",
@@ -112,17 +115,23 @@
     "quimicos",
     "gas_natural",
     "agua"
-   ]
+   ],
+   "clase": "cisterna",
+   "tech": "",
+   "spec": "liquidos"
   },
   "cerrado": {
    "label": "Cerrado (bienes)",
    "capacity": 80,
    "tare": 20,
    "price": 300,
-   "goods": "*"
+   "goods": "*",
+   "clase": "cerrado",
+   "tech": "",
+   "spec": "general"
   },
   "frigorifico": {
-   "label": "Frigorífico",
+   "label": "Frigorífico (de hielo)",
    "capacity": 70,
    "tare": 28,
    "price": 450,
@@ -133,7 +142,10 @@
     "conservas",
     "pan",
     "ganado"
-   ]
+   ],
+   "clase": "frigorifico",
+   "tech": "",
+   "spec": "refrigerado"
   },
   "plataforma": {
    "label": "Plataforma",
@@ -149,7 +161,10 @@
     "madera",
     "piedra",
     "vidrio"
-   ]
+   ],
+   "clase": "plataforma",
+   "tech": "",
+   "spec": "pesada"
   },
   "pasajeros": {
    "label": "Pasajeros",
@@ -157,9 +172,333 @@
    "passengers": 60,
    "tare": 24,
    "price": 500,
+   "goods": [],
+   "clase": "pasajeros",
+   "tech": "",
+   "spec": "pasajeros"
+  },
+  "tolva_acero": {
+   "label": "Tolva de acero",
+   "clase": "granelero",
+   "spec": "granel",
+   "capacity": 140,
+   "tare": 26,
+   "price": 420,
+   "tech": "acero_estructural"
+  },
+  "tolva_autodescarga": {
+   "label": "Tolva autodescargable",
+   "clase": "granelero",
+   "spec": "granel",
+   "capacity": 170,
+   "tare": 24,
+   "price": 700,
+   "tech": "automatizacion"
+  },
+  "cisterna_presion": {
+   "label": "Cisterna a presión",
+   "clase": "cisterna",
+   "spec": "liquidos",
+   "capacity": 130,
+   "tare": 30,
+   "price": 620,
+   "tech": "petroquimica"
+  },
+  "furgon_acero": {
+   "label": "Furgón de acero",
+   "clase": "cerrado",
+   "spec": "general",
+   "capacity": 110,
+   "tare": 24,
+   "price": 420,
+   "tech": "acero_estructural"
+  },
+  "contenedor_doble": {
+   "label": "Contenedores a doble altura",
+   "clase": "cerrado",
+   "spec": "general",
+   "capacity": 180,
+   "tare": 34,
+   "price": 800,
+   "tech": "automatizacion"
+  },
+  "frigorifico_mecanico": {
+   "label": "Frigorífico mecánico",
+   "clase": "frigorifico",
+   "spec": "refrigerado",
+   "capacity": 100,
+   "tare": 30,
+   "price": 700,
+   "tech": "refrigeracion"
+  },
+  "plataforma_pesada": {
+   "label": "Plataforma pesada",
+   "clase": "plataforma",
+   "spec": "pesada",
+   "capacity": 160,
+   "tare": 28,
+   "price": 480,
+   "tech": "acero_estructural"
+  },
+  "coche_salon": {
+   "label": "Coche salón (lujo)",
+   "clase": "pasajeros",
+   "spec": "lujo",
+   "capacity": 0,
+   "passengers": 24,
+   "tare": 30,
+   "price": 1200,
+   "tech": "electricidad",
    "goods": []
+  },
+  "furgon_valores": {
+   "label": "Furgón de valores",
+   "clase": "valores",
+   "spec": "lujo",
+   "capacity": 40,
+   "tare": 26,
+   "price": 900,
+   "tech": "banca_moderna",
+   "goods": "@valiosos"
   }
  },
  "unit_mass": 0.1,
- "min_speed_ratio": 0.3
+ "min_speed_ratio": 0.3,
+ "cargo_classes": {
+  "_nota": "Clases de carga para las especialidades (docs/VEHICULOS.md).",
+  "perecederos": {
+   "label": "Perecederos",
+   "goods": [
+    "carne",
+    "comida",
+    "embutidos",
+    "pan",
+    "ganado",
+    "conservas"
+   ]
+  },
+  "granel": {
+   "label": "Granel",
+   "goods": [
+    "hierro",
+    "carbon",
+    "cobre",
+    "oro",
+    "plata",
+    "uranio",
+    "piedra",
+    "arcilla",
+    "trigo",
+    "harina",
+    "algodon",
+    "lana",
+    "lena"
+   ]
+  },
+  "liquidos": {
+   "label": "Líquidos",
+   "goods": [
+    "petroleo",
+    "combustible",
+    "quimicos",
+    "gas_natural",
+    "agua"
+   ]
+  },
+  "pesada": {
+   "label": "Carga pesada",
+   "goods": [
+    "acero",
+    "maquinaria",
+    "motor",
+    "automovil_bien",
+    "avion_bien",
+    "madera",
+    "piedra",
+    "vidrio",
+    "hierro"
+   ]
+  },
+  "valiosos": {
+   "label": "Valiosos y frágiles",
+   "goods": [
+    "joyas",
+    "relojes",
+    "oro",
+    "plata",
+    "componentes_electronicos",
+    "electrodomesticos",
+    "medicamentos",
+    "ropa_fina",
+    "loza"
+   ]
+  }
+ },
+ "specialties": {
+  "_nota": "Efectos en la simulación. cargo: multiplicador de capacidad por clase de carga ('_other' = el resto). loss: merma de una clase en vehículos que NO la protegen (fracción por día de viaje de ida más allá de 'grace' días, tope 'cap'). todoterreno: velocidad mínima en caminos malos (multiplicador de carretera) y alcance fuera de camino. express: +1 viaje al día y media merma. pesada (locomotora): el peso la frena menos.",
+  "general": {
+   "label": "General",
+   "short": "GEN",
+   "color": "#9aa4ad",
+   "desc": "Lleva de todo, sin bonos."
+  },
+  "refrigerado": {
+   "label": "Refrigerado",
+   "short": "FRÍO",
+   "color": "#6fc3ff",
+   "desc": "Los perecederos no se dañan en el camino; el resto cabe un 15 % menos.",
+   "cargo": {
+    "_other": 0.85
+   },
+   "protects": [
+    "perecederos"
+   ]
+  },
+  "granel": {
+   "label": "Granel",
+   "short": "GRAN",
+   "color": "#c9a45c",
+   "desc": "+25 % de minerales, granos y leña; la carga suelta cabe a la mitad.",
+   "cargo": {
+    "granel": 1.25,
+    "_other": 0.6
+   }
+  },
+  "liquidos": {
+   "label": "Líquidos",
+   "short": "LÍQ",
+   "color": "#8a7bd8",
+   "desc": "+30 % de petróleo, combustible, químicos, gas y agua; no lleva otra cosa.",
+   "cargo": {
+    "liquidos": 1.3,
+    "_other": 0.0
+   }
+  },
+  "pasajeros": {
+   "label": "Pasajeros",
+   "short": "PAX",
+   "color": "#5fbf8f",
+   "desc": "Lleva gente, no carga.",
+   "cargo": {
+    "_other": 0.0
+   }
+  },
+  "lujo": {
+   "label": "Lujo y valores",
+   "short": "LUJO",
+   "color": "#e3c35a",
+   "desc": "Joyas, oro, relojes y frágiles llegan sin merma; lo demás cabe un 30 % menos.",
+   "cargo": {
+    "_other": 0.7
+   },
+   "protects": [
+    "valiosos"
+   ]
+  },
+  "todoterreno": {
+   "label": "Todoterreno",
+   "short": "4x4",
+   "color": "#7fae4f",
+   "desc": "Sufre menos en caminos malos (velocidad mínima de camino empedrado) y va más lejos fuera de camino.",
+   "road_min_mult": 1.35,
+   "offroad_range_mult": 1.6
+  },
+  "pesada": {
+   "label": "Carga pesada",
+   "short": "PES",
+   "color": "#d0703c",
+   "desc": "+30 % de acero, maquinaria, madera y piedra; la locomotora pesada casi no se frena con el peso.",
+   "cargo": {
+    "pesada": 1.3
+   },
+   "train_min_speed_ratio": 0.5
+  },
+  "express": {
+   "label": "Express",
+   "short": "EXP",
+   "color": "#e25b5b",
+   "desc": "Un viaje más al día y la merma de perecederos baja a la mitad.",
+   "extra_trips": 1,
+   "loss_mult": 0.5
+  }
+ },
+ "cargo_loss": {
+  "_nota": "Merma en el camino (determinista, según los días de viaje de ida): perecederos sin frío y valiosos sin vehículo de valores.",
+  "perecederos": {
+   "per_day": 0.06,
+   "grace": 1.5,
+   "cap": 0.35
+  },
+  "valiosos": {
+   "per_day": 0.02,
+   "grace": 1.0,
+   "cap": 0.12
+  }
+ },
+ "wear": {
+  "_nota": "Desgaste: pasado su 'durability' en km desde la última revisión, el vehículo cuesta más de mantener y va más lento. La revisión cuesta una fracción del precio.",
+  "upkeep_per_life": 0.5,
+  "max_upkeep_mult": 2.0,
+  "worn_speed_mult": 0.9,
+  "overhaul_frac": 0.35
+ },
+ "porter_gear": {
+  "_nota": "Equipo de los cargadores (a pie). Se compra una vez para todas tus centrales: precio × cargadores (mínimo 4). Cambia capacidad, velocidad y consumo de TODOS los cargadores.",
+  "mecapal": {
+   "label": "Mecapal y bulto",
+   "capacity": 10,
+   "speed": 180,
+   "price": 0,
+   "upkeep": 0.0,
+   "fuel_per_km": 0.0,
+   "tech": "",
+   "spec": "general",
+   "order": 0,
+   "durability": 0
+  },
+  "carretilla": {
+   "label": "Carretilla de mano",
+   "capacity": 18,
+   "speed": 165,
+   "price": 40,
+   "upkeep": 0.01,
+   "fuel_per_km": 0.0,
+   "tech": "carretas",
+   "spec": "pesada",
+   "order": 1,
+   "durability": 0
+  },
+  "bicicleta": {
+   "label": "Bicicleta de carga",
+   "capacity": 14,
+   "speed": 420,
+   "price": 90,
+   "upkeep": 0.02,
+   "fuel_per_km": 0.0,
+   "tech": "produccion_en_serie",
+   "spec": "express",
+   "order": 2,
+   "durability": 0
+  },
+  "motocarro": {
+   "label": "Motocarro",
+   "capacity": 40,
+   "speed": 800,
+   "price": 400,
+   "upkeep": 0.08,
+   "fuel_per_km": 0.8,
+   "tech": "automovil",
+   "spec": "general",
+   "order": 3,
+   "durability": 0
+  }
+ },
+ "legacy_modes": {
+  "_nota": "Modelos de partidas viejas que ya no existen → modelo actual.",
+  "barco": "vapor_barco",
+  "tren": "tren_vapor",
+  "camion_grande": "trailer",
+  "avion_carga": "avion",
+  "caballo_carga": "caballo"
+ }
 }

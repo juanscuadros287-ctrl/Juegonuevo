@@ -705,12 +705,16 @@ static func _vehicle_upkeep(gs) -> void:
 		for m in modes():
 			if not is_vehicle(m):
 				continue
-			var own := vehicles_of(gs, int(b["id"]), m).size()
+			var own := 0.0
+			for v in vehicles_of(gs, int(b["id"]), m):
+				own += VehicleCatalog.wear_upkeep_mult(v)   # Desgaste: pasado su durabilidad cuesta más.
 			var cost := float(mode_def(m).get("upkeep", 0.0)) * (included_at(gs, b, m) + own * FleetSim.upkeep_mult(gs, b, m))
 			if bool(mode_def(m).get("animal", false)):
 				feed += cost
 			else:
 				service += cost
+		if LogisticsSim.central_supports(gs, b, "pie"):   # Equipo de los cargadores (carretillas, bicicletas, motocarros).
+			service += float(VehicleCatalog.eff_def(gs, "pie").get("upkeep", 0.0)) * crew_size(gs, b)
 		if feed > 0.0:
 			BusinessSim.pay(gs, b, feed * pm, "insumos")
 		if service > 0.0:
@@ -764,7 +768,7 @@ static func route_block_reason(gs, from_id: int, to_id: int, mode: String, vehic
 		return "Medio de transporte desconocido"
 	if is_planned(mode):
 		return "%s: aún no disponible" % mode_label(mode)
-	if mode == "avion":
+	if RouteSim.family(mode) == "aire":
 		var air := AirSim.domestic_block_reason(gs, from_id, to_id)   # Fase 10: aviones entre aeropuertos del país.
 		if air != "":
 			return air
@@ -830,6 +834,8 @@ static func create_route(gs, opts: Dictionary) -> Dictionary:
 	var reason := route_block_reason(gs, from_id, to_id, mode, vid, stops)
 	if reason != "":
 		return {"error": reason}
+	if not VehicleCatalog.is_train(mode) and not VehicleCatalog.can_carry(mode, good, gs):
+		return {"error": "%s no llevan %s (especialidad: %s)" % [mode_label(mode), GameData.good_label(good).to_lower(), VehicleCatalog.spec_label(VehicleCatalog.spec_of(mode, gs)).to_lower()]}
 	var auto := bool(opts.get("auto", false))
 	if vid >= 0 and not auto:
 		qty = minf(qty, float(trip_info(gs, from_id, to_id, mode, vid, stops, good)["per_carrier"]))   # Un viaje.
@@ -868,23 +874,23 @@ static func trip_info(gs, from_id: int, to_id: int, mode: String, vid := -1, sto
 	var p1 := endpoint_pos(gs, from_id)
 	var p2 := endpoint_pos(gs, to_id)
 	var dist := RouteSim.route_distance(gs, from_id, to_id, mode, stops)   # Riel y agua: largo del camino real.
-	var speed := float(md.get("speed", 180.0))
-	var cap := float(md.get("capacity", 10.0))
+	var eff := VehicleCatalog.eff_def(gs, mode)   # A pie: equipo de los cargadores.
+	var speed := float(eff.get("speed", 180.0))
+	var cap := float(eff.get("capacity", 10.0)) * VehicleCatalog.cargo_mult(mode, good, gs)   # Especialidad del modelo.
 	var veh := get_vehicle(gs, vid) if vid >= 0 else {}
 	if not veh.is_empty():
 		cap = vehicle_capacity(gs, veh, good)
-		if VehicleCatalog.is_train(mode):
-			speed = VehicleCatalog.speed_of(veh, cap)   # El peso del tren cargado baja la velocidad.
+		speed = VehicleCatalog.speed_of(veh, cap)   # Tren: el peso cargado lo frena. Todos: el desgaste.
 	if bool(md.get("road", false)):
-		speed *= RoadSim.speed_mult(gs, p1, p2, road_kinds(mode))
+		speed *= maxf(RoadSim.speed_mult(gs, p1, p2, road_kinds(mode)), VehicleCatalog.road_min_mult(mode))   # Todoterreno.
 	var travel := maxf(0.02, dist / speed)
-	var trips := clampi(int(0.66 / (2.0 * travel)), 1, int(tcfg().get("max_trips_per_day", 4)))
+	var trips := clampi(int(0.66 / (2.0 * travel)), 1, int(tcfg().get("max_trips_per_day", 4)) + VehicleCatalog.extra_trips(mode, gs))
 	# Combustible por vehículo: ida y vuelta de cada viaje.
 	var pm: float = gs.price_mult()
 	var km := dist / 1000.0 * 2.0 * trips
-	var fuel := float(md.get("fuel_per_km", 0.0)) * km * _fuel_price() * pm
+	var fuel := float(eff.get("fuel_per_km", 0.0)) * km * _fuel_price() * pm
 	return {"distance": dist, "travel": travel, "trips": trips, "per_carrier": cap * trips, "capacity": cap,
-		"fuel_per_vehicle": fuel, "km_per_vehicle": km}
+		"fuel_per_vehicle": fuel, "km_per_vehicle": km, "loss": VehicleCatalog.loss_frac(mode, good, travel, veh, gs)}
 
 
 static func _fuel_price() -> float:
@@ -965,7 +971,8 @@ static func dispatch(gs, r: Dictionary, depart: float) -> float:
 	var info := trip_info(gs, from_id, to_id, mode, int(r.get("vehicle", -1)), stops, good)
 	var per_carrier := float(info["per_carrier"])
 	if per_carrier <= 0.0:
-		r["status"] = "El tren no tiene vagones para %s (agrega vagones del tipo adecuado)" % GameData.good_label(good).to_lower()
+		r["status"] = ("El tren no tiene vagones para %s (agrega vagones del tipo adecuado)" % GameData.good_label(good).to_lower()) if VehicleCatalog.is_train(mode) \
+				else "%s no llevan %s (especialidad: %s)" % [mode_label(mode), GameData.good_label(good).to_lower(), VehicleCatalog.spec_label(VehicleCatalog.spec_of(mode, gs)).to_lower()]
 		if auto:
 			r["next_day"] = gs.today() + 1
 		return 0.0
@@ -1040,7 +1047,7 @@ static func dispatch(gs, r: Dictionary, depart: float) -> float:
 		"arrive": depart + (2.0 * trips - 1.0) * travel, "back": depart + 2.0 * trips * travel,
 		"ax": endpoint_pos(gs, from_id).x, "az": endpoint_pos(gs, from_id).y,
 		"bx": endpoint_pos(gs, to_id).x, "bz": endpoint_pos(gs, to_id).y, "delivered": false,
-		"fuel": fuel_total, "bought": bought, "stops": stops, "rail_sections": sections,
+		"fuel": fuel_total, "bought": bought, "stops": stops, "rail_sections": sections, "loss": float(info.get("loss", 0.0)),
 		"garage": int(alloc["crew"][0][0]) if not (alloc["crew"] as Array).is_empty() else -1,
 	})
 	r["trips"] = int(r.get("trips", 0)) + 1
@@ -1078,6 +1085,11 @@ static func _complete_shipments(gs, now: float) -> void:
 			s["delivered"] = true
 			var good := str(s["good"])
 			var qty := float(s["qty"])
+			var lost := qty * clampf(float(s.get("loss", 0.0)), 0.0, 1.0)   # Merma en el camino (perecederos sin frío, valiosos sin escolta).
+			if lost > 0.0:
+				qty -= lost
+				st["month_lost"] = float(st.get("month_lost", 0.0)) + lost
+				st["total_lost"] = float(st.get("total_lost", 0.0)) + lost
 			var acc := endpoint_put(gs, int(s["to"]), good, qty) if endpoint_valid(gs, int(s["to"])) else 0.0
 			if acc < qty - 0.01:
 				var back := endpoint_put(gs, int(s["from"]), good, qty - acc) if endpoint_valid(gs, int(s["from"])) else 0.0

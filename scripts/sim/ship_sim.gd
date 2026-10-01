@@ -400,7 +400,7 @@ static func ship_intl(gs, opts: Dictionary) -> Dictionary:
 			var why := "No hay barcos de altura libres con tripulación en %s (compra un velero, vapor, carguero o portacontenedores en un astillero)" % CountriesSim.country_label(from_iso)
 			for v in LogisticsSim.vehicles(gs):
 				var m := str(v.get("mode", ""))
-				if not is_ship_mode(m) or not bool(LogisticsSim.mode_def(m).get("intl", false)) or (vid >= 0 and int(v["id"]) != vid):
+				if not is_ship_mode(m) or not bool(LogisticsSim.mode_def(m).get("intl", false)) or (vid >= 0 and int(v["id"]) != vid) or not VehicleCatalog.can_carry(m, good):
 					continue
 				var y: Dictionary = gs.get_building(int(v["base"]))
 				if y.is_empty() or not gs.is_active(y):
@@ -418,7 +418,7 @@ static func ship_intl(gs, opts: Dictionary) -> Dictionary:
 					continue
 				out["vehicle"] = int(v["id"])
 				out["ship_mode"] = m
-				out["cap"] = LogisticsSim.vehicle_capacity(gs, v)
+				out["cap"] = LogisticsSim.vehicle_capacity(gs, v, good)   # Especialidad: petrolero, granelero, frigorífico.
 				return out
 			return {"error": why}
 		return out)
