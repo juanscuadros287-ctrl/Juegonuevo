@@ -201,8 +201,8 @@ func _test_recipe_limits() -> void:
 	check(made > 0.4 and made <= 0.5001 and WarehouseSim.stock(gs, "carbon") < 0.001, "faltan insumos: produce proporcionalmente (%.2f herramientas con 0,5 carbón)" % made)
 	check(str(smith.get("chain_status", "")).begins_with("faltan insumos"), "el negocio indica qué insumo falta")
 	# Almacén lleno: se limita la producción y se avisa.
-	WarehouseSim.add(gs, "piedra", WarehouseSim.free_space(gs))
 	var farm := _place("trigal", 20, 20)
+	WarehouseSim.add(gs, "piedra", WarehouseSim.free_space(gs))   # Módulos: también su almacén integrado.
 	_hire(farm, 4)
 	BusinessSim.produce(gs)
 	check(WarehouseSim.stock(gs, "trigo") <= 0.001 and str(farm.get("chain_status", "")) == "almacén lleno", "almacén lleno: no se guarda más producción")
@@ -214,10 +214,11 @@ func _test_routes_on_foot() -> void:
 	_set_deposits([["hierro", 70, 5, 12000]])
 	var mine := _place("mina_hierro", 70, 6)
 	_hire(mine, 5)
-	check(not LogisticsSim.in_reach(gs, mine), "mina lejos del almacén: su producción queda en el sitio")
+	# Módulos (docs/MODULOS.md): lejos de un almacén separado, guarda en su almacén integrado.
+	check(WarehouseSim.warehouse_for(gs, mine) == -1 and WarehouseSim.chain_ids(gs, mine) == [int(mine["id"])], "mina lejos del almacén: guarda en su almacén integrado")
 	TimeManager.advance_days(10)
-	var at_site := float(mine["inventory"].get("hierro", 0.0))
-	check(at_site > 5.0 and WarehouseSim.stock(gs, "hierro") <= 0.001, "hierro acumulado en la mina (%.1f), no en el almacén" % at_site)
+	var at_site := WarehouseSim.stock_in(gs, int(mine["id"]), "hierro")
+	check(at_site > 5.0 and WarehouseSim.stock_in(gs, WarehouseSim.PLAZA, "hierro") <= 0.001, "hierro acumulado en la mina (%.1f), no en la plaza" % at_site)
 	var bad := LogisticsSim.create_route(gs, {"from": int(mine["id"]), "to": LogisticsSim.PLAZA, "good": "hierro", "qty": 20, "mode": "pie"})
 	check(bad.has("error") and str(bad["error"]).find("central") >= 0, "sin central de transporte no hay rutas: %s" % bad.get("error", ""))
 	var central := _place("central_transporte", -20, 20)
@@ -229,19 +230,19 @@ func _test_routes_on_foot() -> void:
 	var s: Dictionary = LogisticsSim.shipments(gs)[0]
 	print("    envío a pie: %.1f hierro, %d cargadores, %d viajes, llega en %.2f días" % [float(s["qty"]), int(s["carriers"]), int(s["trips"]), float(s["arrive"]) - float(s["depart"])])
 	TimeManager.advance_days(4)
-	check(WarehouseSim.stock(gs, "hierro") >= 19.9, "el hierro llegó al almacén (%.1f)" % WarehouseSim.stock(gs, "hierro"))
+	check(WarehouseSim.stock_in(gs, WarehouseSim.PLAZA, "hierro") >= 19.9, "el hierro llegó a la bodega de la plaza (%.1f)" % WarehouseSim.stock_in(gs, WarehouseSim.PLAZA, "hierro"))
 	check(LogisticsSim.routes(gs).is_empty(), "la ruta manual se completa y desaparece")
 	check(BusinessSim.period_value(central, "total", "salarios") > wage_before, "los cargadores cobran salario")
 	# Ruta automática: cada 2 días lleva 15.
 	var auto := LogisticsSim.create_route(gs, {"from": int(mine["id"]), "to": LogisticsSim.PLAZA, "good": "hierro", "qty": 15, "mode": "pie", "auto": true, "every": 2})
-	var wh0 := WarehouseSim.stock(gs, "hierro")
+	var wh0 := WarehouseSim.stock_in(gs, WarehouseSim.PLAZA, "hierro")
 	TimeManager.advance_days(12)
-	var moved := WarehouseSim.stock(gs, "hierro") - wh0
+	var moved := WarehouseSim.stock_in(gs, WarehouseSim.PLAZA, "hierro") - wh0
 	check(auto.has("route") and moved >= 15.0 * 5.0 - 0.1, "ruta automática cada 2 días movió %.0f hierro en 12 días" % moved)
 	check(int(auto["route"]["trips"]) >= 5, "la ruta automática hizo %d viajes" % int(auto["route"]["trips"]))
 	# Un almacén cerca de la mina evita el transporte.
 	_place("almacen", 70, 22)
-	check(LogisticsSim.in_reach(gs, mine), "construir un almacén junto a la mina la deja al alcance")
+	check(WarehouseSim.warehouse_for(gs, mine) >= 0, "construir un almacén junto a la mina la vincula")
 
 
 func _test_roads_and_carts() -> void:

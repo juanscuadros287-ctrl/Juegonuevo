@@ -174,8 +174,10 @@ static func _apply_shortfall(gs, b: Dictionary, lost_frac: float) -> float:
 	var taken := 0.0
 	var wid := -1
 	if LogisticsSim.uses_chain(def, ld) and LogisticsSim.output_target(gs, b) == "warehouse":
-		wid = WarehouseSim.warehouse_for(gs, b)
-		taken = WarehouseSim.remove_from(gs, wid, product, lost)
+		for w in WarehouseSim.chain_ids(gs, b):   # Módulos: almacén integrado y luego el de al lado.
+			if wid < 0:
+				wid = int(w)
+			taken += WarehouseSim.remove_from(gs, int(w), product, lost - taken)
 	else:
 		var inv: Dictionary = b["inventory"]
 		taken = minf(lost, float(inv.get(product, 0.0)))

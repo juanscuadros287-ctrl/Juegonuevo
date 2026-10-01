@@ -16,6 +16,14 @@ static func applies(gs, b: Dictionary) -> bool:
 
 ## Línea para el resumen del edificio ("" si no aplica).
 static func summary_line(gs, b: Dictionary) -> String:
+	if ModulesSim.warehouse_capacity(b) > 0.0 and WarehouseSim.is_warehouse_building(gs, b):
+		# Módulos: almacén integrado (y el separado al lado, si lo hay).
+		var own := int(b["id"])
+		var s := "Almacén integrado: [color=%s]%s / %s[/color] (nivel %d)\n" % [GREEN, Fmt.thousands(WarehouseSim.used_in(gs, own)), Fmt.thousands(WarehouseSim.capacity_of(gs, own)), ModulesSim.level(b, ModulesSim.ALMACEN)]
+		if WarehouseSim.is_linkable(gs, b):
+			var adj := WarehouseSim.warehouse_for(gs, b)
+			s += ("Almacén vinculado al lado: [color=%s]%s ✔[/color]\n" % [GREEN, WarehouseSim.label_of(gs, adj)]) if adj >= 0 else "Almacén al lado: ninguno (usa su almacén integrado)\n"
+		return s
 	if WarehouseSim.is_warehouse_building(gs, b):
 		var wid := int(b["id"])
 		return "Almacén: %s / %s ocupado · abastece a [color=%s]%d negocio(s)[/color]\n" % [
@@ -34,7 +42,15 @@ static func build(gs, b: Dictionary, hud) -> Control:
 	var rl := UIKit.rich()
 	rl.custom_minimum_size.x = 380
 	v.add_child(rl)
-	if WarehouseSim.is_warehouse_building(gs, b):
+	if WarehouseSim.is_warehouse_building(gs, b) and WarehouseSim.is_linkable(gs, b):
+		# Módulos: fábrica con almacén integrado → su stock y además el vínculo con el almacén de al lado.
+		rl.text = warehouse_text(gs, int(b["id"])) + "\n" + factory_text(gs, b)
+		var adj := WarehouseSim.warehouse_for(gs, b)
+		if adj > 0:
+			v.add_child(UIKit.button("Abrir el almacén vinculado", func(): hud.open_building(adj)))
+		v.add_child(UIKit.button("Ampliar el almacén integrado (Mejorar)", func(): hud.open_building(int(b["id"]))))
+		v.add_child(UIKit.button("Rutas de transporte (Logística)", func(): hud._show_dock("logistics")))
+	elif WarehouseSim.is_warehouse_building(gs, b):
 		rl.text = warehouse_text(gs, int(b["id"]))
 		_add_links(v, gs, int(b["id"]), hud)
 	else:
@@ -94,6 +110,8 @@ static func factory_text(gs, b: Dictionary) -> String:
 	if wid >= 0:
 		s += "Almacén vinculado: [color=%s][b]%s ✔[/b][/color]\n" % [GREEN, WarehouseSim.label_of(gs, wid)]
 		s += "Espacio libre en ese almacén: %s de %s\n" % [Fmt.thousands(WarehouseSim.free_in(gs, wid)), Fmt.thousands(WarehouseSim.capacity_of(gs, wid))]
+	elif WarehouseSim.is_warehouse_building(gs, b):
+		s += "Almacén separado al lado: ninguno — usa su almacén integrado (amplíalo en Mejorar o lleva mercancía con rutas)\n"
 	else:
 		s += "Almacén vinculado: [color=%s][b]ninguno[/b][/color]\n" % RED
 		s += "[color=#aaa]Lo producido queda en el sitio (máx. %s) y los insumos deben llegar aquí con rutas.[/color]\n" % Fmt.thousands(LogisticsSim.local_capacity(gs, b))

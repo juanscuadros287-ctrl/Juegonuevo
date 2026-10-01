@@ -381,6 +381,8 @@ func rebuild_links() -> void:
 		var p := Vector2(float(b["x"]), float(b["z"]))
 		var fp := float(gs.building_def(b).get("footprint", 4.0))
 		var wid := WarehouseSim.warehouse_for(gs, b)
+		if WarehouseSim.is_warehouse_building(gs, b):
+			continue   # Módulos: con almacén integrado (siempre) no hace falta anillo ni flecha.
 		var node := Node3D.new()
 		node.position = Vector3(p.x, _h(p.x, p.y) + 0.12, p.y)
 		node.name = "link_%d" % int(b["id"])
@@ -394,6 +396,8 @@ func rebuild_links() -> void:
 			_links_root.add_child(line)
 	# Etiqueta sobre cada almacén: ocupación y cuántos negocios abastece.
 	for wid in WarehouseSim.ids(gs):
+		if ModulesSim.is_private_warehouse(gs, wid):
+			continue   # Módulos: el almacén integrado se ve en el panel del negocio, no con etiqueta 3D.
 		var wp := WarehouseSim.pos_of(gs, wid)
 		var lab := Label3D.new()
 		lab.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -464,10 +468,10 @@ func placement_feedback(type_id: String, pos: Vector3, ignore_id: int, ok: bool,
 		if not n.is_empty():
 			var wid := int(n["id"])
 			_place_root.add_child(_link_line(p, _edge_point(wid, p), _flat_mat("green", LINK_GREEN)))
-			_place_text = "   ✔ Al lado de «%s»: guardará y tomará insumos de ahí (%s libres)" % [WarehouseSim.label_of(gs, wid), Fmt.thousands(WarehouseSim.free_in(gs, wid))]
+			_place_text = "   ✔ Al lado de «%s»: usará su almacén integrado y luego ese (%s libres)" % [WarehouseSim.label_of(gs, wid), Fmt.thousands(WarehouseSim.free_in(gs, wid))]
 			return link_ghost_mat() if ok else fallback
-		_place_text = "   ⚠ Sin almacén al lado (a menos de %d m): la producción quedará en el sitio" % int(WarehouseSim.link_distance())
-		return nolink_ghost_mat() if ok else fallback
+		_place_text = "   Guardará en su almacén integrado (ampliable en Mejorar → Almacén)"
+		return fallback
 	if WarehouseSim.type_is_warehouse(type_id):
 		var near := WarehouseSim.linkable_near(gs, type_id, pos.x, pos.z, ignore_id)
 		for b in near:

@@ -191,6 +191,7 @@ func _test_garage_levels() -> void:
 	print("-- Compra central: compañía, cupo, catálogo por investigación y vacante --")
 	_new()
 	var saw := _place("aserradero" if GameData.building_def("aserradero").size() > 0 else "carpinteria", -40, -40)
+	saw["modules"] = {"parqueadero": 5}   # Módulos (docs/MODULOS.md): el cupo lo pone Parqueadero y flota (nivel 5 = camiones).
 	gs.techs.erase("automovil")
 	var m0: float = gs.money
 	var e := FleetSim.buy(gs, saw, "camion")
@@ -209,8 +210,12 @@ func _test_garage_levels() -> void:
 		FleetSim.buy(gs, saw, "camion")
 	var full := FleetSim.buy(gs, saw, "camion")
 	check(full.has("error") and str(full["error"]).contains("cupo"), "límite por compañía (módulo Flota: %d): %s" % [lim, full.get("error", "")])
-	check(FleetSim.buy(gs, saw, "velero").has("error") and str(FleetSim.buy(gs, saw, "velero").get("error", "")).contains("puerto"), "el barco va a un puerto o astillero")
-	check(str(FleetSim.buy(gs, saw, "avion").get("error", "")).contains("aeropuerto") or str(FleetSim.buy(gs, saw, "avion").get("error", "")).contains("Requiere"), "el avión va a un aeropuerto o hangar")
+	# Módulos: un aserradero no admite barcos ni aviones (módulo Parqueadero y flota); con el tipo admitido,
+	# la conexión se valida al comprar (puerto/astillero, aeropuerto/hangar).
+	var eb := str(FleetSim.buy(gs, saw, "velero").get("error", ""))
+	check(eb.contains("puerto") or eb.contains("no admite"), "el barco va a un puerto o astillero: %s" % eb)
+	var ea := str(FleetSim.buy(gs, saw, "avion").get("error", ""))
+	check(ea.contains("aeropuerto") or ea.contains("Requiere") or ea.contains("no admite"), "el avión va a un aeropuerto o hangar: %s" % ea)
 	check(FleetSim.buy(gs, saw, "pie").has("error"), "a pie no se compra nada (vacante de cargador)")
 	var st := VehicleCatalog.stats(gs, "camion")
 	check(float(st["speed_empty"]) > float(st["speed_full"]) and float(st["capacity"]) > 0.0, "antes de comprar: velocidad vacío %d / a tope %d y capacidad %d" % [int(st["speed_empty"]), int(st["speed_full"]), int(st["capacity"])])

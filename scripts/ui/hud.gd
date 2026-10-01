@@ -221,6 +221,7 @@ func _ready() -> void:
 
 func toast(text: String, category := "info") -> void:
 	if text != "":
+		AudioManager.on_toast(text, category)   # Audio: sonido del aviso (errores = "error").
 		_on_notification({"text": text, "category": category})
 
 
@@ -1058,6 +1059,7 @@ func _show_dock(mode: String, keep_open := false) -> void:
 
 ## Apertura/cierre del panel lateral: deslizamiento + opacidad (tween de los márgenes).
 func _animate_dock(opening: bool) -> void:
+	AudioManager.panel(opening)   # Audio: abrir/cerrar panel.
 	if _dock_tween != null and _dock_tween.is_valid():
 		_dock_tween.kill()
 	var base_l := -DOCK_W - 10.0
@@ -1431,6 +1433,7 @@ func _build_modals() -> void:
 	pb.add_child(_menu_button("Guardar en otra ranura…", "save", func(): _close(pause_modal); _open_save()))
 	pb.add_child(_menu_button("Cargar partida", "folder", func(): _close(pause_modal); _open_load()))
 	pb.add_child(_menu_button("Opciones", "settings", func(): _close(pause_modal); _open_options()))
+	pb.add_child(_menu_button("Sonido y música", "bell", func(): _close(pause_modal); _open_options()))   # Audio (docs/AUDIO.md)
 	pb.add_child(UIKit.danger(_menu_button("Salir del juego (guarda antes)", "exit", _save_and_quit)))
 	var controls := UIKit.label("Cámara: WASD/flechas o clic derecho para mover · Q/E o botón central para rotar · rueda o pellizco para zoom · Espacio pausa · 1-4 velocidades · 5 salto de años · R/T gira 15° y Shift+rueda gira libre al construir o mover.\nPaneles: P personaje · B construir · C empresas · V bienes raíces · K contratos · F finanzas · Y estadísticas · O catálogo · L logística · J transporte · U servicios · X comercio · Z población · G gobierno · I investigación · N notificaciones · F1-F5 categorías", 12, UIKit.TEXT_DIM)
 	controls.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1610,6 +1613,9 @@ func _build_options(body: VBoxContainer) -> void:
 	an.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	an.custom_minimum_size.x = 440
 	body.add_child(an)
+	# Sonido y música: volúmenes por bus, silenciar, música según época y pista (docs/AUDIO.md).
+	body.add_child(HSeparator.new())
+	AudioSettings.build_ui(body)
 	# Calidad gráfica (Baja/Media/Alta): GraphicsSettings (scripts/world/graphics_settings.gd).
 	body.add_child(HSeparator.new())
 	body.add_child(UIKit.label("Gráficos", 16, UIKit.ACCENT))
@@ -1648,10 +1654,14 @@ func _update_legal_desc() -> void:
 
 func _open(m: Dictionary) -> void:
 	close_category()
+	if not m["root"].visible:
+		AudioManager.panel(true)
 	m["root"].visible = true
 
 
 func _close(m: Dictionary) -> void:
+	if m["root"].visible:
+		AudioManager.panel(false)
 	m["root"].visible = false
 
 
