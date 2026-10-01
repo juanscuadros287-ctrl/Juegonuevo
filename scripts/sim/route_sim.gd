@@ -48,6 +48,8 @@ static func state(gs) -> Dictionary:
 static func init_state(gs) -> void:
 	var old: bool = not gs.logistics.has("rutas")
 	state(gs)
+	for v in LogisticsSim.vehicles(gs):
+		VehicleCatalog.migrate_vehicle(v)   # Variedad de vehículos: modelos viejos → actuales (docs/VEHICULOS.md).
 	if old and not gs.buildings.is_empty():
 		var n := FleetSim.grandfather(gs)
 		if n > 0:
@@ -253,11 +255,11 @@ static func family(mode: String) -> String:
 		return "riel"
 	if bool(md.get("water", false)) or mode in ["barco", "naviera"]:
 		return "agua"
-	if mode in ["avion", "comercial"]:
+	if mode in ["avion", "comercial"] or str(md.get("tipo", "")) == "avion":
 		return "aire"
 	if bool(md.get("road", false)):
 		return "carretera"
-	if mode == "pie":
+	if mode == "pie" or str(md.get("tipo", "")) == "pie":
 		return "pie"
 	return "animal"
 
@@ -320,7 +322,7 @@ static func leg_reason(gs, from_id: int, to_id: int, mode: String) -> String:
 			var b := LogisticsSim.endpoint_pos(gs, to_id)
 			if RoadSim.connected(gs, a, b, []):
 				return ""
-			var mx := float(cfg().get("mule_max", 1500.0))
+			var mx := float(cfg().get("mule_max", 1500.0)) * VehicleCatalog.offroad_range_mult(mode)   # Todoterreno: más lejos.
 			if d > mx:
 				return "Demasiado lejos para mulas por el monte (máx. %d m sin carretera; este tramo mide %d m): traza una carretera" % [int(mx), int(d)]
 			var wp := TransitSim.water_profile(gs, PackedVector2Array([a, b]))

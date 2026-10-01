@@ -100,7 +100,7 @@ static func planes_in(gs, iso: String) -> Array:
 	var r = CountriesSim.with_country(gs, iso, func() -> Array:
 		var out := []
 		for v in LogisticsSim.vehicles(gs):
-			if str(v.get("mode", "")) == "avion":
+			if VehicleCatalog.tipo_of(str(v.get("mode", ""))) == "avion":
 				out.append({"id": int(v["id"]), "name": str(v.get("name", "Avión")), "base": int(v["base"]),
 						"busy": LogisticsSim.vehicle_busy(gs, int(v["id"]), now), "km": float(v.get("km", 0.0)), "trips": int(v.get("trips", 0))})
 		return out)
@@ -237,7 +237,7 @@ static func ship(gs, opts: Dictionary) -> Dictionary:
 			var now := float(gs.today()) + TimeManager.hour_float() / 24.0
 			var pick := -1
 			for v in LogisticsSim.vehicles(gs):
-				if str(v.get("mode", "")) != "avion" or (vid >= 0 and int(v["id"]) != vid):
+				if VehicleCatalog.tipo_of(str(v.get("mode", ""))) != "avion" or (vid >= 0 and int(v["id"]) != vid):
 					continue
 				var h: Dictionary = gs.get_building(int(v["base"]))
 				if h.is_empty() or not gs.is_active(h) or LogisticsSim.crew_size(gs, h) <= 0:
@@ -264,8 +264,10 @@ static func ship(gs, opts: Dictionary) -> Dictionary:
 		return {"error": "Sin %s en el origen" % GameData.good_label(good).to_lower()}
 	if mode == "avion":
 		vid = int(chk["vehicle"])
-		qty = minf(qty, float(LogisticsSim.mode_def("avion").get("capacity", 400)))
-		fuel = plane_fuel(gs, km * 2.0)   # ida y vuelta (regresa vacío)
+		var pv := LogisticsSim.get_vehicle(gs, vid)
+		qty = minf(qty, LogisticsSim.vehicle_capacity(gs, pv, good) if not pv.is_empty() else float(LogisticsSim.mode_def("avion").get("capacity", 400)))
+		var pmode := str(pv.get("mode", "avion"))   # Consumo del modelo relativo al avión de hélice.
+		fuel = plane_fuel(gs, km * 2.0) * float(LogisticsSim.mode_def(pmode).get("fuel_per_km", 30.0)) / maxf(1.0, float(LogisticsSim.mode_def("avion").get("fuel_per_km", 30.0)))
 		if gs.money < fuel:
 			return {"error": "Dinero insuficiente para el combustible (%s)" % Fmt.money(fuel)}
 	else:
