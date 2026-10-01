@@ -175,6 +175,12 @@ static func daily(gs) -> void:
 	var diff: Dictionary = gs.diff()
 	var occupancy := home_occupancy(gs)
 	TechSim.invalidate_world_cache()   # Multiplicadores de obras/eventos: se recalculan una vez por día.
+	# Rendimiento: precios del día calculados una vez (no por ciudadano) y registro de necesidades acumulado.
+	_day_active = true
+	_day_pm = gs.price_mult()
+	_day_gf = {}
+	_need_acc = {}
+	MarketSim.begin_accumulate()
 
 	var ids: Array = gs.citizens.keys()
 	for id in ids:
@@ -193,12 +199,53 @@ static func daily(gs) -> void:
 			continue
 		_happiness(gs, c, occupancy, wdata)
 
+	_flush_needs(gs)
+	MarketSim.flush_day(gs)
+	_day_active = false
 	if today % 7 == 3:
 		MarketSim.discretionary(gs)
 	_marriages(gs, today)
 	_births(gs, today)
 	if today % 7 == 0:
 		_emigration(gs, today)
+
+
+static var _day_active := false
+static var _day_pm := 1.0
+static var _day_gf := {}
+static var _need_acc := {}
+
+
+static func _good_factor(gs, good: String) -> float:
+	if not _day_active:
+		return EconomySim.good_factor(gs, good)
+	if not _day_gf.has(good):
+		_day_gf[good] = EconomySim.good_factor(gs, good)
+	return float(_day_gf[good])
+
+
+static func _record_need(gs, need: String, quality: float) -> void:
+	if not _day_active:
+		EconomySim.record_need(gs, need, quality)
+		return
+	var key := "met" if quality >= 0.99 else ("partial" if quality > 0.0 else "unmet")
+	var row: Dictionary = _need_acc.get(need, {})
+	row[key] = float(row.get(key, 0.0)) + 1.0
+	_need_acc[need] = row
+
+
+## Vuelca al mes lo acumulado del día (mismo resultado que EconomySim.record_need uno por uno).
+static func _flush_needs(gs) -> void:
+	var m: Dictionary = gs.economy.get("month", {})
+	var nm: Dictionary = m.get("needs", {})
+	for need in _need_acc:
+		var row: Dictionary = nm.get(need, {})
+		for k in _need_acc[need]:
+			row[k] = float(row.get(k, 0.0)) + float(_need_acc[need][k])
+		nm[need] = row
+	m["needs"] = nm
+	gs.economy["month"] = m
+	_need_acc = {}
 
 
 static func home_occupancy(gs) -> Dictionary:
@@ -273,7 +320,7 @@ static func _wallet(gs, p: Citizen) -> float:
 
 static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionary, wdata: Dictionary, diff: Dictionary) -> void:
 	var cfg := GameData.citizens
-	var price_mult: float = gs.price_mult()
+	var price_mult: float = _day_pm if _day_active else gs.price_mult()
 	var is_adult := age >= adult_age
 	var is_player: bool = gs.is_player(c.id)
 	var cost_factor := 1.0 if is_adult else float(cfg.get("child_cost_factor", 0.4))
@@ -300,7 +347,7 @@ static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionar
 		total_w += w
 		var ref := float(need.get("cost", 0.1)) * price_mult
 		if need.has("good"):
-			ref *= EconomySim.good_factor(gs, str(need["good"]))
+			ref *= _good_factor(gs, str(need["good"]))
 		var qty := cost_factor
 		if need_id == "energia":
 			qty *= energy_mult
@@ -315,7 +362,7 @@ static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionar
 			bonus += float(r["bonus"])
 		else:
 			quality = 1.0 if pay_with(gs, payers, ref * qty) else 0.0
-		EconomySim.record_need(gs, need_id, quality)
+		_record_need(gs, need_id, quality)
 		met_w += w * quality
 		if quality <= 0.0:
 			c.health -= float(need.get("health_penalty", 0.0))

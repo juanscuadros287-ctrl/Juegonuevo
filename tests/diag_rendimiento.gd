@@ -8,6 +8,25 @@ const BIZ := ["granja", "aguatero", "lenador", "panaderia", "tienda", "taberna",
 
 func _ready() -> void:
 	var gs = GameState
+	_build_town(gs)
+	TimeManager.advance_days(3)   # calienta cachés
+	var reps := 5
+	var t0 := Time.get_ticks_usec()
+	for i in range(reps):
+		MarketSim.begin_day(gs)
+		PopulationSim.daily(gs)
+	var pop_ms := (Time.get_ticks_usec() - t0) / 1000.0 / reps
+	t0 = Time.get_ticks_usec()
+	var days := 10
+	TimeManager.advance_days(days)
+	var day_ms := (Time.get_ticks_usec() - t0) / 1000.0 / days
+	print("PopulationSim.daily: %.1f ms · día completo: %.1f ms (promedio de %d días, %d hab.)" % [pop_ms, day_ms, days, gs.citizens.size()])
+	_per_system(gs)
+	get_tree().quit()
+
+
+## Pueblo grande: 600 habitantes y 275 edificios (negocios del jugador con 2 empleados y obras públicas).
+func _build_town(gs) -> void:
 	gs.new_game({"seed": 13, "difficulty": "normal"})
 	gs.money = 500000.0
 	PopulationSim.generate_initial(gs, 600)
@@ -15,12 +34,13 @@ func _ready() -> void:
 	rng.seed = 13
 	var n_biz := 0
 	var n_gov := 0
-	while gs.buildings.size() < 275:
+	# Mismo pueblo en cualquier versión: 84 negocios del jugador y 12 obras públicas (+ chozas y talleres NPC).
+	while n_biz < 84 or n_gov < 12:
 		var ang := rng.randf() * TAU
 		var r := rng.randf_range(20.0, 120.0)
 		var owner := "jugador"
 		var t: String = BIZ[rng.randi() % BIZ.size()]
-		if n_gov < 12 and rng.randf() < 0.1:
+		if n_gov < 12 and (rng.randf() < 0.1 or n_biz >= 84):
 			t = ["plaza_empedrada", "iglesia", "acueducto_publico"][n_gov % 3]
 			owner = "gobierno"
 			n_gov += 1
@@ -44,20 +64,6 @@ func _ready() -> void:
 			c.job_kind = "empleo"
 			c.wage = 2.0
 	print("pueblo: %d hab., %d edificios (%d negocios, %d obras públicas)" % [gs.citizens.size(), gs.buildings.size(), n_biz, n_gov])
-	TimeManager.advance_days(3)   # calienta cachés
-	var reps := 5
-	var t0 := Time.get_ticks_usec()
-	for i in range(reps):
-		MarketSim.begin_day(gs)
-		PopulationSim.daily(gs)
-	var pop_ms := (Time.get_ticks_usec() - t0) / 1000.0 / reps
-	t0 = Time.get_ticks_usec()
-	var days := 10
-	TimeManager.advance_days(days)
-	var day_ms := (Time.get_ticks_usec() - t0) / 1000.0 / days
-	print("PopulationSim.daily: %.1f ms · día completo: %.1f ms (promedio de %d días, %d hab.)" % [pop_ms, day_ms, days, gs.citizens.size()])
-	_per_system(gs)
-	get_tree().quit()
 
 
 ## Tiempo por sistema del día (mismo orden que GameState.simulate_country_day, sin lo mensual).

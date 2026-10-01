@@ -190,17 +190,28 @@ static func _buy(gs, c, w: Dictionary, qty: float, ctx: Dictionary, nd: float, s
 	var any_stock := false
 	var options := []   # [bien, tienda, precio]
 	var whole := float(cfg().get("whole_unit_price", 20.0))
+	# Rendimiento: quien no tiene ni el mínimo que guarda no puede comprar; no se recorren tiendas.
+	if c.money <= nd * float(w.get("min_wealth_days", 10)):
+		for g in goods:
+			if by_good.has(g):
+				return {"result": "too_poor"}
+		return {"result": "no_shop"}
+	if not ctx.has("wh"):
+		ctx["wh"] = {}
+	var wh: Dictionary = ctx["wh"]   # Existencias del almacén por bien (memo de la semana).
 	for g in goods:
 		if not by_good.has(g):
 			continue
 		any_shop = true
+		if not wh.has(g):
+			wh[g] = WarehouseSim.stock(gs, g)
 		var q := qty
 		if float(GameData.goods.get(g, {}).get("base_price", 0.0)) >= whole:
 			q = maxf(1.0, roundf(qty))
 		for b in by_good[g]:
 			if float(caps.get(int(b["id"]), 0.0)) < 1.0:
 				continue
-			var have := stock_for(gs, b, g)
+			var have := float(wh[g]) + float(b["inventory"].get(g, 0.0))
 			if have < minf(q, 1.0) * 0.999 or (q >= 1.0 and float(GameData.goods.get(g, {}).get("base_price", 0.0)) >= whole and have < q):
 				continue
 			any_stock = true
@@ -242,6 +253,7 @@ static func _buy(gs, c, w: Dictionary, qty: float, ctx: Dictionary, nd: float, s
 		if q <= 0.001:
 			continue
 		_take(gs, b, g, q)
+		wh.erase(g)
 		c.money -= cost
 		BusinessSim.earn(gs, b, cost, "ventas")
 		EconomySim.record_discretionary(gs, g, q, cost)

@@ -4,12 +4,88 @@ extends RefCounted
 ## o se autoabastecen/importan si no hay oferta. Mercado de vivienda mensual.
 
 static var _offers := {}   # bien -> Array de edificios vendedores ordenados
-static var _memo := {}     # memo del día (se vacía en begin_day): calidad por negocio y precio de importación por bien
+static var _memo := {}     # memo del día (se vacía en begin_day): precio de importación por bien
+static var _q_memo := {}   # id de negocio -> calidad (memo del día)
+static var _hq_memo := {}  # id de vivienda -> calidad de la casa (memo del día)
+static var _memo_of = null  # lista de edificios a la que pertenecen los memos (otro país u otra partida: se vacían)
+
+
+static var _sm_memo := {}  # id de negocio -> [aceptación por calidad, demanda por publicidad] (memo del día)
+
+
+static func _seller_mult(gs, b: Dictionary, idx: int) -> float:
+	_check_memo(gs)
+	var k := int(b.get("id", -1))
+	if not _sm_memo.has(k):
+		_sm_memo[k] = [QualitySim.accept_mult(gs, b), AdvertisingSim.demand_mult(gs, b)]
+	return float(_sm_memo[k][idx])
+
+
+# --- Acumulación del día (rendimiento) -------------------------------------------------------
+## Mientras PopulationSim recorre a los ciudadanos, las ventas a empresas NPC y el registro de
+## compras se acumulan y se vuelcan una vez al final (flush_day): mismo resultado, menos trabajo.
+static var _acc_on := false
+static var _rev_acc := {}   # id -> [edificio, monto]
+static var _pur_acc := {}   # bien -> [qty, local, imported, self, shortage, revenue]
+
+
+static func begin_accumulate() -> void:
+	_acc_on = true
+	_rev_acc = {}
+	_pur_acc = {}
+
+
+static func flush_day(gs) -> void:
+	_acc_on = false
+	for k in _rev_acc:
+		BusinessSim.earn(gs, _rev_acc[k][0], float(_rev_acc[k][1]), "ventas")
+	for g in _pur_acc:
+		var r: Array = _pur_acc[g]
+		EconomySim.record_purchase(gs, g, r[0], r[1], r[2], r[3], r[4], r[5])
+	_rev_acc = {}
+	_pur_acc = {}
+
+
+static func _earn(gs, b: Dictionary, amount: float) -> void:
+	if _acc_on and NpcBusinessSim.is_npc(b):
+		var k := int(b["id"])
+		if _rev_acc.has(k):
+			_rev_acc[k][1] = float(_rev_acc[k][1]) + amount
+		else:
+			_rev_acc[k] = [b, amount]
+		return
+	BusinessSim.earn(gs, b, amount, "ventas")
+
+
+static func _record_purchase(gs, good: String, qty: float, local: float, imported: float, self_q: float, shortage: float, revenue: float) -> void:
+	if not _acc_on:
+		EconomySim.record_purchase(gs, good, qty, local, imported, self_q, shortage, revenue)
+		return
+	if not _pur_acc.has(good):
+		_pur_acc[good] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+	var r: Array = _pur_acc[good]
+	r[0] += qty
+	r[1] += local
+	r[2] += imported
+	r[3] += self_q
+	r[4] += shortage
+	r[5] += revenue
+
+
+static func _check_memo(gs) -> void:
+	if not is_same(_memo_of, gs.buildings):
+		_memo_of = gs.buildings
+		_q_memo = {}
+		_hq_memo = {}
+		_sm_memo = {}
 
 
 static func begin_day(gs) -> void:
 	_offers = {}
 	_memo = {}
+	_q_memo = {}
+	_hq_memo = {}
+	_sm_memo = {}
 	for b in gs.buildings:
 		# Libre mercado: las empresas NPC compiten con las tuyas por los mismos clientes.
 		if not (gs.owned_by_player(b) or NpcBusinessSim.is_npc(b)) or b["status"] != "activo":
@@ -27,11 +103,12 @@ static func begin_day(gs) -> void:
 
 
 static func _quality(gs, b: Dictionary) -> float:
-	var k := "q%d|%d|%s" % [int(b.get("id", -1)), int(b.get("level", 1)), str(b.get("type", ""))]
-	if _memo.has(k):
-		return float(_memo[k])
+	_check_memo(gs)
+	var k := int(b.get("id", -1))
+	if _q_memo.has(k):
+		return float(_q_memo[k])
 	var q := maxf(0.1, float(gs.level_def(b).get("quality", 1.0)))
-	_memo[k] = q
+	_q_memo[k] = q
 	return q
 
 
@@ -73,11 +150,11 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 		if stock <= 0.0:
 			continue   # Sin existencias: se salta antes de calcular calidad y publicidad (rendimiento).
 		var price := float(b["price"])
-		var am := QualitySim.accept_mult(gs, b)   # Economía global: calidad y marca suben el precio aceptado.
+		var am := _seller_mult(gs, b, 0)   # Economía global: calidad y marca suben el precio aceptado.
 		if price > willing * am:
 			continue
 		# Demanda elástica: por encima del precio de referencia compran menos (la publicidad ayuda).
-		var ad := AdvertisingSim.demand_mult(gs, b)
+		var ad := _seller_mult(gs, b, 1)
 		if price > ref_price * am and gs.rng.randf() < (price / (ref_price * am) - 1.0) / (willing / ref_price - 1.0) / ad:
 			continue
 		var take := minf(stock, left)
@@ -85,7 +162,7 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 		if not PopulationSim.pay_with(gs, payers, cost):
 			break
 		inv[good] = stock - take
-		BusinessSim.earn(gs, b, cost, "ventas")
+		_earn(gs, b, cost)
 		revenue += cost
 		left -= take
 		bonus += (_quality(gs, b) - 1.0) * 2.0 * (take / qty)
@@ -111,7 +188,7 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 				ss *= float(GameData.citizens.get("employed_self_supply_factor", 0.7))
 			self_q = left
 			quality = (local + ss * left) / qty
-	EconomySim.record_purchase(gs, good, qty, local, imported, self_q, maxf(0.0, qty - total_stock), revenue)
+	_record_purchase(gs, good, qty, local, imported, self_q, maxf(0.0, qty - total_stock), revenue)
 	return {"ok": quality > 0.0, "quality": quality, "bonus": bonus}
 
 
@@ -180,7 +257,13 @@ static func daily_rent(gs, b: Dictionary) -> float:
 static func home_quality(gs, b: Dictionary) -> float:
 	if b.is_empty():
 		return 0.0
-	return float(gs.level_def(b).get("quality", 1.0)) + float(Housing.tier_def(b).get("quality_add", 0.0)) + GridSim.home_quality_delta(gs, b)
+	_check_memo(gs)
+	var k := int(b.get("id", -1))
+	if _hq_memo.has(k):
+		return float(_hq_memo[k])
+	var q := float(gs.level_def(b).get("quality", 1.0)) + float(Housing.tier_def(b).get("quality_add", 0.0)) + GridSim.home_quality_delta(gs, b)
+	_hq_memo[k] = q
+	return q
 
 
 ## Familias: adulto responsable + cónyuge + hijos menores en la misma casa.
