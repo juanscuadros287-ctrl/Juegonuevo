@@ -94,7 +94,7 @@ void fragment() {
 		float center = aa_band(0.478, 0.522, u) * smoothstep(0.0, dw, dash) * (1.0 - smoothstep(0.55 - dw, 0.55 + dw, dash));
 		// A lo lejos las líneas finas se funden con el asfalto en lugar de titilar.
 		float lines_k = 1.0 - smoothstep(0.07, 0.16, fwidth(u));
-		c = mix(c, vec3(0.9, 0.9, 0.86), side * 0.85 * lines_k);
+		c = mix(c, vec3(0.93, 0.93, 0.9), side * 0.95 * lines_k);
 		c = mix(c, vec3(0.93, 0.76, 0.26), center * 0.9 * lines_k);
 		float shoulder = 1.0 - aa_band(0.03, 0.97, u);
 		c = mix(c, base_color * 1.4, shoulder);

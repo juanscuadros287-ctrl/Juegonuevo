@@ -129,23 +129,18 @@ float tc_canopy(vec2 p, float dens, float aa) {
 	return best;
 }
 
-// Tramado ordenado (Bayer 4×4): umbral estable y repartido de forma uniforme. El ruido blanco de antes
-// dejaba "sal y pimienta" visible en la banda de transición entre LOD; con Bayer la mezcla se lee como
-// un tono intermedio (y con TAA/MSAA se funde del todo).
-float tc_bayer2(vec2 a) {
-	a = floor(a);
-	return fract(a.x / 2.0 + a.y * a.y * 0.75);
-}
-
-float tc_bayer4(vec2 a) {
-	return tc_bayer2(0.5 * a) * 0.25 + tc_bayer2(a);
+// Tramado de la banda de transición entre LOD: ruido de gradiente intercalado (IGN, el que usan los
+// motores para el "crossfade" de LOD). Reparte el umbral de forma uniforme sin grumos (el ruido blanco
+// de antes dejaba "sal y pimienta") ni la trama regular de una matriz de Bayer; con MSAA/TAA se funde.
+float tc_ign(vec2 p) {
+	return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
 }
 
 void fragment() {
 	vec2 cuv = (world_pos.xz - map_origin) / chunk_size;
 	float dist = length(VERTEX);
 	// Tramado complementario entre la malla detallada y la tesela lejana (banda fade_near..fade_far).
-	float dither = tc_bayer4(FRAGCOORD.xy) + 1.0 / 32.0;
+	float dither = tc_ign(floor(FRAGCOORD.xy));
 	float fade = smoothstep(fade_near, fade_far, dist);
 	if (is_far) {
 		if (texture(detail_tex, cuv / map_texels).r > 0.5 && dither >= fade) {
@@ -160,7 +155,11 @@ void fragment() {
 	float h = world_pos.y;
 	vec3 wn = normalize(world_nrm);
 	float slope = 1.0 - wn.y;
-	float dens = clamp(veg.x, 0.0, 1.0);
+	// Faldones (UV.x + 10, Terrain.SKIRT_UV): son paredes verticales que tapan las rendijas entre chunks
+	// de distinta resolución. Con la normal de las derivadas salían oscuros y se veían como líneas
+	// punteadas a lo largo de los bordes de chunk; ahora se iluminan con la normal del suelo y sin copas.
+	float skirt = step(1.05, veg.x);
+	float dens = clamp(veg.x, 0.0, 1.0) * (1.0 - skirt);
 	float arid = clamp(veg.y, 0.0, 1.0);
 	float mtn = clamp(-veg.y, 0.0, 1.0);          // montaña o nevado
 	float nev = clamp(-veg.y - 1.0, 0.0, 1.0);    // nevado (la nieve la decide la altura, abajo)
@@ -269,6 +268,9 @@ void fragment() {
 	vec3 nb = abs(det) * n - grad;
 	if (dot(nb, nb) > 1e-12) {
 		n = normalize(nb);
+	}
+	if (skirt > 0.5) {
+		n = vn;
 	}
 	NORMAL = n;
 

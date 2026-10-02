@@ -19,6 +19,7 @@ const TOWN_FLAT_RADIUS := 30.0
 const TOWN_HEIGHT := 3.0
 const SNOW_LINE := 34.0
 const CHUNK := 400.0
+const SKIRT_UV := 10.0   # UV.x de los vértices de faldón (+10): el shader los ilumina como el suelo
 const LOD_NONE := -1
 const LOD_HIGH := 0
 const LOD_MID := 1
@@ -1194,7 +1195,7 @@ func _grid_mesh(x0: float, z0: float, step: float, n: int, hs: PackedFloat32Arra
 			# Pulido: mismo color que el borde (antes oscurecido): por las rendijas entre chunks de distinta
 			# resolución se veían líneas punteadas oscuras a lo largo de los bordes de chunk.
 			cols[base + e * n + t] = cols[g]
-			uvs[base + e * n + t] = uvs[g]
+			uvs[base + e * n + t] = uvs[g] + Vector2(SKIRT_UV, 0.0)   # marca de faldón para el shader
 	return {"verts": verts, "normals": normals, "cols": cols, "uvs": uvs}
 
 
