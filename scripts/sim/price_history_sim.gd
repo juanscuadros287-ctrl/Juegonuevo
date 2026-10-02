@@ -113,11 +113,11 @@ static func series(gs, what: String, months := 0) -> Dictionary:
 static func value_ago(gs, what: String, months: int) -> float:
 	var target: int = gs.today() - months * 30
 	var all := entries(gs)
-	if all.is_empty() or int(all[0]["d"]) > target + 20:
+	if all.is_empty() or int(all[0]["d"]) > target + 3:
 		return -1.0
 	var best: Dictionary = all[0]
 	for e in all:
-		if int(e["d"]) <= target + 15:
+		if int(e["d"]) <= target + 3:
 			best = e
 	return value_of(best, what)
 

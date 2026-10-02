@@ -125,6 +125,9 @@ xvfb-run -a -s "-screen 0 1600x900x24" godot --rendering-driver opengl3 --resolu
   negocio); no mueven dinero, no causan IVA y el consolidado los elimina. Los fletes a empresas NPC sí son dinero
   (de su caja a la tuya, con IVA como cualquier venta). La renta de impuestos se calcula por edificio (la
   transportadora con ganancia paga renta aunque la fábrica tenga pérdida: son razones sociales distintas).
+- Auditoría (`FlowSim`): todos estos movimientos son entre bolsillos que cuenta `FlowSim.pockets` (jugador,
+  ciudadanos, cajas de empresas NPC, tesoro nacional y municipal); ninguno crea ni destruye dinero, así que
+  `FlowSim.conserved_total` no cambia (lo verifican `tests/test_terrenos_costos.gd` y `tests/test_conservacion.gd`).
 - El reparto interno es solo informativo (costeo); el costo real ya salió del libro de la estación.
 - Un envío entre almacenes (sin negocio beneficiario) reparte su costo entre los productores según el valor que
   producen. Las estaciones que no son de transporte (una fábrica con sus propios camiones) ya tienen ese costo en

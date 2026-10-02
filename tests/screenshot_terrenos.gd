@@ -69,6 +69,9 @@ func _ready() -> void:
 	gs.suppress_notifications = true
 	TimeManager.advance_days(24 * 30)
 	gs.suppress_notifications = false
+	for r in LogisticsSim.routes(gs):
+		print("ruta: ", r.get("status", ""), " viajes ", r.get("trips", 0))
+	print("fletes internos: ", TransportDivSim.st(gs).get("total_billed", 0.0))
 	for c in gs.citizens.values():
 		if not gs.is_player(c.id):
 			c.money = maxf(c.money, 60000.0)
@@ -120,9 +123,16 @@ func _ready() -> void:
 	_save(out, "precios.png")
 	hud._show_dock("build", true)
 	await _frames(10)
+	var calc: Button = null
 	for btn in hud.build_menu.list.find_children("*", "Button", true, false):
 		if (btn as Button).text.begins_with("Calculadora"):
-			(btn as Button).pressed.emit()
+			calc = btn
+			calc.pressed.emit()
+			break
+	await _frames(10)
+	if calc != null:
+		for sc in hud.build_menu.find_children("*", "ScrollContainer", true, false):
+			(sc as ScrollContainer).scroll_vertical = int(calc.get_parent().get_parent().position.y) - 10
 			break
 	await _frames(30)
 	_save(out, "calculadora.png")

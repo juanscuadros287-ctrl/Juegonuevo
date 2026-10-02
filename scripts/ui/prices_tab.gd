@@ -26,14 +26,15 @@ static func build(gs, body: VBoxContainer, refresh_cb: Callable) -> void:
 		var cs := PriceHistorySim.causes(gs, g)
 		rows.append({"good": g, "label": GameData.good_label(g), "price": now, "c1": _chg(gs, g, 1, now), "c12": _chg(gs, g, 12, now),
 			"c60": _chg(gs, g, 60, now), "min": minf(mm.x, now), "max": maxf(mm.y, now), "spark": sp,
+			"range": "%s–%s" % [_short(minf(mm.x, now)), _short(maxf(mm.y, now))],
 			"cause": ", ".join(cs) if not cs.is_empty() else "estable",
 			"_color": UIKit.ACCENT if selected.has(g) else UIKit.TEXT})
 	var dt := DataTable.new()
-	dt.set_data([{"title": "Bien", "key": "label", "w": 1.3}, {"title": "Precio", "key": "price", "w": 0.8, "fmt": "money2"},
-		{"title": "1 mes", "key": "c1", "w": 0.7, "fmt": "trend", "invert": true}, {"title": "12 m", "key": "c12", "w": 0.7, "fmt": "trend", "invert": true},
-		{"title": "5 años", "key": "c60", "w": 0.7, "fmt": "trend", "invert": true}, {"title": "Mín", "key": "min", "w": 0.7, "fmt": "money2"},
-		{"title": "Máx", "key": "max", "w": 0.7, "fmt": "money2"}, {"title": "Tendencia", "key": "spark", "w": 0.8, "fmt": "spark"},
-		{"title": "Causa", "key": "cause", "w": 1.8}], rows, 14)
+	dt.set_data([{"title": "Bien", "key": "label", "w": 1.1}, {"title": "Precio", "key": "price", "w": 0.75, "fmt": "money2"},
+		{"title": "1 m", "key": "c1", "w": 0.6, "fmt": "trend", "invert": true}, {"title": "12 m", "key": "c12", "w": 0.6, "fmt": "trend", "invert": true},
+		{"title": "5 a", "key": "c60", "w": 0.6, "fmt": "trend", "invert": true}, {"title": "Mín–máx", "key": "range", "w": 1.0},
+		{"title": "Tend.", "key": "spark", "w": 0.6, "fmt": "spark"}, {"title": "Causa", "key": "cause", "w": 1.3}], rows, 14)
+	dt.tooltip_text = "Causa completa y mínimo/máximo exactos: pasa al catálogo de bienes o mira la gráfica."
 	dt.row_clicked.connect(func(r):
 		var g := str(r["good"])
 		if selected.has(g):
@@ -107,3 +108,7 @@ static func _base100(vals: Array) -> Array:
 	if b <= 0.0:
 		return vals.map(func(_v): return 100.0)
 	return vals.map(func(v): return float(v) / b * 100.0)
+
+
+static func _short(v: float) -> String:
+	return (String.num(v, 2) if v < 10.0 else (String.num(v, 1) if v < 100.0 else Fmt.compact(v))).replace(".", ",")

@@ -174,8 +174,17 @@ static func estimate(gs, type_id: String, level := 1) -> Dictionary:
 	var prod := 0.0
 	var wage := 0.0
 	var n := mini(jobs, cands.size())
+	# Con empleo la gente se pone más contenta (y rinde más): se usa la felicidad típica de un empleado del pueblo.
+	var emp_h := 0.0
+	var emp_n := 0
+	for c in gs.citizens.values():
+		if c.job_kind == "empleo":
+			emp_h += c.happiness
+			emp_n += 1
+	emp_h = maxf(75.0, emp_h / emp_n if emp_n > 0 else 75.0)
 	for i in range(n):
-		prod += BusinessSim.productivity(cands[i], skill)
+		var hap_fix: float = (0.75 + maxf(cands[i].happiness, emp_h) / 100.0 * 0.5) / (0.75 + cands[i].happiness / 100.0 * 0.5)
+		prod += BusinessSim.productivity(cands[i], skill) * hap_fix
 		wage += maxf(BusinessSim.asked_wage(gs, cands[i], type_id), GovSim.min_wage(gs))
 	if n > 0:
 		prod /= n
@@ -185,6 +194,7 @@ static func estimate(gs, type_id: String, level := 1) -> Dictionary:
 		wage = maxf(float(def.get("base_wage", 2.0)) * pm, GovSim.min_wage(gs))
 	var units := jobs * prod * float(ld.get("prod_per_worker", 1.0))
 	units *= TechSim.mult(gs, "production", product)
+	units *= RegionSim.region_mult(gs, fake) * CountriesSim.op_mult()   # Recursos de la región y presencia en el país.
 	units *= float(def.get("resource_bonus", {}).get(str(gs.settings.get("map_type", "")), 1.0))
 	if bool(def.get("seasonal", false)):
 		units *= float(WeatherSim.season_data(gs).get("farming", 1.0))

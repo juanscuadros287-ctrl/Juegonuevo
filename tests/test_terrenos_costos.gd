@@ -37,17 +37,9 @@ func _new(seed_v := 1234) -> void:
 	GameState.government["treasury"] = 1e7
 
 
-## Dinero del sistema: jugador + ciudadanos + cajas de empresas + tesoro nacional + tesoros municipales.
+## Dinero del sistema (FlowSim): jugador, ciudadanos, empresas, tesoros, bancos y cuenta externa.
 func _system_money() -> float:
-	var gs = GameState
-	var m: float = gs.money + float(gs.government.get("treasury", 0.0))
-	for c in gs.citizens.values():
-		m += c.money
-	for b in gs.buildings:
-		m += float(b.get("reserve", 0.0))
-	for k in gs.map.get("regions", {}):
-		m += float(gs.map["regions"][k].get("treasury", 0.0))
-	return m
+	return FlowSim.conserved_total(GameState)   # Auditoría: bolsillos + cuenta externa.
 
 
 ## Territorios del Estado con tierra, lejos del pueblo (para comprarlos y venderlos).
@@ -336,8 +328,10 @@ func _test_transport() -> void:
 	BusinessSim.hire(gs, st, hired[0], 3.0)
 	sys0 = _system_money()
 	TransportDivSim.monthly(gs)
-	var npc_fee := float(npc["ledger"]["month"].get("fletes", 0.0))
-	check(npc_fee > 0.0 and float(npc["reserve"]) < 2000.0, "cobra fletes a una empresa NPC (%s de su caja)" % Fmt.money2(npc_fee))
+	var npc_fee := 0.0
+	for nb in NpcBusinessSim.npc_buildings(gs):
+		npc_fee += float(nb["ledger"]["month"].get("fletes", 0.0))
+	check(npc_fee > 0.0, "cobra fletes a una empresa NPC (%s de su caja)" % Fmt.money2(npc_fee))
 	check(absf(_system_money() - sys0) < 0.01 + float(gs.informal.get("iva_pending", 0.0)) + 1.0, "cliente NPC: el dinero pasa de su caja a la tuya")
 
 
