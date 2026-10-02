@@ -305,7 +305,7 @@ por rama del mundo (para cazar llamadas de dibujo).
 | 6 | Charcos de luz de los faroles **hundidos** en laderas | Disco horizontal a +5 cm | Disco inclinado con la normal del terreno (`street_lights.gd`) y sesgo mayor que las carreteras (la luz cae también sobre la calzada) |
 | 7 | Ladrillos, piedra, teja, paja y ventanas **se deslizaban** sobre lo que se mueve y se estiraban en edificios girados | Patrones en espacio del **mundo** con proyección por eje | `building.gdshader`: patrones en espacio del **objeto** con la tangente real de la cara; juntas con `fwidth` y corrugado que se apaga antes del moiré |
 | 8 | **Fronteras de municipio en escalera** (bordes de chunk de 400 m) | El shader marcaba los lados del chunk | Curva de nivel 0,5 del indicador "mismo municipio" interpolado entre las 4 celdas vecinas (marching squares suavizado): esquinas en curva, ancho uniforme en metros, antialias por píxel |
-| 9 | **Líneas punteadas oscuras** a lo largo de los bordes de chunk | Faldones oscurecidos vistos por las rendijas entre resoluciones | Faldones del mismo color que el borde (`terrain.gd`) |
+| 9 | **Líneas punteadas oscuras** a lo largo de los bordes de chunk | La tesela lejana se recortaba justo en el borde del chunk detallado: los rayos que pasaban al lado de la malla detallada caían en la tesela ya recortada y se veía el fondo; además los faldones salían oscuros | La tesela solo se recorta con un margen de ≈2 px/3 m dentro del chunk detallado (se solapan en vez de dejar huecos); faldones del mismo color y marcados (`Terrain.SKIRT_UV`) para iluminarse con la normal del suelo |
 | 10 | **Tramado "sal y pimienta"** en la banda de transición entre LOD | Umbral de ruido blanco por píxel (grumos) | Ruido de gradiente intercalado (IGN, el estándar para el *crossfade* de LOD): reparto uniforme sin grumos ni trama regular (se probó Bayer 4×4 y la trama se veía más); con TAA (Alta, Forward+) se funde. **Mejora leve en Compatibility**: la banda sigue notándose donde la tesela lejana (colores y densidad de bosque suavizados 3×3) difiere de la malla detallada; ver §10.4 |
 | 11 | **Bosque** con borde poligonal (forma de la malla) y copas con borde dentado; bosque que empezaba de golpe en el borde recto del chunk del pueblo | Umbral sobre la densidad interpolada por vértice; cúpula con `sqrt` (borde vertical) | Umbral con ruido (borde orgánico); borde de cada copa suavizado al tamaño del píxel; las copas entran con la mezcla de colores del pueblo (claro orgánico, sin costura recta) |
 | 12 | Rayas finas de **acné de sombra** en el terreno casi plano | Sesgo normal 1,1 | Sesgo 0,04 y sesgo normal 2,0 |
@@ -334,9 +334,43 @@ instancia (todos salen de cachés: `MeshLib.mat`, `RoadMesh.material`, `building
 
 ### 10.3 Rendimiento
 
-PENDIENTE_TABLA
+Medido con `screenshot_graficos.tscn … rapido` (xvfb + llvmpipe, render por CPU en 4 núcleos compartidos con
+otros agentes: el tiempo de frame es orientativo; llamadas de dibujo, objetos y primitivas sí son comparables).
+Misma escena, base `363c19e` (antes) contra esta rama (después), dos corridas alternadas de cada una:
+
+| Vista | Draw calls antes → después | Objetos | Primitivas | ms/frame antes → después (FPS) |
+|---|---|---|---|---|
+| Pueblo de día | 1204 → 1013 (−16 %) | 4641 → 4450 | 1,70 M → 1,70 M | 696–711 → 708–728 (≈1,4 FPS) |
+| Atardecer | 1017 → 896 (−12 %) | 4454 → 4333 | 1,38 M → 1,39 M | 626–656 → 684–690 (≈1,5 FPS) |
+| Noche | 1149 → 961 (−16 %) | 4586 → 4398 | 1,55 M → 1,54 M | 635–675 → 643–644 (≈1,5 FPS) |
+
+Mapa del país (`screenshot_mapa_v2`, `rendimiento.txt`): en todas las vistas lejanas hay **≈205 llamadas de
+dibujo menos** (región 584 → 379, municipio 668 → 463, montañas 563 → 358, país 960 → 755): las 41
+personas del pueblo (5 piezas cada una) ya no se dibujan con la cámara a kilómetros (LOD de personas).
+Pueblo de cerca 934 → 780, minimapa 1012 → 930.
+
+- **GPU**: menos llamadas de dibujo (LOD de personas, sin sombra de brazos y piernas, conexiones de mina
+  unidas); las primitivas no cambian.
+- **Costo por píxel**: el antialias analítico (`fwidth`), 4 muestras más de la altura del agua y la mezcla
+  del pueblo en el shader del país son unas pocas instrucciones; en llvmpipe (que sombrea en CPU) el frame
+  queda igual dentro del ruido (−2 % a +7 %). En una GPU real es despreciable frente a sombras y postproceso.
+- **CPU**: el color por vértice del chunk del pueblo calcula (RES+1)² colores en lugar de 2·RES² (la mitad).
+
+### 10.4 Pendiente
+
+- La banda de transición entre LOD sigue notándose en Compatibility donde la tesela lejana (colores y
+  densidad de bosque suavizados 3×3) difiere de la malla detallada. Arreglo de fondo: hornear en la malla
+  detallada la altura/color de la tesela lejana y hacer *geomorphing* en la banda en vez de tramar.
+- El cuadrado del pueblo se sigue viendo más claro en el mapa del país cuando lo de alrededor es ajeno: es el
+  oscurecimiento de "propiedad ajena" (DIM_LOCKED), es información de juego y no se tocó.
+
 
 ## Archivos
+
+Pulido (§10) — modificados: `shaders/{road,building,water,deposit_area,light_pool}.gdshader`,
+`shaders/terrain_chunk_body.gdshaderinc`, `shaders/terrain_grade.gdshaderinc`, `scripts/world/{terrain,world,
+camera_rig,sky_rig,graphics_settings,street_lights,mesh_lib,mining_visuals,country_gen}.gd` (country_gen: solo
+dos colores de `old_color`), `tests/screenshot_graficos.gd` (vistas nuevas, lista de vistas, censo).
 
 Mapa v2 — nuevos: `scripts/world/label_declutter.gd`, `shaders/terrain_chunk_body.gdshaderinc`,
 `tests/screenshot_mapa_v2.{gd,tscn}`; modificados: `terrain.gd`, `terrain_look.gd`, `country_overlay.gd`,

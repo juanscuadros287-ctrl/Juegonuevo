@@ -143,7 +143,14 @@ void fragment() {
 	float dither = tc_ign(floor(FRAGCOORD.xy));
 	float fade = smoothstep(fade_near, fade_far, dist);
 	if (is_far) {
-		if (texture(detail_tex, cuv / map_texels).r > 0.5 && dither >= fade) {
+		// Pulido: la tesela lejana solo se recorta si el punto está DENTRO del chunk detallado con un
+		// margen (≈2 px o 3 m). Sin margen, los rayos que pasaban justo al lado del borde de la malla
+		// detallada caían en la tesela (más baja o más alta) ya recortada y se veía el fondo: líneas
+		// punteadas oscuras a lo largo de los bordes de chunk.
+		float mg = max(length(fwidth(world_pos.xz)) * 1.5, 3.0) / chunk_size;
+		float inside = min(min(texture(detail_tex, (cuv + vec2(mg, 0.0)) / map_texels).r, texture(detail_tex, (cuv - vec2(mg, 0.0)) / map_texels).r),
+				min(texture(detail_tex, (cuv + vec2(0.0, mg)) / map_texels).r, texture(detail_tex, (cuv - vec2(0.0, mg)) / map_texels).r));
+		if (inside > 0.5 && dither >= fade) {
 			discard;
 		}
 	} else if (dither < fade) {
