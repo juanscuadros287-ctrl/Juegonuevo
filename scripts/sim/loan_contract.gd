@@ -209,6 +209,8 @@ static func sign_player_loan(gs, lender_id: String, amount: float, months: int, 
 	if not own.is_empty():
 		own["reserve"] = float(own["reserve"]) - amount
 		BusinessSim.ledger_add(own, "prestado", amount)
+	else:
+		FlowSim.bank_move(gs, -amount)   # Sale de la caja del banco externo/NPC.
 	gs.add_money(amount)
 	gs.notify("Firmaste con %s: %s al %.1f%% anual a %d meses, %s (primera cuota %s)." % [q["label"], Fmt.money(amount), float(q["rate"]) * 100.0, months, type_label(type).to_lower(), Fmt.money(float(l["payment"]))], "importante")
 	return {"loan": l}
@@ -253,6 +255,7 @@ static func remaining_schedule(l: Dictionary) -> Array:
 static func on_player_paid(gs, l: Dictionary, paid: float, interest: float) -> void:
 	var own := _own_bank(gs, str(l.get("lender", "")))
 	if own.is_empty():
+		FlowSim.bank_move(gs, paid)   # Banco externo/NPC: la cuota entra a su caja.
 		return
 	own["reserve"] = float(own["reserve"]) + paid
 	if interest > 0.0:
@@ -303,6 +306,8 @@ static func disburse(gs, l: Dictionary, amount: float) -> float:
 		if float(own.get("reserve", 0.0)) < take:
 			return 0.0
 		own["reserve"] = float(own["reserve"]) - take
+	else:
+		FlowSim.bank_move(gs, -take)
 	l["disbursed"] = float(l["disbursed"]) + take
 	l["principal"] = float(l["principal"]) + take
 	l["balance"] = float(l["balance"]) + take
@@ -391,6 +396,8 @@ static func grant_mortgage(gs, offer: Dictionary, borrower: Citizen, amount: flo
 		else:
 			gs.add_money(-amount)
 		BusinessSim.ledger_add(bank, "prestado", amount)
+	else:
+		FlowSim.bank_move(gs, -amount)   # Hipoteca de un banco externo/NPC.
 	borrower.money += amount
 	borrower.debt += amount
 	return l

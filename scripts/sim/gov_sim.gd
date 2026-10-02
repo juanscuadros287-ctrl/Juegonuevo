@@ -540,6 +540,7 @@ static func start_public_project(gs, tender: Dictionary, x: float, z: float, rot
 	if gs.money < upfront:
 		return "Necesitas %s para materiales" % Fmt.money(upfront)
 	gs.add_money(-upfront)
+	FlowSim.spend(gs, upfront, "obras")   # Anticipo de materiales: proveedores del pueblo (parte importada).
 	var b := ConstructionSim.make_building(gs, str(tender["type"]), 1, x, z, rot, "gobierno")
 	var ld := GameData.level_def(str(tender["type"]), 1)
 	b["status"] = "construccion"

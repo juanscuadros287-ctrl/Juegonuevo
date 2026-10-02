@@ -221,6 +221,7 @@ static func adopt_orphan(gs, c: Citizen) -> String:
 	if gs.money < fee:
 		return "Necesitas %s" % Fmt.money(fee)
 	gs.add_money(-fee)
+	GovSim.add_treasury(gs, fee)   # Trámite de adopción: lo cobra el Estado (orfanato).
 	_adopt(gs, c)
 	gs.notify("Adoptaste a %s." % c.full_name(), "familia")
 	EventBus.citizens_moved.emit()
@@ -233,6 +234,7 @@ static func adopt_baby(gs) -> String:
 		return "Necesitas %s" % Fmt.money(fee)
 	var p: Citizen = gs.player_citizen()
 	gs.add_money(-fee)
+	FlowSim.external_out(gs, fee, "adopción en otro pueblo")
 	var baby := PopulationSim.create_citizen(gs, "M" if gs.rng.randf() < 0.5 else "F", 0, p.last_name)
 	baby.birth_day = gs.today() - gs.rng.randi_range(0, 200)
 	baby.health = 95.0
@@ -316,6 +318,51 @@ static func monthly(gs) -> void:
 	DynastySim.monthly(gs)
 
 
+## Heredero de la familia extendida cuando no hay hijos ni lista (después de HeirsSim.pick_heir):
+## cónyuge → hermanos (mayor primero) → sobrinos adultos → padres → adoptado. {citizen, how}.
+static func extended_heir(gs, dead: Citizen) -> Dictionary:
+	var today: int = gs.today()
+	var adult := int(GameData.citizens.get("adult_age", 16))
+	if dead.spouse_id >= 0 and gs.citizens.has(dead.spouse_id):
+		return {"citizen": gs.citizens[dead.spouse_id], "how": "cónyuge"}
+	var sibs: Array = HeirsSim.siblings(gs, dead)
+	sibs.sort_custom(func(a, b): return a.birth_day < b.birth_day)
+	for sb in sibs:
+		if sb.age_years(today) >= adult:
+			return {"citizen": sb, "how": "hermano(a)"}
+	var nephews := []
+	for sb in sibs:
+		for kid in sb.children_ids:
+			if gs.citizens.has(kid):
+				nephews.append(gs.citizens[kid])
+	nephews.sort_custom(func(a, b): return a.birth_day < b.birth_day)
+	for n in nephews:
+		if n.age_years(today) >= adult:
+			return {"citizen": n, "how": "sobrino(a)"}
+	if not sibs.is_empty():
+		return {"citizen": sibs[0], "how": "hermano(a)"}
+	if not nephews.is_empty():
+		return {"citizen": nephews[0], "how": "sobrino(a)"}
+	for pid in dead.parent_ids:
+		if gs.citizens.has(pid):
+			return {"citizen": gs.citizens[pid], "how": "padre/madre"}
+	# Adoptado: el adulto joven con más afinidad con la familia (o el más joven de 18 a 40).
+	var rel: Dictionary = gs.player.get("relations", {})
+	var best: Citizen = null
+	var best_score := -INF
+	for c in gs.citizens.values():
+		var age: int = c.age_years(today)
+		if age < 18 or age > 40 or c.prison_until >= 0:
+			continue
+		var sc: float = float(rel.get(str(c.id), 0.0)) * 2.0 - age * 0.5 + c.education * 3.0
+		if sc > best_score:
+			best_score = sc
+			best = c
+	if best != null:
+		return {"citizen": best, "how": "adoptado"}
+	return {}
+
+
 ## Llamado cuando muere el personaje. Pasa el control al heredero o termina la partida.
 static func on_player_death(gs, dead: Citizen) -> void:
 	var heirs := []
@@ -324,12 +371,21 @@ static func on_player_death(gs, dead: Citizen) -> void:
 			heirs.append(gs.citizens[id])
 	# Sección C: el orden de herederos que eligió el jugador manda (primero vivo de la lista).
 	var chosen: Citizen = HeirsSim.pick_heir(gs, dead)
+	var how := ""
 	if chosen == null and heirs.is_empty():
-		DynastySim.on_dynasty_end(gs, dead)
-		gs.running = false
-		gs.notify("Has muerto sin herederos. Fin de la dinastía.", "jugador")
-		EventBus.player_died.emit()
-		return
+		# Sin hijos: la familia continúa con el cónyuge, un hermano, un sobrino o, en último caso,
+		# un adoptado (el vecino más cercano a la familia). Solo termina si no queda nadie.
+		var ext := extended_heir(gs, dead)
+		chosen = ext.get("citizen")
+		how = str(ext.get("how", ""))
+		if chosen == null:
+			DynastySim.on_dynasty_end(gs, dead)
+			gs.running = false
+			gs.notify("Has muerto sin herederos. Fin de la dinastía.", "jugador")
+			EventBus.player_died.emit()
+			return
+		if how == "adoptado":
+			chosen.last_name = dead.last_name
 	var designated := int(gs.player.get("heir_id", -1))
 	if chosen == null:
 		for h in heirs:
@@ -353,5 +409,6 @@ static func on_player_death(gs, dead: Citizen) -> void:
 	chosen.money = 0.0
 	var inheritance := DynastySim.on_succession(gs, dead, chosen)
 	HeirsSim.on_succession(gs, dead, chosen)
-	gs.notify("%s murió. Tu heredero(a) %s (%d años) toma el control de la familia. %s Bonos por sus talentos: %s." % [dead.full_name(), chosen.full_name(), chosen.age_years(gs.today()), inheritance, HeirsSim.bonus_text(gs)], "jugador")
+	var rel := "" if how == "" else " (%s)" % how
+	gs.notify("%s murió. Tu heredero(a) %s%s (%d años) toma el control de la familia. %s Bonos por sus talentos: %s." % [dead.full_name(), chosen.full_name(), rel, chosen.age_years(gs.today()), inheritance, HeirsSim.bonus_text(gs)], "jugador")
 	EventBus.player_changed.emit()

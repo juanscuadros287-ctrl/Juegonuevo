@@ -85,6 +85,52 @@ func refresh() -> void:
 	_charts_section()
 
 
+## Historial crediticio, aviso de saldo en rojo y opciones de rescate en bancarrota.
+func _credit_box() -> void:
+	var gs := GameState
+	var sc := CreditSim.score(gs, "jugador")
+	body.add_child(UIKit.label("Historial crediticio: %d (%s) · recargo de tasa +%.1f%% · cupo ×%.2f" % [int(sc), CreditSim.label(sc), CreditSim.rate_add(sc) * 100.0, CreditSim.limit_mult(sc)], 13, UIKit.GOOD if sc >= 670.0 else (UIKit.WARN if sc >= 450.0 else UIKit.BAD)))
+	var warn := CreditSim.bar_warning(gs)
+	if warn != "":
+		var wl := UIKit.label("⚠ %s. Tope de sobregiro: %s. Tras la mora el banco embarga por liquidez (vehículos → negocios → propiedades; nunca tu casa)." % [warn, Fmt.money(CreditSim.overdraft_limit(gs))], 13, UIKit.BAD)
+		wl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.add_child(wl)
+	if gs.money < 0.0:
+		var rr := HBoxContainer.new()
+		rr.add_child(UIKit.button("Préstamo de emergencia (tasa alta)", func():
+			var e := CreditSim.emergency_loan(GameState)
+			message.emit(e if e != "" else "Préstamo de emergencia aprobado.", "jugador")
+			refresh()))
+		for b in gs.player_buildings():
+			if BusinessSim.is_business(b):
+				var bid := int(b["id"])
+				rr.add_child(UIKit.button("Vender %s" % gs.building_label(b), func():
+					message.emit(CreditSim.sell_business(GameState, bid), "jugador")
+					refresh()))
+				break
+		body.add_child(rr)
+
+
+## Negociar un préstamo: plazo, rebaja por pago inmediato, dación en pago o periodo de gracia.
+func _negotiation_row(l: Dictionary) -> void:
+	var opts := CreditSim.options_for(GameState, l)
+	var row := HBoxContainer.new()
+	row.add_child(UIKit.label("Negociar:", 12, UIKit.TEXT_DIM))
+	var labels := {"plazo": "Más plazo", "quita": "Rebaja por pago", "dacion": "Dación en pago", "gracia": "Gracia 3 meses"}
+	var lid := int(l["id"])
+	for o in CreditSim.OPTIONS:
+		var why := str(opts.get(o, ""))
+		var opt: String = o
+		var btn := UIKit.button(str(labels[o]), func():
+			var e := CreditSim.negotiate(GameState, lid, opt)
+			message.emit(e if e != "" else "El banco aceptó.", "jugador" if e != "" else "importante")
+			refresh())
+		btn.disabled = why != ""
+		btn.tooltip_text = why if why != "" else "El banco acepta esta opción"
+		row.add_child(btn)
+	body.add_child(row)
+
+
 func _col(v: float) -> String:
 	return "[color=%s]%s[/color]" % ["#6c6" if v >= 0 else "#e66", Fmt.money(v)]
 
@@ -95,6 +141,7 @@ func _pct(v: float) -> String:
 
 func _loans_section() -> void:
 	body.add_child(UIKit.label("Créditos", 16, UIKit.ACCENT))
+	_credit_box()
 	# Bienes raíces: crédito con banco, tipo de pago, plazo y tabla antes de firmar.
 	body.add_child(UIKit.button("Pedir crédito (banco, tipo, plazo y tabla)…", func(): LoanDialog.open(hud, refresh)))
 	for l in BankSim.player_loans(GameState):
@@ -118,6 +165,7 @@ func _loans_section() -> void:
 			message.emit(BankSim.repay_loan(GameState, lid), "jugador")
 			refresh()))
 		body.add_child(row)
+		_negotiation_row(ll)
 	body.add_child(UIKit.label("Préstamo rápido · %s (cuota fija)" % BankSim.ext_cfg().get("label", "Banco"), 14, UIKit.ACCENT))
 	var lim := BankSim.credit_limit(GameState)
 	body.add_child(UIKit.label("Tasa ofrecida: %.1f%% anual · Límite disponible: %s" % [BankSim.player_rate(GameState) * 100.0, Fmt.money(lim)], 13, UIKit.TEXT_DIM))

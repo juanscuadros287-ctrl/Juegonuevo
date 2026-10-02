@@ -260,7 +260,10 @@ func _test_phase2_player() -> void:
 		if PlayerSim.can_court(GameState, c) == "":
 			target = c
 			break
-	check(target != null, "hay alguien soltero para conocer")
+	if target == null:
+		# La población inicial es aleatoria: si no hay soltero, llega uno (como un inmigrante).
+		target = PopulationSim.create_citizen(GameState, "M" if p.gender == "F" else "F", p.age_years(GameState.today()) + 1, "Forastero")
+	check(target != null and PlayerSim.can_court(GameState, target) == "", "hay alguien soltero para conocer")
 	if target == null:
 		return
 	PlayerSim.talk(GameState, target)
@@ -322,8 +325,14 @@ func _test_time_speeds() -> void:
 
 
 func _hire_n(b: Dictionary, n: int) -> void:
-	for c in BusinessSim.candidates(GameState, b).slice(0, n):
-		BusinessSim.hire(GameState, b, c, BusinessSim.asked_wage(GameState, c, b["type"]))
+	# Solo candidatos con la educación que pide el nivel (hay artesanos NPC que ya emplean gente).
+	var min_edu := int(GameState.level_def(b).get("min_education", 0))
+	var hired := 0
+	for c in BusinessSim.candidates(GameState, b):
+		if hired >= n:
+			break
+		if c.education >= min_edu and BusinessSim.hire(GameState, b, c, BusinessSim.asked_wage(GameState, c, b["type"])) == "":
+			hired += 1
 
 
 func _test_phase3_prices() -> void:
@@ -432,16 +441,12 @@ func _test_phase3_bankruptcy() -> void:
 
 func _test_closed_economy() -> void:
 	GameState.new_game({"seed": 45, "difficulty": "normal"})
-	var citizens_money := 0.0
-	for c in GameState.citizens.values():
-		if not GameState.is_player(c.id):
-			citizens_money += c.money
+	# Antes: "el dinero de los ciudadanos no sube". Ahora hay artesanos NPC que exportan (entra dinero
+	# del exterior, registrado): lo que no puede cambiar es bolsillos + cuenta externa.
+	var total0 := FlowSim.conserved_total(GameState)
 	TimeManager.advance_days(365)
-	var after := 0.0
-	for c in GameState.citizens.values():
-		if not GameState.is_player(c.id):
-			after += c.money
-	check(after <= citizens_money + 0.01, "sin empresas el dinero no aparece de la nada (%.0f → %.0f)" % [citizens_money, after])
+	var after := FlowSim.conserved_total(GameState)
+	check(absf(after - total0) < 5.0, "sin empresas del jugador el dinero no aparece de la nada (%.0f → %.0f)" % [total0, after])
 	var needs := StatsSim.needs_table(GameState)
 	var food: Dictionary = needs.filter(func(r): return r["need"] == "comida")[0]
 	check(food["partial"] > 0.5, "sin negocios la gente se autoabastece de comida (a medias)")
@@ -588,7 +593,10 @@ func _test_phase5_government() -> void:
 	shop["legal"] = "sin_lucro"
 	TimeManager.advance_days(95)
 	check(float(g["taxes_last"].get("propiedad", 0.0)) > 0.0, "se cobra impuesto a la propiedad")
-	check(float(g["treasury"]) > t0 - 1.0, "los impuestos llegan al tesoro público")
+	# El tesoro también gasta (planes de gobierno, sueldos públicos): se mide solo el cobro.
+	var tb := float(g["treasury"])
+	GovSim._collect_taxes(GameState)
+	check(float(g["treasury"]) > tb and t0 > 0.0, "los impuestos llegan al tesoro público")
 	# Salario mínimo
 	g["gov_id"] = "virrey_reformista"
 	var cand: Citizen = BusinessSim.candidates(GameState, shop)[0]

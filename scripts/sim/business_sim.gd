@@ -83,11 +83,12 @@ static func asked_wage(gs, c: Citizen, type_id: String) -> float:
 
 
 ## Producción diaria estimada con los empleados actuales.
-static func expected_output(gs, b: Dictionary) -> float:
+static func expected_output(gs, b: Dictionary, emps = null) -> float:
 	var def: Dictionary = gs.building_def(b)
 	var ld: Dictionary = gs.level_def(b)
 	var prods := []
-	for c in gs.employees_of(int(b["id"])):
+	var list: Array = emps if emps is Array else gs.employees_of(int(b["id"]))
+	for c in list:
 		if c.job_kind == "empleo" and not c.sick:
 			prods.append(productivity(c, str(def.get("skill", ""))) * TransitSim.commute_mult(gs, c))   # Transporte: trayecto.
 	var total := MineSim.workforce(gs, b, prods)   # Minas: solo trabajan los puestos de los frentes.
@@ -101,6 +102,18 @@ static func expected_output(gs, b: Dictionary) -> float:
 	total *= LaborSim.strike_mult(gs, b) * ClimateSim.output_mult(gs, b)   # Trabajo: huelga · Mundo: clima de la zona.
 	total *= CountriesSim.op_mult()   # Fase 10: gerente o presencia del jugador en ese país.
 	return total
+
+
+## id de edificio -> Array[Citizen] con su personal (cualquier job_kind). Un recorrido de ciudadanos.
+static func employee_index(gs) -> Dictionary:
+	var idx := {}
+	for c in gs.citizens.values():
+		if c.job_id < 0:
+			continue
+		if not idx.has(c.job_id):
+			idx[c.job_id] = []
+		idx[c.job_id].append(c)
+	return idx
 
 
 static func storage_cap(gs, b: Dictionary) -> float:
@@ -165,22 +178,32 @@ static func pay(gs, b: Dictionary, amount: float, key: String) -> void:
 		gs.add_money(-left)
 
 
+## Gasto con destino (mantenimiento, insumos, reparaciones, obras): sale del edificio y lo cobran
+## proveedores del pueblo; la parte importada va a la cuenta externa (FlowSim.spend).
+static func pay_out(gs, b: Dictionary, amount: float, key: String, import_share := -1.0) -> void:
+	if amount <= 0.0:
+		return
+	pay(gs, b, amount, key)
+	FlowSim.spend(gs, amount, key, import_share)
+
+
 # --- Simulación ------------------------------------------------------------------------
 
 static func produce(gs) -> void:
 	var points := 0.0
 	var pm: float = gs.price_mult()
 	var discount := minf(0.9, office_discount(gs) + HeirsSim.upkeep_discount(gs))   # Sección C: talento de negocios/oficio del jefe.
+	var staff := employee_index(gs)   # Un solo recorrido de ciudadanos (antes: uno por edificio).
 	for b in gs.buildings:
 		if not gs.owned_by_player(b) or b["status"] == "construccion" or b["status"] == "cerrado":
 			continue
 		var def: Dictionary = gs.building_def(b)
 		var ld: Dictionary = gs.level_def(b)
-		pay(gs, b, float(ld.get("upkeep", 0.0)) * pm * (1.0 - discount), "mantenimiento")
+		pay_out(gs, b, float(ld.get("upkeep", 0.0)) * pm * (1.0 - discount), "mantenimiento")
 		if def.get("category", "") != "negocio":
 			continue
 		var skill := str(def.get("skill", ""))
-		for c in gs.employees_of(int(b["id"])):
+		for c in staff.get(int(b["id"]), []):
 			if c.job_kind != "empleo":
 				continue
 			if not MoneySim.pay_wage_black(gs, b, c):   # Sección E: sueldo en negro (efectivo) si está activado.
@@ -198,7 +221,7 @@ static func produce(gs) -> void:
 			continue
 		if bool(b.get("auto_price", false)):
 			b["price"] = clampf(snappedf(EconomySim.market_price(gs, product) * (1.0 + float(b.get("markup", 0.0))), 0.01), 0.01, max_price(gs, b))
-		var out := expected_output(gs, b)
+		var out := expected_output(gs, b, staff.get(int(b["id"]), []))
 		if product == "construccion":
 			points += out
 			continue
@@ -207,14 +230,14 @@ static func produce(gs) -> void:
 			# Fase 6: recetas ("inputs" del almacén), yacimientos y "output": "warehouse".
 			out = LogisticsSim.produce_chain(gs, b, product, out)
 			if unit_cost > 0.0 and out > 0.0:
-				pay(gs, b, out * unit_cost, "insumos")
+				pay_out(gs, b, out * unit_cost, "insumos")
 			continue
 		var inv: Dictionary = b["inventory"]
 		var storable := bool(GameData.goods.get(product, {}).get("storable", true))
 		if storable:
 			out = minf(out, maxf(0.0, storage_cap(gs, b) - float(inv.get(product, 0.0))))
 		if unit_cost > 0.0 and out > 0.0:
-			pay(gs, b, out * unit_cost, "insumos")
+			pay_out(gs, b, out * unit_cost, "insumos")
 		inv[product] = float(inv.get(product, 0.0)) + out
 		b["units_today"] = out   # Costeo por fábrica (CostSim): unidades producidas hoy.
 	gs.set_meta("construction_points", points)
@@ -249,7 +272,8 @@ static func monthly(gs) -> void:
 		else:
 			b["loss_months"] = 0
 	# Renuncias por salario bajo y jubilación.
-	var ratio := float(GameData.citizens.get("quit_wage_ratio", 0.8))
+	# Con mucho desempleo la gente no renuncia por sueldo: no tiene a dónde ir (mismo ajuste que los NPC).
+	var ratio := float(GameData.citizens.get("quit_wage_ratio", 0.8)) * clampf(1.0 - float(NpcBusinessSim.cfg().get("wage_slack", 0.5)) * EconomySim.unemployment(gs), 0.55, 1.0)
 	var chance := float(GameData.citizens.get("quit_monthly_chance", 0.3))
 	var retire := int(GameData.citizens.get("retirement_age", 65))
 	var today: int = gs.today()
@@ -259,6 +283,9 @@ static func monthly(gs) -> void:
 		var b: Dictionary = gs.get_building(c.job_id)
 		if b.is_empty():
 			fire(gs, c, "")
+			continue
+		if str(b.get("status", "")) == "cerrado" and not NpcBusinessSim.is_npc(b):
+			fire(gs, c, "%s quedó sin empleo: %s está cerrado y no paga sueldos." % [c.full_name(), gs.building_label(b)])
 			continue
 		if c.age_years(today) >= retire:
 			fire(gs, c, "%s se jubiló de %s." % [c.full_name(), gs.building_label(b)])
@@ -287,6 +314,8 @@ static func candidates(gs, b: Dictionary) -> Array:
 
 
 static func hire(gs, b: Dictionary, c: Citizen, wage: float) -> String:
+	if str(b.get("status", "activo")) in ["cerrado", "construccion"]:
+		return "%s está %s: no puede contratar." % [gs.building_label(b), "cerrado" if str(b["status"]) == "cerrado" else "en obra"]
 	var jobs := MineSim.jobs(gs, b)   # Minas: los empleos dependen de los frentes.
 	var current := 0
 	for e in gs.employees_of(int(b["id"])):
@@ -348,7 +377,9 @@ static func go_bankrupt(gs, b: Dictionary) -> void:
 			fire(gs, c)
 	b["status"] = "cerrado"
 	b["loss_months"] = 0
+	# Remate: compradores de fuera pagan el inventario (entra dinero del exterior, con su motivo).
 	gs.add_money(recovered)
+	FlowSim.external_in(gs, recovered, "remate de inventario")
 	gs.count("bankruptcies")
 	gs.notify("QUIEBRA: %s cerró tras meses de pérdidas. Remate de inventario: %s." % [gs.building_label(b), Fmt.money(recovered)], "jugador")
 	EventBus.building_changed.emit(int(b["id"]))
@@ -366,6 +397,7 @@ static func reopen(gs, b: Dictionary) -> String:
 		return "Necesitas %s" % Fmt.money(cost)
 	gs.add_money(-cost)
 	ledger_add(b, "obras", cost)
+	FlowSim.spend(gs, cost, "reparaciones")   # Reparar y reabrir: lo cobran artesanos del pueblo.
 	b["status"] = "activo"
 	gs.notify("Reabriste %s." % gs.building_label(b), "negocio")
 	EventBus.building_changed.emit(int(b["id"]))

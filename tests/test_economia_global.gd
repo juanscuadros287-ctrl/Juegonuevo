@@ -300,7 +300,11 @@ func _test_own_insurer() -> void:
 	var m0: float = gs.money
 	InsuranceSim._run_own(gs, ins)
 	var o := InsuranceSim.own_state(gs, ins)
-	check((o["clients"] as Array).has(int(npc["id"])), "la empresa NPC compra el seguro")
+	# El pueblo ya tiene artesanos NPC desde el inicio: cualquiera de ellos puede ser el cliente.
+	var cl: Array = (o["clients"] as Array).filter(func(id): return NpcBusinessSim.is_npc(gs.get_building(int(id))))
+	check(not cl.is_empty(), "la empresa NPC compra el seguro")
+	if not cl.is_empty():
+		npc = gs.get_building(int(cl[0]))
 	check(float(o["month"].get("premiums", 0.0)) > 0.0 and gs.money > m0 - float(o["month"].get("claims", 0.0)), "cobra primas (%s)" % Fmt.money2(float(o["month"].get("premiums", 0.0))))
 	check(absf(_total() - t0) < 0.05, "primas y siniestros conservan el dinero")
 	var reserve0 := float(npc["reserve"])

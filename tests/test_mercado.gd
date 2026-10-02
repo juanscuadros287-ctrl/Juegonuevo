@@ -117,7 +117,9 @@ func _test_npc_opening_and_inheritance() -> void:
 	check(str(b["owner"]) == "ciudadano" and int(b["owner_id"]) >= 0 and NpcBusinessSim.is_npc(b), "edificio real de un ciudadano (owner_id %d)" % int(b["owner_id"]))
 	check(str(gs.building_def(b).get("product", "")) == "agua", "abre lo que falta: %s" % gs.building_label(b))
 	check(str(b["status"]) == "construccion", "empieza con obra")
-	check(absf(_total() - (before - float(cap["build"]))) < 0.01, "sin dinero nuevo: solo salen los materiales (%s)" % Fmt.money(float(cap["build"])))
+	# Los materiales los cobran proveedores del pueblo; solo la parte importada sale (cuenta externa).
+	var imported: float = float(cap["build"]) * float(GameData.economy.get("flows", {}).get("import_share", {}).get("obras", 0.35))
+	check(absf(_total() - (before - imported)) < 0.01, "sin dinero nuevo: solo sale la parte importada de los materiales (%s)" % Fmt.money(imported))
 	_finish_construction(b)
 	check(str(b["status"]) == "activo" and str(b["npc_state"]) == NpcBusinessSim.STATE_OPEN, "la obra termina y abre")
 	check(NpcBusinessSim.owner_works(gs, b) or NpcBusinessSim.staff_count(gs, b) > 0, "el dueño atiende su negocio (empleados: %d)" % NpcBusinessSim.staff_count(gs, b))
@@ -482,7 +484,9 @@ func _test_long_simulation() -> void:
 	for p in GovPlansSim.plans(gs):
 		print("      · plan %s: %s" % [p["label"], p["status"]])
 	check(gs.citizens.size() >= int(pop0 * 0.7), "la población no colapsa")
-	check(int(st.get("npc_opened", 0)) >= 1, "los ciudadanos abren negocios con el tiempo")
+	# El pueblo ya empieza con artesanos NPC (NpcBusinessSim.seed_initial): si cubren la demanda,
+	# no hace falta abrir más. Se exige que haya empresas NPC vivas, sembradas o abiertas.
+	check(npcs.size() >= 1 and int(st.get("npc_opened", 0)) + int(st.get("npc_seeded", 0)) >= 1, "hay empresarios NPC en el pueblo (sembrados %d, abiertos %d)" % [int(st.get("npc_seeded", 0)), int(st.get("npc_opened", 0))])
 	check(int(st.get("npc_opened", 0)) <= 8 * 2 + 2, "ritmo lento de aperturas")
 	check(GovPlansSim.plans(gs).size() >= 1, "el gobierno ejecuta planes")
 	var bad := 0

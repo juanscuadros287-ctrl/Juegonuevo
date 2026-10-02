@@ -377,7 +377,10 @@ func _employees_tab(b: Dictionary) -> Control:
 			BusinessSim.fire(GameState, GameState.citizens[cid], "Despediste a %s." % GameState.citizens[cid].full_name())
 			rebuild()))
 		v.add_child(row)
-	v.add_child(UIKit.button("Contratar…", _open_hire))
+	if str(b.get("status", "")) == "cerrado":
+		v.add_child(UIKit.label("Cerrado: reábrelo para contratar.", 12, UIKit.TEXT_DIM))
+	else:
+		v.add_child(UIKit.button("Contratar…", _open_hire))
 	return v
 
 
