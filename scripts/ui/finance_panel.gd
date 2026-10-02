@@ -79,6 +79,7 @@ func refresh() -> void:
 	pt.set_data([{"title": "Bien", "key": "label", "w": 1.6}, {"title": "Precio", "key": "price", "w": 1.0, "fmt": "money2"},
 		{"title": "vs normal", "key": "factor", "w": 0.9, "fmt": "trend", "invert": true}, {"title": "Mercado", "key": "tag", "w": 0.9, "color_key": "tag_col"}], rows, 8)
 	eco.add_child(pt)
+	TransportOrgTab.finance_section(gs, body)   # Transporte como línea propia y consolidado del grupo.
 	_loans_section()
 	_investment_section()
 	_charts_section()

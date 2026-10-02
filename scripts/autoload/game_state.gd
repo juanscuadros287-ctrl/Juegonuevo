@@ -177,6 +177,7 @@ func _init_expansions() -> void:
 	MoneySim.init_state(self)   # Sección E: efectivo y mercado negro.
 	GlobalEconSim.init_state(self)   # Economía global (partidas viejas: valores por defecto).
 	MapSim.post_init(self)   # Fase 9B: pueblos de comercio con posición real en municipios.
+	TerrenosCostosSim.init_state(self)   # Terrenos, costeo por fábrica, transporte en finanzas e historial de precios.
 
 
 ## Fase 10: inicializa los sistemas de país de un país nuevo (CountriesSim._create_context).
@@ -217,6 +218,7 @@ func simulate_country_day(new_month: bool, primary: bool) -> void:
 	WaterSim.daily(self)
 	PopulationSim.daily(self)
 	BusinessSim.end_day(self)
+	TerrenosCostosSim.daily(self)   # Envíos y fletes, unidades producidas, ofertas por tus terrenos.
 	FreeMarketSim.daily(self)     # Empresas NPC, contratos y planes del gobierno.
 	if primary:
 		TechSim.end_day(self)
@@ -252,6 +254,7 @@ func simulate_country_day(new_month: bool, primary: bool) -> void:
 		TourismSim.monthly(self)
 		AdvertisingSim.monthly(self)
 		EconomySim.monthly(self)
+		TerrenosCostosSim.monthly(self)   # Costeo por fábrica, transporte, predial, ofertas e historial de precios.
 		if primary:
 			GlobalEconSim.monthly(self)   # Economía global: ciclos, monedas, calidad, bolsa y seguros.
 		if primary:

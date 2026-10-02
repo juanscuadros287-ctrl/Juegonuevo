@@ -19,7 +19,7 @@ const CATEGORIES := [
 		["countries", "Mis países y mapa mundial", "globe", ""]]},   # Fase 10
 	{"id": "construir", "label": "Construir", "icon": "build", "key": "B", "items": [["build", "Construir", "build", "B"]]},
 	{"id": "empresas", "label": "Empresas", "icon": "companies", "key": "F2", "items": [
-		["companies", "Mis empresas", "companies", "C"], ["realestate", "Bienes raíces", "realestate", "V"], ["contracts", "Contratos", "contracts", "K"],
+		["companies", "Mis empresas", "companies", "C"], ["realestate", "Bienes raíces", "realestate", "V"], ["lands", "Mis terrenos", "map", ""], ["contracts", "Contratos", "contracts", "K"],
 		["hiring", "Contrataciones", "employment", ""]]},   # Contrataciones: vacantes, postulantes y personal
 	{"id": "economia", "label": "Economía", "icon": "economy", "key": "F3", "items": [
 		["finance", "Finanzas", "finance", "F"], ["cash", "Efectivo y riesgo", "money", ""], ["stats", "Estadísticas", "stats", "Y"],
@@ -101,6 +101,7 @@ var cash_panel: CashPanel   # Sección E: efectivo y riesgo
 var global_econ: GlobalEconWindow   # Economía global: ciclos, monedas, bolsa y seguros.
 var cycle_indicator: CycleIndicator
 var countries_window: CountriesWindow   # Fase 10: mapa mundial y Mis países
+var lands_window: LandsWindow   # Mis terrenos: cartera, ventas y ofertas (docs/TERRENOS_COSTOS.md)
 var aviation_window: AviationWindow     # Fase 10: aeropuertos, flota, vuelos y rutas
 var hiring_panel: HiringPanel           # Contrataciones: vacantes, postulantes y personal
 var country_indicator: CountryIndicator # Fase 10: país donde está el personaje
@@ -189,6 +190,10 @@ func _ready() -> void:
 	root.add_child(aviation_window)
 	aviation_window.setup()
 	aviation_window.message.connect(toast)
+	lands_window = LandsWindow.new()
+	root.add_child(lands_window)
+	lands_window.setup()
+	lands_window.message.connect(toast)
 	hiring_panel = HiringPanel.new()   # Contrataciones
 	root.add_child(hiring_panel)
 	hiring_panel.setup(self)
@@ -713,6 +718,8 @@ func _item_active(item_id: String) -> bool:
 			return countries_window != null and countries_window.visible
 		"aviation":
 			return aviation_window != null and aviation_window.visible
+		"lands":
+			return lands_window != null and lands_window.visible
 		"routes", "vehicles":
 			return RoutesWindow.is_open(self, item_id)   # Rutas y vehículos (docs/RUTAS_BARCOS.md)
 		"hiring":
@@ -747,6 +754,9 @@ func _open_item(item_id: String) -> void:
 		"aviation":
 			close_dock()
 			aviation_window.open()
+		"lands":
+			close_dock()
+			lands_window.open()
 		"routes", "vehicles":
 			close_dock()
 			RoutesWindow.open_in(self, item_id)

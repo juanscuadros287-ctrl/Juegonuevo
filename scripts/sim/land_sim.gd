@@ -389,10 +389,13 @@ static func accept_chance(ratio: float) -> float:
 
 
 static func _transfer_to_player(gs, cx: int, cy: int, price: float, seller: String) -> void:
+	var added := 0
 	for zy in range(cy * 5, cy * 5 + 5):
 		for zx in range(cx * 5, cx * 5 + 5):
 			if not gs.is_zone_unlocked(zx, zy):
 				gs.unlocked_zones.append([zx, zy])
+				added += 1
+	LandPortfolioSim.on_bought(gs, cx, cy, price, added)   # Terrenos: precio de compra para la plusvalía.
 	gs.map["parcels"][key(cx, cy)] = {"owner": "jugador", "name": "Tú"}
 	_record_sale(gs, cx, cy, price, seller, "Tú")
 	MapSim.reveal(gs, cx, cy)
@@ -414,6 +417,16 @@ static func _record_sale(gs, cx: int, cy: int, price: float, seller: String, buy
 	dm[str(zid)] = clampf(demand_of(gs, zid) + float(cfg().get("demand_per_sale", 0.03)), float(rg[0]), float(rg[1]))
 
 
+## Sección H: si el territorio es de un ciudadano real (p. ej. le vendiste tu terreno), recomprarlo exige
+## negociar con su personalidad (NegotiationSim). {} si el dueño es un particular genérico.
+static func negotiation(gs, cx: int, cy: int, amount: float) -> Dictionary:
+	var ov: Dictionary = gs.map.get("parcels", {}).get(key(cx, cy), {})
+	var cid := int(ov.get("citizen_id", -1))
+	if str(ov.get("owner", "")) != "npc" or cid < 0 or not gs.citizens.has(cid):
+		return {}
+	return NegotiationSim.respond(gs, "land:" + key(cx, cy), remaining_price(gs, cx, cy), cid, amount, int(ov.get("since", -1)))
+
+
 # --- Diario y mensual ----------------------------------------------------------------------------------------
 
 static func daily(gs) -> void:
@@ -429,6 +442,11 @@ static func daily(gs) -> void:
 		var ok: bool = gs.rng.randf() < accept_chance(ratio) or ratio >= float(cfg().get("sure_accept_ratio", 1.15))
 		var cx := int(o["cx"])
 		var cy := int(o["cy"])
+		var neg := negotiation(gs, cx, cy, float(o["amount"]))   # Sección H: dueño ciudadano (p. ej. a quien le vendiste) negocia.
+		if not neg.is_empty():
+			ok = bool(neg["ok"])
+			if not ok:
+				gs.notify("%s: %s" % [o["seller"], neg["text"]], "jugador")
 		if ok and str(owner_info(gs, cx, cy)["owner"]) == "npc":
 			var cid := int(o.get("citizen_id", -1))
 			if cid >= 0 and gs.citizens.has(cid):

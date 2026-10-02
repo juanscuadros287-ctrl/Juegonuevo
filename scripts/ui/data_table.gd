@@ -115,6 +115,8 @@ func _notification(what: int) -> void:
 
 
 func _cell_text(col: Dictionary, v) -> String:
+	if v is String and str(col.get("fmt", "text")) != "text":
+		return v   # Sin dato ("—") en una columna numérica.
 	match str(col.get("fmt", "text")):
 		"int":
 			return Fmt.thousands(float(v))
@@ -163,6 +165,20 @@ func _draw() -> void:
 				draw_style_box(UIKit._flat(Color(1, 1, 1, 0.07), 3, 0, 0), Rect2(Vector2(x0, y + row_h * 0.5 - 3), Vector2(bw, 6)))
 				draw_style_box(UIKit._flat(bc, 3, 0, 0), Rect2(Vector2(x0, y + row_h * 0.5 - 3), Vector2(maxf(2.0, bw * ratio), 6)))
 				draw_string(font, Vector2(x0 + bw + 4, y + row_h * 0.5 + 4), Fmt.pct(ratio * 100.0), HORIZONTAL_ALIGNMENT_LEFT, 36, 11, bc.lightened(0.2))
+				continue
+			if fmt == "spark":   # Mini tendencia: v = Array de valores (Terrenos y costos: tabla de precios).
+				var arr: Array = v if v is Array else []
+				if arr.size() >= 2:
+					var lo := INF
+					var hi := -INF
+					for a in arr:
+						lo = minf(lo, float(a))
+						hi = maxf(hi, float(a))
+					var pts := PackedVector2Array()
+					for k in range(arr.size()):
+						var t := (float(arr[k]) - lo) / maxf(0.000001, hi - lo) if hi > lo else 0.5
+						pts.append(Vector2(x0 + w * 0.95 * float(k) / float(arr.size() - 1), y + row_h - 5.0 - t * (row_h - 10.0)))
+					draw_polyline(pts, UIKit.GOOD if float(arr[-1]) >= float(arr[0]) else UIKit.BAD, 1.5, true)
 				continue
 			if fmt == "trend":
 				var d := float(v)

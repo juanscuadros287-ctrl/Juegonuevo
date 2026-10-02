@@ -362,6 +362,7 @@ static func public_way_ok(gs, x: float, z: float) -> bool:
 static func on_zone_bought(gs, zx: int, zy: int) -> void:
 	var c := chunk_of_zone(zx, zy)
 	reveal(gs, c.x, c.y)
+	LandPortfolioSim.on_zone_bought(gs, zx, zy)   # Terrenos: precio de compra de la parcela.
 
 
 # --- Expediciones -------------------------------------------------------------------------------
