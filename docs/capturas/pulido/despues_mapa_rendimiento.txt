@@ -1,0 +1,10 @@
+textura de ríos reconstruida en 102 ms
+colombia_completa cámara  29760 m |  4795 ms/frame |   762 draw calls |   0.47 M prim | alta 0, media 0, media-baja 0 | cálculo en hilos acumulado 29732 ms
+region_media     cámara   2500 m |  3091 ms/frame |   386 draw calls |   0.25 M prim | alta 0, media 27, media-baja 60 | cálculo en hilos acumulado 37152 ms
+zona_completa    cámara   6000 m |  3352 ms/frame |   470 draw calls |   0.25 M prim | alta 0, media 0, media-baja 119 | cálculo en hilos acumulado 38918 ms
+montanas         cámara   7000 m |  2746 ms/frame |   365 draw calls |   0.14 M prim | alta 0, media 0, media-baja 0 | cálculo en hilos acumulado 38918 ms
+costa            cámara   9000 m |  2749 ms/frame |   156 draw calls |   0.15 M prim | alta 0, media 0, media-baja 0 | cálculo en hilos acumulado 39086 ms
+etiquetas_pais   cámara  16000 m |  4536 ms/frame |   555 draw calls |   0.28 M prim | alta 0, media 0, media-baja 0 | cálculo en hilos acumulado 39086 ms
+pueblo_cerca     cámara    150 m |  2484 ms/frame |   810 draw calls |   2.02 M prim | alta 9, media 56, media-baja 26 | cálculo en hilos acumulado 51250 ms
+etiquetas_pueblo cámara    300 m |  3100 ms/frame |   415 draw calls |   1.58 M prim | alta 9, media 56, media-baja 29 | cálculo en hilos acumulado 51361 ms
+minimapa         cámara    110 m |  2241 ms/frame |   975 draw calls |   1.86 M prim | alta 9, media 56, media-baja 29 | cálculo en hilos acumulado 51459 ms

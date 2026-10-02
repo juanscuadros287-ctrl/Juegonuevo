@@ -1,0 +1,8 @@
+RENDIMIENTO rapido (despues1):
+  pueblo_dia: 708.4 ms/frame (~1 FPS) · 1013 draw calls · 4451 objetos · 1696347 primitivas · 2942 nodos
+  pueblo_atardecer: 690.1 ms/frame (~1 FPS) · 896 draw calls · 4334 objetos · 1391669 primitivas · 3083 nodos
+  pueblo_noche: 644.4 ms/frame (~2 FPS) · 961 draw calls · 4399 objetos · 1541611 primitivas · 3082 nodos
+RENDIMIENTO rapido (despues2):
+  pueblo_dia: 728.4 ms/frame (~1 FPS) · 1013 draw calls · 4449 objetos · 1696343 primitivas · 2942 nodos
+  pueblo_atardecer: 683.9 ms/frame (~1 FPS) · 896 draw calls · 4332 objetos · 1391665 primitivas · 3083 nodos
+  pueblo_noche: 642.7 ms/frame (~2 FPS) · 961 draw calls · 4397 objetos · 1541607 primitivas · 3082 nodos
