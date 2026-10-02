@@ -89,10 +89,28 @@ static func candidates(gs, skill: String) -> Array:
 static func hire_silent(gs, b: Dictionary, c: Citizen) -> void:
 	c.job_id = int(b["id"])
 	c.job_kind = "empleo"
-	c.wage = maxf(GovSim.min_wage(gs), BusinessSim.asked_wage(gs, c, str(b["type"])))
+	c.wage = offered_wage(gs, c, str(b["type"]))
 	if not _staff.has(c.job_id):
 		_staff[c.job_id] = []
 	_staff[c.job_id].append(c)
+
+
+## Sueldo que ofrece un empresario NPC: lo que pide el trabajador, rebajado cuando sobra mano de
+## obra (con 60 % de desempleo, ~30 % menos; nunca menos del 55 % ni del salario mínimo).
+static func offered_wage(gs, c: Citizen, type_id: String) -> float:
+	var f := clampf(1.0 - float(cfg().get("wage_slack", 0.5)) * _unemp(gs), 0.55, 1.0)
+	return maxf(GovSim.min_wage(gs), snappedf(BusinessSim.asked_wage(gs, c, type_id) * f, 0.05))
+
+
+static var _unemp_key := -1
+static var _unemp_val := 0.0
+
+
+static func _unemp(gs) -> float:
+	if _unemp_key != gs.today():
+		_unemp_key = gs.today()
+		_unemp_val = EconomySim.unemployment(gs)
+	return _unemp_val
 
 
 ## El dueño trabaja en su propio negocio (sin sueldo: vive de las ganancias).
@@ -136,7 +154,11 @@ static func fill_jobs(gs, b: Dictionary, target: int) -> int:
 	var have := staff_of(b).size()
 	if have >= target:
 		return 0
-	for c in candidates(gs, skill):
+	var cands := candidates(gs, skill)
+	if min_edu == 0:
+		# Oficios sin estudios: primero quienes no tienen estudios (los educados son escasos).
+		cands.sort_custom(func(a, bb): return a.education < bb.education or (a.education == bb.education and float(a.skills.get(skill, 0.0)) > float(bb.skills.get(skill, 0.0))))
+	for c in cands:
 		if have + hired >= target:
 			break
 		if c.education < min_edu:
@@ -191,6 +213,9 @@ static var _suppliers: Array = []
 static func _pay_local(gs, amount: float) -> void:
 	if amount <= 0.0:
 		return
+	# La lista es del día: si es de otra partida o país (o alguien murió), se rehace.
+	if _sup_key != _supplier_key(gs):
+		_refresh_suppliers(gs)
 	if _suppliers.is_empty():
 		GovSim.add_treasury(gs, amount)   # Sin vecinos que vendan: lo cobra el mercado municipal.
 		return
@@ -201,14 +226,26 @@ static func _pay_local(gs, amount: float) -> void:
 		c.money += amount / n
 
 
-static func produce(gs) -> void:
-	staff_index(gs)
+static var _sup_key := ""
+
+
+static func _supplier_key(gs) -> String:
+	return "%d|%d|%d|%d" % [gs.get_instance_id(), gs.today(), gs.citizens.size(), gs.next_citizen_id]
+
+
+static func _refresh_suppliers(gs) -> void:
+	_sup_key = _supplier_key(gs)
 	_suppliers = []
 	var today: int = gs.today()
 	var adult := int(GameData.citizens.get("adult_age", 16))
 	for c in gs.citizens.values():
 		if c.job_id < 0 and not gs.is_player(c.id) and c.prison_until < 0 and c.age_years(today) >= adult:
 			_suppliers.append(c)
+
+
+static func produce(gs) -> void:
+	staff_index(gs)
+	_refresh_suppliers(gs)
 	var pm: float = gs.price_mult()
 	for b in gs.buildings:
 		if not is_npc(b) or str(b["status"]) != "activo":
@@ -231,8 +268,16 @@ static func produce(gs) -> void:
 		var product := str(def.get("product", ""))
 		if product == "" or not GameData.goods.has(product):
 			continue
-		b["price"] = clampf(snappedf(EconomySim.market_price(gs, product) * (1.0 + float(b.get("markup", 0.08))), 0.01), 0.01, BusinessSim.max_price(gs, b))
 		var out := _output(gs, b, workers)
+		# Precio sensato: el de mercado con su margen, pero nunca por debajo del costo por unidad
+		# (sueldos + mantenimiento del día repartidos en lo producido + insumos): no vende a pérdida.
+		var day_cost := 0.0
+		for c in emps:
+			day_cost += c.wage
+		day_cost += float(ld.get("upkeep", 0.0)) * pm
+		var floor_price := (day_cost / maxf(1.0, out) + float(ld.get("unit_cost", 0.0)) * pm) * float(cfg().get("price_floor_margin", 1.03))
+		var target := maxf(EconomySim.market_price(gs, product) * (1.0 + float(b.get("markup", 0.08))), floor_price)
+		b["price"] = clampf(snappedf(target, 0.01), 0.01, BusinessSim.max_price(gs, b))
 		var inv: Dictionary = b["inventory"]
 		if bool(GameData.goods.get(product, {}).get("storable", true)):
 			out = minf(out, maxf(0.0, BusinessSim.storage_cap(gs, b) - float(inv.get(product, 0.0))))
@@ -479,6 +524,7 @@ static func monthly(gs) -> void:
 				c.job_id = -1
 				c.job_kind = ""
 				c.wage = 0.0
+	_spontaneous_exports(gs)
 	_monthly_accounts(gs)
 	_estate_sales(gs)
 	_consider_opening(gs)
@@ -603,7 +649,8 @@ static func open_business(gs, owner: Citizen, type_id: String, x: float, z: floa
 	b["partners"] = partners
 	b["owners"] = [{"id": owner.id, "name": owner.full_name(), "how": "fundador", "day": gs.today()}]
 	_snapshot_family(gs, b, owner)
-	BusinessSim.ledger_add(b, "obras", float(cap["build"]))  # Materiales (salen del pueblo) = inversión.
+	BusinessSim.ledger_add(b, "obras", float(cap["build"]))  # Materiales = inversión.
+	FlowSim.spend(gs, float(cap["build"]), "obras")   # Proveedores del pueblo; la parte importada sale a la cuenta externa.
 	gs.add_building(b)
 	var op: Dictionary = gs.market["npc"].get("openings", {})
 	op[_year_key(gs)] = int(op.get(_year_key(gs), 0)) + 1
@@ -652,6 +699,17 @@ static func _monthly_accounts(gs) -> void:
 		var daily_cost := BusinessSim.period_value(b, "last_month", "salarios") + BusinessSim.period_value(b, "last_month", "insumos") + BusinessSim.period_value(b, "last_month", "mantenimiento")
 		var working := daily_cost / 30.0 * float(npc_cfg.get("working_capital_days", 30))
 		var excess := float(b["reserve"]) - working
+		# Primero las deudas: con el excedente, el dueño abona a su préstamo antes de repartir.
+		if excess > 0.0 and owner != null:
+			var debt_paid := _pay_owner_debt(gs, b, owner, excess * 0.5)
+			excess -= debt_paid
+		# Reinversión: si lleva meses ganando, vende lo que produce y tiene caja, mejora de nivel.
+		if profit > 0.0:
+			b["profit_months"] = int(b.get("profit_months", 0)) + 1
+		else:
+			b["profit_months"] = 0
+		if excess > 0.0 and _try_upgrade(gs, b, working):
+			excess = float(b["reserve"]) - working
 		if excess > 0.0 and owner != null and profit > 0.0:
 			var div := excess * float(npc_cfg.get("dividend_share", 0.6))
 			b["reserve"] = float(b["reserve"]) - div
@@ -673,18 +731,31 @@ static func _monthly_accounts(gs) -> void:
 			b["loss_months"] = 0
 			# Contrata solo si vende casi todo lo que produce y la ganancia paga otro sueldo.
 			var sold_units := BusinessSim.period_value(b, "last_month", "ventas") / maxf(0.01, float(b.get("price", 1.0)))
-			var extra_wage: float = float(gs.building_def(b).get("base_wage", 2.0)) * gs.price_mult() * 30.0
-			if emps.size() < jobs - (1 if owner_works(gs, b) else 0) and stock < sold_units / 30.0 * 3.0 and profit > extra_wage * 1.2:
+			var extra_wage: float = float(gs.building_def(b).get("base_wage", 2.0)) * gs.price_mult() * 30.0 * clampf(1.0 - float(npc_cfg.get("wage_slack", 0.5)) * _unemp(gs), 0.55, 1.0)
+			# Contrata si el trabajador extra produce más de lo que cuesta (ingreso marginal > sueldo)
+			# y hay clientes: casi no le queda mercancía o el pueblo aún importa ese bien.
+			var marginal: float = float(gs.level_def(b).get("prod_per_worker", 1.0)) * float(b.get("price", 0.0)) * 30.0 * 0.9
+			var imported := float(gs.economy.get("last_month", {}).get("goods", {}).get(product, {}).get("imported", 0.0))
+			var demand_ok: bool = stock < sold_units / 30.0 * 3.0 or imported > float(gs.level_def(b).get("prod_per_worker", 1.0)) * 10.0
+			if emps.size() < jobs - (1 if owner_works(gs, b) else 0) and demand_ok and marginal > extra_wage * 1.1 and float(b["reserve"]) > extra_wage:
 				fill_jobs(gs, b, emps.size() + 1)
+			# Sobra personal: mucha mercancía guardada sin vender → despide a uno.
+			elif emps.size() > 1 and bool(GameData.goods.get(product, {}).get("storable", true)) and stock > maxf(1.0, sold_units / 30.0) * float(npc_cfg.get("overstock_days", 15)):
+				release(gs, emps[emps.size() - 1])
 		else:
 			b["loss_months"] = int(b.get("loss_months", 0)) + 1
 			if int(b["loss_months"]) >= 2 and emps.size() > 1:
 				release(gs, emps[emps.size() - 1])
+			# Cerrar o vender a tiempo: tras varios meses de pérdidas, con caja aún sana, lo pone en venta.
+			if int(b["loss_months"]) >= int(npc_cfg.get("sell_loss_months", 4)) and float(b["reserve"]) > working * 0.5 and str(b.get("npc_state", "")) == STATE_OPEN:
+				_list_for_sale(gs, b, "pérdidas")
+				FreeMarketSim.log_event(gs, "%s puso en venta %s tras meses de pérdidas." % [gs.person_name(int(b.get("owner_id", -1))), gs.building_label(b)])
+				continue
 		_owner_joins(gs, b)
 		if emps.is_empty() and not owner_works(gs, b):
 			fill_jobs(gs, b, 1)
 		for c in staff_of(b):
-			c.wage = maxf(c.wage, BusinessSim.asked_wage(gs, c, str(b["type"])) * 0.95)
+			c.wage = maxf(c.wage, offered_wage(gs, c, str(b["type"])))
 		if float(b["reserve"]) < 0.0:
 			b["negative_months"] = int(b.get("negative_months", 0)) + 1
 		else:
@@ -692,6 +763,150 @@ static func _monthly_accounts(gs) -> void:
 		if int(b.get("negative_months", 0)) >= bk_neg or (int(b.get("loss_months", 0)) >= bk_loss and float(b["reserve"]) < working * 0.25):
 			bankrupt(gs, b)
 	gs.market["npc_tax_last"] = taxes_month
+
+
+## Abona al préstamo del dueño con caja del negocio (hasta `budget`). Devuelve lo pagado.
+static func _pay_owner_debt(gs, b: Dictionary, owner: Citizen, budget: float) -> float:
+	var l := BankSim.citizen_loan(gs, owner.id)
+	if l.is_empty() or budget <= 0.0:
+		return 0.0
+	var pay := minf(budget, float(l["balance"]))
+	b["reserve"] = float(b["reserve"]) - pay
+	BankSim.lender_receive(gs, l, pay, 0.0)
+	l["balance"] = float(l["balance"]) - pay
+	owner.debt = maxf(0.0, owner.debt - pay)
+	if float(l["balance"]) <= 0.01:
+		gs.loans.erase(l)
+	return pay
+
+
+## Mejora de nivel cuando es rentable: meses seguidos de ganancia, vende casi todo y le sobra caja.
+static func _try_upgrade(gs, b: Dictionary, working: float) -> bool:
+	if int(b.get("profit_months", 0)) < int(cfg().get("upgrade_profit_months", 6)):
+		return false
+	var next := int(b["level"]) + 1
+	if ConstructionSim.level_block_reason(gs, str(b["type"]), next) != "":
+		return false
+	var product := str(gs.building_def(b).get("product", ""))
+	var sold_units := BusinessSim.period_value(b, "last_month", "ventas") / maxf(0.01, float(b.get("price", 1.0)))
+	if float(b["inventory"].get(product, 0.0)) > sold_units / 30.0 * 3.0:
+		return false   # Si no vende lo que ya produce, crecer no tiene sentido.
+	var cost := ConstructionSim.cost_for(gs, str(b["type"]), next, true)
+	var upfront := float(cost["upfront"])
+	if float(b["reserve"]) < upfront * float(cfg().get("upgrade_reserve_mult", 1.3)) + working + float(cost.get("labor", 0.0)):
+		return false
+	if ConstructionSim.upgrade_space_reason(gs, b, next) != "":
+		return false
+	b["reserve"] = float(b["reserve"]) - upfront
+	BusinessSim.ledger_add(b, "obras", upfront)
+	FlowSim.spend(gs, upfront, "obras")
+	b["status"] = "mejorando"
+	b["target_level"] = next
+	b["work_done"] = 0.0
+	b["work_needed"] = float(int(cost["days"]) * int(cost["workers"]))
+	b["profit_months"] = 0
+	FreeMarketSim.log_event(gs, "%s amplía %s (nivel %d)." % [gs.person_name(int(b.get("owner_id", -1))), gs.building_label(b), next])
+	EventBus.building_changed.emit(int(b["id"]))
+	return true
+
+
+## Exportación espontánea (arrieros): el excedente guardado se vende fuera a precio de remate,
+## con tope mensual. Entra dinero del exterior a la caja del negocio (cuenta externa).
+static func _spontaneous_exports(gs) -> void:
+	var c := cfg()
+	var connected := not TradeSim.towns(gs).is_empty()
+	var cap: float = float(c.get("export_cap_month", 40)) * gs.price_mult() * (1.0 if connected else 0.5)
+	for b in npc_buildings(gs):
+		if str(b["status"]) != "activo" or str(b.get("npc_state", "")) != STATE_OPEN:
+			continue
+		var product := str(gs.building_def(b).get("product", ""))
+		if product == "" or not bool(GameData.goods.get(product, {}).get("storable", true)):
+			continue
+		var inv: Dictionary = b["inventory"]
+		var stock := float(inv.get(product, 0.0))
+		var price := EconomySim.market_price(gs, product) * float(c.get("export_price_factor", 0.6))
+		if stock <= 0.0 or price <= 0.0:
+			continue
+		var sold_units := BusinessSim.period_value(b, "month", "ventas") / maxf(0.01, float(b.get("price", 1.0)))
+		var keep := sold_units / 30.0 * float(c.get("export_keep_days", 10))
+		var qty := maxf(0.0, stock - keep) * float(c.get("export_share", 0.5))
+		var value := minf(qty * price, cap)
+		if value <= 0.01:
+			continue
+		inv[product] = stock - value / price
+		b["reserve"] = float(b.get("reserve", 0.0)) + value
+		BusinessSim.ledger_add(b, "ventas", value)
+		FlowSim.external_in(gs, value, "exportación espontánea (arrieros)")
+		FreeMarketSim.stat(gs, "npc_exports", value)
+
+
+## Artesanos del pueblo desde el inicio: 2–4 talleres NPC ya construidos (granja, leñador,
+## aguatero, taberna) con dueños del pueblo y parte de su personal. Solo en partidas nuevas.
+static func seed_initial(gs) -> void:
+	# Usa el generador del mercado pero lo deja como estaba: la siembra no altera el resto de la partida.
+	var rng_state = gs.market.get("rng_state", "1")
+	_seed_initial(gs)
+	gs.market["rng_state"] = rng_state
+
+
+static func _seed_initial(gs) -> void:
+	var c := cfg()
+	staff_index(gs)
+	var n := clampi(int(gs.citizens.size() / maxf(1.0, float(c.get("seed_citizens_per_business", 10)))), int(c.get("seed_min", 2)), int(c.get("seed_max", 4)))
+	var types: Array = c.get("seed_types", ["granja", "lenador", "aguatero", "taberna"])
+	var made := 0
+	for i in range(types.size()):
+		if made >= n:
+			break
+		var type_id := str(types[i])
+		if ConstructionSim.level_block_reason(gs, type_id, 1) != "":
+			continue
+		var owner := _seed_owner(gs, type_id)
+		if owner == null:
+			continue
+		var spot := find_spot(gs, type_id)
+		if spot.is_empty():
+			continue
+		var b := ConstructionSim.make_building(gs, type_id, 1, float(spot["x"]), float(spot["z"]), float(spot["rot"]), "ciudadano")
+		var ld := GameData.level_def(type_id, 1)
+		b["owner_id"] = owner.id
+		b["npc"] = true
+		b["npc_state"] = STATE_OPEN
+		b["contractor"] = "npc"
+		b["name"] = "%s %s" % [str(ld.get("label", type_id)), owner.last_name]
+		b["markup"] = FreeMarketSim.range_of(gs, c.get("markup_range", [0.02, 0.15]))
+		b["auto_price"] = true
+		b["reserve"] = float(capital_needed(gs, type_id)["reserve"]) * 2.0   # Capital de trabajo del taller.
+		b["founded_day"] = gs.today()
+		b["founder"] = owner.full_name()
+		b["partners"] = []
+		b["owners"] = [{"id": owner.id, "name": owner.full_name(), "how": "fundador", "day": gs.today()}]
+		b["built_day"] = gs.today() - 365 * 5
+		_snapshot_family(gs, b, owner)
+		gs.add_building(b)
+		_owner_joins(gs, b)
+		var jobs := int(ld.get("jobs", 1))
+		fill_jobs(gs, b, maxi(1, int(round(jobs * float(c.get("seed_staff_share", 0.5))))))
+		made += 1
+	if made > 0:
+		FreeMarketSim.stat(gs, "npc_seeded", float(made))
+
+
+static func _seed_owner(gs, type_id: String) -> Citizen:
+	var skill := str(GameData.building_def(type_id).get("skill", ""))
+	var today: int = gs.today()
+	var best: Citizen = null
+	for c in gs.citizens.values():
+		if gs.is_player(c.id) or _player_family(gs, c) or c.job_id >= 0 or _owns_npc(gs, c.id):
+			continue
+		var age: int = c.age_years(today)
+		if age < int(cfg().get("min_age", 22)) or age > int(cfg().get("max_age", 60)):
+			continue
+		# Los pocos vecinos con estudios se reservan para escuelas, laboratorios y hospitales.
+		var sc: float = float(c.skills.get(skill, 0.0)) - c.education * 30.0
+		if best == null or sc > float(best.skills.get(skill, 0.0)) - best.education * 30.0:
+			best = c
+	return best
 
 
 static func bankrupt(gs, b: Dictionary) -> void:
@@ -823,6 +1038,12 @@ static func _estate_sales(gs) -> void:
 		var buyer := _citizen_buyer(gs, b, price)
 		if buyer != null:
 			_pay_seller(gs, b, price, buyer)
+			var old_owner: Citizen = gs.citizens.get(int(b.get("owner_id", -1)))
+			if old_owner != null and float(b.get("reserve", 0.0)) != 0.0:
+				old_owner.money += float(b["reserve"])   # La caja que quedaba es del vendedor.
+			elif float(b.get("reserve", 0.0)) != 0.0:
+				GovSim.add_treasury(gs, float(b["reserve"]))
+			b["reserve"] = 0.0
 			b["owner_id"] = buyer.id
 			b["owners"].append({"id": buyer.id, "name": buyer.full_name(), "how": "compra", "day": gs.today()})
 			_snapshot_family(gs, b, buyer)

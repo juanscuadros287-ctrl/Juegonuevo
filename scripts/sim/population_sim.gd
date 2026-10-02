@@ -6,12 +6,22 @@ extends RefCounted
 
 # --- Generación inicial ---------------------------------------------------------
 
+static var _generating := false   # Población inicial: sus ahorros no son un flujo externo.
+
+
 static func generate_initial(gs, target: int) -> void:
+	_generating = true
+	_generate_initial(gs, target)
+	_generating = false
+
+
+static func _generate_initial(gs, target: int) -> void:
 	var cfg := GameData.citizens
 	var adult_age := int(cfg.get("adult_age", 16))
 	while gs.citizens.size() < target:
 		var remaining: int = target - gs.citizens.size()
 		var hut := create_hut(gs)
+		var cap: int = maxi(1, gs.building_capacity(hut))   # Sin hacinamiento inicial: la familia cabe en su choza.
 		var household := []
 		if remaining >= 2 and gs.rng.randf() < 0.75:
 			var h_age: int = gs.rng.randi_range(20, 48)
@@ -20,14 +30,14 @@ static func generate_initial(gs, target: int) -> void:
 			var wife := create_citizen(gs, "F", w_age, random_surname(gs))
 			marry(husband, wife)
 			household.append_array([husband, wife])
-			var max_kids := mini(gs.rng.randi_range(0, 4), remaining - 2)
+			var max_kids := mini(mini(gs.rng.randi_range(0, 4), remaining - 2), cap - 2)
 			var max_child_age := mini(adult_age - 1, w_age - 18)
 			for k in range(max_kids):
 				var child := create_citizen(gs, "M" if gs.rng.randf() < 0.5 else "F",
 						gs.rng.randi_range(0, maxi(0, max_child_age)), husband.last_name)
 				link_parents(child, husband, wife)
 				household.append(child)
-			if remaining - household.size() >= 1 and gs.rng.randf() < 0.2:
+			if remaining - household.size() >= 1 and household.size() < cap and gs.rng.randf() < 0.2:
 				var elder := create_citizen(gs, "M" if gs.rng.randf() < 0.4 else "F",
 						gs.rng.randi_range(56, 72), husband.last_name)
 				household.append(elder)
@@ -104,6 +114,8 @@ static func create_citizen(gs, gender: String, age: int, last_name: String) -> C
 			c.skills[psk] = maxf(float(c.skills.get(psk, 0.0)), 45.0)
 		var money_range: Array = gs.diff().get("citizen_money", [20, 80])
 		c.money = roundf(gs.rng.randf_range(float(money_range[0]), float(money_range[1])))
+		if gs.running and not _generating:
+			FlowSim.external_in(gs, c.money, "inmigración (ahorros)")   # Quien llega trae sus ahorros de fuera.
 	gs.citizens[c.id] = c
 	return c
 
@@ -162,6 +174,13 @@ static func daily(gs) -> void:
 	var wdata := WeatherSim.weather_data(gs)
 	var diff: Dictionary = gs.diff()
 	var occupancy := home_occupancy(gs)
+	TechSim.invalidate_world_cache()   # Multiplicadores de obras/eventos: se recalculan una vez por día.
+	# Rendimiento: precios del día calculados una vez (no por ciudadano) y registro de necesidades acumulado.
+	_day_active = true
+	_day_pm = gs.price_mult()
+	_day_gf = {}
+	_need_acc = {}
+	MarketSim.begin_accumulate()
 
 	var ids: Array = gs.citizens.keys()
 	for id in ids:
@@ -180,12 +199,53 @@ static func daily(gs) -> void:
 			continue
 		_happiness(gs, c, occupancy, wdata)
 
+	_flush_needs(gs)
+	MarketSim.flush_day(gs)
+	_day_active = false
 	if today % 7 == 3:
 		MarketSim.discretionary(gs)
 	_marriages(gs, today)
 	_births(gs, today)
 	if today % 7 == 0:
 		_emigration(gs, today)
+
+
+static var _day_active := false
+static var _day_pm := 1.0
+static var _day_gf := {}
+static var _need_acc := {}
+
+
+static func _good_factor(gs, good: String) -> float:
+	if not _day_active:
+		return EconomySim.good_factor(gs, good)
+	if not _day_gf.has(good):
+		_day_gf[good] = EconomySim.good_factor(gs, good)
+	return float(_day_gf[good])
+
+
+static func _record_need(gs, need: String, quality: float) -> void:
+	if not _day_active:
+		EconomySim.record_need(gs, need, quality)
+		return
+	var key := "met" if quality >= 0.99 else ("partial" if quality > 0.0 else "unmet")
+	var row: Dictionary = _need_acc.get(need, {})
+	row[key] = float(row.get(key, 0.0)) + 1.0
+	_need_acc[need] = row
+
+
+## Vuelca al mes lo acumulado del día (mismo resultado que EconomySim.record_need uno por uno).
+static func _flush_needs(gs) -> void:
+	var m: Dictionary = gs.economy.get("month", {})
+	var nm: Dictionary = m.get("needs", {})
+	for need in _need_acc:
+		var row: Dictionary = nm.get(need, {})
+		for k in _need_acc[need]:
+			row[k] = float(row.get(k, 0.0)) + float(_need_acc[need][k])
+		nm[need] = row
+	m["needs"] = nm
+	gs.economy["month"] = m
+	_need_acc = {}
 
 
 static func home_occupancy(gs) -> Dictionary:
@@ -229,7 +289,10 @@ static func pay_with(gs, payers: Array, amount: float) -> bool:
 	if total < amount:
 		if player_payer == null:
 			return false
-		# La familia del jugador nunca pasa hambre: se endeuda (saldo negativo → embargo).
+		# La familia del jugador se endeuda (sobregiro con el banco) hasta el tope; pasado el tope
+		# o en bancarrota, ya no hay crédito: se autoabastece como cualquier familia.
+		if gs.player.get("bankruptcy") is Dictionary or gs.money - (amount - total) < -CreditSim.overdraft_limit(gs):
+			return false
 		var rest := amount
 		for p in payers:
 			if not gs.is_player(p.id):
@@ -257,7 +320,7 @@ static func _wallet(gs, p: Citizen) -> float:
 
 static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionary, wdata: Dictionary, diff: Dictionary) -> void:
 	var cfg := GameData.citizens
-	var price_mult: float = gs.price_mult()
+	var price_mult: float = _day_pm if _day_active else gs.price_mult()
 	var is_adult := age >= adult_age
 	var is_player: bool = gs.is_player(c.id)
 	var cost_factor := 1.0 if is_adult else float(cfg.get("child_cost_factor", 0.4))
@@ -284,7 +347,7 @@ static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionar
 		total_w += w
 		var ref := float(need.get("cost", 0.1)) * price_mult
 		if need.has("good"):
-			ref *= EconomySim.good_factor(gs, str(need["good"]))
+			ref *= _good_factor(gs, str(need["good"]))
 		var qty := cost_factor
 		if need_id == "energia":
 			qty *= energy_mult
@@ -299,7 +362,7 @@ static func _economy(gs, c: Citizen, age: int, adult_age: int, season: Dictionar
 			bonus += float(r["bonus"])
 		else:
 			quality = 1.0 if pay_with(gs, payers, ref * qty) else 0.0
-		EconomySim.record_need(gs, need_id, quality)
+		_record_need(gs, need_id, quality)
 		met_w += w * quality
 		if quality <= 0.0:
 			c.health -= float(need.get("health_penalty", 0.0))
@@ -408,6 +471,8 @@ static func _happiness(gs, c: Citizen, occupancy: Dictionary, wdata: Dictionary)
 
 static func die(gs, c: Citizen, cause: String) -> void:
 	var age := c.age_years(gs.today())
+	if not gs.is_player(c.id):
+		_bequeath(gs, c)   # Herencia NPC: dinero y casas a la familia (o al tesoro).
 	_remove(gs, c, "murió")
 	gs.count("deaths")
 	gs.count("death_" + cause.replace(" ", "_"))
@@ -418,7 +483,58 @@ static func die(gs, c: Citizen, cause: String) -> void:
 		gs.notify("Murió %s a los %d años (%s)." % [c.full_name(), age, cause], "muerte")
 
 
+## Herederos de un NPC: cónyuge; si no, hijos (a partes iguales); si no, padres; si no, hermanos.
+static func heirs_of(gs, c: Citizen) -> Array:
+	if c.spouse_id >= 0 and gs.citizens.has(c.spouse_id):
+		return [gs.citizens[c.spouse_id]]
+	for group in [c.children_ids, c.parent_ids]:
+		var out := []
+		for id in group:
+			if gs.citizens.has(id) and id != c.id:
+				out.append(gs.citizens[id])
+		if not out.is_empty():
+			return out
+	var sib := []
+	if not c.parent_ids.is_empty():
+		for o in gs.citizens.values():
+			if o.id != c.id and o.parent_ids.any(func(p): return c.parent_ids.has(p)):
+				sib.append(o)
+	return sib
+
+
+static func _bequeath(gs, c: Citizen) -> void:
+	var estate := c.money
+	c.money = 0.0
+	estate -= BankSim.settle_estate(gs, c, maxf(0.0, estate))   # Primero se pagan sus deudas.
+	var heirs := heirs_of(gs, c).filter(func(h): return not gs.is_player(h.id))
+	if estate != 0.0:
+		if heirs.is_empty():
+			GovSim.add_treasury(gs, estate)   # Bienes vacantes: al Estado.
+		else:
+			for h in heirs:
+				h.money += estate / heirs.size()
+	# Casas propias: al primer heredero (el que vive ahí primero); sin herederos, al pueblo.
+	for b in gs.buildings:
+		if str(b.get("owner", "")) != "ciudadano" or int(b.get("owner_id", -1)) != c.id or NpcBusinessSim.is_npc(b):
+			continue
+		var heir: Citizen = null
+		for h in heirs:
+			if h.home_id == int(b["id"]):
+				heir = h
+				break
+		if heir == null and not heirs.is_empty():
+			heir = heirs[0]
+		if heir != null:
+			b["owner_id"] = heir.id
+		else:
+			b["owner"] = "pueblo"
+			b["owner_id"] = -1
+		EventBus.building_changed.emit(int(b["id"]))
+
+
 static func _remove(gs, c: Citizen, reason: String) -> void:
+	if reason == "emigró" and c.money != 0.0:
+		FlowSim.external_out(gs, c.money, "emigración (ahorros)")   # Se lleva sus ahorros.
 	gs.graveyard[c.id] = "%s (%s en %d)" % [c.full_name(), reason, TimeManager.year()]
 	if c.spouse_id >= 0 and gs.citizens.has(c.spouse_id):
 		gs.citizens[c.spouse_id].spouse_id = -1

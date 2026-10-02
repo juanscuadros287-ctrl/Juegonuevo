@@ -645,6 +645,7 @@ static func money_total(gs) -> float:
 
 
 static func add_outflow(gs, amount: float) -> void:
+	FlowSim.external_out(gs, amount, "viajes y fletes al exterior")
 	if ready(gs):
 		gs.countries["stats"]["outflow"] = float(gs.countries["stats"].get("outflow", 0.0)) + amount
 

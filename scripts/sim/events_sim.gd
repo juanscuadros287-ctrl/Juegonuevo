@@ -184,7 +184,9 @@ static func _imprison(gs, c: Citizen) -> bool:
 		c.job_id = -1
 		c.job_kind = ""
 		c.wage = 0.0
-	c.money *= 0.5
+	var fine := maxf(0.0, c.money) * 0.5   # Multa/decomiso: va al tesoro (antes desaparecía).
+	c.money -= fine
+	GovSim.add_treasury(gs, fine)
 	gs.count("arrests")
 	return true
 
@@ -209,13 +211,22 @@ static func _fires(gs) -> void:
 		var label: String = gs.building_label(b)
 		if gs.owned_by_player(b):
 			var cost: float = float(gs.level_def(b).get("cost", 300)) * gs.price_mult() * ratio
-			BusinessSim.pay(gs, b, cost, "reparaciones")
+			BusinessSim.pay_out(gs, b, cost, "reparaciones")
 			for g in b["inventory"]:
 				b["inventory"][g] = float(b["inventory"][g]) * (0.9 if contained else 0.4)
 			gs.notify("Incendio en %s: %s. Reparación: %s." % [label, "controlado por los bomberos" if contained else "daños graves", Fmt.money(cost)], "jugador")
 		elif not contained and gs.rng.randf() < float(fc.get("destroy_chance_uncovered", 0.25)):
 			for c in gs.residents_of(int(b["id"])):
 				c.home_id = -1
+			# La caja del negocio (empresa NPC) no se quema: vuelve a su dueño o, sin dueño, al tesoro.
+			var cash := float(b.get("reserve", 0.0))
+			if cash != 0.0:
+				var owner: Citizen = gs.citizens.get(int(b.get("owner_id", -1)))
+				if owner != null and not gs.is_player(owner.id):
+					owner.money += cash
+				else:
+					GovSim.add_treasury(gs, cash)
+				b["reserve"] = 0.0
 			gs.remove_building(int(b["id"]))
 			EventBus.building_removed.emit(int(b["id"]))
 			EventBus.citizens_moved.emit()

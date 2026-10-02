@@ -255,7 +255,9 @@ static func _start_build(gs, p: Dictionary) -> void:
 		p["reason"] = "sin presupuesto"
 		gs.notify("Plan de gobierno cancelado por falta de presupuesto: %s." % p["label"], "info")
 		return
-	GovSim.add_treasury(gs, -spend)   # Obra y materiales importados: el dinero sale del pueblo.
+	GovSim.add_treasury(gs, -spend)
+	FlowSim.spend(gs, float(cost["build"]), "obras")   # Obra: contratistas y proveedores del pueblo (parte importada).
+	FlowSim.external_out(gs, imported, "importación de materiales")
 	var b := ConstructionSim.make_building(gs, type_id, 1, float(spot["x"]), float(spot["z"]), float(spot["rot"]), "gobierno")
 	var ld := GameData.level_def(type_id, 1)
 	b["status"] = "construccion"
@@ -319,6 +321,7 @@ static func _pay_upkeep(gs) -> void:
 		var up := float(gs.level_def(b).get("upkeep", 0.0)) * pm * 30.0
 		if up > 0.0:
 			var paid := GovSim.treasury_pay(gs, up)
+			FlowSim.spend(gs, paid, "mantenimiento")
 			BusinessSim.ledger_add(b, "mantenimiento", paid)
 
 

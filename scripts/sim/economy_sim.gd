@@ -128,20 +128,46 @@ static func total_credit(gs) -> float:
 	return t
 
 
+## Desempleo: adultos en edad de trabajar sin empleo, sin negocio propio y sin parcela.
+## Campesino por cuenta propia: en cada vivienda del pueblo o de un vecino (no del jugador), un adulto
+## sin empleo con práctica agrícola (≥ 15) trabaja la parcela familiar y vende su excedente
+## (NpcBusinessSim._pay_local): no cuenta como desempleado. Una parcela por casa.
 static func unemployment(gs) -> float:
+	var r := labor_breakdown(gs)
+	return float(r["unemployed"]) / maxf(1.0, float(r["workforce"]))
+
+
+## {workforce, employed (sueldo u obra), owners, campesinos, unemployed}.
+static func labor_breakdown(gs) -> Dictionary:
 	var today: int = gs.today()
 	var adult := int(GameData.citizens.get("adult_age", 16))
 	var retire := int(GameData.citizens.get("retirement_age", 65))
-	var workforce := 0
-	var unemployed := 0
+	var out := {"workforce": 0, "employed": 0, "owners": 0, "campesinos": 0, "unemployed": 0}
+	var plots_used := {}
 	for c in gs.citizens.values():
 		var age: int = c.age_years(today)
 		if age < adult or age >= retire or gs.is_player(c.id):
 			continue
-		workforce += 1
-		if c.job_id < 0:
-			unemployed += 1
-	return float(unemployed) / maxf(1.0, workforce)
+		out["workforce"] += 1
+		if c.job_id >= 0:
+			out["owners" if c.job_kind == "dueño" else "employed"] += 1
+		elif is_campesino(gs, c, plots_used):
+			out["campesinos"] += 1
+		else:
+			out["unemployed"] += 1
+	return out
+
+
+static func is_campesino(gs, c: Citizen, plots_used: Dictionary) -> bool:
+	if c.job_id >= 0 or c.home_id < 0 or plots_used.has(c.home_id) or c.prison_until >= 0:
+		return false
+	if float(c.skills.get("agricultura", 0.0)) < 15.0:
+		return false
+	var h: Dictionary = gs.get_building(c.home_id)
+	if h.is_empty() or str(h.get("owner", "")) == "jugador":
+		return false
+	plots_used[c.home_id] = true
+	return true
 
 
 static func stock_of(gs, good: String) -> float:
@@ -153,6 +179,7 @@ static func stock_of(gs, good: String) -> float:
 
 ## Cierre mensual: ajusta precios por escasez/exceso e inflación.
 static func monthly(gs) -> void:
+	FlowSim.close_month(gs)   # Cuenta externa: guarda las entradas y salidas del mes.
 	var pf: Dictionary = cfg().get("price_factor", {})
 	var scarcity := 0.0
 	var weight := 0.0

@@ -15,7 +15,7 @@ static func make_building(gs, type_id: String, level: int, x: float, z: float, r
 		"name": "", "legal": "sas", "price": 0.0, "inventory": {}, "reserve": 0.0,
 		"rent": 0.0, "for_sale": false, "sale_price": 0.0,
 		"ledger": {"month": {}, "last_month": {}, "total": {}},
-		"built_day": gs.today(),
+		"built_day": gs.today(), "tier": "normal",
 	}
 	gs.next_building_id += 1
 	var ld := GameData.level_def(type_id, level)
@@ -79,11 +79,21 @@ static func cost_for(gs, type_id: String, level: int, is_upgrade: bool, tier := 
 		from_stock[g] = use
 		imports[g] = need - use
 		import_cost += (need - use) * float(GameData.goods.get(g, {}).get("import_price", 5.0)) * pm * GovSim.import_mult(gs)
+	var days := int(ld.get("build_days", 10))
+	var workers := int(ld.get("workers", 2))
+	# Mano de obra: los jornales se pagan día a día a la cuadrilla (ConstructionSim.daily), así que
+	# no se cobran por adelantado (antes se cobraban dos veces: en el costo y en los jornales).
+	var labor := minf(money * 0.9, labor_cost(gs, days, workers))
 	return {
 		"money": money, "materials": mats, "from_stock": from_stock, "import": imports,
-		"import_cost": import_cost, "total": money + import_cost,
-		"days": int(ld.get("build_days", 10)), "workers": int(ld.get("workers", 2)),
+		"import_cost": import_cost, "total": money + import_cost, "labor": labor,
+		"upfront": money - labor + import_cost, "days": days, "workers": workers,
 	}
+
+
+## Jornales estimados de una obra (lo que cobrará la cuadrilla día a día).
+static func labor_cost(gs, days: int, workers: int) -> float:
+	return float(days * workers) * float(GameData.game.get("construction_day_wage", 2.2)) * gs.price_mult()
 
 
 ## Unidades de un bien disponibles en el inventario de tus negocios y en el almacén de la compañía.
@@ -120,7 +130,7 @@ static func level_block_reason(gs, type_id: String, level: int) -> String:
 		return "Nivel máximo alcanzado"
 	var tech := str(ld.get("tech", ""))
 	if not gs.has_tech(tech):
-		return "Requiere investigar: %s (Fase 4)" % GameData.tech_label(tech)
+		return "Requiere investigar: %s" % GameData.tech_label(tech)
 	var maps: Array = def.get("map_types", [])
 	if not maps.is_empty() and not maps.has(str(gs.settings.get("map_type", ""))):
 		return "Solo en mapas: %s" % ", ".join(maps.map(func(m): return str(GameData.map_type(m).get("label", m))))
@@ -192,6 +202,16 @@ static func start_construction(gs, type_id: String, x: float, z: float, rot: flo
 		cost["total"] = float(cost["total"]) + extra
 		if extra > 0.0 and gs.money < float(cost["total"]):
 			return {"error": "Dinero insuficiente con los permisos del municipio (%s)" % Fmt.money(float(cost["total"]))}
+	if bm > 1.0001:
+		# Permisos: el sobrecosto del municipio lo cobra su tesoro (no es material de obra).
+		var permit := float(cost["money"]) * (1.0 - 1.0 / bm)
+		cost["money"] = float(cost["money"]) - permit
+		gs.add_money(-permit)
+		var reg := MunicipalSim.region(gs, MunicipalSim.zone_id_at(gs, x, z))
+		if reg.is_empty():
+			GovSim.add_treasury(gs, permit)
+		else:
+			reg["treasury"] = float(reg.get("treasury", 0.0)) + permit
 	_pay_cost(gs, cost)
 	var b := make_building(gs, type_id, 1, x, z, rot, "jugador")
 	MineSim.on_new_building(gs, b)   # Minas: el centro nuevo empieza sin frentes.
@@ -292,8 +312,10 @@ static func start_renovation(gs, b: Dictionary) -> String:
 		return "Ya tiene la calidad máxima"
 	if gs.money < float(rc["total"]):
 		return "Dinero insuficiente (%s)" % Fmt.money(rc["total"])
-	gs.add_money(-float(rc["total"]))
-	BusinessSim.ledger_add(b, "obras", float(rc["total"]))
+	var upfront := maxf(0.0, float(rc["total"]) - minf(float(rc["total"]) * 0.9, labor_cost(gs, int(rc["days"]), int(rc["workers"]))))
+	gs.add_money(-upfront)
+	FlowSim.spend(gs, upfront, "obras")
+	BusinessSim.ledger_add(b, "obras", upfront)
 	b["status"] = "mejorando"
 	b["target_level"] = int(b["level"])
 	b["target_tier"] = rc["tier"]
@@ -304,10 +326,16 @@ static func start_renovation(gs, b: Dictionary) -> String:
 	return ""
 
 
+## Cobra el adelanto de la obra: materiales comprados en el pueblo (proveedores locales, parte
+## importada) y materiales importados (cuenta externa). La mano de obra se paga en jornales.
 static func _pay_cost(gs, cost: Dictionary) -> void:
 	for g in cost["from_stock"]:
 		_consume_stock(gs, g, float(cost["from_stock"][g]))
-	gs.add_money(-float(cost["total"]))
+	var materials := maxf(0.0, float(cost["money"]) - float(cost.get("labor", 0.0)))
+	var imported := float(cost.get("import_cost", 0.0))
+	gs.add_money(-(materials + imported))
+	FlowSim.spend(gs, materials, "obras")
+	FlowSim.external_out(gs, imported, "importación de materiales")
 
 
 static func demolish(gs, b: Dictionary) -> void:
@@ -320,6 +348,9 @@ static func demolish(gs, b: Dictionary) -> void:
 		if c.home_id == id:
 			c.home_id = -1
 	LogisticsSim.before_demolish(gs, b)   # El stock de un almacén pasa a los demás.
+	if float(b.get("reserve", 0.0)) != 0.0 and gs.owned_by_player(b):
+		gs.add_money(float(b["reserve"]))   # La reserva de una fundación demolida vuelve a tu cuenta.
+		b["reserve"] = 0.0
 	gs.remove_building(id)
 	LogisticsSim.on_buildings_changed(gs)
 	gs.notify("Demoliste %s." % gs.building_label(b), "construccion")
@@ -389,6 +420,7 @@ static func _complete(gs, b: Dictionary, crew: Array) -> void:
 		c.job_kind = ""
 		c.wage = 0.0
 	var upgraded: bool = b["status"] == "mejorando"
+	TechSim.invalidate_world_cache()   # Una obra terminada puede cambiar los efectos del día.
 	if str(b.get("owner", "")) == "gobierno":
 		b["status"] = "activo"
 		b["work_done"] = 0.0

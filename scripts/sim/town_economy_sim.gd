@@ -21,6 +21,8 @@ static func ensure(gs) -> void:
 			t["pop_f"] = pop
 		if not t.has("cash"):
 			t["cash"] = pop * float(cfg().get("cash_initial_per_pop", 4.0)) * pm
+			if gs.running:
+				FlowSim.external_in(gs, float(t["cash"]), "pueblo vecino descubierto (su caja)")
 		if not t.has("gov_aid"):
 			t["gov_aid"] = FreeMarketSim.rf(gs)
 		if not t.has("sectors"):
@@ -84,9 +86,17 @@ static func monthly(gs) -> void:
 		if year_start and FreeMarketSim.rf(gs) < float(cfg().get("new_sector_chance_year", 0.08)) * (0.5 + float(t.get("gov_aid", 0.5))):
 			_new_sector(gs, t, pc)
 		# Caja: ingresos de su economía menos gasto.
+		# Su ahorro sale de su comercio con el resto del mundo (cuenta externa, con motivo) y tiene
+		# un tope realista: lo que pasa del tope lo gastan fuera (vuelve a la cuenta externa).
 		var cash := float(t.get("cash", 0.0))
-		cash += pop * float(cfg().get("income_per_pop_month", 0.9)) * pm * (1.0 - float(cfg().get("spending_share", 0.85)))
-		t["cash"] = clampf(cash, 0.0, pop * float(cfg().get("cash_max_per_pop", 30.0)) * pm)
+		var income := pop * float(cfg().get("income_per_pop_month", 0.9)) * pm * (1.0 - float(cfg().get("spending_share", 0.85)))
+		cash += income
+		FlowSim.external_in(gs, income, "ahorro de los pueblos vecinos (su comercio exterior)")
+		var cap := pop * float(cfg().get("cash_max_per_pop", 30.0)) * pm
+		if cash > cap:
+			FlowSim.external_out(gs, cash - cap, "gasto de los pueblos vecinos fuera de la región")
+			cash = cap
+		t["cash"] = maxf(0.0, cash)
 		t["trade_month"] = {"exports": 0.0, "imports": 0.0}
 	_inter_town_trade(gs)
 

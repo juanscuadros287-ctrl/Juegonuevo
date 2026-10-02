@@ -117,6 +117,7 @@ static func _next_from_queue(gs) -> void:
 
 
 static func _recompute_mods(gs) -> void:
+	invalidate_world_cache()
 	var mods := {}
 	for id in gs.techs:
 		for e in tech(id).get("effects", []):
@@ -144,15 +145,46 @@ static func mult(gs, type: String, key := "") -> float:
 
 
 static func happiness_bonus(gs) -> float:
-	return float(gs.research.get("mods", {}).get("happiness", 0.0)) + GovSim.project_happiness(gs) + EventsSim.pollution_happiness(gs)
+	var cache := _world_cache(gs)
+	if cache.has("happiness"):
+		return float(cache["happiness"])
+	var h := float(gs.research.get("mods", {}).get("happiness", 0.0)) + GovSim.project_happiness(gs) + EventsSim.pollution_happiness(gs)
+	cache["happiness"] = h
+	return h
 
 
 ## Multiplicador combinado de tecnología, obras públicas, eventos y contaminación.
+## Se memoriza por día (PopulationSim lo consulta por cada ciudadano: antes era O(ciudadanos × edificios)).
 static func world_mult(gs, key: String) -> float:
+	var cache := _world_cache(gs)
+	if cache.has(key):
+		return float(cache[key])
 	var m := mult(gs, key) * GovSim.project_mult(gs, key) * EventsSim.mult(gs, key)
 	if key == "disease":
 		m *= EventsSim.pollution_disease_mult(gs)
+	cache[key] = m
 	return m
+
+
+# --- Caché diaria de world_mult / happiness_bonus ------------------------------------------------
+static var _wc_key := ""
+static var _wc := {}
+static var _wc_epoch := 0
+
+
+## La caché vale para una partida, un día, una cantidad de edificios y de tecnologías. Cambios
+## sin esas marcas (una obra pública que termina, un evento nuevo) llaman a invalidate_world_cache.
+static func _world_cache(gs) -> Dictionary:
+	var key := "%d|%d|%d|%d|%d|%d" % [gs.get_instance_id(), gs.today(), gs.buildings.size(), gs.techs.size(),
+		gs.problems.get("events", []).hash(), _wc_epoch]
+	if key != _wc_key:
+		_wc_key = key
+		_wc = {}
+	return _wc
+
+
+static func invalidate_world_cache() -> void:
+	_wc_epoch += 1
 
 
 ## Qué desbloquea una tecnología (niveles de edificios y objetos de las casas).

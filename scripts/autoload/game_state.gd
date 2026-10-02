@@ -109,9 +109,10 @@ func new_game(opts: Dictionary) -> void:
 	PlayerSim.create_player(self)
 	GovSim.init_state(self)
 	_init_expansions()
+	NpcBusinessSim.seed_initial(self)   # Artesanos del pueblo desde el inicio (economía base viva).
 	CountriesSim.init_state(self)   # Fase 10: un solo país (el de origen) al empezar.
 	running = true
-	notify("Bienvenido a %s, %s. Eres el único empresario del pueblo." % [settings["town_name"], player_name()], "info")
+	notify("Bienvenido a %s, %s. El pueblo vive de sus artesanos; tú puedes ser su gran empresario." % [settings["town_name"], player_name()], "info")
 
 
 func _clear() -> void:

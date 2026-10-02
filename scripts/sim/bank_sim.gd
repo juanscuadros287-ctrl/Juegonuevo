@@ -38,15 +38,16 @@ static func player_rate(gs) -> float:
 	var base := float(gs.diff().get("bank_interest", 0.07))
 	var nw := maxf(1.0, EconomySim.net_worth(gs) + EconomySim.player_debt(gs))
 	var leverage := clampf(EconomySim.player_debt(gs) / nw, 0.0, 1.0)
-	var bad := float(gs.player.get("credit_marks", 0)) * 0.01
+	var bad := CreditSim.rate_add(CreditSim.score(gs, "jugador"))   # Historial crediticio (mora, acuerdos, embargos).
 	return base + float(ext_cfg().get("risk_premium_max", 0.08)) * leverage + bad
 
 
 static func credit_limit(gs) -> float:
 	var nw := EconomySim.net_worth(gs)
 	var lim := maxf(float(ext_cfg().get("min_limit", 1000)) * gs.price_level(), nw * float(ext_cfg().get("limit_networth_ratio", 0.5))) * GlobalEconSim.credit_limit_mult(gs)   # Ciclo económico.
-	if int(gs.player.get("credit_marks", 0)) >= 3:
+	if CreditSim.in_bankruptcy(gs) or gs.player.get("bankruptcy") is Dictionary:
 		return 0.0
+	lim *= CreditSim.limit_mult(CreditSim.score(gs, "jugador"))
 	return maxf(0.0, lim - EconomySim.player_debt(gs))
 
 
@@ -60,6 +61,7 @@ static func request_player_loan(gs, amount: float, months: int) -> String:
 	var rate := player_rate(gs)
 	var l := _new_loan(gs, EXTERNAL, "jugador", amount, rate, months, "empresario")
 	gs.add_money(amount)
+	FlowSim.bank_move(gs, -amount)   # Sale de la caja del banco.
 	gs.notify("%s te prestó %s al %.1f%% anual a %d meses (cuota %s)." % [ext_cfg().get("label", "El banco"), Fmt.money(amount), rate * 100.0, months, Fmt.money(float(l["payment"]))], "importante")
 	return ""
 
@@ -145,8 +147,8 @@ static func _citizen_requests(gs) -> void:
 		var c: Citizen = gs.citizens[id]
 		if gs.is_player(c.id) or c.age_years(today) < adult or not citizen_loan(gs, c.id).is_empty():
 			continue
-		if int(bans.get(str(c.id), -1)) > today:
-			continue
+		if int(bans.get(str(c.id), -1)) > today or CreditSim.score(gs, str(c.id)) < 450.0:
+			continue   # Historial crediticio malo: tu banco no le presta.
 		var bank: Dictionary = {}
 		for b in banks:
 			if bank_loans(gs, b).size() < bank_capacity(gs, b):
@@ -205,6 +207,8 @@ static func monthly(gs) -> void:
 		var r := float(l["rate"]) / 12.0
 		var interest := bal * r
 		var due := LoanContract.due(l, bal, interest)   # Bienes raíces: tipo de pago firmado.
+		if int(l.get("grace_until", -1)) > gs.today():
+			due = interest   # Periodo de gracia negociado: solo intereses.
 		var borrower := str(l["borrower"])
 		var paid := false
 		if borrower == "jugador":
@@ -231,24 +235,32 @@ static func monthly(gs) -> void:
 					if BusinessSim.is_nonprofit(bank):
 						bank["reserve"] = float(bank["reserve"]) + principal_back
 					else:
-						gs.money += principal_back
+						gs.add_money(principal_back)   # Capital devuelto: queda registrado en tus finanzas.
+				else:
+					FlowSim.bank_move(gs, due)   # Hipoteca o crédito de un banco externo/NPC.
+		var who := borrower
 		if paid:
 			l["balance"] = maxf(0.0, bal + interest - due)
 			l["months_paid"] = int(l["months_paid"]) + 1
 			l["missed"] = 0
+			CreditSim.adjust(gs, who, 4.0, "cuota al día")
 		else:
 			l["missed"] = int(l["missed"]) + 1
 			l["balance"] = bal + interest + due * penalty_rate
+			CreditSim.adjust(gs, who, -35.0, "cuota impaga (mora)")
 			if borrower == "jugador":
 				gs.player["credit_marks"] = int(gs.player.get("credit_marks", 0)) + 1
-				gs.notify("No pudiste pagar la cuota de tu préstamo (%d/%d). Recargo aplicado." % [int(l["missed"]), player_default], "jugador")
+				gs.notify("MORA: no pudiste pagar la cuota de tu préstamo (%d/%d). Recargo aplicado. Puedes negociar (plazo, rebaja, dación o gracia) en Finanzas." % [int(l["missed"]), player_default], "jugador")
 				if int(l["missed"]) >= player_default:
-					_seize(gs, float(l["balance"]))
-					gs.loans.erase(l)
+					_player_default(gs, l)
 					continue
-			elif int(l["missed"]) >= cit_default:
-				_default(gs, l, borrower)
-				continue
+			else:
+				if int(l["missed"]) >= cit_default - 1 and CreditSim.npc_try_negotiate(gs, l):
+					continue   # El vecino negoció con el banco antes de caer en incumplimiento.
+				if int(l["missed"]) >= cit_default:
+					CreditSim.adjust(gs, who, -120.0, "incumplimiento")
+					_default(gs, l, borrower)
+					continue
 		if float(l["balance"]) <= 0.01 and not LoanContract.keep_open(l):
 			gs.loans.erase(l)
 			if borrower == "jugador":
@@ -259,7 +271,7 @@ static func monthly(gs) -> void:
 	for l in gs.loans:
 		if str(l["borrower"]) != "jugador" and gs.citizens.has(int(l["borrower"])):
 			gs.citizens[int(l["borrower"])].debt += float(l["balance"])
-	_check_insolvency(gs)
+	CreditSim.monthly_overdraft(gs)   # Sobregiro: interés, aviso, embargo por liquidez y bancarrota.
 	_citizen_requests(gs)
 
 
@@ -279,44 +291,61 @@ static func _default(gs, l: Dictionary, borrower: String) -> void:
 		gs.notify("%s no pagó su préstamo: pérdida de %s para tu banco." % [c.full_name(), Fmt.money(float(l["balance"]))], "negocio")
 
 
-## Dinero negativo varios meses seguidos → embargo.
-static func _check_insolvency(gs) -> void:
-	if gs.money < 0.0:
-		gs.player["negative_months"] = int(gs.player.get("negative_months", 0)) + 1
-		var limit := int(GameData.economy.get("bankruptcy", {}).get("seizure_months", 3))
-		if int(gs.player["negative_months"]) >= limit:
-			_seize(gs, -gs.money)
-			gs.player["negative_months"] = 0
-		else:
-			gs.notify("Tienes saldo negativo (%s). Si sigue así %d meses más, el banco embargará tus bienes." % [Fmt.money(gs.money), limit - int(gs.player["negative_months"])], "jugador")
-	else:
-		gs.player["negative_months"] = 0
+## Incumplimiento del jugador (mora prolongada sin acuerdo): último recurso. Embargo por orden de
+## liquidez hasta cubrir el saldo; lo que falte pasa a su saldo en rojo (sobregiro con el banco),
+## que sigue el camino de CreditSim (bancarrota con rescate si no quedan bienes).
+static func _player_default(gs, l: Dictionary) -> void:
+	var bal := float(l["balance"])
+	CreditSim.adjust(gs, "jugador", -120.0, "incumplimiento")
+	var r := CreditSim.seize(gs, bal)
+	var covered: float = minf(float(r["recovered"]), bal)
+	var rest := bal - covered
+	gs.loans.erase(l)
+	if rest > 0.0:
+		gs.add_money(-rest)
+		lender_receive(gs, l, rest, 0.0)
+	gs.notify("EMBARGO por incumplimiento: el banco se quedó con %s%s." % [", ".join(r["labels"]) if not r["labels"].is_empty() else "ningún bien",
+		" y el resto (%s) pasa a tu saldo en rojo" % Fmt.money(rest) if rest > 0.0 else ""], "jugador")
 
 
-## Embargo: el banco se queda con propiedades (a precio de remate) hasta cubrir la deuda.
-static func _seize(gs, amount: float) -> void:
-	var ratio := float(GameData.economy.get("bankruptcy", {}).get("seizure_value", 0.5))
-	var props: Array = gs.player_buildings()
-	var p: Citizen = gs.player_citizen()
-	props = props.filter(func(b): return p == null or int(b["id"]) != p.home_id)
-	props.sort_custom(func(a, b): return EconomySim.property_value(gs, a) > EconomySim.property_value(gs, b))
-	var recovered := 0.0
-	var names := []
-	for b in props:
-		if recovered >= amount:
-			break
-		var v := EconomySim.property_value(gs, b) * ratio
-		recovered += v
-		names.append(gs.building_label(b))
-		for c in gs.employees_of(int(b["id"])):
-			if c.job_kind == "empleo":
-				BusinessSim.fire(gs, c)
-		b["owner"] = "pueblo"
-		b["for_sale"] = false
-		if BusinessSim.is_business(b) or b["type"] == "oficina":
-			b["status"] = "cerrado"
-		EventBus.building_changed.emit(int(b["id"]))
-	var covered := minf(recovered, amount)
-	if gs.money < 0.0:
-		gs.money += covered
-	gs.notify("EMBARGO: el banco se quedó con %s para cubrir %s de deuda." % [", ".join(names) if not names.is_empty() else "nada (no tienes bienes)", Fmt.money(amount)], "jugador")
+## El prestamista recibe un pago: tu banco (reserva o tu dinero) o la caja de los bancos externos/NPC.
+## money=false: pago en especie (dación): solo se registra, no se mueve dinero.
+static func lender_receive(gs, l: Dictionary, amount: float, interest: float, money := true) -> void:
+	var bank := LoanContract._own_bank(gs, str(l.get("lender", "")))
+	if bank.is_empty():
+		if money:
+			FlowSim.bank_move(gs, amount)
+		return
+	if interest > 0.0:
+		BusinessSim.ledger_add(bank, "intereses", interest)
+	if not money:
+		return
+	if BusinessSim.is_nonprofit(bank):
+		bank["reserve"] = float(bank.get("reserve", 0.0)) + amount
+	elif str(l["borrower"]) != "jugador":
+		gs.add_money(amount)
+
+
+## Deuda perdonada o incobrable (rebaja negociada, castigo): el banco la pierde; no hay dinero.
+static func writeoff(gs, l: Dictionary, amount: float) -> void:
+	if amount <= 0.0:
+		return
+	var bank := LoanContract._own_bank(gs, str(l.get("lender", "")))
+	if not bank.is_empty():
+		BusinessSim.ledger_add(bank, "incobrables", amount)
+
+
+## Herencia: las deudas del difunto se pagan primero con su dinero. Devuelve lo pagado.
+static func settle_estate(gs, c: Citizen, available: float) -> float:
+	var paid_total := 0.0
+	for l in gs.loans.duplicate():
+		if str(l["borrower"]) != str(c.id):
+			continue
+		var bal := float(l["balance"])
+		var pay := minf(bal, available - paid_total)
+		if pay > 0.0:
+			lender_receive(gs, l, pay, 0.0)
+			paid_total += pay
+		writeoff(gs, l, bal - maxf(0.0, pay))
+		gs.loans.erase(l)
+	return paid_total

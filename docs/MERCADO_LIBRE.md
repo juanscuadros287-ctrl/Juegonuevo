@@ -32,8 +32,11 @@ Ganchos mínimos en archivos compartidos:
 
 ## Empresarios NPC (tu pueblo)
 
-- **Cuándo abren:** una vez al mes, desde el mes 6 y con pocas aperturas por año según la época
-  (1, 2 y 3). Nunca hay más de un negocio NPC por cada 22 habitantes.
+- **Artesanos desde el inicio** (`seed_initial`, llamado en `GameState.new_game`): el pueblo empieza
+  con 2 a 4 talleres ya construidos (1 por cada 10 habitantes, en el orden granja, leñador, aguatero,
+  taberna), con dueño del pueblo, capital de trabajo y la mitad de su personal. La familia del jugador no participa.
+- **Cuándo abren:** una vez al mes, desde el mes 4 y con pocas aperturas por año según la época
+  (2, 2 y 3). Nunca hay más de un negocio NPC por cada 11 habitantes.
 - **Qué abren:** lo que más falta según el mes anterior. Cuenta lo importado, parte del
   autoabastecimiento y el faltante. Además se estiman las ventas con quienes pueden pagar: si no
   alcanzan un mínimo, no abren. Solo abren tipos permitidos por la época, la tecnología y el mapa
@@ -47,7 +50,7 @@ Ganchos mínimos en archivos compartidos:
 - **Obra real:**
   - Busca un lugar libre en terreno desbloqueado cerca de la plaza (`placement_block_reason`, más agua y pendiente si hay mundo 3D).
   - La obra tarda lo normal, con jornaleros pagados de la caja de la empresa.
-  - Los materiales se compran fuera: ese dinero sale del pueblo.
+  - Los materiales los cobran proveedores del pueblo; la parte importada sale a la cuenta externa (`FlowSim.spend`, motivo «obras»).
 - **Operación:**
   - El dueño atiende sin sueldo y contrata solo cuando vende casi todo y la ganancia alcanza para otro sueldo.
   - Paga sueldos, mantenimiento, insumos e impuestos de renta, propiedad y nómina, que van al tesoro.
@@ -69,6 +72,21 @@ Ganchos mínimos en archivos compartidos:
   - El dinero va al dueño, que además se lleva la caja. Respeta el límite de negocios de tu oficina.
   - Si la vende el Estado o está en quiebra, se compra al precio publicado.
 
+## Cómo decide un empresario NPC (reglas del empresario sensato)
+
+| Decisión | Regla |
+|---|---|
+| **Precio** | Precio de mercado + su margen, pero nunca por debajo del costo por unidad: (sueldos + mantenimiento del día) ÷ unidades producidas + insumos, × 1,03 (`price_floor_margin`). No vende a pérdida de forma sostenida. |
+| **Sueldo que ofrece** | Lo que pide el trabajador, rebajado cuando sobra mano de obra: × (1 − 0,5 × desempleo), entre 55 % y 100 %, nunca bajo el mínimo (`offered_wage`, `wage_slack`). Con mucho desempleo tampoco hay renuncias por sueldo. |
+| **Contratar** | Solo si el trabajador extra produce más de lo que cuesta (ingreso marginal > 1,1 × sueldo), tiene caja para un mes de ese sueldo y hay clientes: casi no le queda mercancía o el pueblo aún importa ese bien. |
+| **Despedir** | Si sobra mercancía (más de 15 días de ventas guardados, `overstock_days`) o lleva 2 meses con pérdidas. |
+| **Pagar deudas** | Con el excedente de caja, primero abona al préstamo del dueño (hasta la mitad del excedente); después reparte dividendos. |
+| **Reinvertir** | Tras 6 meses seguidos de ganancia (`upgrade_profit_months`), si vende lo que produce y la caja cubre 1,3 × el adelanto de la obra + capital de trabajo + jornales, mejora de nivel (obra real, pagada a proveedores). |
+| **Cuidar la caja** | Guarda capital de trabajo de 30 días de costos; solo reparte el 60 % de lo que sobra. |
+| **Cerrar o vender a tiempo** | Con 4 meses de pérdidas (`sell_loss_months`) y la caja aún sana, pone el negocio en venta (la caja es del vendedor). Si sigue perdiendo, quiebra. |
+| **Abrir** | Donde hay demanda sin cubrir (importado + autoabastecimiento + faltante) y ventas esperadas suficientes. |
+| **Exportar** | Cada mes vende fuera (arrieros) la mitad del excedente guardado por encima de 10 días de ventas, al 60 % del precio de mercado, con tope de $60 × precios por empresa (la mitad sin caminos). Entra dinero del exterior (cuenta externa, motivo «exportación espontánea (arrieros)»). |
+
 ## Pueblos vecinos que crecen
 
 Cada pueblo de la Fase 7 tiene ahora:
@@ -82,6 +100,10 @@ Cada mes:
 - Abre negocios en sus sectores y aumenta su oferta.
 - A veces sus empresarios empiezan a producir algo que antes importaban. Desde entonces lo venden y
   lo piden menos.
+- **Su caja** crece con su propio comercio exterior: `pop × 0,9 × 15 %` al mes, registrado como
+  entrada de la cuenta externa («ahorro de los pueblos vecinos»). Tope realista: `cash_max_per_pop` (30)
+  × población × precios; lo que pasa del tope lo gastan fuera (salida de la cuenta externa). Ya no
+  aparece dinero sin registro.
 - **Comercia con los otros pueblos** de forma resumida: quien produce le vende a quien lo pide. Su
   dinero cambia de manos (suma cero) y parte de esa demanda queda cubierta, así que tu precio allá baja un poco.
 
@@ -207,7 +229,12 @@ Configuración en `data/mercado.json → contracts` (`request_periods`, `duratio
 
 ## Economía cerrada
 
-- Ningún sistema crea dinero. Todo pago tiene origen y destino: caja NPC, ciudadano, jugador, tesoro o caja de pueblo.
+- Ningún sistema crea dinero. Todo pago tiene origen y destino: caja NPC, ciudadano, jugador, tesoro,
+  tesoro municipal, caja de pueblo, bancos o la **cuenta externa** (`gs.economy["external"]`, con motivo).
+- `FlowSim` (scripts/sim/flow_sim.gd) es el sistema de flujos: `spend` (proveedores del pueblo + parte
+  importada), `external_out/in` (importaciones, exportaciones, inmigración, emigración, remates),
+  `bank_move` (caja de los bancos externo y NPC) y `pockets` (todos los bolsillos).
+  `tests/test_conservacion.tscn` verifica cada mes que bolsillos + saldo externo no cambien.
 - Lo único que sale del pueblo son las compras afuera: los materiales de las obras, la electricidad de la red regional, el flete y las compras por contrato a la importación externa (menos el arancel, que va al tesoro). Las compras a empresas NPC y a pueblos vecinos van a sus cajas.
 - Las exportaciones a pueblos vecinos traen dinero de sus cajas, que se alimentan de su propia economía.
 - `FreeMarketSim.money_snapshot(gs)` suma todo. La prueba lo verifica en:

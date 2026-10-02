@@ -267,6 +267,9 @@ static func collect_local_tax(gs, b: Dictionary, profit: float) -> float:
 		BusinessSim.pay(gs, b, t, "impuestos")
 		reg["treasury"] = float(reg.get("treasury", 0.0)) + t
 	else:
+		t = -minf(-t, maxf(0.0, float(reg.get("treasury", 0.0))))   # La rebaja solo si el municipio tiene fondos.
+		if t >= 0.0:
+			return 0.0
 		BusinessSim.earn(gs, b, -t, "subsidios")
 		reg["treasury"] = float(reg.get("treasury", 0.0)) + t
 	return t
@@ -422,10 +425,14 @@ static func _check_missions(gs) -> void:
 	for m in active.duplicate():
 		var reg := region(gs, int(m["zone"]))
 		if mission_done(gs, m):
-			var paid := float(m.get("reward_money", 0.0))
+			# La recompensa sale del tesoro del municipio; lo que le falte lo pone el tesoro nacional.
+			# Nunca deja un tesoro en negativo (antes se creaba dinero).
+			var reward := float(m.get("reward_money", 0.0))
+			var from_muni := minf(reward, maxf(0.0, float(reg.get("treasury", 0.0))))
+			reg["treasury"] = float(reg.get("treasury", 0.0)) - from_muni
+			var paid := from_muni + GovSim.treasury_pay(gs, reward - from_muni)
 			gs.add_money(paid)
 			gs.add_counter("subsidies", paid)
-			reg["treasury"] = float(reg.get("treasury", 0.0)) - paid
 			var months := int(m.get("reward_tax_months", 0))
 			if months > 0:
 				reg["tax_exempt_until"] = maxi(int(reg.get("tax_exempt_until", -1)), gs.today()) + months * 30

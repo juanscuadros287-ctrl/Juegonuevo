@@ -198,3 +198,97 @@ Impacto: A = alto, M = medio, B = bajo. Esfuerzo: S = pequeño, M = mediano, L =
 - Configuraciones: semillas 3, 5, 7, 9, 11, 13 y 21; países COL, MEX, ESP, USA y respaldo; dificultades fácil, normal, difícil y extremo; de 3 a 60 años. El máximo real fue 50 años: las partidas pasivas terminan por muerte del jugador y las ricas se cortaron por tiempo, a más de 1 s por día.
 - Estados imposibles revisados cada trimestre: NaN o infinitos, hogar o empleo en edificios inexistentes, cónyuges asimétricos, capacidad ≤ 0, inventario o stock negativo, empleados de más, préstamos de muertos, prestamista demolido, contratos o rutas huérfanos, tesoros negativos y precios fuera de ×0,33–×3. **Solo aparecieron** los casos de A4, A6, A7 y A8.
 - La demolición de una casa habitada y de un negocio con empleados, en el año 12 del modo activo, no dejó referencias colgando: `demolish` limpia empleos y hogares.
+
+---
+
+## Después de las correcciones (octubre 2026)
+
+Herramientas nuevas, todas en `tests/`:
+- `test_conservacion.tscn`: prueba permanente. Hace un balance mensual por bolsillos (`FlowSim.pockets`): jugador (banco + efectivo), ciudadanos, empresas NPC, reservas, tesoro, tesoros municipales, pueblos vecinos, bancos, bolsa, aseguradoras y la cuenta externa `gs.economy["external"]`. Corre 5 años con jugador activo (semilla 7) y 2 años pasivos (semilla 11). Con `-- --pasos` atribuye cada fuga al sistema del día que la causó. También prueba la herencia NPC, el hacinamiento inicial, contratar en negocios cerrados, la dinastía extendida, el sobregiro, el embargo, la bancarrota y la negociación de deudas.
+- `diag_rendimiento.tscn`: pueblo de 600 habitantes con 84 negocios del jugador y 12 obras públicas. Mide `PopulationSim.daily`, el día completo y el tiempo de cada sistema.
+- `diag_partidas.tscn -- <años> <pasivo|activo|ambos> <semillas>`: tabla de partidas largas.
+
+### Conservación del dinero (5 años, jugador activo, semilla 7)
+
+| | Antes | Después |
+|---|---|---|
+| Deriva del total (bolsillos + externo) | **+36.996** | **0,00** |
+| Fugas por sistema | `FreeMarketSim.monthly` +46.465 (pueblos), `PopulationSim` −4.909 (importaciones), `MarketSim.monthly_housing` −2.562 (chozas), `BankSim` −1.223 (préstamos externos), `BusinessSim.produce` −600 (mantenimiento e insumos) | ninguna mayor a $0,5 (redondeo) |
+
+Cada salida de la economía queda en la cuenta externa con su motivo: importación de bienes y de materiales, viajes y fletes, emigración, adopción en otro pueblo y gasto de los pueblos vecinos. Cada entrada también: exportación espontánea, remate de inventario, inmigración y el ahorro de los pueblos vecinos.
+
+### Rendimiento (600 habitantes; la máquina estaba cargada por otros agentes, con carga promedio de 13 a 15)
+
+| | Antes | Después |
+|---|---|---|
+| `PopulationSim.daily` | 470–570 ms | 96–148 ms |
+| Día completo | 446–585 ms | 137–193 ms |
+
+Qué se cambió:
+- `world_mult` y `happiness_bonus` se calculan una vez por día, con una caché que se invalida al cambiar los edificios, las tecnologías o los eventos.
+- `MarketSim.purchase`: revisa primero las existencias y memoriza por día la calidad, la aceptación, la publicidad y el precio de importación.
+- Las ventas a empresas NPC y el registro de compras y necesidades se acumulan durante el día y se vuelcan una sola vez.
+- `BusinessSim.produce` arma un índice de empleados en un solo recorrido.
+- `ShopSim.weekly` ya no recorre las tiendas por cada ciudadano sin dinero, y memoriza las existencias del almacén.
+
+La meta de 150 ms para el día completo se cumple solo sin carga en la máquina. Bajo carga queda entre 137 y 193 ms, unas 3 veces más rápido que antes.
+
+### Partidas largas (20 años, semillas 7, 11 y 3; la 11 en difícil)
+
+**Antes:**
+
+| Semilla | Modo | Pobl. | Desempleo (prom.) | Felic. | Crimen | Precios | Tesoro | Jugador | Ciudadanos | Sin techo | Hacinados |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 7 | pasivo | 31→43 | 96 % (94 %) | 61 | 18 | 0,90 | 79 | −5.025 | 147 | 7 | 31 |
+| 7 | activo | 31→33 | 96 % (86 %) | 66 | 19 | 0,85 | 391 | −9.824 | 30 | 4 | 5 |
+| 11 | pasivo | 23→40 | 100 % (100 %) | 63 | 28 | 0,97 | 2.663 | −14.838 | 218 | 11 | 18 |
+| 11 | activo | 23→30 | 100 % (90 %) | 65 | 28 | 0,64 | 911 | −11.603 | 0 | 0 | 16 |
+| 3 | pasivo | 31→42 | 96 % (94 %) | 63 | 21 | 0,78 | 2.011 | −6.344 | 9 | 2 | 29 |
+| 3 | activo | 31→39 | 100 % (87 %) | 66 | 20 | 1,11 | 1.574 | −14.146 | 215 | 7 | 11 |
+
+**Después:**
+
+| Semilla | Modo | Pobl. | Desempleo (prom.) | Con sueldo o negocio | Felic. | Crimen | Precios | Tesoro | Jugador | Ciudadanos | Sin techo | Hacinados |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 7 | pasivo | 31→35 | 29 % (29 %) | 24 % | 71 | 6 | 1,34 | 2.547 | −199 | 1.911 | 0 | 15 |
+| 7 | activo | 31→47 | 43 % (28 %) | 14 % | 70 | 9 | 1,20 | 2.440 | −60 | 852 | 0 | 16 |
+| 11 | pasivo | 23→41 | 33 % (34 %) | 17 % | 67 | 9 | 1,10 | 2.870 | −100 | 265 | 0 | 23 |
+| 11 | activo | 23→37 | 37 % (33 %) | 5 % | 67 | 10 | 1,10 | 3.193 | −192 | 158 | 0 | 10 |
+| 3 | pasivo | 31→50 | 54 % (35 %) | 8 % | 66 | 11 | 1,23 | 2.285 | −145 | 155 | 0 | 18 |
+| 3 | activo | 31→44 | 35 % (27 %) | 27 % | 76 | 7 | 1,35 | 3.420 | −89 | 3.497 | 0 | 5 |
+
+**Cómo leer «Desempleo».** Ahora cuenta como ocupado al *campesino por cuenta propia*: un adulto sin empleo que trabaja la parcela de su casa, a razón de uno por vivienda que no sea del jugador (`EconomySim.labor_breakdown`). La columna «Con sueldo o negocio» muestra solo a quienes tienen sueldo, obra o negocio NPC propio. Antes del cambio esa cifra estaba entre 0 y 4 %. El jugador conserva el protagonismo: los talleres NPC solo cubren lo básico (granja, leñador, aguatero, taberna) y la mayoría de los oficios siguen esperando sus negocios.
+
+**El saldo del jugador** ya no se hunde en decenas de miles de deuda. Al llegar al tope de sobregiro vienen el embargo por liquidez, la bancarrota con rescate y el castigo de la deuda. El jugador pasivo termina entre −60 y −200: un sobregiro dentro del tope que el banco cobra con intereses.
+
+**Precios.** Sin las fugas, la deflación (de 0,64 a 0,97) se volvió una inflación suave, del 0,5 al 1,5 % anual.
+
+### Estado de cada error
+
+| # | Estado | Arreglo |
+|---|---|---|
+| A1 | Arreglado | Ver «Rendimiento» |
+| A2 | Arreglado | `FlowSim.spend` reparte mantenimiento, insumos, obras, reparaciones, chozas y anticipos de obra pública entre proveedores del pueblo y la parte importada (cuenta externa). El adelanto de obra ya no incluye los jornales (`cost_for` → `labor` y `upfront`), así que la mano de obra no se cobra dos veces; lo mismo vale para las etapas de bienes raíces. Los permisos del municipio van a su tesoro |
+| A3 | Arreglado | `CreditSim`: historial crediticio de 300 a 850 puntos (para el jugador y para cada ciudadano) que mueve la tasa y el cupo; mora; negociación siempre disponible (más plazo, rebaja por pago inmediato, dación en pago, 3 meses de gracia); sobregiro con tope e interés; embargo por liquidez (vehículos, luego negocios, luego propiedades, nunca la casa donde vive); bancarrota con rescate (préstamo de emergencia o venta de empresas) y castigo de la deuda a los 60 días. Aviso en la barra superior. Pasado el tope, la familia del jugador ya no se endeuda: se autoabastece |
+| A4 | Arreglado | `hire` rechaza negocios cerrados o en obra; el mes despide a quien quedó en un negocio cerrado; el panel oculta «Contratar…» |
+| A5 | Arreglado | La recompensa municipal sale del tesoro del municipio y lo que falte, del nacional, sin dejar ninguno en negativo; los tesoros municipales entran en `FlowSim.pockets` |
+| A6 | Arreglado | `PopulationSim._bequeath`: el dinero del difunto paga primero sus deudas y luego pasa al cónyuge, a los hijos, a los padres o a los hermanos, o al tesoro si no hay nadie; sus casas pasan al heredero |
+| A7 | Arreglado | Las familias iniciales caben en su choza |
+| A8 | Arreglado | La renta se calcula como en `_pay_housing` (con la fracción de los niños); quien no tiene techo y sí sueldo solo necesita un mes ahorrado; primero se ofrecen las chozas libres del pueblo; sin dinero, la familia autoconstruye con su trabajo (8 % al mes) |
+| A9 | Arreglado | `PlayerSim.extended_heir`: después de la lista de `HeirsSim` y de los hijos vienen el cónyuge, los hermanos, los sobrinos, los padres y, por último, un adoptado. Solo termina si no queda nadie en el pueblo |
+| A10 | Arreglado | El remate lo pagan compradores de fuera (entrada externa) |
+| A11 | Arreglado | El capital devuelto entra con `add_money` |
+| A12 | Arreglado | `make_building` ya crea el edificio con `tier: "normal"` |
+| A13 | Arreglado | Se quitaron «(Fase 4)» y «llegarán en una fase posterior» |
+| B2 | Arreglado | La caja de los pueblos vecinos crece por su comercio exterior, que entra registrado en la cuenta externa, y tiene un tope documentado (`cash_max_per_pop`); lo que pasa del tope sale a la cuenta externa |
+| B1 | Recalibrado | Desde el inicio hay 2 a 4 talleres NPC. Los empresarios NPC deciden con reglas sensatas, documentadas en `docs/MERCADO_LIBRE.md`: precio con piso de costo, contratación por ingreso marginal, sueldos que bajan cuando sobra mano de obra, pago de deudas, reinversión, venta a tiempo y exportación espontánea moderada |
+
+Otras fugas encontradas y cerradas en el camino:
+- la multa al encarcelar a alguien ahora va al tesoro (antes destruía la mitad de su dinero);
+- la caja de una empresa NPC que se quema vuelve a su dueño;
+- la reserva de una fundación demolida vuelve al jugador;
+- la venta de una empresa NPC ya no borra su caja;
+- la lista de proveedores locales ya no queda vieja entre partidas;
+- los préstamos e hipotecas de bancos externos o NPC ahora salen de la caja de los bancos y vuelven a ella.
+
+`tests/balance.tscn` (40 años; semillas 7, 8 y 9) no muestra caída de población: 31→62, 31→63 y 31→60. Los saltos del tesoro a ~100k–225k vienen del impuesto a la herencia, porque la prueba repone $1.000.000 al jugador cada año.

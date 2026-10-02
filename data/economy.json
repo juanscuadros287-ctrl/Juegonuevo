@@ -62,5 +62,22 @@
   "revert": 0.25,
   "min": 0.7,
   "max": 1.4
+ },
+ "flows": {
+  "_nota": "FlowSim: parte importada de cada gasto con destino (el resto lo cobran proveedores del pueblo). Lo importado va a la cuenta externa economy.external con su motivo.",
+  "default_import_share": 0.3,
+  "import_share": {"mantenimiento": 0.3, "insumos": 0.4, "obras": 0.35, "reparaciones": 0.2, "vivienda autoconstruida": 0.05}
+ },
+ "credit": {
+  "_nota": "CreditSim: historial crediticio (300-850), sobregiro, negociación y bancarrota personal.",
+  "max_rate_add": 0.08,
+  "overdraft_min": 500,
+  "overdraft_networth": 0.1,
+  "overdraft_rate": 0.24,
+  "emergency_rate": 0.28,
+  "emergency_months": 36,
+  "emergency_min_score": 320,
+  "dacion_value": 0.85,
+  "distress_sale": 0.7
  }
 }
