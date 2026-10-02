@@ -30,6 +30,7 @@ func _ready() -> void:
 		if not GameState.techs.has(t):
 			GameState.techs.append(t)
 	GameState.money += 20000.0
+	GameState.add_building(ConstructionSim.make_building(GameState, "inmobiliaria", 1, -70.0, -70.0, 0.0, "jugador"))   # Sección H.
 	var pr := RealEstateSim.start_project(GameState, 4, "media", 34, 24, 0.0, "Torres Test", {"credit_lender": "externo", "credit_ratio": 0.5})
 	print("PROYECTO: ", pr.get("error", "iniciado"))
 	if pr.has("building"):

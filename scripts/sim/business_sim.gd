@@ -3,7 +3,7 @@ extends RefCounted
 ## Negocios del jugador: producción, salarios, mantenimiento, contabilidad,
 ## contratación manual y renuncias. Parámetros en data/businesses.json.
 
-const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "subsidios", "salarios", "mantenimiento", "insumos", "impuestos", "iva", "salarios_negro", "multas", "reparaciones", "robos", "incobrables", "obras"]
+const LEDGER_KEYS := ["ventas", "alquileres", "intereses", "subsidios", "salarios", "mantenimiento", "insumos", "impuestos", "iva", "salarios_negro", "multas", "reparaciones", "robos", "incobrables", "fletes", "obras"]
 const INCOME_KEYS := ["ventas", "alquileres", "intereses", "subsidios"]
 ## Movimientos que no son ingreso ni gasto (inversión y capital prestado).
 const NON_PNL_KEYS := ["obras", "prestado"]
@@ -216,6 +216,7 @@ static func produce(gs) -> void:
 		if unit_cost > 0.0 and out > 0.0:
 			pay(gs, b, out * unit_cost, "insumos")
 		inv[product] = float(inv.get(product, 0.0)) + out
+		b["units_today"] = out   # Costeo por fábrica (CostSim): unidades producidas hoy.
 	gs.set_meta("construction_points", points)
 
 

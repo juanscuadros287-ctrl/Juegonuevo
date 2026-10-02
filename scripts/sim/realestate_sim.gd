@@ -464,6 +464,9 @@ static func _pay_stage(gs, b: Dictionary, idx: int) -> bool:
 static func project_block_reason(gs, level: int, tier: String, credit_ratio := 0.0) -> String:
 	if not is_multi_level(level):
 		return "No es un nivel multifamiliar"
+	var agency := AgencySim.block_reason(gs)   # Sección H: los proyectos los hace tu inmobiliaria.
+	if agency != "":
+		return agency
 	var r := ConstructionSim.level_block_reason(gs, "vivienda", level)
 	if r != "":
 		return r
@@ -493,6 +496,7 @@ static func start_project(gs, level: int, tier: String, x: float, z: float, rot:
 	b["name"] = bname
 	ConstructionSim.apply_tier(b, tier)
 	b["re_project"] = _new_project("nuevo", level, tier, cost, 0)
+	b["agency_id"] = int(AgencySim.main_agency(gs).get("id", -1))   # Sección H: proyecto a nombre de la inmobiliaria.
 	b["units"] = make_units(gs, level, tier)
 	var err := _setup_credit(gs, b, lender, ratio, int(cost["days"]))
 	if err != "":
@@ -519,7 +523,9 @@ static func start_project_upgrade(gs, b: Dictionary, opts := {}) -> String:
 	var next := int(b["level"]) + 1
 	if not is_multi_level(next):
 		return "El siguiente nivel no es multifamiliar"
-	var reason := ConstructionSim.level_block_reason(gs, "vivienda", next)
+	var reason := AgencySim.block_reason(gs)   # Sección H: hace falta la inmobiliaria.
+	if reason == "":
+		reason = ConstructionSim.level_block_reason(gs, "vivienda", next)
 	if reason == "":
 		reason = ConstructionSim.upgrade_space_reason(gs, b, next)
 	if reason != "":
@@ -735,6 +741,7 @@ static func _sell_unit(gs, b: Dictionary, u: Dictionary, members: Array, price: 
 		_count(gs, "sales", price)
 		_credit_sweep(gs, b, price)
 	u["status"] = "vendida"
+	u["sold_day"] = gs.today()   # Sección H: antigüedad del dueño (apego al negociar la recompra).
 	u["owner_id"] = head.id
 	u["tenant_id"] = -1
 	u["household"] = _ids(members)

@@ -43,6 +43,8 @@ func _town(seed_v: int, money := 300000.0) -> void:
 		if not GameState.techs.has(t):
 			GameState.techs.append(t)
 	GameState.money = money
+	var ag := ConstructionSim.make_building(GameState, "inmobiliaria", 1, -70.0, -70.0, 0.0, "jugador")
+	GameState.add_building(ag)   # Sección H: los proyectos inmobiliarios exigen una inmobiliaria.
 
 
 func _finish(b: Dictionary, max_days := 600) -> void:

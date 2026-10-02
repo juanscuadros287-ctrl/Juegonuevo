@@ -9,7 +9,7 @@ extends VBoxContainer
 signal closed
 
 const TABS := [["resumen", "Resumen", "grid"], ["poblacion", "Población", "population"], ["mercado", "Mercado", "economy"],
-	["comercio", "Comercio", "trade"], ["pueblos", "Pueblos", "town"], ["empresas", "Empresas", "companies"]]
+	["comercio", "Comercio", "trade"], ["pueblos", "Pueblos", "town"], ["empresas", "Empresas", "companies"], ["precios", "Precios", "inflation"]]
 
 var body: VBoxContainer
 var tab_bar: HBoxContainer
@@ -74,6 +74,8 @@ func refresh() -> void:
 			_towns_tab()
 		"empresas":
 			_companies_tab()
+		"precios":
+			PricesTab.build(GameState, body, refresh)   # Tabla y gráficas de precios (historial guardado).
 		_:
 			_summary_tab()
 

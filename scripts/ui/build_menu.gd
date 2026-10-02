@@ -60,6 +60,8 @@ func refresh() -> void:
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info.tooltip_text = str(def.get("description", ""))
 		v.add_child(info)
+		if CostSim.is_producer_def(def):
+			_calculator(v, type_id)   # Calculadora de fábrica: costo por unidad estimado antes de construir.
 		var reason := ConstructionSim.build_block_reason(GameState, type_id, tier)
 		var b := UIKit.button("Colocar" if reason == "" else reason, func(): EventBus.build_mode_requested.emit(type_id, tier))
 		b.disabled = reason != ""
@@ -95,3 +97,18 @@ func _projects_section(tier: String) -> void:
 		b.tooltip_text = "Con crédito constructor: panel «Bienes raíces» → Nuevo proyecto."
 		v.add_child(b)
 		list.add_child(panel)
+
+
+## Calculadora de fábrica (docs/TERRENOS_COSTOS.md): costo estimado por unidad a plantilla completa, precio de
+## mercado y margen esperado con los precios de hoy (CostSim.estimate). Se despliega al pulsar.
+func _calculator(v: VBoxContainer, type_id: String) -> void:
+	var r := UIKit.rich()
+	r.visible = false
+	var btn := UIKit.button("Calculadora de costos ▾", func():
+		if r.text == "":
+			r.text = CostSim.estimate_text(CostSim.estimate(GameState, type_id, 1))
+		r.visible = not r.visible)
+	btn.flat = true
+	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	v.add_child(btn)
+	v.add_child(r)

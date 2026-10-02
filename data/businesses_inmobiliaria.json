@@ -1,0 +1,286 @@
+{
+ "_nota": "Sección H (docs/TERRENOS_COSTOS.md): la inmobiliaria es la compañía que hace los proyectos inmobiliarios (Bienes raíces los exige), compra terrenos a su nombre y muestra los proyectos con presupuesto y venta o renta aproximada.",
+ "inmobiliaria": {
+  "label": "Inmobiliaria",
+  "category": "negocio",
+  "sector": "Bienes raíces",
+  "order": 34,
+  "product": "servicio",
+  "skill": "comercio",
+  "base_wage": 2.4,
+  "footprint": 5.0,
+  "description": "Compañía inmobiliaria: sin ella no puedes hacer proyectos de apartamentos ni edificios. Desde su pestaña «Inmobiliaria» compras terrenos a nombre de la empresa (quedan en su libro) y ves cada proyecto (casas, apartamentos, edificios) con presupuesto, precio de venta o renta por unidad y rentabilidad.",
+  "levels": [
+   {
+    "label": "Oficina inmobiliaria",
+    "cost": 900,
+    "materials": {
+     "madera": 20,
+     "piedra": 20
+    },
+    "build_days": 15,
+    "workers": 2,
+    "jobs": 2,
+    "prod_per_worker": 0,
+    "quality": 1.0,
+    "upkeep": 0.3,
+    "unit_cost": 0,
+    "tech": "",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       5,
+       3.0,
+       4.2
+      ],
+      "pos": [
+       0,
+       1.5,
+       0
+      ],
+      "c": [
+       0.86,
+       0.82,
+       0.72
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       5.4,
+       0.3,
+       4.6
+      ],
+      "pos": [
+       0,
+       3.15,
+       0
+      ],
+      "c": [
+       0.5,
+       0.3,
+       0.2
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       1.9,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.95,
+       2.13
+      ],
+      "c": [
+       0.3,
+       0.2,
+       0.12
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       4.0,
+       0.6,
+       0.08
+      ],
+      "pos": [
+       0,
+       2.4,
+       2.14
+      ],
+      "c": [
+       0.85,
+       0.68,
+       0.25
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Inmobiliaria",
+    "cost": 2600,
+    "materials": {
+     "madera": 30,
+     "piedra": 80
+    },
+    "build_days": 30,
+    "workers": 4,
+    "jobs": 4,
+    "prod_per_worker": 0,
+    "quality": 1.0,
+    "upkeep": 0.7,
+    "unit_cost": 0,
+    "tech": "ladrillo",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       6,
+       4.2,
+       4.2
+      ],
+      "pos": [
+       0,
+       2.1,
+       0
+      ],
+      "c": [
+       0.8,
+       0.72,
+       0.6
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       6.4,
+       0.3,
+       4.6
+      ],
+      "pos": [
+       0,
+       4.3500000000000005,
+       0
+      ],
+      "c": [
+       0.45,
+       0.28,
+       0.2
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       1.9,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.95,
+       2.13
+      ],
+      "c": [
+       0.3,
+       0.2,
+       0.12
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       4.800000000000001,
+       0.6,
+       0.08
+      ],
+      "pos": [
+       0,
+       3.6,
+       2.14
+      ],
+      "c": [
+       0.85,
+       0.68,
+       0.25
+      ]
+     }
+    ]
+   },
+   {
+    "label": "Promotora inmobiliaria",
+    "cost": 7000,
+    "materials": {
+     "piedra": 160,
+     "acero": 20
+    },
+    "build_days": 45,
+    "workers": 6,
+    "jobs": 6,
+    "prod_per_worker": 0,
+    "quality": 1.0,
+    "upkeep": 1.4,
+    "unit_cost": 0,
+    "tech": "arquitectura_urbana",
+    "model": [
+     {
+      "s": "box",
+      "size": [
+       7,
+       7.0,
+       4.2
+      ],
+      "pos": [
+       0,
+       3.5,
+       0
+      ],
+      "c": [
+       0.7,
+       0.74,
+       0.8
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       7.4,
+       0.3,
+       4.6
+      ],
+      "pos": [
+       0,
+       7.15,
+       0
+      ],
+      "c": [
+       0.3,
+       0.32,
+       0.36
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       1.0,
+       1.9,
+       0.1
+      ],
+      "pos": [
+       0,
+       0.95,
+       2.13
+      ],
+      "c": [
+       0.3,
+       0.2,
+       0.12
+      ]
+     },
+     {
+      "s": "box",
+      "size": [
+       5.6000000000000005,
+       0.6,
+       0.08
+      ],
+      "pos": [
+       0,
+       6.4,
+       2.14
+      ],
+      "c": [
+       0.85,
+       0.68,
+       0.25
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

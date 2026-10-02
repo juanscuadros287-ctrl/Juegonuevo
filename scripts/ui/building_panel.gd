@@ -75,6 +75,12 @@ func rebuild() -> void:
 			_add_tab("Alumnos", _school_tab(b))
 		if str(def.get("service", "")) != "":
 			_add_tab("Servicio", _service_tab(b))
+	if CostsTab.applies(GameState, b):
+		_add_tab("Costos", CostsTab.build(GameState, b))   # Costeo por fábrica (costo por unidad desglosado).
+	if TransportOrgTab.applies(GameState, b):
+		_add_tab("Organización", TransportOrgTab.build(GameState, b, rebuild))   # División interna o empresa de transporte.
+	if AgencyTab.applies(GameState, b):
+		_add_tab("Inmobiliaria", AgencyTab.build(GameState, b, hud, rebuild))   # Sección H: terrenos y proyectos.
 	if mine and FleetTab.applies(GameState, b):
 		_add_tab("Vehículos", FleetTab.build(GameState, b, hud, rebuild))   # Comprar/vender vehículos.
 	if mine and BusTab.applies(GameState, b):
