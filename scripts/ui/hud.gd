@@ -101,6 +101,7 @@ var cash_panel: CashPanel   # Sección E: efectivo y riesgo
 var global_econ: GlobalEconWindow   # Economía global: ciclos, monedas, bolsa y seguros.
 var cycle_indicator: CycleIndicator
 var countries_window: CountriesWindow   # Fase 10: mapa mundial y Mis países
+var companies_window: MyCompaniesWindow   # Mis empresas: lista, ficha y resumen del grupo (docs/MIS_EMPRESAS.md)
 var lands_window: LandsWindow   # Mis terrenos: cartera, ventas y ofertas (docs/TERRENOS_COSTOS.md)
 var aviation_window: AviationWindow     # Fase 10: aeropuertos, flota, vuelos y rutas
 var hiring_panel: HiringPanel           # Contrataciones: vacantes, postulantes y personal
@@ -190,6 +191,15 @@ func _ready() -> void:
 	root.add_child(aviation_window)
 	aviation_window.setup()
 	aviation_window.message.connect(toast)
+	companies_window = MyCompaniesWindow.new()   # Mis empresas (docs/MIS_EMPRESAS.md)
+	root.add_child(companies_window)
+	companies_window.setup(self)
+	companies_window.message.connect(toast)
+	companies_window.open_building.connect(open_building)
+	companies_window.focus_building.connect(func(id):
+		var world := get_parent()
+		if world != null and world.has_method("focus_building"):
+			world.focus_building(id))
 	lands_window = LandsWindow.new()
 	root.add_child(lands_window)
 	lands_window.setup()
@@ -720,6 +730,8 @@ func _item_active(item_id: String) -> bool:
 			return aviation_window != null and aviation_window.visible
 		"lands":
 			return lands_window != null and lands_window.visible
+		"companies":
+			return (companies_window != null and companies_window.visible) or (dock.visible and dock_mode == "companies")
 		"routes", "vehicles":
 			return RoutesWindow.is_open(self, item_id)   # Rutas y vehículos (docs/RUTAS_BARCOS.md)
 		"hiring":
@@ -757,6 +769,12 @@ func _open_item(item_id: String) -> void:
 		"lands":
 			close_dock()
 			lands_window.open()
+		"companies":
+			close_dock()
+			if companies_window.visible:
+				companies_window.close()
+			else:
+				companies_window.open()
 		"routes", "vehicles":
 			close_dock()
 			RoutesWindow.open_in(self, item_id)

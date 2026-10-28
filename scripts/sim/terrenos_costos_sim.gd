@@ -28,3 +28,4 @@ static func monthly(gs) -> void:
 	CostSim.monthly(gs)
 	LandPortfolioSim.monthly(gs)
 	PriceHistorySim.monthly(gs)
+	CompanyReportSim.monthly(gs)   # Mis empresas: historial mensual de ingresos, costos y utilidad por empresa.
