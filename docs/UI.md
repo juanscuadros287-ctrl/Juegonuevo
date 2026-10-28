@@ -120,9 +120,11 @@ Todos usan `UIKit.header()` (icono + título + ↻ + cerrar). Destacados:
   (**tarjetas por pueblo**: arquetipo, población, distancia, crecimiento, relación/ruta,
   **reputación**, sectores y precios de compra/venta) y *Empresas* (tabla de empresas NPC).
   `show_tab(id)` abre una pestaña.
-- **Mis empresas**: tarjetas por negocio con franja de color por estado (rentable/equilibrio/
-  deficitaria/cerrado), nivel, resultado, margen, empleados y alertas (vacantes, meses con
-  pérdidas, sin almacén); resumen en tarjetas.
+- **Mis empresas** (`my_companies_window.gd`, ventana completa, tecla C): resumen del grupo (patrimonio, utilidad
+  consolidada, mes en curso, más y menos rentable), lista ordenable y filtrable con foto 3D de cada edificio
+  (`building_thumb.gd`), nivel, estado, utilidad, margen y ROI, y ficha con gráfica mensual, precios, compras y
+  proveedores, ventas y canales, personal, vehículos, módulos y costo por unidad; botones «Ver en el mapa» y «Abrir
+  panel». Ver docs/MIS_EMPRESAS.md. El panel lateral anterior (`companies_panel.gd`) queda para `_show_dock`.
 - **Finanzas**: tarjetas (dinero, patrimonio, deudas, resultado) con sparkline y tendencia,
   economía del pueblo en chips + tabla de precios, créditos, inversión e historial.
 - **Mi personaje**: ficha visual (retrato, barras, patrimonio, talentos, árbol familiar) sobre el
