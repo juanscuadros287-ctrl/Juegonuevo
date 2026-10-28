@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/test_misiones_escenarios.gd" id="1"]
+
+[node name="TestMisionesEscenarios" type="Node"]
+script = ExtResource("1")

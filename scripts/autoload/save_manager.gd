@@ -402,6 +402,7 @@ func build_meta() -> Dictionary:
 		"population": gs.citizens.size(),
 		"play_seconds": play_seconds,
 		"difficulty": str(gs.settings.get("difficulty", "")),
+		"scenario": str(gs.settings.get("scenario", "normal")),   # Escenario de inicio (ScenarioSim).
 		"thumbnail": thumbnail_png,
 	}
 

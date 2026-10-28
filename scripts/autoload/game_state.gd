@@ -40,6 +40,7 @@ var labor: Dictionary = {}             # Trabajo: sindicatos, huelgas, guerras d
 var world_events: Dictionary = {}      # Mundo: clima, contaminación local y guerras (ClimateSim/PollutionSim/WarSim)
 var world_econ: Dictionary = {}        # Economía global: ciclos, monedas, bolsa, seguros, calidad y marca (GlobalEconSim)
 var countries: Dictionary = {}         # Fase 10: países con presencia, viajes, gerentes y aviación (CountriesSim)
+var progress: Dictionary = {}          # Misiones guía y logros (ProgressSim; docs/MISIONES_ESCENARIOS.md)
 var loans: Array = []                  # préstamos (banco externo ↔ jugador, tu banco ↔ ciudadanos)
 var next_loan_id: int = 1
 var weather: Dictionary = {}
@@ -87,6 +88,7 @@ func default_settings() -> Dictionary:
 		"player_gender": "M",
 		"player_age": int(GameData.game.get("player", {}).get("default_age", 25)),
 		"difficulty": "normal",
+		"scenario": "normal",   # Escenario de inicio (ScenarioSim).
 		"map_type": "interior",
 		"seed": randi() % 1000000,
 	}
@@ -103,6 +105,7 @@ func new_game(opts: Dictionary) -> void:
 	unlocked_zones = [START_ZONE.duplicate()]
 	EconomySim.init_state(self)
 	TechSim.init_state(self)
+	ScenarioSim.apply_early(self)   # Escenario: año de inicio, época y tecnologías base.
 	EventsSim.init_state(self)
 	WeatherSim.init_weather(self)
 	PopulationSim.generate_initial(self, int(diff().get("start_citizens", 30)))
@@ -112,6 +115,8 @@ func new_game(opts: Dictionary) -> void:
 	NpcBusinessSim.seed_initial(self)   # Artesanos del pueblo desde el inicio (economía base viva).
 	CountriesSim.init_state(self)   # Fase 10: un solo país (el de origen) al empezar.
 	running = true
+	ScenarioSim.apply_late(self)   # Escenario: capital, crédito, empresa y deuda heredadas.
+	ProgressSim.init_state(self, true)   # Misiones guía y logros.
 	notify("Bienvenido a %s, %s. El pueblo vive de sus artesanos; tú puedes ser su gran empresario." % [settings["town_name"], player_name()], "info")
 
 
@@ -144,6 +149,7 @@ func _clear() -> void:
 	world_events = {}
 	world_econ = {}
 	countries = {}
+	progress = {}
 	_deferred_notes = []
 	transit = {}
 	loans = []
@@ -263,6 +269,8 @@ func simulate_country_day(new_month: bool, primary: bool) -> void:
 			MoneySim.monthly(self)   # Sección E: inspecciones y cierre del mes.
 		if primary:
 			_record_month()
+	if primary and running:
+		ProgressSim.daily(self, new_month)   # Misiones guía (cada 7 días) y logros (cada mes).
 
 
 func _record_month() -> void:
@@ -556,6 +564,7 @@ func to_dict() -> Dictionary:
 		"transit": transit,
 		"world_econ": world_econ,
 		"countries": CountriesSim.to_save(self),
+		"progress": progress,
 		"loans": loans,
 		"next_loan_id": next_loan_id,
 		"weather": weather,
@@ -573,7 +582,7 @@ func to_dict() -> Dictionary:
 
 ## Ajustes que toda partida debe tener (partidas viejas o incompletas: se completan con estos).
 const SETTINGS_FALLBACK := {"town_name": "San Rafael", "player_name": "Sebastián", "player_surname": "Cuadros",
-	"player_gender": "M", "player_age": 25, "difficulty": "normal", "map_type": "interior", "seed": 0}
+	"player_gender": "M", "player_age": 25, "difficulty": "normal", "scenario": "normal", "map_type": "interior", "seed": 0}
 
 
 ## Tolerante a partidas de otras versiones: claves que faltan → valor por defecto; claves que
@@ -587,6 +596,8 @@ func load_dict(d: Dictionary) -> void:
 		settings["difficulty"] = "normal"
 	if not GameData.map_types.has(str(settings["map_type"])):
 		settings["map_type"] = "interior"
+	if not ScenarioSim.defs().has(str(settings["scenario"])):
+		settings["scenario"] = "normal"   # Partidas viejas (o de un escenario que ya no existe).
 	money = float(d.get("money", 0.0))
 	cash = float(d.get("cash", 0.0))
 	informal = _dget(d, "informal")
@@ -669,6 +680,8 @@ func load_dict(d: Dictionary) -> void:
 	if player_id < 0:
 		# Partida de la Fase 1: el jugador aún no era un ciudadano.
 		PlayerSim.migrate_v1_player(self, d.get("player", {}))
+	progress = _dget(d, "progress")   # Partida vieja: misiones y logros nuevos (lo ya cumplido, sin premio).
+	ProgressSim.init_state(self, false)
 
 
 func _dget(d: Dictionary, key: String) -> Dictionary:

@@ -16,7 +16,8 @@ const BAR_H := 46.0
 const CATEGORIES := [
 	{"id": "dinastia", "label": "Mi dinastía", "icon": "dynasty", "key": "F1", "items": [
 		["player", "Mi personaje", "character", "P"], ["family", "Familia y herederos", "family", ""],
-		["countries", "Mis países y mapa mundial", "globe", ""]]},   # Fase 10
+		["countries", "Mis países y mapa mundial", "globe", ""],   # Fase 10
+		["guide", "Misiones guía", "check", ""], ["achievements", "Logros", "trophy", ""]]},   # docs/MISIONES_ESCENARIOS.md
 	{"id": "construir", "label": "Construir", "icon": "build", "key": "B", "items": [["build", "Construir", "build", "B"]]},
 	{"id": "empresas", "label": "Empresas", "icon": "companies", "key": "F2", "items": [
 		["companies", "Mis empresas", "companies", "C"], ["realestate", "Bienes raíces", "realestate", "V"], ["lands", "Mis terrenos", "map", ""], ["contracts", "Contratos", "contracts", "K"],
@@ -105,6 +106,7 @@ var lands_window: LandsWindow   # Mis terrenos: cartera, ventas y ofertas (docs/
 var aviation_window: AviationWindow     # Fase 10: aeropuertos, flota, vuelos y rutas
 var hiring_panel: HiringPanel           # Contrataciones: vacantes, postulantes y personal
 var country_indicator: CountryIndicator # Fase 10: país donde está el personaje
+var guide_panel: GuidePanel             # Misiones guía, aviso de logros y ventana de logros
 
 # Interior
 var interior_panel: PanelContainer
@@ -198,6 +200,9 @@ func _ready() -> void:
 	root.add_child(hiring_panel)
 	hiring_panel.setup(self)
 	hiring_panel.message.connect(toast)
+	guide_panel = GuidePanel.new()   # Misiones guía y logros (docs/MISIONES_ESCENARIOS.md)
+	root.add_child(guide_panel)
+	guide_panel.setup(self)
 	_build_hint()
 	_build_flyout()
 	_build_save_toast()
@@ -724,6 +729,10 @@ func _item_active(item_id: String) -> bool:
 			return RoutesWindow.is_open(self, item_id)   # Rutas y vehículos (docs/RUTAS_BARCOS.md)
 		"hiring":
 			return hiring_panel != null and hiring_panel.visible
+		"guide":
+			return guide_panel != null and guide_panel.is_guide_visible()
+		"achievements":
+			return guide_panel != null and guide_panel.achievements_open()
 		"population":
 			return population_modal.has("root") and population_modal["root"].visible
 		"towns":
@@ -763,6 +772,10 @@ func _open_item(item_id: String) -> void:
 		"hiring":
 			close_dock()
 			hiring_panel.open(0)
+		"guide":
+			guide_panel.show_guide()
+		"achievements":
+			guide_panel.open_achievements()
 		"stocks":
 			close_dock()
 			global_econ.open(1)

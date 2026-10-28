@@ -26,6 +26,10 @@ var diff_ids: Array = []
 var diff_idx := 1
 var _diff_buttons: Array = []
 var _diff_desc: Label
+var scen_ids: Array = []             # Escenarios de inicio (ScenarioSim, data/progreso.json)
+var scen_idx := 0
+var _scen_buttons: Array = []
+var _scen_desc: Label
 var map_ids: Array = []
 var region_opt: OptionButton          # Fase 6: dónde fundar el pueblo
 var country_opt: OptionButton         # Fase 9A: país (perfil de biomas y recursos)
@@ -286,6 +290,8 @@ func _build_new_panel(parent: Control) -> void:
 	_diff_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_diff_desc.custom_minimum_size.x = 380
 	left.add_child(_diff_desc)
+	# Columna central: escenario de inicio (docs/MISIONES_ESCENARIOS.md).
+	_build_scenarios(top)
 	# Columna derecha: país y lugar
 	var side := VBoxContainer.new()
 	side.add_theme_constant_override("separation", 8)
@@ -318,7 +324,60 @@ func _build_new_panel(parent: Control) -> void:
 	start.custom_minimum_size.x = 200
 	row.add_child(start)
 	_select_diff(diff_idx)
+	_select_scen(scen_idx, false)
 	_on_map_changed()
+
+
+## Escenarios: lista de botones con icono y la descripción breve del elegido.
+func _build_scenarios(parent: Control) -> void:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	col.custom_minimum_size.x = 250
+	parent.add_child(col)
+	_group_title(col, "Escenario", "flag" if UIIcons.names().has("flag") else "star")
+	scen_ids = ScenarioSim.ids()
+	scen_idx = maxi(0, scen_ids.find("normal"))
+	for i in range(scen_ids.size()):
+		var id := str(scen_ids[i])
+		var d := ScenarioSim.def(id)
+		var b := Button.new()
+		b.text = str(d.get("label", id))
+		b.icon = UIIcons.tex(str(d.get("icon", "star")), 18)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.toggle_mode = true
+		b.custom_minimum_size = Vector2(250, 38)
+		b.add_theme_constant_override("h_separation", 10)
+		b.add_theme_stylebox_override("pressed", UIKit._flat(Color(UIKit.ACCENT, 0.2), 8, 10, 5, UIKit.ACCENT, 2))
+		b.add_theme_stylebox_override("hover_pressed", UIKit._flat(Color(UIKit.ACCENT, 0.26), 8, 10, 5, UIKit.ACCENT, 2))
+		b.tooltip_text = str(d.get("description", ""))
+		var idx := i
+		b.pressed.connect(func(): _select_scen(idx, true))
+		col.add_child(b)
+		_scen_buttons.append(b)
+	_scen_desc = UIKit.label("", 12, UIKit.TEXT_DIM)
+	_scen_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_scen_desc.custom_minimum_size.x = 250
+	col.add_child(_scen_desc)
+
+
+func _select_scen(i: int, by_user: bool) -> void:
+	scen_idx = clampi(i, 0, maxi(0, scen_ids.size() - 1))
+	for k in range(_scen_buttons.size()):
+		(_scen_buttons[k] as Button).set_pressed_no_signal(k == scen_idx)
+	if scen_ids.is_empty():
+		return
+	var id := str(scen_ids[scen_idx])
+	var d := ScenarioSim.def(id)
+	var bits := []
+	if d.has("money_mult"):
+		bits.append("Capital ×%s" % String.num(float(d["money_mult"]), 2).replace(".", ","))
+	if d.has("credit_score"):
+		bits.append("crédito %d" % int(d["credit_score"]))
+	if d.has("start_year"):
+		bits.append("año %d" % int(d["start_year"]))
+	_scen_desc.text = str(d.get("description", "")) + ("\n" + " · ".join(bits) if not bits.is_empty() else "")
+	if id == "otro_pais" and by_user:
+		_open_world_map()   # Integra la selección de país existente: elige el país de destino.
 
 
 func _select_diff(i: int) -> void:
@@ -372,9 +431,9 @@ func _update_desc() -> void:
 		return
 	var d: Dictionary = GameData.difficulties[diff_ids[diff_idx]]
 	var m: Dictionary = GameData.map_types[map_ids[map_opt.selected]]
-	_diff_desc.text = "%s · Dinero inicial %s · %d ciudadanos · enfermedades ×%s · precios ×%s · eventos ×%s" % [
-		d.get("description", ""), Fmt.money(float(d.get("start_money", 0))), int(d.get("start_citizens", 0)),
-		String.num(float(d.get("disease_mult", 1)), 1), String.num(float(d.get("price_mult", 1)), 2), String.num(float(d.get("event_freq_mult", 1)), 1)]
+	_diff_desc.text = "%s · Dinero inicial %s · %d ciudadanos · interés del banco %s · enfermedades ×%s · precios ×%s · eventos negativos ×%s · agresividad de los rivales ×%s" % [
+		d.get("description", ""), Fmt.money(float(d.get("start_money", 0))), int(d.get("start_citizens", 0)), Fmt.pct_1(float(d.get("bank_interest", 0.07)) * 100.0),
+		String.num(float(d.get("disease_mult", 1)), 1), String.num(float(d.get("price_mult", 1)), 2), String.num(float(d.get("event_freq_mult", 1)), 1), String.num(float(d.get("npc_aggression", 1)), 1)]
 	desc_lbl.text = "%s: %s" % [m.get("label", ""), m.get("description", "")]
 	if not region_list.is_empty() and region_opt.selected >= 0:
 		var r: Dictionary = region_list[region_opt.selected]
@@ -636,6 +695,9 @@ func _slot_row(info: Dictionary) -> Control:
 	v.add_child(chips)
 	chips.add_child(UIKit.chip(Fmt.money(float(meta.get("money", 0.0))), UIKit.ACCENT, "money", 11))
 	chips.add_child(UIKit.chip("%s hab." % Fmt.thousands(int(meta.get("population", 0))), UIKit.ACCENT_2, "population", 11))
+	var sc_id := str(meta.get("scenario", "normal"))
+	if sc_id != "" and sc_id != "normal":
+		chips.add_child(UIKit.chip(ScenarioSim.label(sc_id), UIKit.WARN, str(ScenarioSim.def(sc_id).get("icon", "star")), 11))
 	chips.add_child(UIKit.chip("Jugado %s" % play_time_text(float(meta.get("play_seconds", 0.0))), UIKit.TEXT_DIM, "realtime", 11))
 	chips.add_child(UIKit.chip("Guardado %s" % saved_at_text(str(info.get("saved_at", ""))), UIKit.TEXT_DIM, "save", 11))
 	if damaged:
@@ -759,6 +821,11 @@ func _show_load_error(slot: int, err: String) -> void:
 
 
 func _enter_game() -> void:
+	# Logros: el perfil global (user://logros.cfg) solo se escribe al jugar de verdad (no en las pruebas).
+	var cs := get_tree().current_scene
+	if cs == null or not str(cs.scene_file_path).begins_with("res://tests/"):
+		ProgressSim.use_profile("user://logros.cfg", true)
+		ProgressSim.sync_profile(GameState)
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 
@@ -827,6 +894,7 @@ func _start() -> void:
 		"player_gender": "F" if gender_opt.selected == 1 else "M",
 		"player_age": int(age_spin.value),
 		"difficulty": diff_ids[diff_idx],
+		"scenario": str(scen_ids[scen_idx]) if not scen_ids.is_empty() else "normal",
 		"map_type": map_ids[map_opt.selected],
 		"seed": int(seed_edit.value),
 		"country_id": _country(),

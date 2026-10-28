@@ -356,6 +356,11 @@ static func _player_rival(gs, product: String) -> Dictionary:
 	return {}
 
 
+## Dificultad: agresividad de las empresas NPC (guerras de precio y ofertas a tus empleados). 1 en Normal.
+static func npc_aggression(gs) -> float:
+	return float(gs.diff().get("npc_aggression", 1.0))
+
+
 static func _price_wars_monthly(gs) -> void:
 	var nc := ncfg()
 	var wars: Dictionary = gs.labor["price_wars"]
@@ -371,7 +376,7 @@ static func _price_wars_monthly(gs) -> void:
 		var rival := _player_rival(gs, product)
 		if rival.is_empty():
 			continue
-		if rf(gs, "pwar" + key) >= float(nc.get("price_war_chance", 0.1)):
+		if rf(gs, "pwar" + key) >= float(nc.get("price_war_chance", 0.1)) * npc_aggression(gs):
 			continue
 		start_price_war(gs, b, rival)
 
@@ -386,7 +391,8 @@ static func start_price_war(gs, b: Dictionary, rival: Dictionary) -> float:
 	if margin <= 0.02:
 		return 0.0
 	var markup := float(b.get("markup", 0.08))
-	var cut := minf(float(nc.get("price_war_max_cut", 0.12)), margin * float(nc.get("price_war_margin_share", 0.7)) * (1.0 + markup))
+	var aggr := clampf(npc_aggression(gs), 0.5, 1.5)   # Dificultad: recortes más (o menos) agresivos, nunca a pérdida.
+	var cut := minf(float(nc.get("price_war_max_cut", 0.12)) * aggr, minf(margin * 0.95, margin * float(nc.get("price_war_margin_share", 0.7)) * aggr) * (1.0 + markup))
 	cut = snappedf(cut, 0.005)
 	if cut <= 0.0:
 		return 0.0
@@ -442,7 +448,7 @@ static func _poach_monthly(gs) -> void:
 			continue
 		if NpcBusinessSim.staff_count(gs, npc) >= int(gs.level_def(npc).get("jobs", 1)):
 			continue
-		if rf(gs, "poach" + key) >= float(nc.get("poach_chance", 0.06)) * freq:
+		if rf(gs, "poach" + key) >= float(nc.get("poach_chance", 0.06)) * freq * npc_aggression(gs):
 			continue
 		make_offer(gs, npc)
 

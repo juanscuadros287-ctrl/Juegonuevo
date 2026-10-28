@@ -24,7 +24,7 @@ var _jump_days_total := 1
 
 
 func start_year() -> int:
-	return int(GameData.game.get("start_year", 1700))
+	return int(GameState.settings.get("start_year", GameData.game.get("start_year", 1700)))   # Escenarios de otra época (ScenarioSim).
 
 
 func reset() -> void:
