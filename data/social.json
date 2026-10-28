@@ -1,0 +1,62 @@
+{
+ "_nota": "Vida social (docs/SOCIAL.md): emociones, conversaciones, memoria, favores, dispositivo por época y socios. Todo pago es entre bolsillos del pueblo (FlowSim).",
+ "emotions": {
+  "labels": {"alegria": "Alegría", "enojo": "Enojo", "tristeza": "Tristeza", "confianza": "Confianza"},
+  "monthly_decay": 0.4,
+  "calm_threshold": 55
+ },
+ "traits": {
+  "labels": {"sociable": "Sociable", "ambicioso": "Ambicioso(a)", "orgulloso": "Orgulloso(a)", "sensible": "Sensible"},
+  "likes": {"sociable": "las bromas y el chisme del pueblo", "ambicioso": "hablar de negocios", "orgulloso": "que le pidan consejo, no favores", "sensible": "que le pregunten por su familia"}
+ },
+ "greet": {"gain": [1.0, 3.0], "stranger_gain": [3.0, 5.0]},
+ "conversation": {
+  "turns": 3,
+  "repeat_days": 30,
+  "base_success": 0.55,
+  "topics": {
+   "familia":   {"label": "Preguntar por su familia",          "gain": 4.0, "trait": "sensible",  "emo": {"alegria": 6, "confianza": 4}},
+   "trabajo":   {"label": "Preguntarle cómo le va",             "gain": 3.0, "trait": "",          "emo": {"confianza": 4}},
+   "negocios":  {"label": "Hablar de negocios",                 "gain": 3.5, "trait": "ambicioso", "emo": {"confianza": 6}},
+   "broma":     {"label": "Contar una anécdota graciosa",       "gain": 5.0, "trait": "sociable",  "emo": {"alegria": 10}},
+   "pueblo":    {"label": "Comentar las noticias del pueblo",   "gain": 2.5, "trait": "sociable",  "emo": {"alegria": 3, "confianza": 2}},
+   "consejo":   {"label": "Pedirle su consejo",                 "gain": 3.5, "trait": "orgulloso", "emo": {"confianza": 6, "alegria": 3}},
+   "consolar":  {"label": "Darle ánimos",                       "gain": 6.0, "trait": "sensible",  "emo": {"tristeza": -15, "confianza": 8}},
+   "calmar":    {"label": "Preguntarle qué le molesta",          "gain": 4.0, "trait": "",          "emo": {"enojo": -18, "confianza": 4}},
+   "favor":     {"label": "Pedirle un favor",                    "gain": 0.0, "trait": "",          "emo": {}}
+  }
+ },
+ "favors": {"min_affinity": 40, "contact_gain": 15.0, "trust_cost": 8.0},
+ "visit": {"cost": 4.0, "gain": [6.0, 12.0], "min_affinity": 10},
+ "job_offer": {"switch_ratio": 1.15, "accept_base": 0.45},
+ "gift": {"cost": 10.0, "gain": 6.0},
+ "devices": {
+  "carta":     {"label": "Carta",     "tech": "",            "delay": [3, 6], "cost": 0.5, "icon": "letter",    "call": false, "chat": false},
+  "telegrafo": {"label": "Telégrafo", "tech": "telegrafo",   "delay": [1, 1], "cost": 1.5, "icon": "telegraph", "call": false, "chat": false},
+  "telefono":  {"label": "Teléfono",  "tech": "electricidad","delay": [0, 0], "cost": 0.4, "icon": "phone",     "call": true,  "chat": false},
+  "celular":   {"label": "Celular",   "tech": "electronica", "delay": [0, 0], "cost": 0.1, "icon": "mobile",    "call": true,  "chat": true}
+ },
+ "notify_every_days": 15,
+ "offer_every_days": 45,
+ "offer_chance": 0.25,
+ "inbox_max": 40,
+ "chat_max": 30,
+ "succession_family_min": 50.0,
+ "partners": {
+  "max_total_share": 0.49,
+  "max_per_business": 3,
+  "min_share": 0.03,
+  "valuation_profit_months": 18,
+  "skill_min": 35,
+  "skill_bonus_per_point": 0.0015,
+  "skill_bonus_max": 0.12,
+  "dispute_penalty": 0.08,
+  "dispute_threshold": 30,
+  "dispute_chance": 0.35,
+  "dispute_force_months": 4,
+  "buyout_premium": 0.05,
+  "buyout_premium_unhappy": 0.15,
+  "compensation_months": 2,
+  "cede_share": 0.03
+ }
+}

@@ -101,6 +101,7 @@ static func expected_output(gs, b: Dictionary, emps = null) -> float:
 	total *= MineSim.yield_mult(gs, b)   # Minas: ley × reserva restante × escombrera.
 	total *= LaborSim.strike_mult(gs, b) * ClimateSim.output_mult(gs, b)   # Trabajo: huelga · Mundo: clima de la zona.
 	total *= CountriesSim.op_mult()   # Fase 10: gerente o presencia del jugador en ese país.
+	total *= PartnersSim.output_mult(gs, b)   # Socios: habilidades (+) o desacuerdo abierto (−). docs/SOCIAL.md
 	return total
 
 

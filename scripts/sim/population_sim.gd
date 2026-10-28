@@ -533,6 +533,7 @@ static func _bequeath(gs, c: Citizen) -> void:
 
 
 static func _remove(gs, c: Citizen, reason: String) -> void:
+	PartnersSim.on_citizen_removed(gs, c, reason)   # Socios: su parte pasa a su heredero o vuelve al jugador.
 	if reason == "emigró" and c.money != 0.0:
 		FlowSim.external_out(gs, c.money, "emigración (ahorros)")   # Se lleva sus ahorros.
 	gs.graveyard[c.id] = "%s (%s en %d)" % [c.full_name(), reason, TimeManager.year()]

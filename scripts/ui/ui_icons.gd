@@ -105,6 +105,13 @@ const ICONS := {
 	"anchor": '<circle cx="12" cy="5" r="2"/><path d="M12 7v14M8 11h8M4 13a8 8 0 0 0 16 0"/>',
 	"mountain": '<path d="M2 20l7-12 4 6 3-4 6 10z"/><path d="M7.5 10.5l1.5 1.5 1.3-1.5"/>',
 	"sprout": '<path d="M12 21v-9"/><path d="M12 12C12 8 9 5.5 4.5 5.5c0 4.5 3 6.5 7.5 6.5zM12 10c0-3.5 2.5-6 7.5-6 0 4-2.5 6-7.5 6z"/>',
+	# Vida social (docs/SOCIAL.md): dispositivo por época, chat y socios.
+	"letter": '<rect x="3" y="6" width="18" height="13" rx="1.5"/><path d="M3.5 7l8.5 6.5L20.5 7"/>',
+	"telegraph": '<path d="M4 19h16M7 19v-3h10v3"/><path d="M9 16l2-5h2l2 5"/><path d="M12 11V6M8 4l4 2 4-2"/>',
+	"phone": '<path d="M5 4.5h3.5l1.5 4-2 1.3a10 10 0 0 0 6.2 6.2l1.3-2 4 1.5V19a1.5 1.5 0 0 1-1.6 1.5C10 20 4 14 3.5 6.1A1.5 1.5 0 0 1 5 4.5z"/>',
+	"mobile": '<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10.5 18.5h3M10 5h4"/>',
+	"chat": '<path d="M4 5h16v10H9l-4 4v-4H4z"/><path d="M8 9h8M8 12h5"/>',
+	"handshake": '<path d="M2 11l4-4 4 2 3-2 3 1 6 3"/><path d="M6 7l-4 4 6 6 2-1 2 2 2-1 2 1 4-4"/><path d="M10 9l3 3M12 14l2 2"/>',
 }
 
 

@@ -304,6 +304,7 @@ static func daily(gs) -> void:
 		if gs.rng.randf() < float(cfg().get("doctor_recover_bonus", 0.25)):
 			p.sick = false
 			gs.notify("Te recuperaste de tu enfermedad.", "jugador")
+	SocialSim.daily(gs)   # Vida social: cartas y telegramas que llegan (docs/SOCIAL.md).
 
 
 static func monthly(gs) -> void:
@@ -316,6 +317,8 @@ static func monthly(gs) -> void:
 			rel[k] = maxf(0.0, float(rel[k]) - decay)
 	gs.player["talked"] = {}
 	DynastySim.monthly(gs)
+	SocialSim.monthly(gs)     # Vida social: emociones que se desvanecen y, rara vez, una propuesta.
+	PartnersSim.monthly(gs)   # Socios: reparto de utilidades y desacuerdos (mes ya cerrado).
 
 
 ## Heredero de la familia extendida cuando no hay hijos ni lista (después de HeirsSim.pick_heir):
@@ -395,6 +398,7 @@ static func on_player_death(gs, dead: Citizen) -> void:
 		heirs.sort_custom(func(a, b): return a.birth_day < b.birth_day)
 		chosen = heirs[0]
 	gs.player_id = chosen.id
+	var old_relations: Dictionary = gs.player.get("relations", {})
 	gs.player["relations"] = {}
 	gs.player["talked"] = {}
 	gs.player["heir_id"] = -1
@@ -409,6 +413,7 @@ static func on_player_death(gs, dead: Citizen) -> void:
 	chosen.money = 0.0
 	var inheritance := DynastySim.on_succession(gs, dead, chosen)
 	HeirsSim.on_succession(gs, dead, chosen)
+	SocialSim.on_succession(gs, old_relations)   # El heredero conserva solo las relaciones familiares.
 	var rel := "" if how == "" else " (%s)" % how
 	gs.notify("%s murió. Tu heredero(a) %s%s (%d años) toma el control de la familia. %s Bonos por sus talentos: %s." % [dead.full_name(), chosen.full_name(), rel, chosen.age_years(gs.today()), inheritance, HeirsSim.bonus_text(gs)], "jugador")
 	EventBus.player_changed.emit()

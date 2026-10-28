@@ -105,6 +105,7 @@ var lands_window: LandsWindow   # Mis terrenos: cartera, ventas y ofertas (docs/
 var aviation_window: AviationWindow     # Fase 10: aeropuertos, flota, vuelos y rutas
 var hiring_panel: HiringPanel           # Contrataciones: vacantes, postulantes y personal
 var country_indicator: CountryIndicator # Fase 10: país donde está el personaje
+var social_ui: SocialUI                 # Vida social: dispositivo, conversaciones y socios (docs/SOCIAL.md)
 
 # Interior
 var interior_panel: PanelContainer
@@ -198,6 +199,9 @@ func _ready() -> void:
 	root.add_child(hiring_panel)
 	hiring_panel.setup(self)
 	hiring_panel.message.connect(toast)
+	social_ui = SocialUI.new()   # Vida social: dispositivo de la época abajo a la derecha.
+	root.add_child(social_ui)
+	social_ui.setup(self)
 	_build_hint()
 	_build_flyout()
 	_build_save_toast()
@@ -1180,6 +1184,7 @@ func _build_citizen_sheet(c: Citizen) -> void:
 	meters.add_theme_constant_override("separation", 4)
 	_cit_meters.add_child(meters)
 	_fill_meters(meters, c)
+	social_ui.fill_sheet(_cit_meters, c)   # Vida social: ánimo, emociones, personalidad y memoria.
 	# Patrimonio
 	var money_row := HBoxContainer.new()
 	money_row.add_theme_constant_override("separation", 6)
@@ -1280,9 +1285,9 @@ func _citizen_action_buttons(c: Citizen) -> void:
 		citizen_actions.add_child(b)
 	if GameState.is_player(cid):
 		add.call("Mi Personaje", func(): _show_dock("player"), true, "", "character")
+		social_ui.add_actions(c, add)   # Vida social: tu dispositivo (contactos y mensajes).
 	else:
-		var talk_r := PlayerSim.can_talk(GameState, c)
-		add.call("Conversar", func(): _act(PlayerSim.talk(GameState, GameState.citizens[cid])), talk_r == "", talk_r, "society")
+		social_ui.add_actions(c, add)   # Vida social: saludar, conversar, trabajo, cena, regalo, sociedad.
 		var court_r := PlayerSim.can_court(GameState, c)
 		if court_r == "":
 			add.call("Invitar a una cita", func(): _act(PlayerSim.date(GameState, GameState.citizens[cid])), true, "", "heart")
@@ -1676,7 +1681,10 @@ func _close(m: Dictionary) -> void:
 
 
 func _all_modals() -> Array:
-	return [pause_modal, save_modal, load_modal, jump_modal, progress_modal, report_modal, population_modal, log_modal, gameover_modal, details_modal, invite_modal, options_modal, building_panel.hire_modal]
+	var list := [pause_modal, save_modal, load_modal, jump_modal, progress_modal, report_modal, population_modal, log_modal, gameover_modal, details_modal, invite_modal, options_modal, building_panel.hire_modal]
+	if social_ui != null:
+		list.append_array(social_ui.modals())
+	return list
 
 
 func _any_modal_open() -> bool:
@@ -2034,7 +2042,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var key: Key = event.keycode
 	if key == KEY_ESCAPE:
-		if flyout != null and flyout.visible:
+		if social_ui != null and social_ui.close_top():
+			pass   # Vida social: conversación, formularios o el dispositivo.
+		elif flyout != null and flyout.visible:
 			close_category()
 		elif goods_catalog.visible:
 			goods_catalog.close()

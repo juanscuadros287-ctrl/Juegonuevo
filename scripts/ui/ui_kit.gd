@@ -49,16 +49,17 @@ const CATEGORY_COLORS := {
 	"clima": Color(0.55, 0.8, 0.95), "importante": Color(1.0, 0.82, 0.3),
 	"jugador": Color(1.0, 0.45, 0.4), "negocio": Color(0.45, 0.85, 0.65),
 	"construccion": Color(0.92, 0.72, 0.45), "familia": Color(1.0, 0.68, 0.85),
+	"social": Color(0.72, 0.62, 0.98),
 }
 const CATEGORY_ICONS := {
 	"info": "info", "nacimiento": "baby", "muerte": "tomb", "salud": "health", "boda": "ring",
 	"emigracion": "exit", "clima": "cloud", "importante": "star", "jugador": "alert", "negocio": "companies",
-	"construccion": "build", "familia": "family",
+	"construccion": "build", "familia": "family", "social": "chat",
 }
 const CATEGORY_LABELS := {
 	"info": "General", "nacimiento": "Nacimientos", "muerte": "Muertes", "salud": "Salud", "boda": "Bodas",
 	"emigracion": "Emigración", "clima": "Clima", "importante": "Importante", "jugador": "Avisos",
-	"negocio": "Negocios", "construccion": "Obras", "familia": "Familia",
+	"negocio": "Negocios", "construccion": "Obras", "familia": "Familia", "social": "Social",
 }
 
 const SETTINGS_PATH := "user://ui_settings.cfg"

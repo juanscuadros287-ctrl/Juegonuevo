@@ -93,6 +93,8 @@ func rebuild() -> void:
 		_add_tab("Vivienda", _home_tab(b, mine))
 	if UnitsTab.applies(GameState, b):
 		_add_tab("Unidades", UnitsTab.build(GameState, b, hud, rebuild))   # Bienes raíces: unidades, ficha y proyecto.
+	if PartnersTab.applies(GameState, b):
+		_add_tab("Socios", PartnersTab.build(GameState, b, hud, rebuild))   # Socios: participación, utilidades y desacuerdos.
 	if mine:
 		_add_tab("Mejorar", _upgrade_tab(b))
 	refresh()

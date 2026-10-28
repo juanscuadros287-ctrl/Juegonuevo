@@ -29,6 +29,7 @@ var _sleep_hour := 21
 var _model: Node3D
 var _bob := 0.0
 var _stage := ""
+var hold := false   # Vida social: se detiene mientras conversa con el jugador (SocialUI).
 
 
 func setup(c: Citizen, t: Terrain, home: Vector3) -> void:
@@ -103,7 +104,7 @@ func set_home(pos: Vector3) -> void:
 
 func _process(delta: float) -> void:
 	var s := TimeManager.speed
-	if s == 0 or TimeManager.jumping or not GameState.running:
+	if s == 0 or TimeManager.jumping or not GameState.running or hold:
 		return
 	var h := TimeManager.hour()
 	if h != _plan_hour:
