@@ -30,7 +30,7 @@ var _ach_head: Label
 
 func setup(h) -> void:
 	hud = h
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel = PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", UIKit.float_style(Color(0.075, 0.082, 0.1, 0.86), 10, 8))
