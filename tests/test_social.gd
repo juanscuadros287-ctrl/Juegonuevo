@@ -371,9 +371,13 @@ func _test_spontaneous_offer() -> void:
 	var farm := _farm()
 	farm["ledger"]["last_month"] = {"ventas": 300.0}
 	var c := _npc(40, 1500.0)
+	while float(SocialSim.traits(c)["ambicioso"]) < 0.5:
+		c = _npc(40, 1500.0)   # Un inversionista: alguien ambicioso.
+	c.job_id = -1
 	PlayerSim._add_affinity(gs, c.id, 90.0)
 	SocialSim.contact(gs, c.id)["emo"]["confianza"] = 30.0
 	var m := SocialSim._spontaneous_offer(gs, 0.0)
+	check(str(m.get("offer", {}).get("type", "")) == "inversion", "la propuesta es invertir en tu empresa")
 	check(not m.is_empty(), "un buen contacto te escribe con una propuesta: %s" % str(m.get("text", "")))
 	check(SocialSim._spontaneous_offer(gs, 0.0).is_empty(), "no llega otra propuesta enseguida (una cada %d días)" % int(SocialSim.cfg().get("offer_every_days", 45)))
 	if not m.is_empty() and str(m.get("offer", {}).get("type", "")) == "inversion":

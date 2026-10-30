@@ -860,9 +860,12 @@ static func send(gs, c: Citizen, kind: String, text := "") -> String:
 	var item := {"to": c.id, "kind": kind, "topic": text, "sent": gs.today(), "arrive": gs.today() + delay}
 	if delay <= 0:
 		_deliver(gs, item)
-		return "%s enviado(a) a %s." % ["Invitación" if kind == "invitacion" else str(d.get("label", "Mensaje")), c.first_name]
+		return "Enviaste %s a %s." % ["una invitación" if kind == "invitacion" else "un mensaje", c.first_name]
 	state(gs)["outbox"].append(item)
-	return "%s a %s enviado(a): llegará en %d día(s)." % [("Invitación por " + str(d.get("label", "")).to_lower()) if kind == "invitacion" else str(d.get("label", "Mensaje")), c.first_name, delay]
+	var what := "un telegrama" if str(d.get("id", "")) == "telegrafo" else "una carta"
+	if kind == "invitacion":
+		what = "una invitación por " + ("telegrama" if str(d.get("id", "")) == "telegrafo" else "carta")
+	return "Enviaste %s a %s: llegará en %d día(s)." % [what, c.first_name, delay]
 
 
 static func _phone_line(gs, c: Citizen) -> String:
