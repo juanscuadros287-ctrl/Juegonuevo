@@ -29,17 +29,18 @@
   "town_wholesale_share": 0.35,
   "town_wholesale_factor": 0.8,
   "town_cash_share": 0.25,
-  "_nota_sucursales": "Comercio propio en otro pueblo, abastecido por ruta. Arriendo y personal se pagan a la caja de ese pueblo. Vende a los vecinos de allá al precio de importación del pueblo × (1 + margen), con demanda capture × su demanda mensual y elasticidad al margen.",
+  "_nota_sucursales": "Comercio propio en otro pueblo, abastecido por ruta. Arriendo y personal se pagan a la caja de ese pueblo. Vende a los vecinos de allá al precio de importación del pueblo × (1 + margen), con demanda capture × su demanda mensual (al menos min_demand_per_pop × habitantes) y elasticidad al margen.",
   "branch": {
     "levels": [
-      {"label": "Sucursal", "open_cost": 900, "rent_month": 20, "staff": 2, "staff_wage": 1.8, "capacity": 200, "capture": 0.3},
-      {"label": "Almacén sucursal", "open_cost": 2600, "rent_month": 45, "staff": 4, "staff_wage": 1.9, "capacity": 600, "capture": 0.55, "tech": "contabilidad"}
+      {"label": "Sucursal", "open_cost": 900, "rent_month": 15, "staff": 1, "staff_wage": 1.8, "capacity": 200, "capture": 0.6},
+      {"label": "Almacén sucursal", "open_cost": 2600, "rent_month": 35, "staff": 3, "staff_wage": 1.9, "capacity": 600, "capture": 1.1, "tech": "contabilidad"}
     ],
     "default_markup": 0.1,
     "max_markup": 0.8,
     "cover_days": 21,
     "daily_cash_share": 0.03,
-    "elasticity": 2.0
+    "elasticity": 2.0,
+    "min_demand_per_pop": 0.03
   },
   "_nota_export": "Exportación fuera de la región: necesita una ruta a otro pueblo o un puerto propio y un vehículo. Solo saca el excedente (lo que pasa de keep_days días de ventas), share por semana, a mercado × price_factor. El dinero entra del exterior (cuenta externa, motivo «exportación»).",
   "export": {"price_factor": 0.62, "keep_days": 20, "share": 0.5, "port_km": 60, "max_units_week": 400},

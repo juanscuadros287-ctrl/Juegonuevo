@@ -301,17 +301,19 @@ func _test_distributor() -> void:
 	_finish_construction(lena)
 	lena["inventory"]["lena"] = 300.0
 	var tid := _connect_town()
+	TradeSim.connection(gs, tid)["distance"] = 60.0   # Dentro del alcance de la distribuidora de arrieros (90 km).
 	var town := TradeSim.town(gs, tid)
 	town["cash"] = 6000.0
 	var row: Dictionary = town["goods"].get("lena", {})
 	if not row.is_empty():
 		row["demand"] = maxf(float(row.get("demand", 0.0)), 200.0)
+		row["buy_mult"] = 1.5   # Allá escasea la leña: la pagan bien.
 		row["sat"] = 0.0
-	var lr0 := float(lena["reserve"])
+	var lr0 := _npc_cash("lenador")
 	var t1 := _total()
 	DistributionSim.state(gs)["fleet"] = {}
 	DistributionSim.weekly(gs)
-	check(float(lena["reserve"]) > lr0, "la distribuidora le compró leña a la empresa NPC (su caja +%s)" % Fmt.money(float(lena["reserve"]) - lr0))
+	check(_npc_cash("lenador") > lr0, "la distribuidora le compró leña a las empresas NPC (su caja +%s)" % Fmt.money(_npc_cash("lenador") - lr0))
 	var trips: Array = DistributionSim.state(gs)["trips"].filter(func(t): return str(t["kind"]) == "distribuidora")
 	check(not trips.is_empty(), "y la lleva con su flota al pueblo con ruta")
 	check(absf(_total() - t1) < 0.01, "conservación al comprarle a la empresa NPC")
@@ -320,6 +322,14 @@ func _test_distributor() -> void:
 		DistributionSim._arrivals(gs)
 	check(DistributionSim.sold(gs, "lena", "distribuidora", "month") > 0.0, "el pueblo pagó la leña a la distribuidora")
 	check(absf(_total() - t1) < 0.05, "conservación en la entrega al pueblo")
+
+
+func _npc_cash(type_id: String) -> float:
+	var n := 0.0
+	for b in NpcBusinessSim.npc_buildings(_gs()):
+		if str(b["type"]) == type_id:
+			n += float(b.get("reserve", 0.0))
+	return n
 
 
 # --- Exportación ------------------------------------------------------------------------------------

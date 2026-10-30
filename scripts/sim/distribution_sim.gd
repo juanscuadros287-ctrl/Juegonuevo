@@ -664,9 +664,8 @@ static func _branch_price(gs, br: Dictionary, good: String) -> float:
 static func town_demand(gs, tid: String, good: String) -> float:
 	var t := TradeSim.town(gs, tid)
 	var row: Dictionary = t.get("goods", {}).get(good, {})
-	if not row.is_empty():
-		return float(row.get("demand", 0.0))
-	return float(t.get("population", 0)) * 0.01
+	var floor_d := float(t.get("population", 0)) * float(cfg().get("branch", {}).get("min_demand_per_pop", 0.03))
+	return maxf(float(row.get("demand", 0.0)), floor_d)
 
 
 static func _branch_daily_units(gs, br: Dictionary, good: String) -> float:
