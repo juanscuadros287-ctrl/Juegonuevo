@@ -202,6 +202,11 @@ func show_note(e: Dictionary, more := 0) -> void:
 		t += "  (+%d más)" % more
 	_note_lbl.text = t
 	_note.reset_size()
+	var ms := _note.get_combined_minimum_size()
+	_note.offset_right = -16.0
+	_note.offset_left = -16.0 - ms.x
+	_note.offset_bottom = -52.0
+	_note.offset_top = -52.0 - ms.y
 	_note.visible = true
 	_note.modulate.a = 1.0
 	_note.move_to_front()
