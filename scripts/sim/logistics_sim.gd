@@ -686,7 +686,7 @@ static func buy_fuel_pump(gs, st: Dictionary) -> String:
 		return "Ya tiene surtidor"
 	if gs.money < fuel_pump_price(gs, st):
 		return "Dinero insuficiente (%s)" % Fmt.money(fuel_pump_price(gs, st))
-	BusinessSim.pay(gs, st, fuel_pump_price(gs, st), "obras")
+	BusinessSim.pay_out(gs, st, fuel_pump_price(gs, st), "obras")   # Surtidor: contratistas del pueblo (parte importada).
 	st["fuel_pump"] = true
 	return ""
 
@@ -717,8 +717,9 @@ static func _vehicle_upkeep(gs) -> void:
 			service += float(VehicleCatalog.eff_def(gs, "pie").get("upkeep", 0.0)) * crew_size(gs, b)
 		if feed > 0.0:
 			BusinessSim.pay(gs, b, feed * pm, "insumos")
+			FlowSim.spend(gs, feed * pm, "forraje", FlowSim.share_of("forraje", 0.1))   # Forraje: lo venden los campesinos del pueblo.
 		if service > 0.0:
-			BusinessSim.pay(gs, b, service * pm, "mantenimiento")
+			BusinessSim.pay_out(gs, b, service * pm, "mantenimiento")
 
 
 ## Estaciones demolidas: sus vehículos se venden (40 %).
@@ -1020,6 +1021,7 @@ static func dispatch(gs, r: Dictionary, depart: float) -> float:
 			BusinessSim.pay(gs, payer, spent, "insumos")
 		else:
 			gs.add_money(-spent)
+		FlowSim.spend_import(gs, spent, "importación de insumos (rutas)")   # Se compra afuera, a precio de importación (el arancel va al tesoro).
 		r["spent"] = float(r.get("spent", 0.0)) + spent
 	# Combustible de los vehículos motorizados (lo paga su estación; el surtidor lo abarata).
 	var fuel_total := 0.0
@@ -1029,6 +1031,7 @@ static func dispatch(gs, r: Dictionary, depart: float) -> float:
 		if fpv > 0.0 and not st.is_empty():
 			var cost := fpv * (int(pair[1]) / crew_per(mode)) * (1.0 - fuel_discount(gs, st))
 			BusinessSim.pay(gs, st, cost, "insumos")
+			FlowSim.spend(gs, cost, "combustible", FlowSim.share_of("combustible", 0.7))
 			fuel_total += cost
 	if fuel_total > 0.0:
 		var stt: Dictionary = gs.logistics.get("stats", {})

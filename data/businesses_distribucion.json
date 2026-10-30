@@ -1,0 +1,56 @@
+{
+  "_nota": "Ventas y distribución (docs/DISTRIBUCION.md): la Distribuidora compra a fábricas (tuyas o NPC) y revende a tiendas de la región con margen, con su propia flota. fleet_per_worker = unidades por semana que mueve cada empleado; dist_capacity = bodega propia; reach_km = pueblo más lejano que atiende.",
+  "distribuidora": {
+    "label": "Distribuidora",
+    "category": "negocio",
+    "sector": "Comercio",
+    "order": 112,
+    "product": "servicio",
+    "skill": "comercio",
+    "base_wage": 2.0,
+    "footprint": 6.0,
+    "distribution": true,
+    "description": "Mayorista con flota propia: compra a tus fábricas (traspaso interno) y a empresas NPC y revende con su margen a las tiendas NPC del pueblo y a los comerciantes de los pueblos con ruta. Sin empleados no reparte. Se maneja en Empresas → Ventas y distribución.",
+    "levels": [
+      {"label": "Distribuidora de arrieros", "cost": 900, "materials": {"madera": 30, "piedra": 10}, "build_days": 14, "workers": 3, "jobs": 4, "prod_per_worker": 1.0, "quality": 1.0, "upkeep": 0.4, "unit_cost": 0.0, "tech": "",
+        "fleet_per_worker": 35, "dist_capacity": 400, "reach_km": 90, "speed_km_day": 25, "fleet_label": "mulas y arrieros",
+        "model": [
+          {"s": "box", "size": [5.4, 2.6, 3.4], "pos": [0, 1.3, -0.8], "c": [0.62, 0.46, 0.3]},
+          {"s": "prism", "size": [5.8, 1.3, 3.9], "pos": [0, 3.25, -0.8], "rot": 90, "c": [0.45, 0.28, 0.2]},
+          {"s": "box", "size": [1.4, 1.8, 0.1], "pos": [0, 0.9, 0.93], "c": [0.3, 0.2, 0.12]},
+          {"s": "box", "size": [5.0, 0.35, 1.6], "pos": [0, 0.18, 1.8], "c": [0.5, 0.4, 0.3]},
+          {"s": "box", "size": [0.7, 0.7, 0.7], "pos": [-1.7, 0.7, 1.7], "c": [0.7, 0.55, 0.32]},
+          {"s": "box", "size": [0.6, 0.6, 0.6], "pos": [-0.9, 0.65, 2.0], "c": [0.66, 0.5, 0.3]},
+          {"s": "box", "size": [0.6, 0.5, 0.6], "pos": [1.6, 0.6, 1.9], "c": [0.72, 0.58, 0.34]},
+          {"s": "box", "size": [2.6, 0.5, 0.08], "pos": [0, 2.3, 0.95], "c": [0.85, 0.62, 0.22]}
+        ]},
+      {"label": "Distribuidora con carretas", "cost": 2600, "materials": {"madera": 50, "piedra": 30}, "build_days": 24, "workers": 4, "jobs": 8, "prod_per_worker": 1.0, "quality": 1.0, "upkeep": 1.0, "unit_cost": 0.0, "tech": "carretas",
+        "fleet_per_worker": 80, "dist_capacity": 1200, "reach_km": 180, "speed_km_day": 35, "fleet_label": "carretas de bueyes",
+        "model": [
+          {"s": "box", "size": [7.0, 3.0, 3.8], "pos": [0, 1.5, -0.8], "c": [0.66, 0.42, 0.3]},
+          {"s": "prism", "size": [7.4, 1.4, 4.3], "pos": [0, 3.7, -0.8], "rot": 90, "c": [0.4, 0.26, 0.2]},
+          {"s": "box", "size": [1.6, 2.0, 0.1], "pos": [-1.6, 1.0, 1.13], "c": [0.3, 0.2, 0.12]},
+          {"s": "box", "size": [1.6, 2.0, 0.1], "pos": [1.6, 1.0, 1.13], "c": [0.3, 0.2, 0.12]},
+          {"s": "box", "size": [6.6, 0.4, 1.8], "pos": [0, 0.2, 2.0], "c": [0.52, 0.42, 0.32]},
+          {"s": "box", "size": [1.6, 0.7, 1.0], "pos": [-2.2, 0.75, 2.2], "c": [0.55, 0.38, 0.22]},
+          {"s": "cyl", "size": [0.5, 0.12, 0.5], "pos": [-2.2, 0.4, 2.8], "rz": 90, "c": [0.3, 0.22, 0.15]},
+          {"s": "box", "size": [0.7, 0.7, 0.7], "pos": [1.0, 0.75, 2.1], "c": [0.7, 0.55, 0.32]},
+          {"s": "box", "size": [0.7, 0.6, 0.7], "pos": [1.9, 0.7, 2.2], "c": [0.66, 0.5, 0.3]},
+          {"s": "box", "size": [3.2, 0.55, 0.08], "pos": [0, 2.7, 1.15], "c": [0.85, 0.62, 0.22]}
+        ]},
+      {"label": "Centro de distribución", "cost": 9000, "materials": {"madera": 30, "piedra": 160}, "build_days": 45, "workers": 8, "jobs": 16, "prod_per_worker": 1.0, "quality": 1.0, "upkeep": 2.5, "unit_cost": 0.0, "tech": "automovil", "pollution": 1,
+        "fleet_per_worker": 220, "dist_capacity": 4000, "reach_km": 9999, "speed_km_day": 220, "fleet_label": "camiones de reparto",
+        "model": [
+          {"s": "floors", "size": [9.0, 4.4, 5.0], "pos": [0, 0, -0.8], "floors": 1, "c": [0.82, 0.8, 0.76], "c2": [0.32, 0.4, 0.48]},
+          {"s": "box", "size": [9.2, 0.3, 5.2], "pos": [0, 4.55, -0.8], "c": [0.3, 0.32, 0.36]},
+          {"s": "box", "size": [2.0, 2.6, 0.1], "pos": [-2.8, 1.3, 1.73], "c": [0.45, 0.45, 0.48]},
+          {"s": "box", "size": [2.0, 2.6, 0.1], "pos": [0, 1.3, 1.73], "c": [0.45, 0.45, 0.48]},
+          {"s": "box", "size": [2.0, 2.6, 0.1], "pos": [2.8, 1.3, 1.73], "c": [0.45, 0.45, 0.48]},
+          {"s": "box", "size": [8.8, 0.9, 1.6], "pos": [0, 0.45, 2.6], "c": [0.55, 0.55, 0.56]},
+          {"s": "box", "size": [1.5, 1.3, 2.2], "pos": [-3.0, 0.85, 4.0], "c": [0.85, 0.3, 0.2]},
+          {"s": "box", "size": [1.5, 1.0, 0.9], "pos": [-3.0, 0.7, 5.6], "c": [0.25, 0.3, 0.4]},
+          {"s": "box", "size": [4.0, 0.7, 0.08], "pos": [0, 3.6, 1.76], "c": [0.85, 0.62, 0.22]}
+        ]}
+    ]
+  }
+}

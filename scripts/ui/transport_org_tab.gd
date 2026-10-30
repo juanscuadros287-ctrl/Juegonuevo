@@ -85,6 +85,6 @@ static func finance_section(gs, body: VBoxContainer) -> void:
 		sec.add_child(dt)
 	var c := TransportDivSim.consolidated(gs)
 	var r := UIKit.rich()
-	r.text = "[b]Consolidado del grupo (mes anterior)[/b]: ingresos %s · gastos %s · resultado [color=%s]%s[/color]\n[color=#8a8f99]Se eliminan %s de fletes entre tus empresas (cuentan como venta de la transportadora y gasto del negocio, pero el dinero no sale del grupo).[/color]" % [
+	r.text = "[b]Consolidado del grupo (mes anterior)[/b]: ingresos %s · gastos %s · resultado [color=%s]%s[/color]\n[color=#8a8f99]Se eliminan %s de fletes y traspasos a tu distribuidora entre tus empresas (cuentan como venta de una y gasto de otra, pero el dinero no sale del grupo).[/color]" % [
 		Fmt.money(float(c["income"])), Fmt.money(float(c["expenses"])), "#6c6" if float(c["result"]) >= 0.0 else "#e66", Fmt.money(float(c["result"])), Fmt.money(float(c["internal"]))]
 	sec.add_child(r)

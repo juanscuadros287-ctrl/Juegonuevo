@@ -301,6 +301,7 @@ static func build_road(gs, ctrl: PackedVector2Array, kind: String) -> String:
 	if float(c.get("stone_stock", 0.0)) > 0.0:
 		ConstructionSim._consume_stock(gs, "piedra", float(c["stone_stock"]))
 	gs.add_money(-float(c["total"]))
+	FlowSim.spend(gs, float(c["total"]), "obras")   # Carretera: contratistas del pueblo (parte importada).
 	_stat(gs, "roads_cost", float(c["total"]))
 	var pid := _next_id(gs)
 	var pts: PackedVector2Array = plan["points"]
@@ -574,6 +575,9 @@ static func _charge_trade(gs, amount: float) -> void:
 	gs.add_money(-amount)
 	if amount > 0.0:
 		gs.add_counter("trade_investment", amount)
+		FlowSim.spend(gs, amount, "obras")
+	else:
+		FlowSim.external_in(gs, -amount, "ajuste de obras (trazado más corto)")   # Rebaja del contrato del camino.
 	_stat(gs, "trade_paths_cost", amount)
 
 
@@ -703,6 +707,7 @@ static func add_stop(gs, p: Vector2) -> Dictionary:
 	if why != "":
 		return {"error": why}
 	gs.add_money(-stop_cost(gs))
+	FlowSim.spend(gs, stop_cost(gs), "obras")
 	_stat(gs, "stops_cost", stop_cost(gs))
 	var id := _next_id(gs)
 	var s := {"id": id, "x": snappedf(p.x, 0.01), "z": snappedf(p.y, 0.01), "name": "Paradero %d" % (stops(gs).size() + 1)}
@@ -785,7 +790,7 @@ static func buy_bus(gs, depot: Dictionary) -> Dictionary:
 	var why := buy_block_reason(gs, depot)
 	if why != "":
 		return {"error": why}
-	BusinessSim.pay(gs, depot, bus_price(gs), "obras")
+	BusinessSim.pay_out(gs, depot, bus_price(gs), "obras", FlowSim.share_of("vehículos", 0.8))   # El bus viene de fuera casi entero.
 	var id := _next_id(gs)
 	var rid := -1
 	for r in routes(gs):
@@ -1268,7 +1273,7 @@ static func _bus_costs(gs) -> void:
 		if n <= 0:
 			continue
 		var upkeep := float(bc.get("upkeep", 1.0)) * n * pm
-		BusinessSim.pay(gs, d, upkeep, "mantenimiento")
+		BusinessSim.pay_out(gs, d, upkeep, "mantenimiento")
 		_stat(gs, "bus_upkeep", upkeep)
 		var fuel := 0.0
 		for r in routes(gs):
@@ -1282,6 +1287,7 @@ static func _bus_costs(gs) -> void:
 			fuel += float(bc.get("fuel_per_km", 3.0)) * km * fuel_price * pm * int(st["operating"])
 		if fuel > 0.0:
 			BusinessSim.pay(gs, d, fuel, "insumos")
+			FlowSim.spend(gs, fuel, "combustible", FlowSim.share_of("combustible", 0.7))
 			_stat(gs, "bus_fuel", fuel)
 
 

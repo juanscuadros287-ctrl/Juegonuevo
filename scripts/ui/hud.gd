@@ -20,6 +20,7 @@ const CATEGORIES := [
 	{"id": "construir", "label": "Construir", "icon": "build", "key": "B", "items": [["build", "Construir", "build", "B"]]},
 	{"id": "empresas", "label": "Empresas", "icon": "companies", "key": "F2", "items": [
 		["companies", "Mis empresas", "companies", "C"], ["realestate", "Bienes raíces", "realestate", "V"], ["lands", "Mis terrenos", "map", ""], ["contracts", "Contratos", "contracts", "K"],
+		["distribution", "Ventas y distribución", "trade", ""],   # Canales de venta (docs/DISTRIBUCION.md)
 		["hiring", "Contrataciones", "employment", ""]]},   # Contrataciones: vacantes, postulantes y personal
 	{"id": "economia", "label": "Economía", "icon": "economy", "key": "F3", "items": [
 		["finance", "Finanzas", "finance", "F"], ["cash", "Efectivo y riesgo", "money", ""], ["stats", "Estadísticas", "stats", "Y"],
@@ -93,6 +94,7 @@ var government_panel: GovernmentPanel
 var logistics_panel: LogisticsPanel
 var trade_panel: TradePanel
 var contracts_panel: ContractsPanel
+var distribution_panel: DistributionPanel
 var tourism_panel: TourismPanel
 var realestate_panel: RealEstatePanel   # Bienes raíces
 var utilities_panel: UtilitiesPanel
@@ -996,9 +998,10 @@ func _build_dock() -> void:
 	realestate_panel = RealEstatePanel.new()
 	utilities_panel = UtilitiesPanel.new()
 	contracts_panel = ContractsPanel.new()
+	distribution_panel = DistributionPanel.new()
 	transit_panel = TransitPanel.new()
 	cash_panel = CashPanel.new()
-	for panel in [logistics_panel, trade_panel, tourism_panel, realestate_panel, utilities_panel, contracts_panel, transit_panel, cash_panel]:
+	for panel in [logistics_panel, trade_panel, tourism_panel, realestate_panel, utilities_panel, contracts_panel, distribution_panel, transit_panel, cash_panel]:
 		panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 		stack.add_child(panel)
 		panel.setup(self)
@@ -1026,6 +1029,7 @@ func _show_dock(mode: String, keep_open := false) -> void:
 	trade_panel.visible = mode == "trade"
 	tourism_panel.visible = mode == "tourism"
 	contracts_panel.visible = mode == "contracts"
+	distribution_panel.visible = mode == "distribution"
 	realestate_panel.visible = mode == "realestate"
 	utilities_panel.visible = mode == "utilities"
 	transit_panel.visible = mode == "transit"
@@ -1047,6 +1051,8 @@ func _show_dock(mode: String, keep_open := false) -> void:
 			tourism_panel.refresh()
 		"contracts":
 			contracts_panel.refresh()
+		"distribution":
+			distribution_panel.refresh()
 		"government":
 			government_panel.refresh()
 		"stats":

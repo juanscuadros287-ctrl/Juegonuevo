@@ -965,6 +965,7 @@ static func deliver(gs, id: int) -> String:
 	_advance(k)
 	_rep_add(gs, key, float(cfg().get("rep_success", 4)))
 	FreeMarketSim.stat(gs, "delivered_value", value)
+	DistributionSim.record(gs, "contratos", good, qty, value)   # Ventas y distribución: canal contratos.
 	return ""
 
 

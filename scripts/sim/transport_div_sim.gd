@@ -105,8 +105,7 @@ static func beneficiary(gs, s: Dictionary) -> int:
 
 ## Cada día: registra los envíos nuevos (unidades·km por estación y negocio) y factura los fletes de las empresas.
 static func daily(gs) -> void:
-	var t := st(gs)
-	var tkm: Dictionary = t["month"]["tkm"]
+	st(gs)
 	var rf := float(LogisticsSim.tcfg().get("route_factor", 1.25))
 	for s in LogisticsSim.shipments(gs):
 		if s.has("tdiv"):
@@ -128,20 +127,33 @@ static func daily(gs) -> void:
 			var stb: Dictionary = gs.get_building(int(pair[0]))
 			if stb.is_empty() or not is_transport(gs, stb):
 				continue
-			var share := float(pair[1]) / float(n)
-			var sk := str(int(stb["id"]))
-			var row: Dictionary = tkm.get(sk, {})
-			row[str(benef)] = float(row.get(str(benef), 0.0)) + qty * km * share
-			tkm[sk] = row
-			if org(stb) == "empresa" and benef >= 0 and benef != int(stb["id"]):
-				var fee := snappedf(freight(gs, stb, qty * share, km), 0.01)
-				if fee > 0.0:
-					var payer: Dictionary = gs.get_building(benef)
-					BusinessSim.ledger_add(payer, "fletes", fee)
-					BusinessSim.ledger_add(stb, "ventas", fee)
-					t["month"]["billed"] = float(t["month"].get("billed", 0.0)) + fee
-					t["total_billed"] = float(t.get("total_billed", 0.0)) + fee
-					stb["fletes_internos_mes"] = float(stb.get("fletes_internos_mes", 0.0)) + fee
+			record_trip(gs, stb, benef, qty * float(pair[1]) / float(n), km)
+
+
+## Registra un viaje de un edificio de transporte tuyo: unidades·km para el reparto del costo (división
+## interna) y, si es empresa aparte, el flete al negocio beneficiario. También lo usa DistributionSim
+## (ventas a otros pueblos, sucursales y exportación). Devuelve el flete facturado (0 si es interna).
+static func record_trip(gs, stb: Dictionary, benef: int, qty: float, km: float) -> float:
+	if stb.is_empty() or not is_transport(gs, stb) or qty <= 0.0:
+		return 0.0
+	var t := st(gs)
+	var tkm: Dictionary = t["month"]["tkm"]
+	var sk := str(int(stb["id"]))
+	var row: Dictionary = tkm.get(sk, {})
+	row[str(benef)] = float(row.get(str(benef), 0.0)) + qty * km
+	tkm[sk] = row
+	if org(stb) != "empresa" or benef < 0 or benef == int(stb["id"]):
+		return 0.0
+	var fee := snappedf(freight(gs, stb, qty, km), 0.01)
+	var payer: Dictionary = gs.get_building(benef)
+	if fee <= 0.0 or payer.is_empty():
+		return 0.0
+	BusinessSim.ledger_add(payer, "fletes", fee)
+	BusinessSim.ledger_add(stb, "ventas", fee)
+	t["month"]["billed"] = float(t["month"].get("billed", 0.0)) + fee
+	t["total_billed"] = float(t.get("total_billed", 0.0)) + fee
+	stb["fletes_internos_mes"] = float(stb.get("fletes_internos_mes", 0.0)) + fee
+	return fee
 
 
 ## Gasto del mes anterior de un edificio (todo lo que no es ingreso ni inversión).
@@ -274,4 +286,6 @@ static func consolidated(gs) -> Dictionary:
 		spend += expenses(b)
 	for b in division(gs):
 		internal += float(b.get("fletes_internos_last", 0.0))
+	for b in DistributionSim.distributors(gs, false):
+		internal += float(b.get("dist_internal_last", 0.0))   # Traspasos de tus fábricas a tu distribuidora.
 	return {"income_gross": inc, "expenses_gross": spend, "internal": internal, "income": inc - internal, "expenses": spend - internal, "result": inc - spend}

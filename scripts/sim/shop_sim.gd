@@ -11,8 +11,8 @@ extends RefCounted
 ##   (× cobertura eléctrica en los niveles modernos).
 ## - Deseos (data/citizens.json → wants): cada semana cada adulto decide, según la época, sus ahorros
 ##   (en días de necesidades básicas) y la frecuencia del deseo, si compra ropa, carne, muebles,
-##   medicinas, un auto… Solo compra en tus comercios con existencias: el dinero circula (economía
-##   cerrada). Si nadie vende, el deseo queda insatisfecho y se registra (oportunidad de negocio).
+##   medicinas, un auto… Compra en tus comercios con existencias y en las tiendas NPC que revenden lo
+##   que compraron al por mayor (DistributionSim): el dinero circula (economía cerrada). Si nadie vende, el deseo queda insatisfecho y se registra (oportunidad de negocio).
 ## Estado: gs.economy["shops"] = {month, last_month, owners}. Llamado desde MarketSim.discretionary.
 
 
@@ -84,6 +84,19 @@ static func context(gs) -> Dictionary:
 		cap[int(b["id"])] = weekly_customers(gs, b)
 		for g in shop_def_of(str(b["type"])).get("sells", []):
 			if not GameData.goods.has(str(g)):
+				continue
+			if not by_good.has(g):
+				by_good[g] = []
+			by_good[g].append(b)
+	# Ventas y distribución: las tiendas NPC venden lo que compraron al por mayor (su stock de reventa).
+	for b in DistributionSim.resellers(gs):
+		var rs: Dictionary = DistributionSim.resale(b)
+		if rs.is_empty():
+			continue
+		shops.append(b)
+		cap[int(b["id"])] = DistributionSim.reseller_customers(gs, b)
+		for g in rs:
+			if float(rs[g]) <= 0.0:
 				continue
 			if not by_good.has(g):
 				by_good[g] = []
@@ -211,11 +224,12 @@ static func _buy(gs, c, w: Dictionary, qty: float, ctx: Dictionary, nd: float, s
 		for b in by_good[g]:
 			if float(caps.get(int(b["id"]), 0.0)) < 1.0:
 				continue
-			var have := float(wh[g]) + float(b["inventory"].get(g, 0.0))
+			var npc := NpcBusinessSim.is_npc(b)   # Tienda NPC: solo su stock de reventa (DistributionSim).
+			var have := DistributionSim.resale_stock(b, g) if npc else float(wh[g]) + float(b["inventory"].get(g, 0.0))
 			if have < minf(q, 1.0) * 0.999 or (q >= 1.0 and float(GameData.goods.get(g, {}).get("base_price", 0.0)) >= whole and have < q):
 				continue
 			any_stock = true
-			options.append([g, b, price_for(gs, b, g), minf(q, have)])
+			options.append([g, b, DistributionSim.resale_price(gs, b, g) if npc else price_for(gs, b, g), minf(q, have)])
 	if not any_shop:
 		return {"result": "no_shop"}
 	if options.is_empty():
@@ -252,7 +266,11 @@ static func _buy(gs, c, w: Dictionary, qty: float, ctx: Dictionary, nd: float, s
 			cost = q * price
 		if q <= 0.001:
 			continue
-		_take(gs, b, g, q)
+		if NpcBusinessSim.is_npc(b):
+			DistributionSim.take_resale(gs, b, g, q, cost)
+		else:
+			_take(gs, b, g, q)
+			DistributionSim.record(gs, "tienda", g, q, cost)
 		wh.erase(g)
 		c.money -= cost
 		BusinessSim.earn(gs, b, cost, "ventas")

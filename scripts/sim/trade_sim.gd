@@ -8,7 +8,8 @@ extends RefCounted
 ##   shipments:    envíos en camino {id, town_id, good, qty, kind ("vender"/"comprar"), value, arrive_day, mode}
 ##   contracts:    contratos automáticos {id, town_id, good, kind, qty, every, next_day, limit, active, fails}
 ##   month / last_month / totals: estadísticas (exportaciones, importaciones, fletes, inmigrantes)
-## Parámetros en data/trade.json. Toda la plata entra/sale con gs.add_money (economía cerrada).
+## Parámetros en data/trade.json. Toda la plata entra/sale con gs.add_money y su destino va por FlowSim o la caja
+## del pueblo (economía cerrada).
 
 const KIND_SELL := "vender"
 const KIND_BUY := "comprar"
@@ -241,6 +242,7 @@ static func open_route(gs, town_id: String) -> String:
 	var q := connection_cost(gs, town_id)
 	var t := town(gs, town_id)
 	gs.add_money(-float(q["total"]))
+	FlowSim.spend(gs, float(q["total"]), "obras")   # Acuerdo y camino: contratistas del pueblo (parte importada).
 	gs.add_counter("trade_investment", float(q["total"]))
 	_stat(gs, "investment", float(q["total"]))
 	gs.trade["projects"].append({"town_id": town_id, "start_day": gs.today(), "done_day": gs.today() + int(q["days"]),
@@ -307,6 +309,7 @@ static func upgrade_road(gs, town_id: String) -> String:
 	var c := connection(gs, town_id)
 	var q := road_upgrade_quote(gs, town_id)
 	gs.add_money(-float(q["cost"]))
+	FlowSim.spend(gs, float(q["cost"]), "obras")
 	gs.add_counter("trade_investment", float(q["cost"]))
 	_stat(gs, "investment", float(q["cost"]))
 	c["work"]["road"] = {"level": int(q["level"]), "done_day": gs.today() + int(q["days"])}
@@ -345,6 +348,7 @@ static func build_rail(gs, town_id: String) -> String:
 	var c := connection(gs, town_id)
 	var q := rail_quote(gs, town_id)
 	gs.add_money(-float(q["cost"]))
+	FlowSim.spend(gs, float(q["cost"]), "obras")
 	gs.add_counter("trade_investment", float(q["cost"]))
 	_stat(gs, "investment", float(q["cost"]))
 	c["work"]["rail"] = {"done_day": gs.today() + int(q["days"])}
@@ -604,6 +608,8 @@ static func buy(gs, town_id: String, good: String, qty: float, max_unit := 0.0) 
 	gs.add_money(-goods_cost)
 	if tariff > 0.0:
 		GovSim.add_treasury(gs, tariff)  # El arancel queda en el tesoro del pueblo.
+	var seller := town(gs, town_id)
+	seller["cash"] = float(seller.get("cash", 0.0)) + goods_cost - maxf(0.0, tariff)   # Lo cobra el pueblo que vende.
 	gs.add_counter("imports", goods_cost)
 	EconomySim.record_value(gs, "imports", goods_cost)
 	_stat(gs, "imports", goods_cost)
@@ -629,11 +635,13 @@ static func _pay_transport(gs, _town_id: String, q: Dictionary) -> void:
 	wages = minf(wages, cost)
 	var crew := _local_crew(gs, int(md.get("crew", 1)) * int(q["trips"]))
 	if crew.is_empty():
+		FlowSim.spend(gs, cost, "fletes")   # Sin cargadores del pueblo: arrieros y proveedores (parte de fuera).
 		return
 	var share: float = wages / crew.size()
 	for c in crew:
 		c.money += share
 		c.skills["comercio"] = minf(100.0, float(c.skills.get("comercio", 0.0)) + 0.1)
+	FlowSim.spend(gs, cost - wages, "fletes")   # Peajes, forraje, combustible y animales: proveedores (parte de fuera).
 
 
 static func _local_crew(gs, n: int) -> Array:
@@ -747,6 +755,14 @@ static func _deliver(gs, today: int) -> void:
 		var tname := str(town(gs, str(s["town_id"])).get("name", ""))
 		if str(s["kind"]) == KIND_SELL:
 			var value := float(s["value"])
+			# Paga el pueblo desde su caja; lo que no alcance lo pagan sus clientes de fuera (cuenta externa).
+			var buyer := town(gs, str(s["town_id"]))
+			var from_cash := minf(value, maxf(0.0, float(buyer.get("cash", 0.0))))
+			if from_cash > 0.0:
+				buyer["cash"] = float(buyer["cash"]) - from_cash
+			if value - from_cash > 0.0:
+				FlowSim.external_in(gs, value - from_cash, "exportación a pueblos (clientes de fuera)")
+			DistributionSim.record(gs, "exportacion", str(s["good"]), float(s["qty"]), value)
 			gs.add_money(value)
 			gs.add_counter("exports", value)
 			EconomySim.record_value(gs, "exports", value)
@@ -809,6 +825,7 @@ static func _upkeep(gs) -> void:
 	var total := monthly_upkeep_estimate(gs)
 	if total > 0.0:
 		gs.add_money(-total)
+		FlowSim.spend(gs, total, "mantenimiento")   # Caminos, vías y animales: proveedores del pueblo (parte de fuera).
 		gs.add_counter("trade_upkeep", total)
 		_stat(gs, "upkeep", total)
 

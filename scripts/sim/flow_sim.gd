@@ -92,6 +92,22 @@ static func spend(gs, amount: float, reason: String, import_share := -1.0) -> vo
 	pay_local(gs, amount - imp)
 
 
+## Parte importada configurada para un motivo (economy.json → flows.import_share) o `default`.
+static func share_of(reason: String, default := 0.3) -> float:
+	return float(cfg().get("import_share", {}).get(reason, default))
+
+
+## Compra hecha afuera a precio de importación (con arancel): el arancel queda en el tesoro y el resto sale
+## a la cuenta externa con su motivo. El que paga ya lo descontó.
+static func spend_import(gs, amount: float, reason: String) -> void:
+	if amount <= 0.0:
+		return
+	var tariff := maxf(0.0, amount - amount / maxf(0.01, GovSim.import_mult(gs)))
+	if tariff > 0.0:
+		GovSim.add_treasury(gs, tariff)
+	external_out(gs, amount - tariff, reason)
+
+
 ## Paga a proveedores del pueblo: primero empresas NPC activas (su caja), luego vecinos sin
 ## empleo (venden lo que cultivan o reparan); sin nadie, lo recibe el mercado municipal (tesoro).
 static func pay_local(gs, amount: float) -> void:

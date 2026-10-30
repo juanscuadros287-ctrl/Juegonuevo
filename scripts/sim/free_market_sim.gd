@@ -6,6 +6,7 @@ extends RefCounted
 ##   TownEconomySim   — pueblos vecinos que crecen y comercian entre ellos.
 ##   ContractSim      — contratos de compra y venta, únicos o recurrentes a precio fijo.
 ##   GovPlansSim      — el gobierno construye parques, salud, policía, escuelas y vivienda social.
+##   DistributionSim  — canales de venta: mayorista, sucursales, distribuidoras y exportación.
 ## Generador aleatorio propio (no altera la secuencia de gs.rng del resto de la simulación).
 
 
@@ -29,6 +30,7 @@ static func init_state(gs) -> void:
 		m["rng_state"] = str(r.state)
 	TownEconomySim.ensure(gs)
 	ContractSim.migrate(gs)   # Contratos de partidas viejas: cuotas mensuales → frecuencia 30.
+	DistributionSim.ensure(gs)   # Ventas y distribución: partidas viejas lo crean con valores por defecto.
 
 
 static func next_id(gs) -> int:
@@ -102,6 +104,7 @@ static func daily(gs) -> void:
 	NpcBusinessSim.daily(gs)
 	GovPlansSim.daily(gs)
 	ContractSim.daily(gs)
+	DistributionSim.daily(gs)   # Ventas y distribución: mayorista, sucursales, distribuidoras y exportación.
 
 
 static func monthly(gs) -> void:
@@ -109,6 +112,7 @@ static func monthly(gs) -> void:
 	GovPlansSim.monthly(gs)
 	TownEconomySim.monthly(gs)
 	ContractSim.monthly(gs)
+	DistributionSim.monthly(gs)
 
 
 ## Suma de todo el dinero que existe dentro del sistema (jugador, ciudadanos, cajas de negocios,

@@ -1,0 +1,58 @@
+{
+  "_nota": "Ventas y distribución (DistributionSim, docs/DISTRIBUCION.md): canales de venta de lo que fabricas. Precios × price_mult salvo que se diga otra cosa.",
+  "channels": {
+    "tienda": {"label": "Tiendas propias y venta directa", "short": "Tiendas", "icon": "companies"},
+    "mayorista": {"label": "Mayorista (B2B a tiendas y empresas)", "short": "Mayorista", "icon": "trade"},
+    "sucursal": {"label": "Sucursales en otros pueblos", "short": "Sucursales", "icon": "town"},
+    "distribuidora": {"label": "Distribuidora propia", "short": "Distribuidora", "icon": "logistics"},
+    "exportacion": {"label": "Exportación", "short": "Exportación", "icon": "globe"},
+    "contratos": {"label": "Contratos firmados", "short": "Contratos", "icon": "contracts"}
+  },
+  "_nota_prioridad": "Orden por defecto en que los canales toman el stock de cada producto (configurable por producto). Las tiendas propias venden todo el tiempo: si van antes que otro canal, ese canal deja una reserva de shop_reserve_days días de sus ventas.",
+  "default_priority": ["tienda", "sucursal", "mayorista", "distribuidora", "exportacion"],
+  "default_enabled": {"tienda": true, "mayorista": true, "sucursal": true, "distribuidora": true, "exportacion": false},
+  "shop_reserve_days": 21,
+  "shop_min_reserve": 8,
+  "_nota_mayorista": "Precio mayorista = mercado × wholesale_factor (nunca bajo el precio mínimo). Una tienda NPC compra si el precio no pasa de mercado × buyer_max_factor (debe ganar al revender). Precio mínimo automático: costo unitario de tu fábrica × auto_floor_cost_mult o, sin costeo, mercado × auto_floor_market.",
+  "wholesale_factor": 0.78,
+  "buyer_max_factor": 0.92,
+  "auto_floor_cost_mult": 1.05,
+  "auto_floor_market": 0.45,
+  "_nota_tiendas_npc": "Las tiendas NPC (empresas NPC cuyo tipo es un comercio de data/shops.json) reponen su stock de reventa cada semana: cubren store_cover_days días de su demanda (lo que vendieron el mes pasado y los vecinos que se fueron sin comprar, store_unmet_capture). Gastan como mucho store_cash_share de su caja por semana.",
+  "store_cover_days": 14,
+  "store_unmet_capture": 0.6,
+  "store_cash_share": 0.5,
+  "store_min_units": 0.5,
+  "store_customers_floor": 6,
+  "store_open": {"type": "tienda", "min_unmet_units": 6, "cooldown_days": 120, "first_month": 4},
+  "_nota_pueblos": "Comerciantes de los pueblos con ruta: cada mes compran hasta town_wholesale_share de su demanda, a su precio de importación × town_wholesale_factor, y pagan desde la caja del pueblo (como mucho town_cash_share de la caja por pedido).",
+  "town_wholesale_share": 0.35,
+  "town_wholesale_factor": 0.8,
+  "town_cash_share": 0.25,
+  "_nota_sucursales": "Comercio propio en otro pueblo, abastecido por ruta. Arriendo y personal se pagan a la caja de ese pueblo. Vende a los vecinos de allá al precio de importación del pueblo × (1 + margen), con demanda capture × su demanda mensual y elasticidad al margen.",
+  "branch": {
+    "levels": [
+      {"label": "Sucursal", "open_cost": 900, "rent_month": 20, "staff": 2, "staff_wage": 1.8, "capacity": 200, "capture": 0.3},
+      {"label": "Almacén sucursal", "open_cost": 2600, "rent_month": 45, "staff": 4, "staff_wage": 1.9, "capacity": 600, "capture": 0.55, "tech": "contabilidad"}
+    ],
+    "default_markup": 0.1,
+    "max_markup": 0.8,
+    "cover_days": 21,
+    "daily_cash_share": 0.03,
+    "elasticity": 2.0
+  },
+  "_nota_export": "Exportación fuera de la región: necesita una ruta a otro pueblo o un puerto propio y un vehículo. Solo saca el excedente (lo que pasa de keep_days días de ventas), share por semana, a mercado × price_factor. El dinero entra del exterior (cuenta externa, motivo «exportación»).",
+  "export": {"price_factor": 0.62, "keep_days": 20, "share": 0.5, "port_km": 60, "max_units_week": 400},
+  "_nota_transporte": "Sin ruta ni vehículo el producto no sale del pueblo. Vehículos: tus estaciones de transporte (división interna o empresa, pasan por TransportDivSim) y la flota de tus distribuidoras. Capacidad por semana: trabajadores × crew_units_week × multiplicador del mejor medio. Costo variable por viaje (combustible, forraje y desgaste): unidades × km × cost_per_ukm + trip_fixed, pagado por el dueño del vehículo a proveedores (parte importada).",
+  "carriers": {
+    "crew_units_week": 30,
+    "mode_mult": {"pie": 1.0, "animal": 1.6, "carreta": 2.5, "camion": 6.0, "tren": 10.0, "barco": 8.0, "avion": 6.0},
+    "reach_km": {"pie": 90, "animal": 150, "carreta": 180, "camion": 9999, "tren": 9999, "barco": 9999, "avion": 9999},
+    "speed_km_day": {"pie": 25, "animal": 30, "carreta": 35, "camion": 220, "tren": 250, "barco": 120, "avion": 800},
+    "cost_per_ukm": 0.004,
+    "trip_fixed": 1.0,
+    "import_share": 0.45
+  },
+  "_nota_distribuidora": "Negocio Distribuidora (data/businesses_distribucion.json): compra a tus fábricas (traspaso interno al precio mayorista, sin mover dinero) y a empresas NPC (su precio × npc_price_factor, del excedente que pasa de npc_keep_days días de ventas) y revende a las tiendas NPC del pueblo y a los comerciantes de los pueblos con ruta dentro de su alcance, con su margen y su flota.",
+  "distribuidora": {"default_margin": 0.12, "max_margin": 0.6, "npc_keep_days": 10, "npc_price_factor": 0.85, "cash_share": 0.6}
+}

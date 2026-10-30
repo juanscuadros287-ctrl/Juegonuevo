@@ -163,6 +163,8 @@ static func purchase(gs, payers: Array, good: String, qty: float, ref_price: flo
 			break
 		inv[good] = stock - take
 		_earn(gs, b, cost)
+		if gs.owned_by_player(b):
+			DistributionSim.record(gs, "tienda", good, take, cost)   # Venta directa de tus negocios.
 		revenue += cost
 		left -= take
 		bonus += (_quality(gs, b) - 1.0) * 2.0 * (take / qty)
@@ -240,6 +242,8 @@ static func discretionary(gs) -> void:
 				spent += take * price
 				units += take
 				BusinessSim.earn(gs, b, take * price, "ventas")
+				if gs.owned_by_player(b):
+					DistributionSim.record(gs, "tienda", gid, take, take * price)
 				EconomySim.record_discretionary(gs, gid, take, take * price)
 		if units > 0.0:
 			c.happiness = minf(100.0, c.happiness + minf(float(cfg.get("max_bonus", 6)), units * float(cfg.get("happiness_per_unit", 0.4))))

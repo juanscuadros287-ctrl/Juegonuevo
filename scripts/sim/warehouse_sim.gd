@@ -442,6 +442,7 @@ static func shop_sell(gs, c, budget: float, ctx: Dictionary) -> Dictionary:
 			spent += cost
 			units += take
 			BusinessSim.earn(gs, b, cost, "ventas")
+			DistributionSim.record(gs, "tienda", g, take, cost)   # Ventas y distribución: canal tiendas propias.
 			EconomySim.record_discretionary(gs, g, take, cost)
 			break
 	return {"spent": spent, "units": units}
