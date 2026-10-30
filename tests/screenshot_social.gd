@@ -53,7 +53,7 @@ func _ready() -> void:
 	var rich: Citizen = people[6]
 	rich.money = 900.0
 	PlayerSim._add_affinity(gs, rich.id, 85.0)
-	SocialSim._msg(gs, rich.id, "oferta", "Quisiera invertir $300 en Granja Cuadros a cambio del 8% de sus utilidades. ¿Qué me dice? — %s" % rich.first_name, gs.today(),
+	SocialSim._msg(gs, rich.id, "oferta", "Quisiera invertir $300 en Granja Cuadros a cambio del 8%% de sus utilidades. ¿Qué me dice? — %s" % rich.first_name, gs.today(),
 		{"type": "inversion", "bid": int(farm["id"]), "capital": 300.0, "share": 0.08})
 	TimeManager.total_hours += 10 - TimeManager.hour()
 	var world: Node3D = load("res://scenes/main.tscn").instantiate()

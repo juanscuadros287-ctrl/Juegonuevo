@@ -20,7 +20,7 @@ Hay dos reglas que valen para todo:
 | `scripts/ui/social_ui.gd` (`SocialUI`) | Botón y ventana del dispositivo, conversación, oferta de trabajo, formulario de sociedad, sección «Ánimo y relación» de la ficha |
 | `scripts/ui/partners_tab.gd` (`PartnersTab`) | Pestaña «Socios» del panel de edificio |
 | `data/social.json` | Parámetros de todo lo anterior |
-| `tests/test_social.gd` | Pruebas: 116 comprobaciones, de la simulación a la interfaz |
+| `tests/test_social.gd` | Pruebas: más de 110 comprobaciones, de la simulación a la interfaz |
 | `tests/screenshot_social.gd` | Capturas en `docs/capturas/social/` |
 
 ## 1. Socios
