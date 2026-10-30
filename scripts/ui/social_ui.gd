@@ -37,7 +37,7 @@ var _held_agent: Node = null
 
 func setup(p_hud) -> void:
 	hud = p_hud
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build_device()
 	_build_convo()

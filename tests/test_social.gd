@@ -497,7 +497,11 @@ func _test_ui() -> void:
 	add_child(world)
 	await get_tree().process_frame
 	var hud: Hud = world.hud
-	check(hud.social_ui != null and hud.social_ui.device_btn.visible, "botón del dispositivo abajo a la derecha")
+	check(hud.social_ui != null and hud.social_ui.device_btn.visible, "botón del dispositivo visible")
+	await get_tree().process_frame
+	var vr: Rect2 = hud.social_ui.get_global_rect()
+	var br: Rect2 = hud.social_ui.device_btn.get_global_rect()
+	check(vr.size.x > 100.0 and vr.encloses(br) and br.end.x > vr.size.x - 20.0 and br.end.y > vr.size.y - 20.0 and hud.social_ui.anchor_right == 1.0, "el botón queda abajo a la derecha, dentro de la pantalla (%s en %s)" % [str(br), str(vr.size)])
 	EventBus.citizen_selected.emit(c.id)
 	await get_tree().process_frame
 	var texts := _buttons(hud.citizen_actions)
