@@ -1,7 +1,7 @@
 # Plan de arquitectura y roadmap — Simulador de empresa de energía global
 
 > Nombre provisional: **Voltaje** (se cambia en `packages/data/game.yaml`).
-> Estado: **Fase 0 — pendiente de aprobación.**
+> Estado: **Fase 0 aprobada** (stack aprobado, país inicial Panamá, repo propio).
 
 ---
 
@@ -189,10 +189,9 @@ Cada fase termina con: el juego corre y se juega, pruebas en verde, `CLAUDE.md` 
 ## 8. Decisiones que tomé (cámbialas si quieres)
 - Nombre provisional "Voltaje"; UI en español (con textos en archivos para traducir después).
 - Año de inicio 2026, costos actuales.
-- El juego vive en la carpeta `energia/` de este repo, separado de Dinastía. Se puede mover a su propio repo sin cambios.
 - Plantas modeladas por código (sin assets descargados) para poder cambiar el estilo fácil.
 
-## 9. Decisiones tuyas
-1. **Aprobar el stack** (TypeScript + Three.js + React + Tauri).
-2. **País inicial** (pequeño, con buen sol y viento para la Fase 2). Recomiendo **Costa Rica** (después da geotermia e hidro); alternativas: Uruguay, Panamá, República Dominicana.
-3. **¿Carpeta `energia/` en este repo o repo nuevo?** Recomiendo la carpeta para empezar.
+## 9. Decisiones del usuario (2026-11-03)
+1. Stack aprobado: TypeScript + Three.js + React + Tauri.
+2. País inicial: **Panamá**.
+3. Repo propio (separado de Dinastía).

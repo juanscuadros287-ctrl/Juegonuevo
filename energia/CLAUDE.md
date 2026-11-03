@@ -1,9 +1,9 @@
 # CLAUDE.md — Voltaje (simulador de empresa de energía)
 
-Proyecto independiente de Dinastía (el juego Godot en la raíz del repo). No mezclar código.
+Proyecto independiente de Dinastía. Repo propio.
 
 ## Estado actual
-- **Fase 0**: plan de arquitectura escrito en `PLAN.md`. Esperando aprobación del usuario (stack, país inicial, ubicación del repo). No hay código todavía.
+- **Fase 0 aprobada.** Siguiente: Fase 1 (globo, capas, tiempo, guardado).
 
 ## Arquitectura (resumen; detalle en PLAN.md)
 - `packages/sim`: motor puro en TypeScript. Sin DOM, sin `Math.random`/`Date.now`. Determinista (PCG32 con semilla, un flujo de RNG por subsistema). Corre en Web Worker.
@@ -22,6 +22,7 @@ Proyecto independiente de Dinastía (el juego Godot en la raíz del repo). No me
 ## Decisiones
 | Fecha | Decisión |
 |---|---|
-| 2026-11-03 | Stack propuesto: TS + Three.js + React + Tauri (pendiente de aprobación). |
-| 2026-11-03 | Ubicación provisional: carpeta `energia/` en este repo. |
+| 2026-11-03 | Stack aprobado: TS + Three.js + React + Tauri. |
+| 2026-11-03 | País inicial: Panamá. |
+| 2026-11-03 | Repo propio, separado de Dinastía. |
 | 2026-11-03 | Año de inicio 2026; UI en español. |
