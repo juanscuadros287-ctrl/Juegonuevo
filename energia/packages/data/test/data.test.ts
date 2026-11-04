@@ -8,6 +8,9 @@ import suppliers from '../suppliers.yaml';
 import solar from '../technologies/solar_fv.yaml';
 import eolica from '../technologies/eolica_tierra.yaml';
 import pan from '../countries/PAN.yaml';
+import research from '../research.yaml';
+import clients from '../clients.yaml';
+import competitors from '../competitors.yaml';
 
 describe('Datos del juego', () => {
   it('todos los YAML cumplen su esquema', () => {
@@ -82,5 +85,58 @@ describe('Datos de la Fase 2', () => {
     expect(() => buildGameData(r2)).toThrow(/ovni/);
     const r3 = raw(); r3.technologies['solar_fv.yaml'].estudios_requeridos.push('astrologia');
     expect(() => buildGameData(r3)).toThrow(/astrologia/);
+  });
+});
+
+describe('Datos de la Fase 3', () => {
+  const raw = () => structuredClone({ game, layers, countries: { 'PAN.yaml': pan }, technologies: { 'solar_fv.yaml': solar, 'eolica_tierra.yaml': eolica }, studies, suppliers, research, clients, competitors }) as any;
+
+  it('I+D, clientes, competidores y dinámica de proveedores cargan y se cruzan bien', () => {
+    const d = gameData.simData;
+    expect(d.research!.nodos.length).toBeGreaterThanOrEqual(30);
+    for (const r of ['tecnologias', 'estudios', 'mercados', 'contratos', 'eficiencia']) expect(d.research!.nodos.some((n) => n.rama === r)).toBe(true);
+    expect(d.research!.nodos.filter((n) => n.inicial).map((n) => n.id).sort()).toEqual(['contrato_ppa_simple', 'est_basicos', 'mercado_panama', 'tec_eolica_tierra', 'tec_solar_fv']);
+    expect(d.competitors!.empresas.length).toBeGreaterThanOrEqual(3);
+    expect(d.competitors!.empresas.length).toBeLessThanOrEqual(5);
+    expect(new Set(d.competitors!.empresas.map((c) => c.estrategia)).size).toBe(d.competitors!.empresas.length);
+    expect(d.clients!.tipos.some((t) => t.tipo === 'licitacion_publica')).toBe(true);
+    expect(new Set(d.clients!.tipos.map((t) => t.contrato))).toEqual(new Set(['ppa', 'potencia', 'epc', 'bot']));
+    expect(d.supply!.materiales.map((m) => m.id).sort()).toEqual(['acero', 'cobre', 'polisilicio']);
+    for (const t of ['equipos', 'epc', 'inversores', 'logistica']) expect(Object.values(d.suppliers).some((s) => s.tipo === t)).toBe(true);
+    expect(buildGameData(raw()).simData.research!.nodos.length).toBe(d.research!.nodos.length);
+  });
+
+  it('rechaza ciclos y prerrequisitos inexistentes en el árbol de I+D', () => {
+    const r = raw(); r.research.nodos.find((n: any) => n.id === 'contrato_ppa_corporativo').requiere = ['contrato_potencia'];
+    expect(() => buildGameData(r)).toThrow(/ciclo/);
+    const r2 = raw(); r2.research.nodos[5].requiere = ['magia'];
+    expect(() => buildGameData(r2)).toThrow(/magia/);
+  });
+
+  it('rechaza tecnologías sin modelo si el nodo no declara fase_modelo, y nodos sin fuente', () => {
+    const r = raw(); delete r.research.nodos.find((n: any) => n.id === 'tec_geotermica').fase_modelo;
+    expect(() => buildGameData(r)).toThrow(/geotermica/);
+    const r2 = raw(); delete r2.research.nodos.find((n: any) => n.id === 'ef_permisos').supuesto;
+    expect(() => buildGameData(r2)).toThrow(/fuente|supuesto/);
+  });
+
+  it('rechaza pesos de evaluación que no suman 1 y tipos de contrato que nadie habilita', () => {
+    const r = raw(); r.clients.tipos[0].pesos.precio = 0.9;
+    expect(() => buildGameData(r)).toThrow(/sumar 1/);
+    const r2 = raw(); r2.clients.tipos[0].tipo_contrato = 'trueque';
+    expect(() => buildGameData(r2)).toThrow(/trueque/);
+    const r3 = raw(); delete r3.clients.tipos[0].precio_referencia.supuesto;
+    expect(() => buildGameData(r3)).toThrow(/precio_referencia/);
+  });
+
+  it('rechaza competidores con tecnologías o prioridades inexistentes y curvas con materiales desconocidos', () => {
+    const r = raw(); r.competitors.empresas[0].tecnologias = ['fusion'];
+    expect(() => buildGameData(r)).toThrow(/fusion/);
+    const r2 = raw(); r2.competitors.empresas[0].investigacion.prioridades = ['teletransporte'];
+    expect(() => buildGameData(r2)).toThrow(/teletransporte/);
+    const r3 = raw(); r3.suppliers.curvas_aprendizaje[0].exposicion = { unobtainium: 0.2 };
+    expect(() => buildGameData(r3)).toThrow(/unobtainium/);
+    const r4 = raw(); r4.suppliers.proveedores[0].tipo = 'magia';
+    expect(() => buildGameData(r4)).toThrow(DataError);
   });
 });

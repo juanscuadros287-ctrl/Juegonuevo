@@ -6,7 +6,7 @@ import {
   type Command, type GameState, type Opportunity, type SimEvent,
 } from '../src';
 import { gameData } from '@voltaje/data';
-import { ctx, data, newGame, SITES } from './helpers';
+import { ctx, data, grid, newGame, SITES } from './helpers';
 
 /** Partida con el mundo de la Fase 3 inicializado (un `step` en pausa) y sin oportunidades aleatorias. */
 function world(seed = 1, cash = 50_000_000, competitors = true): GameState {
@@ -307,6 +307,15 @@ describe('Proveedores y cadena de suministro', () => {
 });
 
 describe('Competidores IA', () => {
+  it('los sitios candidatos están en tierra, en Panamá y con recurso', () => {
+    for (const site of data.competitors!.sitios_candidatos) {
+      const c = grid.cell(site.lat, site.lon);
+      expect(c.land, site.nombre).toBe(true);
+      expect(c.country?.code, site.nombre).toBe(site.pais);
+      expect(c.values[data.technologies[site.tecnologia].recurso!] ?? 0, site.nombre).toBeGreaterThan(0);
+    }
+  });
+
   const run = (seed: number, days: number) => {
     const s = newGame(seed, 1e9);
     for (let d = 0; d < days; d++) step(s, [], ctx);

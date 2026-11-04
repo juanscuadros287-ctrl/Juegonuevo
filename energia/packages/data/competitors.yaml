@@ -136,14 +136,14 @@ empresas:
 sitios_fuente: "Zonas con proyectos solares y eólicos reales o en trámite en Panamá (ASEP, registro de licencias 2024), aproximadas"
 sitios_candidatos:
   - { nombre: "Arco seco – Coclé", pais: PAN, tecnologia: solar_fv, lat: 8.2, lon: -80.7 }
-  - { nombre: "Aguadulce", pais: PAN, tecnologia: solar_fv, lat: 8.25, lon: -80.5 }
+  - { nombre: "Natá", pais: PAN, tecnologia: solar_fv, lat: 8.3, lon: -80.6 }
   - { nombre: "Chitré", pais: PAN, tecnologia: solar_fv, lat: 7.95, lon: -80.45 }
   - { nombre: "Las Tablas", pais: PAN, tecnologia: solar_fv, lat: 7.75, lon: -80.3 }
   - { nombre: "Santiago de Veraguas", pais: PAN, tecnologia: solar_fv, lat: 8.1, lon: -80.95 }
-  - { nombre: "David – Chiriquí", pais: PAN, tecnologia: solar_fv, lat: 8.42, lon: -82.4 }
-  - { nombre: "Antón", pais: PAN, tecnologia: solar_fv, lat: 8.4, lon: -80.25 }
+  - { nombre: "Llanos de Chiriquí", pais: PAN, tecnologia: solar_fv, lat: 8.6, lon: -82.3 }
+  - { nombre: "Guararé", pais: PAN, tecnologia: solar_fv, lat: 7.85, lon: -80.3 }
   - { nombre: "Penonomé", pais: PAN, tecnologia: eolica_tierra, lat: 8.6, lon: -80.3 }
   - { nombre: "Penonomé norte", pais: PAN, tecnologia: eolica_tierra, lat: 8.7, lon: -80.4 }
   - { nombre: "Toabré", pais: PAN, tecnologia: eolica_tierra, lat: 8.65, lon: -80.2 }
   - { nombre: "Llano de Antón", pais: PAN, tecnologia: eolica_tierra, lat: 8.55, lon: -80.15 }
-  - { nombre: "Boquerón – Chiriquí", pais: PAN, tecnologia: eolica_tierra, lat: 8.5, lon: -82.6 }
+  - { nombre: "Boquerón – Chiriquí", pais: PAN, tecnologia: eolica_tierra, lat: 8.7, lon: -82.6 }
