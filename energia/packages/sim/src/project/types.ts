@@ -27,6 +27,24 @@ export interface Site {
    * OCULTO: recurso real = cellValue × realFactor. La UI no debe mostrarlo (solo lo usa la producción).
    */
   realFactor: number;
+  /**
+   * Fase 4: datos públicos del sitio que usan las tecnologías nuevas (lluvia, relieve, distancia a la costa,
+   * profundidad aproximada en el mar, biomasa) y, en líneas, el otro extremo. Opcional (partidas viejas).
+   */
+  extras?: SiteExtras;
+}
+
+export interface SiteExtras {
+  rainMm: number;
+  relief: number;
+  distCoastKm: number;
+  /** Profundidad aproximada (m) si el sitio está en el mar. */
+  depthM: number;
+  offshore: boolean;
+  hydroIndex: number;
+  biomass: number;
+  /** Líneas e interconexiones: extremo final y longitud de trazado (km). */
+  to?: { lat: number; lon: number; countryCode: string; km: number };
 }
 
 export interface ResourceEstimate {
@@ -86,6 +104,10 @@ export interface PpaContract {
   codDeadlineTick: number;
   penaltyUsdMwMonth: number;
   costUsd: number;
+  /** Fase 4: moneda del contrato ('local' = el precio en USD sigue al tipo de cambio desde la firma). */
+  currency?: 'USD' | 'local';
+  /** Tipo de cambio nominal (USD por unidad local) a la firma. */
+  fxAtSigning?: number;
 }
 
 export interface Financing {
@@ -126,6 +148,8 @@ export interface Construction {
   idcUsd: number;
   /** Gasto del mes en curso (se liquida al cerrar el mes). */
   monthSpendUsd: number;
+  /** Fase 4 (geotermia): pozos productores y reinyectores planificados y perforados (incluidos los secos). */
+  wells?: { plannedProducers: number; plannedInjectors: number; drilled: number; dry: number };
   monthOverrunUsd: number;
   /** Retraso de entrega de equipos (días). */
   equipmentLateDays: number;
@@ -152,6 +176,11 @@ export interface Operation {
   month: { energyMwh: number; availSum: number; days: number; repairUsd: number };
   /** Fallas (últimas 100): día, fracción de la planta fuera, días y costo de reparación. Opcional (partidas viejas no la traen). */
   failures?: { tick: number; fraction: number; days: number; costUsd: number }[];
+  /** Fase 4 (eficiencia/ESCO): ahorro garantizado (MWh/año) y penalidades pagadas. */
+  guaranteedMwhYear?: number;
+  /** Fase 4: costo de combustible/carga del mes en curso (USD) y emisiones (tCO2). */
+  monthFuelUsd?: number;
+  monthCo2T?: number;
   /** Historial mensual (últimos 120 meses). */
   history: { year: number; month: number; energyMwh: number; revenueUsd: number; opexUsd: number; availability: number }[];
   totalEnergyMwh: number;

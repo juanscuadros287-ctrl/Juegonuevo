@@ -47,6 +47,9 @@ export type SimEventBase =
   | P<'saleFailed'>
   | P<'projectAbandoned', { writeOffUsd: number }>
   | P<'projectDecommissioned', { costUsd: number }>
+  // Fase 4
+  | P<'wellsDrilled', { producers: number; injectors: number; dry: number; extraCostUsd: number }>
+  | P<'savingsShortfall', { shortfallMwh: number; penaltyUsd: number }>
   | BusinessEvent;
 
 /** Eventos de negocio (Fase 3): texto en español y severidad. */
@@ -74,6 +77,13 @@ export type BusinessEvent =
   | B<'supplyPriceChange', { techId: string; changePct: number }>
   | B<'competitorWonTender', { competitorId: string; opportunityId: string }>
   | B<'competitorPlantOperational', { competitorId: string; techId: string; mw: number }>
-  | B<'competitorBankrupt', { competitorId: string }>;
+  | B<'competitorBankrupt', { competitorId: string }>
+  // Fase 4
+  | B<'presenceRequested', { countryCode: string }>
+  | B<'presenceOpened', { countryCode: string }>
+  | B<'presenceClosed', { countryCode: string }>
+  | B<'competitorExpanded', { competitorId: string; countryCode: string }>
+  | B<'currencyShock', { countryCode: string; changePct: number }>
+  | B<'fuelPriceChange', { fuelId: string; changePct: number }>;
 
 export type ProjectEvent = Extract<SimEvent, { projectId: string }>;

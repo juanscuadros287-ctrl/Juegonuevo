@@ -46,6 +46,10 @@ export const CATEGORIES = {
   garantias_ejecutadas: { pnl: true, cash: 'operating', label: 'Garantías ejecutadas' },
   investigacion: { pnl: true, cash: 'operating', label: 'Investigación y desarrollo' },
   garantias: { pnl: false, cash: 'investing', label: 'Caja inmovilizada en garantías (neto)' },
+  // Fase 4
+  combustible: { pnl: true, cash: 'operating', label: 'Combustibles y energía comprada' },
+  carbono: { pnl: true, cash: 'operating', label: 'Impuesto al carbono' },
+  presencia: { pnl: true, cash: 'operating', label: 'Presencia en otros países (constitución y representantes)' },
 } as const;
 export type Category = keyof typeof CATEGORIES;
 

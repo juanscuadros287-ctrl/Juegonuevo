@@ -6,6 +6,8 @@ import { capacityFactor } from '../tech/capacityFactor';
 import { annualFixedCosts, currentCapex, capexBreakdown, expectedAvailability, expectedRepairCostUsd, type CapexBreakdown } from '../tech/costs';
 import { researchEffects } from '../business/research';
 import { captureFactor, spotPrice } from '../market/spot';
+import { annualSpotUsd, productTerms, sellsEnergy, siteCapexFactor, techCaptureFactor, techMode, thermalDispatch, type ProductTerms, type TechMode } from '../tech/models';
+import { fxNominal, usdIndexation, usdInflation } from '../market/macro';
 import { costOfEquity, npv, wacc } from '../finance/math';
 import { runProjectModel, sizeDebt, type ProjectModelInput, type ProjectModelResult } from '../finance/projectModel';
 import { p90 } from '../world/site';
@@ -79,11 +81,24 @@ export interface Economics {
   lcoeUsdMwh: number;
   priceAssumption: 'ppa' | 'spot';
   priceUsdMwh: number;
+  // Fase 4
+  /** Modo económico de la tecnología (generación, térmica, almacenamiento, hidrógeno, transmisión, eficiencia). */
+  mode: TechMode;
+  /** Despacho supuesto (térmicas por margen; almacenamiento 1/0 según el arbitraje). */
+  dispatch: number;
+  /** Costo variable de combustible/carga/electricidad/pérdidas del año 1 (USD/MWh) y emisiones directas (tCO2/MWh). */
+  fuelCostUsdMwh: number;
+  carbonCostUsdMwh: number;
+  co2TPerMwh: number;
+  /** Hidrógeno: costo nivelado (USD/kg). */
+  lcohUsdKg?: number;
 }
 
 /** CAPEX del proyecto a precios actuales (con `state`: índices, proveedores, relación e I+D del actor). */
 export function projectCapex(ctx: SimContext, p: Project, state?: GameState): CapexBreakdown {
-  const i = { techId: p.techId, mw: p.mw, countryCode: p.countryCode, capexFactor: p.capexFactor, ...p.suppliers };
+  const tech = ctx.data.technologies[p.techId];
+  const sf = tech ? siteCapexFactor(tech, p.site.extras, p.estimate.value) : 1;
+  const i = { techId: p.techId, mw: p.mw, countryCode: p.countryCode, capexFactor: p.capexFactor, ...(sf !== 1 ? { siteFactor: sf } : {}), ...p.suppliers };
   return state ? currentCapex(state, ctx, i) : capexBreakdown(ctx, i);
 }
 
@@ -95,7 +110,25 @@ export function constructionBudget(ctx: SimContext, p: Project, state?: GameStat
 }
 
 export function fcFromResource(ctx: SimContext, p: Pick<Project, 'techId' | 'site'>, resource: number): number {
-  return capacityFactor(ctx.data.technologies[p.techId], resource, p.site.temperatureC);
+  return capacityFactor(ctx.data.technologies[p.techId], resource, p.site.temperatureC, p.site.extras);
+}
+
+/** Fase 4: términos del producto del proyecto para el año dado (precio sin PPA, despacho, combustible). */
+export function projectTerms(state: GameState, ctx: SimContext, p: Pick<Project, 'techId' | 'countryCode' | 'site'>, year: number, resource?: number): ProductTerms {
+  const tech = ctx.data.technologies[p.techId];
+  const c = ctx.data.countries[p.countryCode];
+  const y0 = startYear(state);
+  const other = p.site.extras?.to && p.site.extras.to.countryCode !== p.countryCode ? ctx.data.countries[p.site.extras.to.countryCode] : undefined;
+  return productTerms(state, ctx, tech, c, {
+    spotUsdMwh: annualSpotUsd(state, c, y0, year), capture: techCaptureFactor(c, tech, p.site.layer), yearsFromStart: year - y0,
+    resourceValue: resource ?? p.site.cellValue, extras: p.site.extras, otherSpotUsdMwh: other ? annualSpotUsd(state, other, y0, year) : undefined,
+  });
+}
+
+/** Precio en USD de un PPA hoy: indexación y, si es en moneda local, tipo de cambio desde la firma. */
+export function ppaFxFactor(state: GameState, ctx: SimContext, countryCode: string, ppa: { currency?: 'USD' | 'local'; fxAtSigning?: number }): number {
+  if (ppa.currency !== 'local' || !ppa.fxAtSigning) return 1;
+  return fxNominal(state, ctx, countryCode) / ppa.fxAtSigning;
 }
 
 /**
@@ -114,22 +147,36 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
   const fcP90 = fcFromResource(ctx, p, resP90) * fcBonus;
   const policy = p.operation?.maintenance ?? 'preventivo';
   const avail = expectedAvailability(tech, p.mw, policy, p.operation?.failureMultiplier ?? 1);
-  const energyP50 = p.mw * 8760 * fcP50 * avail;
-  const energyP90 = p.mw * 8760 * fcP90 * avail;
+  const terms = projectTerms(state, ctx, p, currentYear(state), resP50);
+  let disp = terms.dispatch;
+  let energyP50 = p.mw * 8760 * fcP50 * avail * disp;
+  let energyP90 = p.mw * 8760 * fcP90 * avail * disp;
   const capex = opts.capexUsd ?? constructionBudget(ctx, p, state);
   const fixed = annualFixedCosts(tech, c, p.mw, capex, policy, fx.omMult(p.techId));
   const repairs = expectedRepairCostUsd(tech, p.mw, policy, p.operation?.failureMultiplier ?? 1);
-  const yearNow = currentYear(state), y0 = startYear(state);
-  const spot = capturedSpot(c, tech, y0, yearNow);
+  const y0 = startYear(state);
+  void y0;
+  // Precio sin PPA: spot capturado (generación y térmicas) o el precio propio del producto (Fase 4).
+  const spot = terms.priceUsdMwh;
 
   let ppa: ProjectModelInput['ppa'];
-  if (!opts.merchant) {
-    if (p.ppa?.status === 'firmado') ppa = { priceUsdMwh: p.ppa.priceUsdMwh, years: p.ppa.years, indexation: p.ppa.indexation };
-    else if (opts.ppaPriceUsdMwh) ppa = { priceUsdMwh: opts.ppaPriceUsdMwh, years: 15, indexation: 0.01 };
+  if (!opts.merchant && sellsEnergy(tech)) {
+    if (p.ppa?.status === 'firmado') {
+      // El modelo se ancla en el COD. En moneda local el precio en USD sigue al tipo de cambio desde la firma (aprox.).
+      ppa = p.ppa.currency === 'local'
+        ? { priceUsdMwh: p.ppa.priceUsdMwh * ppaFxFactor(state, ctx, p.countryCode, p.ppa), years: p.ppa.years, indexation: usdIndexation(ctx, c, p.ppa.indexation, 'local') }
+        : { priceUsdMwh: p.ppa.priceUsdMwh, years: p.ppa.years, indexation: p.ppa.indexation };
+    } else if (opts.ppaPriceUsdMwh) ppa = { priceUsdMwh: opts.ppaPriceUsdMwh, years: 15, indexation: 0.01 };
     else if (p.ppa?.status === 'en_proceso') {
       const ch = c.ppa.canales.find((x) => x.id === p.ppa!.channelId);
-      if (ch) ppa = { priceUsdMwh: ch.precio_usd_mwh.base, years: ch.plazo_anos, indexation: ch.indexacion_anual };
+      if (ch) ppa = { priceUsdMwh: ch.precio_usd_mwh.base, years: ch.plazo_anos, indexation: usdIndexation(ctx, c, ch.indexacion_anual, ch.moneda ?? c.mercado.moneda_contratos) };
     }
+  }
+  // Una térmica con PPA despacha según el precio del contrato (no según el spot).
+  if (ppa && techMode(tech) === 'termica') {
+    disp = thermalDispatch(tech, terms.fuel.varUsdMwh + tech.om_variable_usd_mwh.base, ppa.priceUsdMwh);
+    energyP50 = p.mw * 8760 * fcP50 * avail * disp;
+    energyP90 = p.mw * 8760 * fcP90 * avail * disp;
   }
 
   const lender = c.finanzas.prestamistas.find((l) => l.id === (opts.lenderId ?? p.financing?.lenderId)) ?? c.finanzas.prestamistas.find((l) => l.tipo === 'comercial') ?? c.finanzas.prestamistas[0];
@@ -140,14 +187,16 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
   const inc = c.incentivos[p.techId];
   const base: ProjectModelInput = {
     energyMwhYear1: energyP50,
-    degradation: tech.degradacion_anual.base,
+    degradation: terms.degradation,
     lifeYears: tech.vida_util_anos.base,
     capexUsd: capex,
     fixedCostUsdYear: fixed.totalUsd + repairs,
     varCostUsdMwh: tech.om_variable_usd_mwh.base,
-    inflation: c.inflacion_anual.base,
+    inflation: usdInflation(c),
     ppa,
     spotPriceUsdMwh: spot,
+    fuelCostUsdMwhYear1: terms.fuel.varUsdMwh,
+    fuelEscalation: usdInflation(c),
     taxRate: c.impuestos.renta.base,
     depreciationYears: c.impuestos.depreciacion_anos.base,
     taxCreditUsd: (inc?.credito_fiscal_frac_inversion.base ?? 0) * capex,
@@ -178,5 +227,7 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
     lcoeUsdMwh: model.lcoeUsdMwh,
     priceAssumption: ppa ? 'ppa' : 'spot',
     priceUsdMwh: ppa ? ppa.priceUsdMwh : spot,
+    mode: techMode(tech), dispatch: disp, fuelCostUsdMwh: terms.fuel.varUsdMwh, carbonCostUsdMwh: terms.fuel.carbonUsdMwh, co2TPerMwh: terms.fuel.co2TPerMwh,
+    ...(tech.hidrogeno ? { lcohUsdKg: model.lcoeUsdMwh / (1000 / tech.hidrogeno.kwh_por_kg.base) } : {}),
   };
 }

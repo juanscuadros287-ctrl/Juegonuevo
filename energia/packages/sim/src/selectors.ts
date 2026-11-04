@@ -13,6 +13,11 @@ import { supplierLeadFactor, supplierPriceFactor, supplierReliability } from './
 import { studyUnlocked, unlockingNode } from './business/research';
 import { capacityFactor } from './tech/capacityFactor';
 import { hiddenResourceFactor, p90 } from './world/site';
+import { productionProfile, resourceKey, siteCapexFactor } from './tech/models';
+import { evaluateSite, type SiteEvaluation } from './tech/siting';
+import { countryAccessBlockers } from './business/presence';
+import { techUnlocked } from './business/research';
+import type { SiteExtras } from './project/types';
 import { DAYS_PER_MONTH } from './project/helpers';
 import { findingCostUsd, permitApprovalProbability, permitCostUsd, studyCostUsd } from './project/outcomes';
 import {
@@ -22,6 +27,11 @@ import { projectCapex, projectEconomics, type Economics } from './project/econom
 import { bankDebtSizing } from './project/tick';
 import { remainingDevCostUsd, saleValueUsd, successProbability } from './project/valuation';
 import { TERMINAL_STAGES, type Project, type ProjectStage } from './project/types';
+
+/** Tipo de modelo 3D de una tecnología (PlantKind de apps/game/src/models; por defecto su id). */
+export function visualKindOf(tech: { id: string; visual?: string } | undefined): string {
+  return tech?.visual ?? tech?.id ?? 'solar_fv';
+}
 
 export const STAGE_LABELS: Record<ProjectStage, string> = {
   identificado: 'Identificado',
@@ -65,6 +75,9 @@ export interface ProjectSummary {
   npvEquityUsd: number;
   warnings: string[];
   active: boolean;
+  /** Fase 4: tipo de modelo 3D (PlantKind de apps/game/src/models). */
+  visualKind: string;
+  countryCode: string;
 }
 
 function safeEconomics(state: GameState, ctx: SimContext, p: Project): Economics | null {
@@ -124,6 +137,7 @@ export function selectProjects(state: GameState, ctx: SimContext): ProjectSummar
       resourceP50: p.estimate.value, resourceSigma: p.estimate.sigma,
       fcP50: eco?.fcP50 ?? 0, irrEquity: eco?.model.irrEquity ?? null, npvEquityUsd: eco?.npvEquityUsd ?? 0,
       warnings, active: !TERMINAL_STAGES.includes(p.stage),
+      visualKind: visualKindOf(tech), countryCode: p.countryCode,
     };
   });
 }
@@ -145,7 +159,10 @@ export interface MonthlyProduction { month: number; p50Mwh: number; p90Mwh: numb
 
 /** Producción esperada por mes (1–12): energía anual repartida según perfil mensual del recurso × días del mes (suma = energía anual). */
 export function expectedMonthlyProduction(ctx: SimContext, p: Project, energyP50Year: number, energyP90Year: number, year: number): MonthlyProduction[] {
-  const prof = normalizedProfile(ctx.data.countries[p.countryCode]?.perfil_recurso_mensual[p.site.layer]);
+  const tech = ctx.data.technologies[p.techId];
+  const c = ctx.data.countries[p.countryCode];
+  // Fase 4: perfil por tecnología (hidro con embalse regulado, térmicas/almacenamiento planos).
+  const prof = tech && tech.modelo_fc !== 'solar_fv' && tech.modelo_fc !== 'eolica' ? productionProfile(c, tech, p.site.layer) : normalizedProfile(c?.perfil_recurso_mensual[p.site.layer]);
   const w = prof.map((f, i) => f * daysInMonth(year, i + 1));
   const tot = w.reduce((a, b) => a + b, 0);
   return w.map((x, i) => ({ month: i + 1, p50Mwh: energyP50Year * x / tot, p90Mwh: energyP90Year * x / tot }));
@@ -399,29 +416,84 @@ export interface SitePreview {
   capexUsd: number;
   prospectingUsd: number;
   landHa: number;
+  // ───────── Fase 4 ─────────
+  countryName?: string;
+  /** Capa del recurso ('sin_recurso' si la tecnología no depende de la grilla). */
+  layer?: string;
+  /** Tipo de modelo 3D (PlantKind). */
+  visualKind?: string;
+  /** Todos los motivos por los que no se puede (sitio, país, I+D, presencia). */
+  errors?: string[];
+  /** Solo los de acceso al mercado (I+D y presencia): el sitio puede ser bueno pero el país no estar abierto. */
+  accessBlockers?: string[];
+  /** Restricciones de la tecnología en texto. */
+  restrictions?: string[];
+  /** Datos públicos del sitio (lluvia, relieve, distancia a la costa, profundidad aproximada, índice hidro, biomasa, línea). */
+  site?: SiteExtras;
+  capexUsdKw?: number;
+  /** Factor del CAPEX por el sitio (mar, profundidad, longitud de línea, pozos). */
+  siteCapexFactor?: number;
+  /** LCOE (USD/MWh) y TIR del equity estimados para este sitio con la información pública (spot, sin PPA). */
+  lcoeUsdMwh?: number;
+  irrEquity?: number | null;
+  /** Hidrógeno: costo nivelado USD/kg. */
+  lcohUsdKg?: number;
+  /** Costo variable (combustible/carga) USD/MWh y despacho supuesto. */
+  fuelCostUsdMwh?: number;
+  dispatch?: number;
+  techUnlocked?: boolean;
+}
+
+/** Proyecto virtual (no se guarda) para calcular la economía de un sitio con las mismas funciones que un proyecto real. */
+export function virtualProject(ctx: SimContext, techId: string, mw: number, ev: Pick<SiteEvaluation, 'countryCode' | 'cellIndex' | 'layer' | 'value' | 'temperatureC' | 'extras'>, lat = 0, lon = 0): Project {
+  const tech = ctx.data.technologies[techId];
+  return {
+    id: '_vista', name: 'Vista previa', techId, countryCode: ev.countryCode!, mw, createdTick: 0, stage: 'identificado',
+    site: { lat, lon, cellIndex: ev.cellIndex, layer: ev.layer, cellValue: ev.value, temperatureC: ev.temperatureC, realFactor: 1, extras: ev.extras },
+    estimate: { value: ev.value, sigma: tech.sigma_recurso_sitio, source: 'celda' },
+    studies: {}, permits: {}, findings: [], capexFactor: 1, devCostUsd: 0, devExpenseUsd: 0, partnerShare: 0, timeline: [],
+  };
 }
 
 /**
- * Vista previa de un sitio antes de crear el proyecto (lo que el jugador sabe: la celda ± σ).
+ * Vista previa de un sitio antes de crear el proyecto (lo que el jugador sabe: la celda ± σ). Fase 4: todas las
+ * tecnologías (mar adentro, sin recurso de grilla, líneas con `to`), restricciones, acceso al país y LCOE estimado.
  */
-export function previewSite(_state: GameState, ctx: SimContext, techId: string, mw: number, lat: number, lon: number): SitePreview {
+export function previewSite(state: GameState, ctx: SimContext, techId: string, mw: number, lat: number, lon: number, to?: { lat: number; lon: number }): SitePreview {
   const tech = ctx.data.technologies[techId];
   const blank = { techId, mw, cellValue: 0, sigma: 0, resourceP90: 0, fcP50: 0, fcP90: 0, energyP50MwhYear: 0, capexUsd: 0, prospectingUsd: 0, landHa: 0 };
-  if (!tech?.recurso) return { ok: false, error: 'Tecnología desconocida.', ...blank };
-  if (!ctx.grid) return { ok: false, error: 'La grilla de recursos no está cargada.', ...blank };
-  const cell = ctx.grid.cell(lat, lon);
-  const c = cell.country ? ctx.data.countries[cell.country.code] : undefined;
-  if (!cell.land || !c) return { ok: false, error: !cell.land ? 'El sitio no está en tierra firme.' : `Todavía no se puede desarrollar en ${cell.country?.nombre}.`, ...blank };
-  const v = cell.values[tech.recurso] ?? 0;
-  const t = cell.values.temperatura ?? 25;
-  const fc50 = capacityFactor(tech, v, t), fc90 = capacityFactor(tech, p90(v, tech.sigma_recurso_sitio), t);
+  if (!tech) return { ok: false, error: 'Tecnología desconocida.', errors: ['Tecnología desconocida.'], ...blank };
+  const ev = evaluateSite(ctx, techId, lat, lon, to);
+  const access = ev.countryCode ? countryAccessBlockers(state, ctx, ev.countryCode) : [];
+  if (ev.extras.to && ev.countryCode && ev.extras.to.countryCode !== ev.countryCode) access.push(...countryAccessBlockers(state, ctx, ev.extras.to.countryCode));
+  const unlocked = techUnlocked(state, ctx, techId);
+  const errors = [...ev.errors, ...access, ...(unlocked ? [] : [`${tech.nombre}: requiere investigación (${unlockingNode(ctx, 'tecnologias', techId)?.nombre ?? 'I+D'}).`])];
+  if (!(mw >= tech.escala_mw.min && mw <= tech.escala_mw.max)) errors.push(`${tech.nombre}: entre ${tech.escala_mw.min} y ${tech.escala_mw.max} MW.`);
+  const common = {
+    countryName: ev.countryName, layer: ev.layer, visualKind: visualKindOf(tech), errors, accessBlockers: access, restrictions: ev.restrictions,
+    site: ev.extras, techUnlocked: unlocked,
+  };
+  if (!ev.countryCode || !ctx.grid) return { ok: false, error: errors[0], ...blank, ...common, countryCode: ev.countryCode };
+  const c = ctx.data.countries[ev.countryCode];
+  const v = ev.value;
+  const t = ev.temperatureC;
+  const sigma = tech.sigma_recurso_sitio;
+  const fc50 = capacityFactor(tech, v, t, ev.extras), fc90 = capacityFactor(tech, p90(v, sigma), t, ev.extras);
+  const sf = siteCapexFactor(tech, ev.extras, v);
+  const capex = currentCapex(state, ctx, { techId, mw, countryCode: c.iso3, ...(sf !== 1 ? { siteFactor: sf } : {}) }).totalUsd;
+  let eco: Economics | null = null;
+  try { eco = projectEconomics(state, ctx, virtualProject(ctx, techId, mw, ev, lat, lon), { capexUsd: capex }); } catch { eco = null; }
   return {
-    ok: true, techId, mw, countryCode: c.iso3, cellValue: v, sigma: tech.sigma_recurso_sitio, resourceP90: p90(v, tech.sigma_recurso_sitio),
-    fcP50: fc50, fcP90: fc90, energyP50MwhYear: fc50 * mw * 8760,
-    capexUsd: currentCapex(_state, ctx, { techId, mw, countryCode: c.iso3 }).totalUsd, prospectingUsd: c.costos.prospeccion_usd.base,
-    landHa: tech.uso_suelo_ha_mw.base * mw,
+    ok: errors.length === 0, error: errors[0], techId, mw, countryCode: c.iso3, cellValue: v, sigma, resourceP90: p90(v, sigma),
+    fcP50: fc50, fcP90: fc90, energyP50MwhYear: eco?.energyP50MwhYear ?? fc50 * mw * 8760,
+    capexUsd: capex, prospectingUsd: c.costos.prospeccion_usd.base, landHa: tech.uso_suelo_ha_mw.base * mw,
+    ...common, capexUsdKw: capex / (mw * 1000), siteCapexFactor: sf,
+    lcoeUsdMwh: eco?.lcoeUsdMwh, irrEquity: eco?.model.irrEquity ?? null, lcohUsdKg: eco?.lcohUsdKg, fuelCostUsdMwh: eco?.fuelCostUsdMwh, dispatch: eco?.dispatch,
   };
 }
+
+/** Solo para pruebas y depuración: clave del recurso oculto de una tecnología. */
+export const hiddenResourceKey = resourceKey;
 
 /** Meses transcurridos entre dos ticks (ayuda para la UI). */
 export const ticksToMonths = (days: number) => days / DAYS_PER_MONTH;
@@ -429,7 +501,7 @@ export const ticksToMonths = (days: number) => days / DAYS_PER_MONTH;
 /** Solo para pruebas y depuración: recurso real de un sitio. La UI NO debe usarlo. */
 export function debugRealResource(state: GameState, ctx: SimContext, p: Project): number {
   const tech = ctx.data.technologies[p.techId];
-  return p.site.cellValue * hiddenResourceFactor(state.seed, p.site.layer, p.site.lat, p.site.lon, tech.sigma_recurso_sitio);
+  return p.site.cellValue * hiddenResourceFactor(state.seed, resourceKey(tech), p.site.lat, p.site.lon, tech.sigma_recurso_sitio);
 }
 
 export interface FinancingPreview {

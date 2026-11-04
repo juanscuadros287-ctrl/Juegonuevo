@@ -7,7 +7,11 @@
 /** Valor con rango. `base` es el valor central; min/max se usan en distribuciones triangulares. */
 export interface Dist { base: number; min?: number; max?: number }
 
-export type FcModel = 'solar_fv' | 'eolica' | 'fijo';
+/**
+ * Modelo físico/económico de la tecnología (ver tech/capacityFactor.ts y tech/models.ts).
+ * Fase 4: geotermia, hidro, csp, termica (combustible), almacenamiento, hidrogeno, transmision, eficiencia.
+ */
+export type FcModel = 'solar_fv' | 'eolica' | 'fijo' | 'geotermia' | 'hidro' | 'csp' | 'termica' | 'almacenamiento' | 'hidrogeno' | 'transmision' | 'eficiencia';
 
 export interface Milestone { id: string; nombre: string; fraccion: number; requiere_equipos?: boolean; sensible_lluvia?: boolean }
 
@@ -61,12 +65,79 @@ export interface TechnologyDef {
     turbina_mw: number; diametro_rotor_m: number; altura_buje_m: number; cp: number;
     v_arranque: number; v_corte: number; weibull_k: number; perdidas: number; cizalle_alfa: number;
   };
-  /** Fase 4: térmicas. */
+  /** Fase 4: térmicas (y biomasa/biogás/nuclear): combustible (id de markets.yaml) y consumo específico. */
   combustible?: { tipo: string; heat_rate_btu_kwh: Dist; precio_usd_mmbtu?: Dist };
   /** Fase 3: fracción del costo de equipos que corresponde a inversores (si se elige un proveedor de inversores aparte). */
   fraccion_inversores?: number;
-  /** Fase 4: almacenamiento. */
-  almacenamiento?: { eficiencia_ida_vuelta: Dist; horas: Dist; ciclos_vida?: Dist };
+  /** Fase 4: almacenamiento (baterías, bombeo). */
+  almacenamiento?: {
+    eficiencia_ida_vuelta: Dist; horas: Dist; ciclos_vida?: Dist;
+    /** Ciclos completos por año si el arbitraje es rentable. */
+    ciclos_ano_max?: number;
+    /** Pérdida de capacidad por ciclo completo (fracción). */
+    degradacion_por_ciclo?: number;
+  };
+  // ───────────────────────── Fase 4 ─────────────────────────
+  /** Recurso de un sitio típico bueno (unidad de la capa): referencia del catálogo si no hay grilla y para el mar. */
+  recurso_tipico?: number;
+  /** Tipo de modelo 3D (PlantKind de apps/game/src/models) que representa a esta tecnología. */
+  visual?: string;
+  /** Restricciones del sitio. */
+  sitio?: TechSiting;
+  geotermia?: GeothermalDef;
+  hidro?: { fc_min: number; fc_max: number; exponente: number; regulacion: number; lluvia_ref_mm: number };
+  csp?: { horas_almacenamiento: number; sm_base: number; sm_por_hora: number; eficiencia_relativa: number; fc_max: number };
+  termica?: { fc_max: number; prima_captura: number; despacho: 'base' | 'media' | 'punta' };
+  hidrogeno?: { kwh_por_kg: Dist; precio_venta_usd_kg: Dist; utilizacion: number; agua_usd_kg: number; factor_precio_electricidad: number };
+  transmision?: { costo_usd_mw_km: Dist; perdidas_frac_100km: number; peaje_usd_mwh: Dist; utilizacion: number; interconexion: boolean; longitud_min_km: number; longitud_max_km: number; captura_diferencial: number };
+  eficiencia?: { precio_ahorro_usd_mwh: Dist; ahorro_garantizado_frac: number; factor_carga: number };
+  /** Riesgos de obra propios de la tecnología (multiplican los del EPC y del país). */
+  riesgo_obra?: { sobrecosto_prob_factor: number; sobrecosto_magnitud_factor: number; retraso_prob_mensual: number; retraso_dias: Dist };
+}
+
+export interface TechSiting {
+  superficie: 'tierra' | 'mar';
+  /** Recurso mínimo de la capa (en su unidad). */
+  recurso_min?: number;
+  dist_costa_km_min?: number;
+  dist_costa_km_max?: number;
+  /** Profundidad máxima (m, aproximada desde la distancia a la costa). */
+  profundidad_max_m?: number;
+  /** Profundidad aproximada = dist_costa_km × este factor (m/km). */
+  profundidad_m_por_km?: number;
+  /** Profundidad desde la que se usa fundación flotante (+ costo). */
+  flotante_desde_m?: number;
+  flotante_capex_extra?: number;
+  /** CAPEX extra por km de distancia a la costa sobre `km_ref` (cable y logística marina). */
+  capex_extra_por_km?: number;
+  km_ref?: number;
+  relieve_min?: number;
+  /** Necesita agua: índice hidro ≥ este valor o a menos de `agua_dist_costa_km` de la costa. */
+  agua_indice_min?: number;
+  agua_dist_costa_km?: number;
+}
+
+/** Geotermia: pozos exploratorios y de producción; el recurso es el flujo de calor (mW/m²). */
+export interface GeothermalDef {
+  /** Flujo de calor para el que la calidad del reservorio es 0 y 1 (interpolación lineal). */
+  calidad_min_mw_m2: number;
+  calidad_max_mw_m2: number;
+  /** Probabilidad de pozo seco de exploración con calidad 0 y 1. */
+  prob_seco_calidad0: number;
+  prob_seco_calidad1: number;
+  /** Probabilidad de pozo de baja entalpía (productivo pero pobre) con calidad 0 y 1. */
+  prob_baja_calidad0: number;
+  prob_baja_calidad1: number;
+  /** Pozos de desarrollo: la tasa de pozos secos es esta fracción de la de exploración. */
+  factor_seco_desarrollo: number;
+  /** MW por pozo productor con calidad 0 y 1. */
+  mw_pozo_calidad0: number;
+  mw_pozo_calidad1: number;
+  costo_pozo_usd: Dist;
+  /** Pozos reinyectores por productor. */
+  reinyectores_por_productor: number;
+  /** Fracción del CAPEX que es perforación (escala con el número de pozos). */
+  frac_capex_perforacion: number;
 }
 
 export type StudyOutcome = 'normal' | 'peor' | 'bloqueo';
@@ -104,6 +175,10 @@ export interface StudyDef {
   peor_capex_factor?: Dist;
   peor_descripcion?: string;
   hallazgos?: string[];
+  /** Fase 4 (geotermia): pozos exploratorios que perfora el estudio (pueden salir secos o de baja entalpía). */
+  pozos_exploratorios?: number;
+  /** Hallazgo que se abre si todos los pozos exploratorios salen secos. */
+  hallazgo_pozos_secos?: string;
 }
 
 export interface PermitDef {
@@ -138,6 +213,10 @@ export interface PpaChannelDef {
   requiere_permisos: string[];
   plazo_cod_meses: number;
   multa_usd_mw_mes: number;
+  /** Fase 4: moneda del contrato (por defecto la del mercado del país, USD si no se indica). */
+  moneda?: 'USD' | 'local';
+  /** Fase 4: tecnologías admitidas (ausente = todas). */
+  tecnologias?: string[];
 }
 
 export interface LenderDef {
@@ -164,12 +243,26 @@ export interface CountrySimDef {
   nombre: string;
   inflacion_anual: Dist;
   prima_riesgo_pais: Dist;
-  moneda: { codigo: string; usd_por_unidad: number };
-  tipo_cambio: { deriva_anual: number; volatilidad_anual: number };
+  moneda: { codigo: string; usd_por_unidad: number; nombre?: string };
+  /**
+   * Fase 4: deriva real anual (tendencia del tipo de cambio real), volatilidad anual, reversión a la media y shocks
+   * (devaluaciones: probabilidad anual y magnitud). Volatilidad 0 y deriva 0 = moneda fija al USD.
+   */
+  tipo_cambio: { deriva_anual: number; volatilidad_anual: number; reversion_anual?: number; shock_prob_anual?: number; shock_magnitud?: Dist };
+  regulador?: string;
+  operador_sistema?: string;
   mercado: {
     precio_spot_medio_usd_mwh: Dist;
     /** 12 multiplicadores (ene–dic) del precio spot medio. */
     perfil_spot_mensual: number[];
+    demanda_anual_twh?: Dist;
+    pico_mw?: Dist;
+    matriz?: Record<string, number | string>;
+    /** Fase 4: precio de las horas punta y valle respecto del medio (arbitraje de almacenamiento). */
+    factor_punta?: number;
+    factor_valle?: number;
+    /** Moneda de los contratos de energía del país (por defecto USD). */
+    moneda_contratos?: 'USD' | 'local';
   };
   /** 12 multiplicadores (ene–dic) del recurso por capa (ghi, viento_tierra…). */
   perfil_recurso_mensual: Record<string, number[]>;
@@ -181,6 +274,8 @@ export interface CountrySimDef {
     opcion_terreno_usd_ha_ano: Dist;
     arriendo_terreno_usd_ha_ano: Dist;
     seguro_frac_capex_ano: Dist;
+    /** Fase 4: fracción de los costos de operación pagados en moneda local (expuestos al tipo de cambio). */
+    fraccion_costos_locales?: number;
   };
   finanzas: {
     tasa_libre_riesgo: Dist;
@@ -203,6 +298,19 @@ export interface CountrySimDef {
   quiebra: { meses_caja_negativa: number };
   permisos: PermitDef[];
   ppa: { canales: PpaChannelDef[] };
+  // ───────────────────────── Fase 4 ─────────────────────────
+  /** Inflación de los precios en USD (derivada al cargar: la local si la moneda está fija al USD, si no la de EE. UU.). */
+  inflacion_usd_anual?: number;
+  /** Costo de abrir presencia (constitución + representante legal). Ausente = no se puede abrir. */
+  expansion?: { constitucion_usd: Dist; dias: Dist; representante_mensual_usd: Dist };
+  /** Combustible por tipo de tecnología: índice de markets.yaml y factor del precio local. */
+  combustibles?: Record<string, { indice: string; factor: number }>;
+  /** Precio del carbono (USD/tCO2) y su crecimiento anual. */
+  carbono?: { precio_usd_tco2: Dist; crecimiento_anual: number };
+  /** Zona habilitada (p. ej. Texas/ERCOT dentro de EE. UU.). */
+  zona?: { nombre: string; lat_min: number; lat_max: number; lon_min: number; lon_max: number };
+  /** Tecnologías no permitidas por ley o política. */
+  restricciones?: { tecnologias_prohibidas: string[]; motivo: string };
 }
 
 export interface SupplierDef {
@@ -342,6 +450,8 @@ export interface ClientTypeDef {
   costo_preparacion_usd: Dist;
   ofertantes_externos: { media: number; precio_factor: Dist };
   indexacion_anual: number;
+  /** Fase 4: moneda del contrato (por defecto la del mercado del país). */
+  moneda?: 'USD' | 'local';
 }
 
 export interface ClientsDef {
@@ -384,6 +494,8 @@ export interface CompetitorDef {
   reserva_meses: number;
   vende: 'nunca' | 'listo_para_construir' | 'en_crisis';
   investigacion: { presupuesto_mensual_usd: number; prioridades: string[] };
+  /** Fase 4: países a los que se expande cuando los tiene investigados y le sobra caja. */
+  expansion?: { paises: string[]; caja_min_usd: number };
 }
 
 export interface CandidateSiteDef { nombre: string; pais: string; tecnologia: string; lat: number; lon: number }
@@ -391,6 +503,25 @@ export interface CandidateSiteDef { nombre: string; pais: string; tecnologia: st
 export interface CompetitorsDef {
   empresas: CompetitorDef[];
   sitios_candidatos: CandidateSiteDef[];
+}
+
+/** Fase 4: índices de combustibles y macro (markets.yaml). */
+export interface FuelDef {
+  id: string;
+  nombre: string;
+  /** Precio de referencia al inicio (USD/MMBtu). */
+  precio_usd_mmbtu: Dist;
+  volatilidad_anual: number;
+  reversion_anual: number;
+  min: number;
+  max: number;
+  /** Emisiones de combustión (kg CO2/MMBtu). */
+  emisiones_kgco2_mmbtu: number;
+}
+
+export interface MarketsDef {
+  inflacion_usd: Dist;
+  combustibles: FuelDef[];
 }
 
 export interface SimData {
@@ -404,4 +535,6 @@ export interface SimData {
   research?: ResearchDef;
   clients?: ClientsDef;
   competitors?: CompetitorsDef;
+  /** Fase 4 (opcional): combustibles e inflación del USD. */
+  markets?: MarketsDef;
 }

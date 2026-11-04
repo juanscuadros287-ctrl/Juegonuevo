@@ -4,6 +4,7 @@ import type { SimEvent } from '../core/events';
 import { Rng } from '../core/rng';
 import { accrue, postCash } from '../finance/company';
 import { currentCapex } from '../tech/costs';
+import { fxNominal } from '../market/macro';
 import { drawDays } from '../project/outcomes';
 import { isTerminal, note } from '../project/helpers';
 import { bookValue } from '../project/valuation';
@@ -47,6 +48,7 @@ export function signContract(state: GameState, ctx: SimContext, o: Opportunity, 
     mw: o.mw, techId: b.techId, price: b.price, years: o.years, indexation: o.indexation, signedTick: state.tick,
     codDeadlineTick: cod, terminationTick: cod + Math.round(o.maxDelayMonths * DPM), bondUsd: o.performanceBondUsd,
     penaltyUsdMwMonth: o.penaltyUsdMwMonth, penaltiesUsd: 0, revenueUsd: 0, status: 'sin_proyecto',
+    ...(o.currency === 'local' ? { currency: 'local' as const, fxAtSigning: fxNominal(state, ctx, o.countryCode) } : {}),
   };
   state.business.contracts.push(k);
   if (o.contract === 'epc') startEpc(state, ctx, k, b);
@@ -70,6 +72,7 @@ function linkProject(state: GameState, k: Contract, p: Project) {
     p.ppa = {
       channelId: `contrato:${k.id}`, status: 'firmado', startTick: state.tick, endTick: state.tick, priceUsdMwh: k.price, years: k.years,
       indexation: k.indexation, codDeadlineTick: k.codDeadlineTick, penaltyUsdMwMonth: k.penaltyUsdMwMonth, costUsd: 0,
+      ...(k.currency === 'local' ? { currency: 'local' as const, fxAtSigning: k.fxAtSigning } : {}),
     };
   }
   p.timeline.push({ tick: state.tick, text: `Vinculado al contrato ${k.id} (${k.clientName}): ${k.kind === 'potencia' ? `${k.mw} MW firmes a ${k.price.toFixed(1)} USD/kW-mes` : `${k.price.toFixed(1)} USD/MWh por ${k.years} años`}.`, kind: 'bueno' });
@@ -246,7 +249,7 @@ export function contractsMonthly(state: GameState, ctx: SimContext, month: numbe
       const years = (t - k.codTick!) / 365.25;
       if (k.kind === 'potencia') {
         const last = p.operation.history.at(-1);
-        let pay = k.mw * 1000 * k.price * Math.pow(1 + k.indexation, Math.floor(years));
+        let pay = k.mw * 1000 * k.price * Math.pow(1 + k.indexation, Math.floor(years)) * (k.currency === 'local' && k.fxAtSigning ? fxNominal(state, ctx, k.countryCode) / k.fxAtSigning : 1);
         if (last && last.availability < 0.85) {
           const pen = pay * 0.1;
           pay -= pen;

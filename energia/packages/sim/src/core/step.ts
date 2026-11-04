@@ -8,6 +8,8 @@ import { ensureWorld } from '../business/world';
 import { opportunitiesDaily, generateOpportunities } from '../business/opportunities';
 import { supplyMonthly } from '../supply/supply';
 import { competitorsDaily, competitorsDecide, competitorsMonthly } from '../ai/competitors';
+import { ensureMacro, macroMonthly } from '../market/macro';
+import { openCountries } from '../business/presence';
 
 export type { SimEvent } from './events';
 
@@ -41,6 +43,7 @@ export function step(state: GameState, commands: readonly Command[] = [], ctx?: 
     if (ctx) {
       competitorsMonthly(state, ctx, prev, events);
       supplyMonthly(state, ctx, prev.year, prev.month, events);
+      macroMonthly(state, ctx, prev.year, prev.month, events, openCountries(state));
       generateOpportunities(state, ctx, events);
     }
     events.push({ type: 'newMonth', year: now.year, month: now.month });
@@ -56,7 +59,7 @@ export function step(state: GameState, commands: readonly Command[] = [], ctx?: 
  */
 export function applyCommands(state: GameState, commands: readonly Command[], ctx?: SimContext): SimEvent[] {
   const events: SimEvent[] = [];
-  if (ctx) ensureWorld(state, ctx, events);
+  if (ctx) { ensureWorld(state, ctx, events); ensureMacro(state, ctx); }
   for (const cmd of commands) {
     const r = applyCommand(state, cmd, ctx, events);
     if (!r.ok) events.push({ type: 'commandRejected', command: cmd, error: r.error });

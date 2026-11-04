@@ -5,6 +5,7 @@ import { applyProjectCommand, type ProjectCommand } from '../project/commands';
 import { applyBidCommand, type BidCommand } from '../business/bids';
 import { applyContractCommand, type ContractCommand } from '../business/contracts';
 import { applyResearchCommand, type ResearchCommand } from '../business/research';
+import { applyPresenceCommand, type PresenceCommand } from '../business/presence';
 
 /**
  * Toda acción del jugador (y de la IA) es un comando. La UI nunca modifica el estado directamente.
@@ -16,7 +17,8 @@ export type Command =
   | ProjectCommand
   | BidCommand
   | ContractCommand
-  | ResearchCommand;
+  | ResearchCommand
+  | PresenceCommand;
 
 export type CommandResult = { ok: true } | { ok: false; error: string };
 
@@ -48,6 +50,9 @@ export function applyCommand(state: GameState, cmd: Command, ctx?: SimContext, e
     case 'cancelResearch':
     case 'setResearchBudget':
       return applyResearchCommand(state, ctx, cmd, events);
+    case 'openPresence':
+    case 'closePresence':
+      return applyPresenceCommand(state, ctx, cmd, events);
     default:
       return applyProjectCommand(state, ctx, cmd, events);
   }

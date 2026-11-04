@@ -1,4 +1,5 @@
 import type { TechnologyDef } from '../data/types';
+import type { SiteExtras } from '../project/types';
 
 /**
  * Factor de capacidad (fracción del año a potencia nominal, base AC) a partir del recurso del sitio.
@@ -11,12 +12,47 @@ import type { TechnologyDef } from '../data/types';
  *   curva de potencia genérica de una turbina de referencia: P = ½ρA·Cp·v³ limitada a P_nom
  *   entre v_arranque y v_corte; ρ corregida por temperatura.
  */
-export function capacityFactor(tech: TechnologyDef, resource: number, temperatureC = 25): number {
+export function capacityFactor(tech: TechnologyDef, resource: number, temperatureC = 25, extras?: SiteExtras): number {
   switch (tech.modelo_fc) {
     case 'solar_fv': return solarCapacityFactor(tech, resource, temperatureC);
     case 'eolica': return windCapacityFactor(tech, resource, temperatureC);
     case 'fijo': return tech.factor_capacidad_ref.base;
+    // Fase 4
+    case 'geotermia': return tech.factor_capacidad_ref.base;
+    case 'hidro': return hydroCapacityFactor(tech, resource, extras?.rainMm);
+    case 'csp': return cspCapacityFactor(tech, resource);
+    case 'termica': return (tech.termica?.fc_max ?? tech.factor_capacidad_ref.base) * (tech.recurso ? 1 : resource);
+    case 'almacenamiento': {
+      const a = tech.almacenamiento;
+      return a ? Math.min(1, (a.ciclos_ano_max ?? 300) * a.horas.base / 8760) : tech.factor_capacidad_ref.base;
+    }
+    case 'hidrogeno': return tech.hidrogeno?.utilizacion ?? tech.factor_capacidad_ref.base;
+    case 'transmision': return tech.transmision?.utilizacion ?? tech.factor_capacidad_ref.base;
+    case 'eficiencia': return (tech.eficiencia?.factor_carga ?? tech.factor_capacidad_ref.base) * resource;
   }
+}
+
+/**
+ * Hidro (Fase 4): FC = fc_min + (fc_max − fc_min)·(índice/100)^exp, con el índice hidro de la celda (escorrentía × pendiente
+ * × ríos) corregido por la lluvia anual: índice·(lluvia/lluvia_ref)^0,15 (acotado ±15 %).
+ */
+export function hydroCapacityFactor(tech: TechnologyDef, index: number, rainMm?: number): number {
+  const h = tech.hidro;
+  if (!h) return tech.factor_capacidad_ref.base;
+  const rain = rainMm === undefined ? 1 : Math.max(0.85, Math.min(1.15, Math.pow(Math.max(1, rainMm) / h.lluvia_ref_mm, 0.15)));
+  const x = Math.max(0, Math.min(1, index * rain / 100));
+  return h.fc_min + (h.fc_max - h.fc_min) * Math.pow(x, h.exponente);
+}
+
+/**
+ * CSP con almacenamiento térmico (Fase 4): múltiplo solar SM = sm_base + sm_por_hora·horas;
+ * FC = mín(fc_max, SM·DNI·η_rel / (24 h · 0,95 kW/m² de diseño)). Más horas de almacenamiento ⇒ campo mayor y más FC.
+ */
+export function cspCapacityFactor(tech: TechnologyDef, dni: number): number {
+  const k = tech.csp;
+  if (!k) return tech.factor_capacidad_ref.base;
+  const sm = k.sm_base + k.sm_por_hora * k.horas_almacenamiento;
+  return Math.max(0, Math.min(k.fc_max, sm * dni * k.eficiencia_relativa / (24 * 0.95)));
 }
 
 export function solarCapacityFactor(tech: TechnologyDef, ghi: number, temperatureC: number): number {

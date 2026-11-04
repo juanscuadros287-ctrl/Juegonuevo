@@ -8,9 +8,10 @@ import { newBusinessState, newMarketState, type BusinessState, type CompetitorSt
 /**
  * v2 (Fase 2): proyectos y finanzas de la empresa.
  * v3 (Fase 3): licitaciones, contratos, I+D, cadena de suministro y competidores IA.
+ * v4 (Fase 4): presencia por país, tipos de cambio, combustibles y datos extra de sitio.
  * Las partidas anteriores se migran (ver save.ts).
  */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 /** Movimiento contable de caja de la empresa. */
 export interface LedgerEntry { day: number; concept: string; amountUsd: number }
@@ -81,7 +82,7 @@ export interface GameState {
 }
 
 /** `supply`, `tenders` y `business` se agregaron en la Fase 3 (la migración 2→3 los siembra). */
-export const RNG_STREAMS = ['world', 'market', 'projects', 'events', 'ai', 'supply', 'tenders', 'business'] as const;
+export const RNG_STREAMS = ['world', 'market', 'projects', 'events', 'ai', 'supply', 'tenders', 'business', 'fx', 'fuels'] as const;
 
 export function newFinanceState(): FinanceState {
   return { month: {}, statements: [], taxLossCarryforwardUsd: 0, taxCreditUsd: 0, emergencyDebtUsd: 0, negativeCashMonths: 0, bankrupt: false };

@@ -36,3 +36,9 @@ export * from './supply/supply';
 export * from './ai/brain';
 export * from './ai/competitors';
 export * from './selectorsBusiness';
+// Fase 4
+export * from './tech/models';
+export * from './tech/siting';
+export * from './market/macro';
+export * from './business/presence';
+export * from './selectorsWorld';

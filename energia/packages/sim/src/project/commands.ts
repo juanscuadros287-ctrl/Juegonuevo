@@ -4,8 +4,11 @@ import type { SimEvent } from '../core/events';
 import { Rng } from '../core/rng';
 import { postCash, accrue } from '../finance/company';
 import { hiddenResourceFactor } from '../world/site';
-import { currentCapex } from '../tech/costs';
-import { countryUnlocked, researchEffects, studyUnlocked, techUnlocked, unlockingNode } from '../business/research';
+import { evaluateSite } from '../tech/siting';
+import { geoWellCount, geoWellProbabilities, resourceKey, sellsEnergy } from '../tech/models';
+import { countryAccessBlockers } from '../business/presence';
+import { projectCapex } from './economics';
+import { researchEffects, studyUnlocked, techUnlocked, unlockingNode } from '../business/research';
 import { recordOrder, supplierLeadFactor, supplierReliability } from '../supply/supply';
 import { drawDays, drawDist, findingCostUsd, permitCostUsd, studyCostUsd } from './outcomes';
 import { financingBlockers, openFindings, permitBlockers, permitGroupApplicable, permitGroupApproved, studyBlockers } from './requirements';
@@ -14,7 +17,11 @@ import { bookValue } from './valuation';
 import type { Project } from './types';
 
 export type ProjectCommand =
-  | { type: 'createProject'; techId: string; mw: number; lat: number; lon: number; name?: string }
+  | {
+    type: 'createProject'; techId: string; mw: number; lat: number; lon: number; name?: string;
+    /** Fase 4: líneas e interconexiones (punto final del trazado). */
+    toLat?: number; toLon?: number;
+  }
   | { type: 'commissionStudy'; projectId: string; studyId: string }
   | { type: 'applyPermit'; projectId: string; permitId: string }
   | { type: 'seekPpa'; projectId: string; channelId: string }
@@ -83,6 +90,8 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
       case 'seekPpa': {
         const ch = c.ppa.canales.find((x) => x.id === cmd.channelId);
         if (!ch) return fail('Canal de venta desconocido.');
+        if (!sellsEnergy(tech)) return fail(`${tech.nombre} no vende energía por PPA (tiene su propio ingreso).`);
+        if (ch.tecnologias && !ch.tecnologias.includes(tech.id)) return fail(`${ch.nombre} no admite ${tech.nombre}.`);
         if (p.ppa && (p.ppa.status === 'firmado' || p.ppa.status === 'en_proceso')) return fail('Ya hay un PPA firmado o en proceso.');
         if (p.mw < ch.mw_min || p.mw > ch.mw_max) return fail(`${ch.nombre}: el proyecto debe tener entre ${ch.mw_min} y ${ch.mw_max} MW.`);
         for (const g of ch.requiere_permisos) if (permitGroupApplicable(ctx, p, g) && !permitGroupApproved(ctx, p, g)) return fail(`${ch.nombre} exige antes el permiso: ${g.replace(/_/g, ' ')}.`);
@@ -134,7 +143,7 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         if (!(cmd.partnerShare >= 0 && cmd.partnerShare <= se.participacion_max)) return fail(`La participación del socio debe estar entre 0 y ${se.participacion_max * 100} %.`);
         if (!(cmd.debtFraction >= 0 && cmd.debtFraction <= 0.95)) return fail('Fracción de deuda inválida.');
         // El presupuesto se fija con los precios del día (índices, colas, relación, I+D).
-        const budget = currentCapex(state, ctx, { techId: p.techId, mw: p.mw, countryCode: p.countryCode, capexFactor: p.capexFactor, ...p.suppliers }).totalUsd;
+        const budget = projectCapex(ctx, p, state).totalUsd;
         if (cmd.debtFraction === 0) {
           // Todo con capital propio (y del socio): cierre inmediato, sin banco.
           p.financing = { status: 'cerrado', lenderId: 'ninguno', startTick: state.tick, endTick: state.tick, requestedDebtFraction: 0, partnerShare: cmd.partnerShare, rate: 0, tenorYears: 0, dscrTarget: 0, budgetUsd: budget, debtUsd: 0, equityUsd: budget, feesUsd: 0, partnerPremiumUsd: 0 };
@@ -189,6 +198,11 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
           equipmentLateDays: late, stoppedDays: 0, delayDays: 0, budgetUsd: p.financing.budgetUsd, overrunUsd: 0, spentUsd: 0, idcUsd: 0,
           monthSpendUsd: 0, monthOverrunUsd: 0,
         };
+        if (tech.geotermia) {
+          // Pozos planificados con la estimación del recurso (los secos y el recurso real se ven al perforar).
+          const w = geoWellCount(tech.geotermia, p.mw, geoWellProbabilities(tech, p.estimate.value).mwPerWell);
+          p.construction.wells = { plannedProducers: w.producers, plannedInjectors: w.injectors, drilled: 0, dry: 0 };
+        }
         if (p.financing.debtUsd > 0) {
           p.debt = { principalUsd: 0, outstandingUsd: 0, rate: p.financing.rate, tenorMonths: p.financing.tenorYears * 12, monthsPaid: 0, monthlyPayment: 0 };
         }
@@ -260,25 +274,29 @@ function createProject(state: GameState, ctx: SimContext, cmd: Extract<ProjectCo
   if (!ctx.grid) return fail('La grilla de recursos no está cargada.');
   if (!(cmd.mw >= tech.escala_mw.min && cmd.mw <= tech.escala_mw.max)) return fail(`${tech.nombre}: entre ${tech.escala_mw.min} y ${tech.escala_mw.max} MW.`);
   if (!(Math.abs(cmd.lat) <= 90 && Math.abs(cmd.lon) <= 180)) return fail('Ubicación inválida.');
-  const cell = ctx.grid.cell(cmd.lat, cmd.lon);
-  if (!cell.land || !cell.country) return fail('El sitio no está en tierra firme.');
-  const country = ctx.data.countries[cell.country.code];
-  if (!country) return fail(`Todavía no se puede desarrollar en ${cell.country.nombre}.`);
-  if (!countryUnlocked(state, ctx, country.iso3)) return fail(`Mercado cerrado: ${country.nombre} requiere investigación (${unlockingNode(ctx, 'paises', country.iso3)?.nombre ?? 'I+D'}).`);
-  if (!tech.recurso) return fail('Tecnología sin recurso de grilla.');
-  const value = cell.values[tech.recurso] ?? 0;
-  if (!(value > 0)) return fail('El sitio no tiene recurso para esta tecnología.');
+  const to = cmd.toLat !== undefined && cmd.toLon !== undefined ? { lat: cmd.toLat, lon: cmd.toLon } : undefined;
+  const ev = evaluateSite(ctx, tech.id, cmd.lat, cmd.lon, to);
+  if (!ev.countryCode) return fail(ev.errors[0] ?? 'Sitio inválido.');
+  const country = ctx.data.countries[ev.countryCode];
+  // Mercado y presencia (Fase 4): I+D del mercado + sociedad local (salvo el país de origen).
+  const access = countryAccessBlockers(state, ctx, country.iso3);
+  if (ev.extras.to && ev.extras.to.countryCode !== country.iso3) access.push(...countryAccessBlockers(state, ctx, ev.extras.to.countryCode));
+  if (!ev.ok) return fail(ev.errors.join(' '));
+  if (access.length) return fail(access.join(' '));
+  const value = ev.value;
   const cost = country.costos.prospeccion_usd.base;
   if (!canPay(state, cost)) return noCash(cost);
   // Los proyectos de los competidores llevan su prefijo (C1-P3) para que los id sean únicos en la partida.
   const id = `${state.actorId ? `${state.actorId}-` : ''}P${state.nextProjectId++}`;
   const name = (cmd.name?.trim() || `${tech.nombre} ${cmd.mw} MW (${id})`).slice(0, 60);
+  const key = resourceKey(tech);
   const p: Project = {
     id, name, techId: tech.id, countryCode: country.iso3, mw: cmd.mw, createdTick: state.tick, stage: 'identificado',
     site: {
-      lat: cmd.lat, lon: cmd.lon, cellIndex: cell.index, layer: tech.recurso, cellValue: value,
-      temperatureC: cell.values.temperatura ?? 25,
-      realFactor: hiddenResourceFactor(state.seed, tech.recurso, cmd.lat, cmd.lon, tech.sigma_recurso_sitio),
+      lat: cmd.lat, lon: cmd.lon, cellIndex: ev.cellIndex, layer: ev.layer, cellValue: value,
+      temperatureC: ev.temperatureC,
+      realFactor: hiddenResourceFactor(state.seed, key, cmd.lat, cmd.lon, tech.sigma_recurso_sitio),
+      extras: ev.extras,
     },
     estimate: { value, sigma: tech.sigma_recurso_sitio, source: 'celda' },
     studies: {}, permits: {}, findings: [], capexFactor: 1, devCostUsd: 0, devExpenseUsd: 0, partnerShare: 0, timeline: [],

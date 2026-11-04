@@ -23,6 +23,8 @@ export interface CapexInput {
   priceFactors?: { equipment?: number; inverter?: number; epc?: number };
   /** Fase 3: multiplicador de I+D sobre todo el CAPEX (p. ej. 0,95 = −5 %). */
   costMultiplier?: number;
+  /** Fase 4: factor del sitio (mar adentro, profundidad, longitud de línea, productividad de pozos). */
+  siteFactor?: number;
 }
 
 export interface CapexBreakdown {
@@ -44,7 +46,7 @@ export interface CapexBreakdown {
 export function capexBreakdown(ctx: SimContext, i: CapexInput): CapexBreakdown {
   const tech = ctx.data.technologies[i.techId];
   const country = ctx.data.countries[i.countryCode];
-  const base = tech.capex_usd_kw.base * i.mw * 1000 * (i.capexFactor ?? 1) * (i.costMultiplier ?? 1);
+  const base = tech.capex_usd_kw.base * i.mw * 1000 * (i.capexFactor ?? 1) * (i.costMultiplier ?? 1) * (i.siteFactor ?? 1);
   const eq: SupplierDef | undefined = i.equipmentId ? ctx.data.suppliers[i.equipmentId] : undefined;
   const epc: SupplierDef | undefined = i.epcId ? ctx.data.suppliers[i.epcId] : undefined;
   const inv: SupplierDef | undefined = i.inverterId ? ctx.data.suppliers[i.inverterId] : undefined;

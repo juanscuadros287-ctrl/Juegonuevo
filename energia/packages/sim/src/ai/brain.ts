@@ -10,6 +10,9 @@ import { isTerminal } from '../project/helpers';
 import { projectCapex, projectEconomics } from '../project/economics';
 import { currentCapex } from '../tech/costs';
 import { siteKey } from '../world/site';
+import { evaluateSite } from '../tech/siting';
+import { sellsEnergy } from '../tech/models';
+import { hasPresence, presenceBlockers } from '../business/presence';
 import { researchBlockers, researchNodes, studyUnlocked, techUnlocked } from '../business/research';
 import { bidBlockers, nameplateMw, quoteBid, realisticDeliveryMonths } from '../business/bids';
 import { publicOpportunity } from '../business/opportunities';
@@ -107,7 +110,7 @@ function projectSteps(view: GameState, ctx: SimContext, p: Project, ai: AiContex
   // PPA del canal genérico de la Fase 2 si no hay contrato de licitación (los agresivos prueban el spot)
   if (!p.contractId && (!p.ppa || (p.ppa.status === 'fallido' && def.estrategia !== 'agresiva' && p.ppa.startTick > 0 && view.tick - p.ppa.endTick > 200))) {
     const c = ctx.data.countries[p.countryCode];
-    const ch = c.ppa.canales.find((x) => p.mw >= x.mw_min && p.mw <= x.mw_max && x.requiere_permisos.every((g) => !applicablePermits(ctx, p).some((d) => d.grupo === g) || Object.values(p.permits).some((r) => r.status === 'aprobado' && c.permisos.find((y) => y.id === r.permitId)?.grupo === g)));
+    const ch = !sellsEnergy(ctx.data.technologies[p.techId]) ? undefined : c.ppa.canales.find((x) => (!x.tecnologias || x.tecnologias.includes(p.techId)) && p.mw >= x.mw_min && p.mw <= x.mw_max && x.requiere_permisos.every((g) => !applicablePermits(ctx, p).some((d) => d.grupo === g) || Object.values(p.permits).some((r) => r.status === 'aprobado' && c.permisos.find((y) => y.id === r.permitId)?.grupo === g)));
     if (ch && (def.estrategia !== 'agresiva' || !p.ppa) && spend(ch.costo_usd.base)) out.push({ type: 'seekPpa', projectId: id, channelId: ch.id });
   }
   if (blockers.length) return out;
@@ -145,8 +148,8 @@ function projectSteps(view: GameState, ctx: SimContext, p: Project, ai: AiContex
   return out;
 }
 
-function projectCapexPerMw(view: GameState, ctx: SimContext, techId: string): number {
-  return currentCapex(view, ctx, { techId, mw: 10, countryCode: view.company.homeCountry }).totalUsd / 10;
+function projectCapexPerMw(view: GameState, ctx: SimContext, techId: string, country: string): number {
+  return currentCapex(view, ctx, { techId, mw: 10, countryCode: country }).totalUsd / 10;
 }
 
 function techFor(view: GameState, ctx: SimContext, def: CompetitorDef, allowed: string[]): string | undefined {
@@ -165,9 +168,10 @@ function pickSite(view: GameState, ctx: SimContext, ai: AiContext, techId: strin
     for (const k of [0, 1, 2]) {
       const lat = s.lat + 0.02 * ((idx + k) % 3 - 1), lon = s.lon + 0.03 * k;
       if (ai.occupiedSites.has(siteKey(lat, lon))) continue;
-      const cell = ctx.grid.cell(lat, lon);
-      const v = tech.recurso ? cell.values[tech.recurso] ?? 0 : 0;
-      if (!cell.land || !(v > 0)) continue;
+      // Fase 4: mismas restricciones de sitio que el jugador (mar, costa, recurso mínimo, zona, agua…).
+      const ev = evaluateSite(ctx, techId, lat, lon);
+      if (!ev.ok || ev.countryCode !== country) continue;
+      const v = tech.recurso ? ev.value : 1;
       if (!best || v > best.v) best = { lat, lon, v };
       break;
     }
@@ -221,15 +225,24 @@ export function decideCompetitor(view: GameState, ctx: SimContext, ai: AiContext
     created++;
   }
 
-  // Proyecto especulativo nuevo
+  // Fase 4: expansión a otros países (mismo comando que el jugador: I+D del mercado + sociedad local).
+  if (!crisis && def.expansion && view.company.cashUsd > def.expansion.caja_min_usd && created === 0) {
+    const pending = Object.values(view.business.presence ?? {}).some((x) => x.status === 'en_tramite');
+    const target = pending ? undefined : def.expansion.paises.find((iso) => !hasPresence(view, iso) && presenceBlockers(view, ctx, iso).length === 0);
+    if (target) cmds.push({ type: 'openPresence', countryCode: target });
+  }
+
+  // Proyecto especulativo nuevo (en el país de origen o en uno donde ya tiene presencia)
   const devCount = active.filter((p) => !p.construction && !p.operation).length;
   if (!crisis && devCount < def.max_proyectos && budget.cash > 600_000 && created === 0 && rng.chance(0.25)) {
-    const techId = techFor(view, ctx, def, def.tecnologias);
-    const site = techId ? pickSite(view, ctx, ai, techId, view.company.homeCountry) : undefined;
+    const markets = [view.company.homeCountry, ...Object.keys(view.business.presence ?? {}).filter((iso) => hasPresence(view, iso)).sort()];
+    const country = markets.length > 1 ? markets[Math.floor(rng.next() * markets.length)] : markets[0];
+    const techId = techFor(view, ctx, def, def.tecnologias.filter((t) => (ctx.data.competitors?.sitios_candidatos ?? []).some((s) => s.tecnologia === t && s.pais === country)));
+    const site = techId ? pickSite(view, ctx, ai, techId, country) : undefined;
     if (techId && site) {
       const tech = ctx.data.technologies[techId];
       // Tamaño que su caja puede sostener (con el máximo de socio y la deuda que suele pedir).
-      const perMw = projectCapexPerMw(view, ctx, techId) * (1 - def.apalancamiento) * 0.35;
+      const perMw = projectCapexPerMw(view, ctx, techId, country) * (1 - def.apalancamiento) * 0.35;
       const lo = Math.max(def.mw.min, tech.escala_mw.min), hi = Math.max(lo, Math.min(def.mw.max, tech.escala_mw.max, Math.floor(budget.cash / perMw)));
       const mw = Math.round(lo + (hi - lo) * rng.next());
       cmds.push({ type: 'createProject', techId, mw, lat: site.lat, lon: site.lon, name: `${def.nombre.split(' ')[0]} ${tech.nombre} ${mw} MW` });

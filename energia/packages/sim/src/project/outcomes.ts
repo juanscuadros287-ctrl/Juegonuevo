@@ -72,3 +72,18 @@ export function permitApprovalProbability(p: PermitDef): number {
   pa += pInfoChain * (a / (a + r));
   return pa;
 }
+
+/** Fase 4 (geotermia): resultado de una campaña de pozos exploratorios. */
+export interface WellCampaign { dry: number; low: number; productive: number }
+
+/** Sorteo de `n` pozos con probabilidades (seco, baja entalpía); compartido por la simulación y el Monte Carlo. */
+export function drawWells(rng: Rng, n: number, pDry: number, pLow: number): WellCampaign {
+  const out = { dry: 0, low: 0, productive: 0 };
+  for (let i = 0; i < n; i++) {
+    const u = rng.next();
+    if (u < pDry) out.dry++;
+    else if (u < pDry + pLow) out.low++;
+    else out.productive++;
+  }
+  return out;
+}

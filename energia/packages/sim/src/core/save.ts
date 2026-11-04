@@ -18,6 +18,14 @@ const MIGRATIONS: Record<number, (s: any) => any> = {
     ...s, saveVersion: 3, business: newBusinessState(), market: newMarketState(true), competitors: [],
     rng: { ...s.rng, supply: seedStream(s.seed, 'supply'), tenders: seedStream(s.seed, 'tenders'), business: seedStream(s.seed, 'business') },
   }),
+  // v3 (Fase 3) → v4 (Fase 4): presencia por país vacía (jugador y competidores), flujos `fx` y `fuels`; los tipos de
+  // cambio y los índices de combustibles se inicializan en el próximo step con datos (todos en 1 = precios del YAML).
+  3: (s) => ({
+    ...s, saveVersion: 4,
+    business: { ...s.business, presence: s.business?.presence ?? {} },
+    competitors: (s.competitors ?? []).map((c: any) => ({ ...c, business: { ...c.business, presence: c.business?.presence ?? {} } })),
+    rng: { ...s.rng, fx: s.rng.fx ?? seedStream(s.seed, 'fx'), fuels: s.rng.fuels ?? seedStream(s.seed, 'fuels') },
+  }),
 };
 
 export function serialize(state: GameState): string {

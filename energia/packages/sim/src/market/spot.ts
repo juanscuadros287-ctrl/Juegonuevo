@@ -27,7 +27,8 @@ export function simpleSpotMarket(ctx: SimContext, startYear: number): SpotMarket
 
 export function spotPrice(c: CountrySimDef, startYear: number, year: number, month: number): number {
   const prof = normalizedProfile(c.mercado.perfil_spot_mensual);
-  const infl = Math.pow(1 + c.inflacion_anual.base, Math.max(0, year - startYear));
+  // Fase 4: en USD los precios crecen con la inflación del USD (salvo monedas fijas al USD: la local).
+  const infl = Math.pow(1 + (c.inflacion_usd_anual ?? c.inflacion_anual.base), Math.max(0, year - startYear));
   return c.mercado.precio_spot_medio_usd_mwh.base * prof[month - 1] * infl;
 }
 

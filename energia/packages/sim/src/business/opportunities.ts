@@ -10,6 +10,8 @@ import { actorName, changeReputation, withActor } from './actor';
 import { executeBond, releaseBond } from './bonds';
 import { experienceScore, technicalScore, PRICE_UNITS } from './bids';
 import { signContract } from './contracts';
+import { openCountries } from './presence';
+import { contractCurrency } from '../market/macro';
 import { PLAYER_ID, type Opportunity, type RankingEntry } from './types';
 
 /**
@@ -49,8 +51,10 @@ export function generateOpportunities(state: GameState, ctx: SimContext, events:
   if (!def) return;
   const rng = new Rng(state.rng.tenders);
   const m = state.market;
+  // Fase 4: solo se generan oportunidades en países donde algún actor (jugador o IA) tiene presencia u origen.
+  const open = openCountries(state);
   for (const ct of def.tipos) {
-    if (!ctx.data.countries[ct.pais]) continue;
+    if (!ctx.data.countries[ct.pais] || !open.has(ct.pais)) continue;
     const n = poisson(rng, ct.frecuencia_anual / 12);
     for (let i = 0; i < n; i++) {
       const mw = Math.max(1, Math.round(drawDist(rng, ct.mw)));
@@ -65,6 +69,7 @@ export function generateOpportunities(state: GameState, ctx: SimContext, events:
         codMonths: Math.round(drawDist(rng, ct.plazo_cod_meses)), bidBondUsd: ct.garantia_seriedad_usd_mw * mw, performanceBondUsd: ct.garantia_cumplimiento_usd_mw * mw,
         weights: { ...ct.pesos }, minExperienceMw: ct.experiencia_mw_min, minEquityUsd: ct.capital_min_usd, penaltyUsdMwMonth: ct.multa_usd_mw_mes,
         maxDelayMonths: ct.meses_max_atraso, prepCostUsd: drawDist(rng, ct.costo_preparacion_usd), indexation: ct.indexacion_anual, status: 'abierta', bids: [],
+        ...(contractCurrency(ctx.data.countries[ct.pais], ct.moneda) === 'local' ? { currency: 'local' as const } : {}),
       };
       m.opportunities.push(o);
       const unit = PRICE_UNITS[o.contract];

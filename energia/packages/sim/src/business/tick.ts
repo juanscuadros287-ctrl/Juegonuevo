@@ -8,6 +8,7 @@ import { projectDaily, projectMonthly, projectNewYear } from '../project/tick';
 import { researchDaily, researchMonthly } from './research';
 import { contractsDaily, contractsMonthly } from './contracts';
 import { bondFeesMonthly } from './bonds';
+import { presenceDaily, presenceMonthly } from './presence';
 
 /**
  * Avance de UN actor (jugador o vista de un competidor): proyectos, I+D y contratos.
@@ -19,6 +20,7 @@ export function actorDaily(state: GameState, ctx: SimContext, prev: GameDate, no
   if (now.year !== prev.year) for (const p of state.projects) projectNewYear(ctx, p, rng);
   if (ctx.data.research) researchDaily(state, ctx, new Rng(state.rng.business ?? state.rng.projects), events);
   if (ctx.data.clients) contractsDaily(state, ctx, prev.month, events);
+  presenceDaily(state, ctx, events);
 }
 
 /** Cierre del mes que terminó (`prev`): proyectos, contratos, I+D, garantías, gastos fijos, impuestos y caja. */
@@ -28,6 +30,7 @@ export function actorMonthly(state: GameState, ctx: SimContext | undefined, prev
     for (const p of state.projects) projectMonthly(state, ctx, p, rng, prev.year, prev.month, events);
     if (ctx.data.clients && state.business) { contractsMonthly(state, ctx, prev.month, events); bondFeesMonthly(state, ctx); }
     if (ctx.data.research && state.business) researchMonthly(state);
+    presenceMonthly(state, ctx);
   }
   const c = state.company;
   postCash(state, 'gastos_fijos', -c.monthlyFixedCostUsd, 'Gastos fijos (personal y oficina)');

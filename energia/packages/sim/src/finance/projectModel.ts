@@ -24,6 +24,9 @@ export interface ProjectModelInput {
   decommissionUsd: number;
   /** Tasa para el LCOE (por defecto 7 %). */
   lcoeRate?: number;
+  /** Fase 4: costo variable de combustible/carga/electricidad del año 1 (USD/MWh) y su escalamiento anual. */
+  fuelCostUsdMwhYear1?: number;
+  fuelEscalation?: number;
 }
 
 export interface YearRow {
@@ -83,7 +86,8 @@ export function runProjectModel(i: ProjectModelInput): ProjectModelResult {
     const energy = i.energyMwhYear1 * Math.pow(1 - i.degradation, t - 1);
     const price = priceForYear(i, t);
     const revenue = energy * price;
-    const opex = i.fixedCostUsdYear * Math.pow(1 + i.inflation, t - 1) + i.varCostUsdMwh * energy + (t === n ? i.decommissionUsd : 0);
+    const fuel = i.fuelCostUsdMwhYear1 ? i.fuelCostUsdMwhYear1 * Math.pow(1 + (i.fuelEscalation ?? i.inflation), t - 1) * energy : 0;
+    const opex = i.fixedCostUsdYear * Math.pow(1 + i.inflation, t - 1) + i.varCostUsdMwh * energy + fuel + (t === n ? i.decommissionUsd : 0);
     const ebitda = revenue - opex;
     const dep = t <= i.depreciationYears ? i.capexUsd / i.depreciationYears : 0;
     let interest = 0, principal = 0;
@@ -113,7 +117,7 @@ export function runProjectModel(i: ProjectModelInput): ProjectModelResult {
     equityFlows.push(r.cfadsUsd - ds);
   });
   const lc = lcoe({
-    capexUsd: i.capexUsd, fixedCostUsdYear: i.fixedCostUsdYear, varCostUsdMwh: i.varCostUsdMwh,
+    capexUsd: i.capexUsd, fixedCostUsdYear: i.fixedCostUsdYear, varCostUsdMwh: i.varCostUsdMwh + (i.fuelCostUsdMwhYear1 ?? 0),
     energyMwhYear1: i.energyMwhYear1, degradation: i.degradation, years: n, rate: i.lcoeRate ?? 0.07,
   });
   return {

@@ -104,6 +104,8 @@ export interface Opportunity {
   prepCostUsd: number;
   indexation: number;
   status: OpportunityStatus;
+  /** Fase 4: moneda del contrato ('local' = el precio en USD sigue al tipo de cambio desde la firma). Ausente = USD. */
+  currency?: 'USD' | 'local';
   /** Ofertas selladas (la UI solo ve la propia hasta la adjudicación). */
   bids: Bid[];
   result?: { ranking: RankingEntry[]; winnerId?: string; winnerName?: string; winnerPrice?: number; tick: number; reason?: string };
@@ -156,6 +158,9 @@ export interface Contract {
   penaltiesUsd: number;
   revenueUsd: number;
   status: ContractStatus;
+  /** Fase 4: moneda y tipo de cambio nominal a la firma. */
+  currency?: 'USD' | 'local';
+  fxAtSigning?: number;
   codTick?: number;
   endTick?: number;
   epc?: EpcExecution;
@@ -177,6 +182,21 @@ export interface BusinessState {
   restrictedCashUsd: number;
   bidsWon: number;
   bidsLost: number;
+  /**
+   * Fase 4: presencia legal por país (constitución + representante legal). El país de origen no figura: siempre
+   * está abierto. `level: 'oficina'` queda reservado para la Fase 6 (oficinas completas).
+   */
+  presence?: Record<string, Presence>;
+}
+
+export interface Presence {
+  status: 'en_tramite' | 'activa' | 'cerrada';
+  level: 'representante' | 'oficina';
+  requestedTick: number;
+  readyTick: number;
+  setupCostUsd: number;
+  monthlyCostUsd: number;
+  closedTick?: number;
 }
 
 export interface CompetitorState {
@@ -212,6 +232,12 @@ export interface MarketState {
   opportunities: Opportunity[];
   nextOpportunityId: number;
   supply: SupplyState;
+  /** Fase 4: tipo de cambio real por país (1 = el del inicio; la deriva nominal por inflación se agrega aparte). */
+  fx?: Record<string, number>;
+  /** Fase 4: índice de precio de cada combustible (1 = precio de referencia de markets.yaml). */
+  fuels?: Record<string, number>;
+  /** Fase 4: historial mensual (últimos 120 meses) de tipos de cambio nominales (USD por unidad) e índices de combustibles. */
+  macroHistory?: { year: number; month: number; fxUsdPerUnit: Record<string, number>; fuels: Record<string, number> }[];
 }
 
 export function newResearchState(): ResearchState {
@@ -221,7 +247,7 @@ export function newResearchState(): ResearchState {
 export function newBusinessState(reputation = 25, experienceMwBase = 0): BusinessState {
   return {
     reputation, experienceMwBase, epcDeliveredMw: 0, research: newResearchState(), contracts: [], nextContractId: 1, relations: {},
-    restrictedCashUsd: 0, bidsWon: 0, bidsLost: 0,
+    restrictedCashUsd: 0, bidsWon: 0, bidsLost: 0, presence: {},
   };
 }
 

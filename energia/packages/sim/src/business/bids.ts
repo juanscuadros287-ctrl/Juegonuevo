@@ -4,12 +4,14 @@ import type { SimEvent } from '../core/events';
 import type { SupplierDef } from '../data/types';
 import { balanceSheet, postCash } from '../finance/company';
 import { currentCapex, expectedAvailability, expectedRepairCostUsd, annualFixedCosts } from '../tech/costs';
-import { capturedSpot, currentYear, discountRates, lenderRate, projectEconomics, startYear } from '../project/economics';
+import { currentYear, discountRates, lenderRate, projectEconomics, startYear } from '../project/economics';
 import { applicablePermits, permitGroupApproved, requiredStudyGroups, studyGroupDone } from '../project/requirements';
 import { isTerminal } from '../project/helpers';
 import { actorIdOf, experienceMw } from './actor';
 import { contractUnlocked, countryUnlocked, researchEffects, techUnlocked, unlockingNode } from './research';
 import { postBond, releaseBond } from './bonds';
+import { hasPresence } from './presence';
+import { annualSpotUsd, effectiveDegradation, productTerms, techCaptureFactor } from '../tech/models';
 import type { Bid, Opportunity } from './types';
 
 /**
@@ -181,11 +183,16 @@ export function quoteBid(state: GameState, ctx: SimContext, opp: Opportunity, o:
   const years = Math.min(opp.years, life);
   const devAllowance = p ? 0 : 0.04 * capex;
   let pvCost = capex + devAllowance, pvE = 0, pvTail = 0, ann = 0;
-  const spot = capturedSpot(c, tech, startYear(state), currentYear(state)) * 0.85;
+  const y0 = startYear(state), yNow = currentYear(state);
+  // Fase 4: costo variable (combustible, carbono, carga) y precio sin contrato con las mismas fórmulas que la operación.
+  const terms = productTerms(state, ctx, tech, c, { spotUsdMwh: annualSpotUsd(state, c, y0, yNow), capture: techCaptureFactor(c, tech, tech.recurso ?? 'sin_recurso'), yearsFromStart: yNow - y0, resourceValue: p?.estimate.value });
+  const fuel = terms.fuel.varUsdMwh;
+  const deg = effectiveDegradation(tech, c);
+  const spot = terms.priceUsdMwh * 0.85;
   for (let t = 1; t <= life; t++) {
-    const e = energy * Math.pow(1 - tech.degradacion_anual.base, t - 1);
+    const e = energy * Math.pow(1 - deg, t - 1);
     const df = Math.pow(1 + r, -t);
-    pvCost += (fixed + tech.om_variable_usd_mwh.base * e) * df;
+    pvCost += (fixed + (tech.om_variable_usd_mwh.base + fuel) * e) * df;
     if (t <= years) { pvE += e * df; ann += df; }
     else if (opp.contract !== 'bot') pvTail += e * spot * df; // tras el contrato vende al spot (en BOT la planta se transfiere)
   }
@@ -211,6 +218,7 @@ export function bidBlockers(state: GameState, ctx: SimContext, opp: Opportunity 
   if (opp.bids.some((x) => x.actorId === me && x.status === 'presentada')) out.push('Ya presentaste una oferta.');
   if (!contractUnlocked(state, ctx, opp.contractType)) out.push(`Requiere investigación: ${unlockingNode(ctx, 'contratos', opp.contractType)?.nombre ?? opp.contractType}.`);
   if (!countryUnlocked(state, ctx, opp.countryCode)) out.push(`Mercado cerrado: ${opp.countryCode}.`);
+  else if (!hasPresence(state, opp.countryCode)) out.push(`Sin presencia en ${ctx.data.countries[opp.countryCode]?.nombre ?? opp.countryCode}: abre antes una sociedad local.`);
   const tech = ctx.data.technologies[b.techId];
   if (!opp.techs.includes(b.techId)) out.push('La tecnología no está admitida en esta oportunidad.');
   else if (!tech) out.push('Esa tecnología aún no tiene modelo en el juego.');

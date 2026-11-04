@@ -102,4 +102,29 @@ export class ResourceGrid {
     for (let i = 0; i < this.countryIds.length; i++) if (this.countryIds[i] === c.id) out.push(i);
     return out;
   }
+
+  /**
+   * Fase 4: país de tierra más cercano a un punto (para sitios en el mar: eólica marina).
+   * Busca en anillos de celdas hasta `maxCells`; devuelve el país y la distancia aproximada en celdas.
+   */
+  nearestCountry(lat: number, lon: number, maxCells = 6): { country: GridCountry; cells: number } | null {
+    const idx = this.indexOf(lat, lon);
+    const r0 = Math.floor(idx / this.width), c0 = idx % this.width;
+    for (let d = 0; d <= maxCells; d++) {
+      const counts = new Map<number, number>();
+      for (let dr = -d; dr <= d; dr++) for (let dc = -d; dc <= d; dc++) {
+        if (Math.max(Math.abs(dr), Math.abs(dc)) !== d) continue;
+        const r = r0 + dr;
+        if (r < 0 || r >= this.height) continue;
+        const c = ((c0 + dc) % this.width + this.width) % this.width;
+        const id = this.countryIds[r * this.width + c];
+        if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+      }
+      if (counts.size) {
+        const best = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+        return { country: this.countriesById.get(best)!, cells: d };
+      }
+    }
+    return null;
+  }
 }
