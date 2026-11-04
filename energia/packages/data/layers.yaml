@@ -1,0 +1,65 @@
+# Capas de recursos del globo. "rampa": colores de menor a mayor.
+# "aplica": tierra | mar. Los valores salen de la grilla generada por tools/build-resources.ts.
+- id: ghi
+  nombre: Irradiación solar global (GHI)
+  unidad: kWh/m²/día
+  aplica: tierra
+  rango: [1.5, 7.5]
+  rampa: ["#2b2d6e", "#6a3d9a", "#d1495b", "#f79d3c", "#ffe66d"]
+  tecnologias: [Solar FV]
+- id: dni
+  nombre: Irradiación directa normal (DNI)
+  unidad: kWh/m²/día
+  aplica: tierra
+  rango: [1.5, 10]
+  rampa: ["#2b2d6e", "#6a3d9a", "#d1495b", "#f79d3c", "#ffe66d"]
+  tecnologias: [Solar térmica (CSP)]
+- id: viento_tierra
+  nombre: Viento en tierra a 100 m
+  unidad: m/s
+  aplica: tierra
+  rango: [3, 11]
+  rampa: ["#f1f5f9", "#9ad0ec", "#3b8bd6", "#2f4fb0", "#5a1e8c"]
+  tecnologias: [Eólica en tierra]
+- id: viento_mar
+  nombre: Viento mar adentro a 100 m
+  unidad: m/s
+  aplica: mar
+  rango: [4, 12]
+  rampa: ["#e0f2fe", "#7dd3fc", "#0ea5e9", "#1d4ed8", "#4c1d95"]
+  tecnologias: [Eólica marina]
+- id: geotermia
+  nombre: Flujo de calor geotérmico
+  unidad: mW/m²
+  aplica: tierra
+  rango: [40, 220]
+  rampa: ["#fef3c7", "#fdba74", "#f97316", "#dc2626", "#7f1d1d"]
+  tecnologias: [Geotérmica]
+- id: hidro
+  nombre: Potencial hidroeléctrico
+  unidad: índice 0–100
+  aplica: tierra
+  rango: [0, 100]
+  rampa: ["#f8fafc", "#bae6fd", "#38bdf8", "#0369a1", "#0c2d48"]
+  tecnologias: [Hidro de pasada, Hidro de embalse, Bombeo]
+- id: biomasa
+  nombre: Productividad de biomasa (NPP)
+  unidad: g/m²/año
+  aplica: tierra
+  rango: [0, 2800]
+  rampa: ["#f5ecd7", "#d9e7a3", "#93c572", "#3f8f4a", "#14532d"]
+  tecnologias: [Biomasa, Biogás]
+- id: lluvia
+  nombre: Precipitación anual
+  unidad: mm/año
+  aplica: tierra
+  rango: [0, 3500]
+  rampa: ["#fdf6e3", "#c7e9b4", "#7fcdbb", "#2c7fb8", "#253494"]
+  tecnologias: []
+- id: temperatura
+  nombre: Temperatura media anual
+  unidad: °C
+  aplica: tierra
+  rango: [-25, 30]
+  rampa: ["#3b4cc0", "#8db0fe", "#f2f2f2", "#f49a7b", "#b40426"]
+  tecnologias: []

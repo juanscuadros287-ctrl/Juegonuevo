@@ -1,0 +1,68 @@
+import { SAVE_VERSION, type GameState } from './state';
+
+export interface SaveFile {
+  format: 'voltaje-save';
+  saveVersion: number;
+  state: GameState;
+}
+
+/** Migraciones de partidas: clave = versión de origen. */
+const MIGRATIONS: Record<number, (s: any) => any> = {};
+
+export function serialize(state: GameState): string {
+  const file: SaveFile = { format: 'voltaje-save', saveVersion: SAVE_VERSION, state };
+  return JSON.stringify(file);
+}
+
+export function deserialize(text: string): GameState {
+  let file: any;
+  try {
+    file = JSON.parse(text);
+  } catch {
+    throw new Error('El archivo de partida está dañado (no es JSON válido).');
+  }
+  if (file?.format !== 'voltaje-save') throw new Error('El archivo no es una partida de Voltaje.');
+  let v = file.saveVersion;
+  if (typeof v !== 'number') throw new Error('Partida sin versión.');
+  if (v > SAVE_VERSION) throw new Error(`La partida es de una versión más nueva del juego (${v}).`);
+  let state = file.state;
+  while (v < SAVE_VERSION) {
+    const m = MIGRATIONS[v];
+    if (!m) throw new Error(`No hay migración desde la versión ${v}.`);
+    state = m(state);
+    v++;
+  }
+  validate(state);
+  return state as GameState;
+}
+
+function validate(s: any) {
+  const ok =
+    s && typeof s.tick === 'number' && typeof s.seed === 'number' && typeof s.startEpochDay === 'number' &&
+    s.company && typeof s.company.cashUsd === 'number' && s.rng && typeof s.rng === 'object';
+  if (!ok) throw new Error('La partida tiene un formato inválido.');
+  for (const k of Object.keys(s.rng)) {
+    const r = s.rng[k];
+    if (!Array.isArray(r) || r.length !== 4 || r.some((x: unknown) => typeof x !== 'number')) throw new Error(`Estado RNG inválido: ${k}`);
+  }
+}
+
+/** Hash estable del estado (para pruebas de determinismo). */
+export function stateHash(state: GameState): string {
+  const text = canonical(state);
+  let h1 = 0x811c9dc5, h2 = 0x01000193;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193);
+    h2 = Math.imul(h2 ^ c, 0x5bd1e995);
+  }
+  return (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0');
+}
+
+function canonical(v: unknown): string {
+  if (Array.isArray(v)) return '[' + v.map(canonical).join(',') + ']';
+  if (v && typeof v === 'object') {
+    return '{' + Object.keys(v as object).sort().map((k) => JSON.stringify(k) + ':' + canonical((v as any)[k])).join(',') + '}';
+  }
+  return JSON.stringify(v);
+}

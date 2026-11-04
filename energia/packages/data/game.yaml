@@ -1,0 +1,25 @@
+# Configuración general del juego. Editable.
+nombre: Voltaje
+version_datos: 1
+fecha_inicio: "2026-01-01"
+pais_inicial: PAN
+moneda_contable: USD
+
+empresa_inicial:
+  caja_usd: 750000
+  # Gastos fijos mensuales de una empresa de desarrollo recién creada en Ciudad de Panamá:
+  # fundador + 2 técnicos + oficina pequeña + contador y abogado externos.
+  gastos_fijos_mensuales_usd: 18500
+  supuesto: "Salarios técnicos en Panamá ~2.500–4.500 USD/mes (2025) + cargas sociales ~25%; arriendo oficina 60 m² ~1.500 USD/mes; servicios profesionales ~2.000 USD/mes."
+
+# Velocidades: días de juego por segundo real.
+velocidades:
+  - { id: x1, etiqueta: "×1", dias_por_segundo: 1 }
+  - { id: x2, etiqueta: "×2", dias_por_segundo: 3 }
+  - { id: x4, etiqueta: "×4", dias_por_segundo: 7 }
+  - { id: x8, etiqueta: "×8", dias_por_segundo: 30 }
+
+autoguardado:
+  cada_meses: 3
+  min_segundos_reales: 45
+  ranuras: 3

@@ -1,0 +1,32 @@
+{
+  "name": "voltaje",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @voltaje/game",
+    "build": "npm run build -w @voltaje/game",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json",
+    "resources": "tsx tools/build-resources.ts",
+    "screens": "node tools/screenshots.mjs",
+    "mac": "npm run tauri -w @voltaje/game -- build --target aarch64-apple-darwin --bundles dmg"
+  },
+  "devDependencies": {
+    "@modyfi/vite-plugin-yaml": "^1.1.1",
+    "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/cli": "^2.12.4",
+    "@types/node": "^26.6.6",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@types/three": "^0.187.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
+  }
+}

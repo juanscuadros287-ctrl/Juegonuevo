@@ -1,0 +1,15 @@
+# Panamá — país inicial. Datos macro aproximados (2025).
+iso3: PAN
+nombre: Panamá
+iso_num: 591
+moneda: { codigo: PAB, nombre: "Balboa (paridad 1:1 con USD; circula el dólar)", usd_por_unidad: 1.0 }
+inflacion_anual: { base: 0.015, fuente: "INEC Panamá / FMI WEO 2025 (≈1–2%)" }
+prima_riesgo_pais: { base: 0.028, fuente: "Damodaran, Country Risk Premiums ene-2025 (Baa3/BBB-, ≈2,5–3,2%)" }
+regulador: "ASEP (Autoridad Nacional de los Servicios Públicos)"
+operador_sistema: "ETESA / CND (Centro Nacional de Despacho)"
+mercado:
+  demanda_anual_twh: { base: 12.5, fuente: "CND/SNE Panamá 2024 (≈12–13 TWh)" }
+  pico_mw: { base: 2200, fuente: "CND 2024 (pico ≈2.1–2.3 GW)" }
+  precio_spot_medio_usd_mwh: { base: 95, fuente: "CND, costo marginal promedio 2023–2024 (≈70–140 USD/MWh según hidrología)" }
+  matriz: { hidro: 0.62, termica: 0.25, solar: 0.07, eolica: 0.06, fuente: "SNE, generación 2023 aproximada" }
+notas: "Los permisos y el mercado detallado se modelan en la Fase 2."

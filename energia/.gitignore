@@ -1,0 +1,7 @@
+node_modules/
+dist/
+tools/raw/
+apps/game/src-tauri/target/
+apps/game/src-tauri/gen/
+*.tsbuildinfo
+.DS_Store
