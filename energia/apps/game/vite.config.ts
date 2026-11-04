@@ -10,5 +10,10 @@ export default defineConfig({
   clearScreen: false,
   server: { port: 5173, strictPort: true },
   worker: { format: 'es', plugins: () => [yaml()] },
-  build: { target: 'safari16', chunkSizeWarningLimit: 2000 },
+  build: {
+    target: 'safari16',
+    chunkSizeWarningLimit: 2000,
+    // models.html: vista previa de los modelos 3D (src/models)
+    rollupOptions: { input: { main: 'index.html', models: 'models.html' } },
+  },
 });
