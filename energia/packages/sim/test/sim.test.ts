@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createNewGame, currentDate, deserialize, serialize, stateHash, step, type Command, type SimConfig, formatDate } from '../src';
+import { createNewGame, currentDate, deserialize, serialize, stateHash, step, SAVE_VERSION, type Command, type SimConfig, formatDate } from '../src';
+import { ctx, newGame, runWithPilot, SITES } from './helpers';
 
 const config: SimConfig = {
   dataVersion: 1,
@@ -82,5 +83,44 @@ describe('Guardado y carga', () => {
     const t = JSON.parse(serialize(run(1)));
     t.state.rng.world = [1, 2];
     expect(() => deserialize(JSON.stringify(t))).toThrow(/RNG/);
+  });
+});
+
+describe('Determinismo y guardado con proyectos (Fase 2)', () => {
+  const play = (seed: number, days: number) => {
+    const s = newGame(seed, 40_000_000);
+    step(s, [
+      { type: 'createProject', techId: 'solar_fv', mw: 10, lat: SITES.solar.lat, lon: SITES.solar.lon },
+      { type: 'createProject', techId: 'eolica_tierra', mw: 30, lat: SITES.eolica.lat, lon: SITES.eolica.lon },
+    ], ctx);
+    runWithPilot(s, days, { partnerShare: 0.5 });
+    return s;
+  };
+
+  it('misma semilla + mismos comandos ⇒ mismo estado tras 10 años con proyectos', () => {
+    const a = play(77, 3650), b = play(77, 3650);
+    expect(a.projects.some((p) => p.stage === 'operacion')).toBe(true);
+    expect(stateHash(a)).toBe(stateHash(b));
+    expect(stateHash(play(78, 400))).not.toBe(stateHash(play(77, 400)));
+  });
+
+  it('guardar → cargar → seguir = no guardar (con obras y plantas en curso)', () => {
+    const a = play(5, 365 * 4);
+    const b = deserialize(serialize(a));
+    runWithPilot(a, 365 * 3, { partnerShare: 0.5 });
+    runWithPilot(b, 365 * 3, { partnerShare: 0.5 });
+    expect(stateHash(b)).toBe(stateHash(a));
+  });
+
+  it('migra partidas de la Fase 1 (versión 1)', () => {
+    const v1 = JSON.parse(serialize(run(40)));
+    v1.saveVersion = 1;
+    delete v1.state.projects; delete v1.state.nextProjectId; delete v1.state.finance;
+    v1.state.saveVersion = 1;
+    const s = deserialize(JSON.stringify(v1));
+    expect(s.saveVersion).toBe(SAVE_VERSION);
+    expect(s.projects).toEqual([]);
+    expect(s.finance.bankrupt).toBe(false);
+    step(s, [], ctx);
   });
 });

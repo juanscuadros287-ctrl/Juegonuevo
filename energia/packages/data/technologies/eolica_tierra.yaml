@@ -1,0 +1,65 @@
+# Eólica en tierra, turbina de referencia de 4,5 MW para vientos medios (clase IEC II/III).
+id: eolica_tierra
+nombre: Eólica en tierra
+categoria: eolica
+recurso: viento_tierra
+modelo_fc: eolica
+
+capex_usd_kw:
+  { min: 1100, base: 1500, max: 2200,
+    fuente: "IRENA 2023 (promedio mundial 1.160 USD/kW; fuera de China 1.300–2.000); NREL ATB 2024 EE.UU. ~1.500–1.700 USD/kW; Lazard LCOE+ 2024 1.150–1.600 USD/kW" }
+desglose_capex:
+  { equipos: 0.68, epc: 0.22, otros: 0.10,
+    fuente: "IRENA 2023 / NREL Cost of Wind Energy Review 2023: turbina ≈ 64–70 % del CAPEX" }
+om_fijo_usd_kw_ano: { min: 30, base: 42, max: 60, fuente: "NREL ATB 2024 (~43 USD/kW·año); Lazard LCOE+ 2024 (20–40)" }
+om_variable_usd_mwh: { min: 0, base: 2, max: 5, supuesto: "Consumibles y pago por energía a comunidades/servidumbres" }
+factor_capacidad_ref: { min: 0.25, base: 0.35, max: 0.50, fuente: "IRENA 2023: FC medio mundial eólica en tierra 2023 ≈ 36 %" }
+vida_util_anos: { min: 20, base: 25, max: 30, fuente: "NREL ATB 2024 (vida económica 30 años; 25 conservador)" }
+degradacion_anual: { min: 0.001, base: 0.003, max: 0.006, fuente: "Staffell & Green 2014 (≈0,16–0,6 %/año en parques en tierra)" }
+construccion_meses: { min: 12, base: 18, max: 30, fuente: "NREL ATB 2024 / experiencia regional (caminos, fundaciones y montaje con grúas grandes)" }
+puesta_en_marcha_dias: { min: 30, base: 45, max: 90, supuesto: "Comisionamiento turbina a turbina y certificación de CND" }
+emisiones_gco2_kwh: { min: 7, base: 11, max: 56, fuente: "IPCC AR5 WGIII Anexo III (ciclo de vida, mediana 11 gCO2/kWh)" }
+uso_suelo_ha_mw: { min: 0.3, base: 1.0, max: 3.0, supuesto: "Huella directa (caminos, plataformas) ≈ 0,3–1 ha/MW; el parque ocupa mucho más pero es compatible con ganadería (Denholm et al., NREL 2009)" }
+escala_mw: { min: 9, max: 300, tipico: 50 }
+
+sigma_recurso_sitio: 0.12   # σ de la velocidad media real frente a la de la celda (mesoescala ±10–15 %)
+variabilidad: { diaria: 0.45, interanual: 0.07, supuesto: "Producción diaria muy variable; interanual ±5–8 % (Global Wind Atlas / ERA5)" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.03, base: 0.06, max: 0.12, fuente: "Pfaffel et al. 2017 / Carroll et al. 2016: fallas que paran la turbina por días ≈ 0,15–0,5 por turbina·año" }
+  fraccion_afectada: { min: 0.02, base: 0.07, max: 0.25, supuesto: "Una turbina de un parque; a veces un circuito colector" }
+  duracion_dias: { min: 3, base: 12, max: 60, supuesto: "Reparación con grúa o repuesto importado (caja multiplicadora)" }
+  costo_reparacion_usd_kw: { min: 10, base: 40, max: 120, supuesto: "Costo por kW afectado (caja multiplicadora ≈ 250–400 mil USD por turbina de 4–5 MW)" }
+mantenimiento:
+  programado_perdida: 0.01
+  preventivo_om_factor: 1.10
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.9
+  supuesto: "Preventivo (monitoreo de condición) reduce fallas mayores ~40 % (IRENA O&M 2023)"
+costo_desmantelamiento_frac_capex: { min: 0.02, base: 0.05, max: 0.1, supuesto: "Neto del valor de chatarra de torres y cobre" }
+
+estudios_requeridos: [medicion_recurso, prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: caminos, nombre: "Caminos de acceso y plataformas", fraccion: 0.20, sensible_lluvia: true }
+  - { id: fundaciones, nombre: "Fundaciones de hormigón", fraccion: 0.20, sensible_lluvia: true }
+  - { id: subestacion, nombre: "Subestación y red colectora", fraccion: 0.15, sensible_lluvia: true }
+  - { id: montaje, nombre: "Transporte y montaje de aerogeneradores", fraccion: 0.35, requiere_equipos: true }
+  - { id: pruebas, nombre: "Conexión y pruebas en frío", fraccion: 0.10 }
+
+riesgos:
+  - { id: logistica, nombre: "Logística de palas", descripcion: "Palas de más de 70 m exigen rutas especiales desde el puerto; puentes y curvas pueden retrasar la obra." }
+  - { id: aves, nombre: "Aves y murciélagos", descripcion: "Panamá está en una ruta migratoria de rapaces: el EIA puede exigir paradas o reubicar turbinas." }
+  - { id: estacionalidad, nombre: "Estacionalidad", descripcion: "En Panamá el viento sopla fuerte en la estación seca (alisios) y es débil en la lluviosa." }
+
+eolica:
+  turbina_mw: 4.5
+  diametro_rotor_m: 155     # potencia específica ≈ 240 W/m² (turbina para vientos bajos/medios)
+  altura_buje_m: 110
+  cp: 0.45                  # coeficiente de potencia efectivo por debajo de nominal
+  v_arranque: 3
+  v_corte: 25
+  weibull_k: 2.0
+  perdidas: 0.12            # estela, eléctricas, histéresis, degradación de palas (sin disponibilidad)
+  cizalle_alfa: 0.14
+  fuente: "Turbina genérica tipo 4,5 MW / 155 m (clase de los modelos 2023–2024); pérdidas típicas 10–15 % (NREL ATB 2024); k = 2 (Rayleigh)"

@@ -3,13 +3,15 @@
  * Hilo de simulación: dueño único del GameState. Avanza días según la velocidad y
  * envía instantáneas de solo lectura a la UI.
  */
-import { applyCommands, createNewGame, deserialize, serialize, step, type Command, type GameState, type SimEvent } from '@voltaje/sim';
+import { applyCommands, createNewGame, deserialize, serialize, step, type Command, type GameState, type SimContext, type SimEvent } from '@voltaje/sim';
 import { gameData } from '@voltaje/data';
 import type { FromWorker, ToWorker } from './protocol';
 
 const post = (m: FromWorker) => (self as unknown as Worker).postMessage(m);
 
 let state: GameState | null = null;
+// Fase 2: datos del motor. La grilla (necesaria para crear proyectos) la agregará la UI.
+const ctx: SimContext = { data: gameData.simData };
 let daysPerSecond = 0;
 let pending: Command[] = [];
 let carry = 0;
@@ -24,7 +26,7 @@ function advance(days: number) {
   if (!state) return;
   const events: SimEvent[] = [];
   for (let d = 0; d < days; d++) {
-    events.push(...step(state, d === 0 ? pending : []));
+    events.push(...step(state, d === 0 ? pending : [], ctx));
     if (d === 0) pending = [];
   }
   if (events.length) post({ t: 'events', events });
@@ -39,7 +41,7 @@ setInterval(() => {
   if (daysPerSecond <= 0) {
     // en pausa los comandos se aplican sin avanzar el tiempo
     if (pending.length) {
-      const events = applyCommands(state, pending);
+      const events = applyCommands(state, pending, ctx);
       pending = [];
       if (events.length) post({ t: 'events', events });
       snapshot();

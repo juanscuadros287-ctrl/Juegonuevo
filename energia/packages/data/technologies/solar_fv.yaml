@@ -1,0 +1,62 @@
+# Solar fotovoltaica a escala de red (utility), seguidor de un eje, base AC.
+# Costos en USD de 2026 (moneda nominal del juego), por kW AC.
+id: solar_fv
+nombre: Solar fotovoltaica
+categoria: solar
+recurso: ghi
+modelo_fc: solar_fv
+
+capex_usd_kw:
+  { min: 700, base: 950, max: 1400,
+    fuente: "IRENA Renewable Power Generation Costs 2023 (promedio mundial ponderado 758 USD/kW; América Latina ~800–1.100); NREL ATB 2024 EE.UU. ~1.400 USD/kWac. Base intermedia para Centroamérica antes de ajuste local." }
+desglose_capex:
+  { equipos: 0.55, epc: 0.35, otros: 0.10,
+    supuesto: "Módulos + inversores + seguidores ≈ 50–60 % del CAPEX (IRENA 2023, desglose de costos de FV); resto obra civil, montaje, BOS eléctrico y desarrollo." }
+om_fijo_usd_kw_ano: { min: 10, base: 16, max: 24, fuente: "IRENA 2023 (O&M FV 8–20 USD/kW·año fuera de la OCDE); NREL ATB 2024 ~22 USD/kWac·año" }
+om_variable_usd_mwh: { base: 0, fuente: "NREL ATB 2024: O&M variable de FV ≈ 0 (todo en fijo)" }
+factor_capacidad_ref: { min: 0.14, base: 0.19, max: 0.30, fuente: "IRENA 2023: FC medio mundial FV 2023 ≈ 16,2 %; con seguidor y buen recurso 20–30 %" }
+vida_util_anos: { min: 25, base: 30, max: 35, fuente: "NREL ATB 2024 (vida económica 30 años)" }
+degradacion_anual: { min: 0.003, base: 0.005, max: 0.008, fuente: "Jordan & Kurtz, NREL 2013 (mediana 0,5 %/año)" }
+construccion_meses: { min: 8, base: 12, max: 20, fuente: "NREL ATB 2024; experiencia regional (8–14 meses para 10–100 MW)" }
+puesta_en_marcha_dias: { min: 20, base: 30, max: 60, supuesto: "Pruebas de desempeño, energización y certificación de CND" }
+emisiones_gco2_kwh: { min: 18, base: 43, max: 180, fuente: "IPCC AR5 WGIII Anexo III (ciclo de vida, mediana 41–48 gCO2/kWh)" }
+uso_suelo_ha_mw: { min: 1.2, base: 1.8, max: 2.5, fuente: "Ong et al., NREL 2013 (≈ 1,8–2,4 ha/MWac con seguidor)" }
+escala_mw: { min: 1, max: 200, tipico: 20 }
+
+sigma_recurso_sitio: 0.07   # σ del GHI real frente al de la celda (atlas satelital ±5–10 %)
+variabilidad: { diaria: 0.28, interanual: 0.04, supuesto: "Variación día a día por nubosidad tropical; interanual ±4 % (NREL NSRDB)" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.05, base: 0.12, max: 0.3, supuesto: "≈1 falla relevante (inversor central, transformador, seguidor) por año cada ~8 MW; Jordan et al. 2022 PV fleet reliability" }
+  fraccion_afectada: { min: 0.02, base: 0.08, max: 0.3, supuesto: "Un inversor de un bloque de varios" }
+  duracion_dias: { min: 2, base: 7, max: 30, supuesto: "Repuesto local vs importado" }
+  costo_reparacion_usd_kw: { min: 5, base: 25, max: 80, supuesto: "Costo por kW afectado (repuesto de inversor ≈ 30–60 USD/kW, reparaciones menores menos)" }
+mantenimiento:
+  programado_perdida: 0.005
+  preventivo_om_factor: 1.12
+  preventivo_fallas_factor: 0.55
+  correctivo_om_factor: 0.9
+  supuesto: "Preventivo cuesta más O&M y reduce fallas a ~la mitad (práctica de la industria; IRENA O&M 2023)"
+costo_desmantelamiento_frac_capex: { min: 0.02, base: 0.04, max: 0.08, supuesto: "Neto de valor de rescate de acero, aluminio y cobre" }
+
+estudios_requeridos: [medicion_recurso, prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: obras_civiles, nombre: "Movimiento de tierras, caminos y cercado", fraccion: 0.25, sensible_lluvia: true }
+  - { id: estructuras, nombre: "Hincado de pilotes y seguidores", fraccion: 0.25, requiere_equipos: true, sensible_lluvia: true }
+  - { id: modulos, nombre: "Montaje de módulos e inversores", fraccion: 0.25, requiere_equipos: true }
+  - { id: subestacion, nombre: "Subestación y línea de conexión", fraccion: 0.15 }
+  - { id: pruebas, nombre: "Cableado final y pruebas en frío", fraccion: 0.10 }
+
+riesgos:
+  - { id: suciedad, nombre: "Suciedad y polvo", descripcion: "En estación seca la suciedad reduce la producción si no se limpian los paneles." }
+  - { id: precio_modulos, nombre: "Precio de módulos", descripcion: "El precio del polisilicio y los módulos es volátil (Fase 5: índice de materiales)." }
+  - { id: curtailment, nombre: "Recortes de red", descripcion: "Con mucha solar en la red el CND puede limitar la inyección al mediodía." }
+
+solar:
+  pr: 0.84                 # rendimiento sin temperatura: inversor, cableado, suciedad, sombras, mismatch, disponibilidad de red
+  coef_temp_por_c: -0.0035 # módulo de silicio cristalino (γ ≈ −0,35 %/°C)
+  t_ref_c: 25
+  delta_celda_c: 20        # celda ≈ ambiente + 20 °C en promedio diurno
+  ganancia_seguidor: 1.12  # seguidor de un eje en trópico nublado (≈ +10–15 %)
+  fuente: "PR y coeficientes: IEC 61724 / PVWatts (NREL); ganancia de seguidor: NREL ATB 2024"

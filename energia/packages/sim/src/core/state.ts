@@ -2,10 +2,12 @@ import type { RngState } from './rng';
 import { seedStream } from './rng';
 import { parseIsoDate, toEpochDay } from './calendar';
 import type { SimConfig } from './config';
+import type { Project } from '../project/types';
 
-export const SAVE_VERSION = 1;
+/** v2 (Fase 2): proyectos y finanzas de la empresa. Las partidas v1 se migran (ver save.ts). */
+export const SAVE_VERSION = 2;
 
-/** Movimiento contable de la empresa. */
+/** Movimiento contable de caja de la empresa. */
 export interface LedgerEntry { day: number; concept: string; amountUsd: number }
 
 export interface Company {
@@ -14,6 +16,33 @@ export interface Company {
   cashUsd: number;
   monthlyFixedCostUsd: number;
   ledger: LedgerEntry[]; // últimos 24 meses
+}
+
+/** Estado de resultados + flujo de caja de un mes (USD). Signo: ingresos +, gastos −. */
+export interface MonthlyStatement {
+  year: number;
+  month: number;
+  /** Por concepto (ver finance/company.ts: CATEGORIES). */
+  lines: Record<string, number>;
+  revenueUsd: number;
+  ebitdaUsd: number;
+  netIncomeUsd: number;
+  cashFlow: { operating: number; investing: number; financing: number; net: number };
+  cashEndUsd: number;
+  debtEndUsd: number;
+}
+
+export interface FinanceState {
+  /** Acumulado del mes en curso por concepto. */
+  month: Record<string, number>;
+  /** Últimos 120 meses. */
+  statements: MonthlyStatement[];
+  taxLossCarryforwardUsd: number;
+  taxCreditUsd: number;
+  emergencyDebtUsd: number;
+  negativeCashMonths: number;
+  bankrupt: boolean;
+  bankruptTick?: number;
 }
 
 /** Estado completo de la partida: objeto plano y serializable. */
@@ -30,9 +59,16 @@ export interface GameState {
   rng: Record<string, RngState>;
   /** País y celda enfocados en la UI (parte de la partida para que el guardado la restaure). */
   focus: { countryCode: string };
+  projects: Project[];
+  nextProjectId: number;
+  finance: FinanceState;
 }
 
 export const RNG_STREAMS = ['world', 'market', 'projects', 'events', 'ai'] as const;
+
+export function newFinanceState(): FinanceState {
+  return { month: {}, statements: [], taxLossCarryforwardUsd: 0, taxCreditUsd: 0, emergencyDebtUsd: 0, negativeCashMonths: 0, bankrupt: false };
+}
 
 export function createNewGame(config: SimConfig, opts: { seed: number; companyName: string }): GameState {
   const rng: Record<string, RngState> = {};
@@ -52,5 +88,8 @@ export function createNewGame(config: SimConfig, opts: { seed: number; companyNa
     },
     rng,
     focus: { countryCode: config.startCountry },
+    projects: [],
+    nextProjectId: 1,
+    finance: newFinanceState(),
   };
 }

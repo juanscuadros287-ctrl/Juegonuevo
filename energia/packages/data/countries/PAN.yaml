@@ -3,6 +3,7 @@ iso3: PAN
 nombre: Panamá
 iso_num: 591
 moneda: { codigo: PAB, nombre: "Balboa (paridad 1:1 con USD; circula el dólar)", usd_por_unidad: 1.0 }
+tipo_cambio: { deriva_anual: 0, volatilidad_anual: 0, fuente: "Panamá está dolarizado desde 1904: el balboa está fijo 1:1 con el USD" }
 inflacion_anual: { base: 0.015, fuente: "INEC Panamá / FMI WEO 2025 (≈1–2%)" }
 prima_riesgo_pais: { base: 0.028, fuente: "Damodaran, Country Risk Premiums ene-2025 (Baa3/BBB-, ≈2,5–3,2%)" }
 regulador: "ASEP (Autoridad Nacional de los Servicios Públicos)"
@@ -10,6 +11,271 @@ operador_sistema: "ETESA / CND (Centro Nacional de Despacho)"
 mercado:
   demanda_anual_twh: { base: 12.5, fuente: "CND/SNE Panamá 2024 (≈12–13 TWh)" }
   pico_mw: { base: 2200, fuente: "CND 2024 (pico ≈2.1–2.3 GW)" }
-  precio_spot_medio_usd_mwh: { base: 95, fuente: "CND, costo marginal promedio 2023–2024 (≈70–140 USD/MWh según hidrología)" }
+  precio_spot_medio_usd_mwh: { base: 95, min: 70, max: 140, fuente: "CND, costo marginal promedio 2023–2024 (≈70–140 USD/MWh según hidrología)" }
+  # Multiplicadores ene–dic del precio spot: en la estación seca (ene–abr) baja la hidro y sube el costo marginal.
+  perfil_spot_mensual: [1.25, 1.35, 1.45, 1.40, 1.10, 0.85, 0.80, 0.75, 0.70, 0.70, 0.80, 1.00]
+  perfil_spot_fuente: "Supuesto con la forma de los costos marginales mensuales del CND 2019–2024 (máximos en mar–abr, mínimos en sep–oct)"
   matriz: { hidro: 0.62, termica: 0.25, solar: 0.07, eolica: 0.06, fuente: "SNE, generación 2023 aproximada" }
-notas: "Los permisos y el mercado detallado se modelan en la Fase 2."
+
+# Multiplicadores ene–dic de la ENERGÍA producida (se normalizan a media 1).
+perfil_recurso_mensual:
+  ghi: [1.15, 1.20, 1.20, 1.10, 0.95, 0.88, 0.92, 0.92, 0.90, 0.88, 0.88, 1.02]
+  viento_tierra: [1.55, 1.65, 1.55, 1.20, 0.70, 0.55, 0.70, 0.70, 0.50, 0.50, 0.70, 1.20]
+perfil_recurso_fuente: "Supuesto: estación seca soleada y con alisios fuertes (dic–abr); producción mensual de los parques de Penonomé y de las plantas FV de Coclé/Chiriquí publicada por el CND (orden de magnitud)"
+
+impuestos:
+  renta: { base: 0.25, fuente: "Código Fiscal de Panamá, art. 699 (ISR personas jurídicas 25 %)" }
+  depreciacion_anos: { base: 20, supuesto: "Línea recta durante 20 años para equipos de generación (vida útil fiscal aproximada)" }
+  itbms: { base: 0.07, fuente: "ITBMS 7 % (Código Fiscal art. 1057-V)" }
+  arancel_general_equipos: { base: 0.10, supuesto: "Arancel de importación típico 5–15 % para equipos eléctricos sin incentivo" }
+
+incentivos:
+  solar_fv:
+    descripcion: "Ley 37 de 2013 (incentivos a la generación solar): exención de impuesto de importación e ITBMS de equipos y crédito fiscal de hasta 5 % de la inversión directa"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.05, fuente: "Ley 37 de 2013, art. 8 (aproximado; verificar condiciones vigentes)" }
+    credito_max_frac_impuesto: 0.5
+  eolica_tierra:
+    descripcion: "Ley 44 de 2011 (incentivos a la generación eólica): exención de impuestos de importación de equipos; beneficios fiscales de la Ley 45 de 2004 para renovables"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.05, supuesto: "Ley 44 de 2011 / Ley 45 de 2004, aproximado (la Ley 45 da hasta 25 % para pequeñas plantas; usamos 5 % conservador)" }
+    credito_max_frac_impuesto: 0.5
+
+costos:
+  factor_construccion_local: { min: 0.95, base: 1.05, max: 1.20, supuesto: "Mano de obra y logística en el interior de Panamá algo más caras que el promedio regional; se aplica a la parte EPC" }
+  prospeccion_usd: { min: 5000, base: 8000, max: 15000, supuesto: "Visita al sitio, revisión catastral y reunión con propietarios para la opción de terreno" }
+  opcion_terreno_usd_ha_ano: { min: 30, base: 60, max: 150, supuesto: "Opción de arrendamiento durante el desarrollo (≈10–15 % del arriendo)" }
+  arriendo_terreno_usd_ha_ano: { min: 250, base: 450, max: 900, supuesto: "Arriendo rural en Coclé/Chiriquí para uso energético (2025)" }
+  seguro_frac_capex_ano: { min: 0.002, base: 0.003, max: 0.005, supuesto: "Seguro todo riesgo operativo ≈0,2–0,5 % del CAPEX al año" }
+
+finanzas:
+  tasa_libre_riesgo: { base: 0.043, fuente: "Bono del Tesoro de EE.UU. a 10 años, promedio 2025 (≈4,2–4,5 %)" }
+  prima_mercado_acciones: { base: 0.045, fuente: "Damodaran, implied ERP ene-2025 (≈4,3–4,6 %)" }
+  beta_renovables: 1.0
+  # Prima por riesgo de etapa sobre el costo del equity (desarrollo temprano = mucho más riesgo).
+  prima_etapa: { identificado: 0.08, estudios: 0.06, permisos: 0.035, cierre_financiero: 0.02, construccion: 0.01, puesta_en_marcha: 0.005, operacion: 0 }
+  prima_tecnologia: { solar_fv: 0, eolica_tierra: 0.01 }
+  prima_fuente: "Supuesto alineado con encuestas de costo de capital de renovables (IEA Cost of Capital Observatory 2024; Steffen 2020)"
+  prestamistas:
+    - id: banco_comercial
+      nombre: "Banco comercial local"
+      tipo: comercial
+      descripcion: "Bancos panameños o regionales. Rápidos y flexibles; aceptan proyectos sin PPA con más cobertura."
+      spread: { base: 0.032, min: 0.025, max: 0.045, supuesto: "SOFR + 2,5–4,5 % para project finance en Centroamérica (2024)" }
+      plazo_anos: 14
+      dscr_ppa: 1.30
+      dscr_merchant: 1.60
+      apalancamiento_max: 0.70
+      comision_estructuracion: 0.015
+      costo_asesores_usd: { base: 50000, min: 30000, max: 90000, supuesto: "Asesor legal y financiero, ingeniero independiente" }
+      diligencia_dias: { min: 60, base: 90, max: 150, supuesto: "Due diligence de banco local" }
+      prob_aprobacion: 0.85
+      requiere_ppa: false
+      sigma_recurso_max: 0.05
+      monto_min_usd: 1500000
+    - id: banco_desarrollo
+      nombre: "Banco multilateral de desarrollo"
+      tipo: desarrollo
+      descripcion: "Tipo BID Invest, CAF o IFC: más barato y largo, pero lento, exige PPA, medición en sitio y Normas de Desempeño IFC."
+      spread: { base: 0.022, min: 0.018, max: 0.03, supuesto: "Préstamos A de multilaterales a renovables en la región ≈ SOFR + 1,8–3 % (2024)" }
+      plazo_anos: 18
+      dscr_ppa: 1.25
+      dscr_merchant: 1.50
+      apalancamiento_max: 0.75
+      comision_estructuracion: 0.01
+      costo_asesores_usd: { base: 120000, min: 80000, max: 200000, supuesto: "Asesores + auditoría de Normas de Desempeño IFC" }
+      diligencia_dias: { min: 120, base: 180, max: 300, supuesto: "Comités de crédito y revisión ambiental y social" }
+      prob_aprobacion: 0.80
+      requiere_ppa: true
+      sigma_recurso_max: 0.035
+      monto_min_usd: 15000000
+  socio_equity: { participacion_max: 0.8, prima_desarrollo_frac: 0.10, supuesto: "Fondos de infraestructura compran participación en proyectos listos para construir pagando ≈5–15 % de prima de desarrollo" }
+  credito_emergencia: { tasa: 0.14, frac_valor_activos: 0.5, supuesto: "Línea corporativa de último recurso garantizada con activos en operación" }
+
+construccion:
+  meses_lluviosos: [5, 6, 7, 8, 9, 10, 11]
+  factor_avance_lluvia: 0.8
+  huelga_prob_mensual: 0.012
+  huelga_duracion_dias: { min: 5, base: 12, max: 30, supuesto: "Huelgas de SUNTRACS y cierres de vías (2023) — orden de magnitud" }
+  clima_extremo_prob_mensual: 0.03
+  clima_extremo_dias: { min: 3, base: 7, max: 15, supuesto: "Lluvias torrenciales e inundaciones en estación lluviosa" }
+  fuente: "Supuesto: estación lluviosa de mayo a noviembre (ETESA Hidrometeorología)"
+
+quiebra: { meses_caja_negativa: 3 }
+
+# Permisos de Panamá como grafo. requiere.estudios = grupos de estudio completos; requiere.permisos = grupos de permiso
+# aprobados (un requisito que no aplica al proyecto se ignora). prob: aprobado / rechazado / información adicional.
+permisos:
+  - id: uso_suelo
+    nombre: Asignación de uso de suelo
+    grupo: uso_suelo
+    autoridad: "Municipio / MIVIOT"
+    descripcion: "Certificación de uso de suelo compatible con generación eléctrica."
+    aplica: {}
+    requiere: { estudios: [prefactibilidad], permisos: [] }
+    costo_fijo_usd: { base: 3000, supuesto: "Tasas municipales y planos" }
+    costo_usd_mw: { base: 150, supuesto: "Agrimensura" }
+    duracion_dias: { min: 30, base: 75, max: 180, supuesto: "Trámite municipal" }
+    prob: { aprobado: 0.85, rechazado: 0.04, info_adicional: 0.11, supuesto: "Trámite rutinario en zonas rurales" }
+    info_adicional: { retraso_dias: { min: 15, base: 30, max: 60, supuesto: "Corrección de planos" }, costo_usd: { base: 1500, supuesto: "Topógrafo" } }
+    reintentable: true
+    max_intentos_info: 2
+
+  - id: participacion_ciudadana
+    nombre: Consulta y participación ciudadana
+    grupo: participacion_ciudadana
+    autoridad: "MiAmbiente (foro público)"
+    descripcion: "Foro público y consulta a las comunidades del área de influencia (EIA categorías II y III)."
+    aplica: { mw_min: 10 }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 15000, supuesto: "Organización de foros, traducción y logística" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el área de influencia" }
+    duracion_dias: { min: 30, base: 60, max: 120, supuesto: "Convocatoria, foro y respuesta a observaciones" }
+    prob: { aprobado: 0.80, rechazado: 0.07, info_adicional: 0.13, supuesto: "Oposición local frecuente en proyectos grandes" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Segundo foro" }, costo_usd: { base: 10000, supuesto: "Segundo foro" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Decreto Ejecutivo 1 de 2023 (proceso de evaluación de impacto ambiental), participación ciudadana"
+
+  - id: licencia_ambiental_cat_I
+    nombre: Aprobación del EIA categoría I
+    grupo: licencia_ambiental
+    autoridad: "MiAmbiente"
+    descripcion: "Resolución de aprobación del EIA de impacto bajo."
+    aplica: { tecnologias: [solar_fv], mw_max: 10 }
+    requiere: { estudios: [eia], permisos: [participacion_ciudadana] }
+    costo_fijo_usd: { base: 2500, supuesto: "Tasa de evaluación" }
+    costo_usd_mw: { base: 0, supuesto: "—" }
+    duracion_dias: { min: 30, base: 60, max: 150, supuesto: "Plazo legal ≈30 días hábiles; en la práctica más" }
+    prob: { aprobado: 0.85, rechazado: 0.03, info_adicional: 0.12, supuesto: "Categoría I casi siempre se aprueba" }
+    info_adicional: { retraso_dias: { min: 20, base: 45, max: 90, supuesto: "Ampliación del EIA" }, costo_usd: { base: 5000, supuesto: "Consultor" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Decreto Ejecutivo 1 de 2023 (categorías I, II, III); umbral de MW supuesto"
+  - id: licencia_ambiental_cat_II
+    nombre: Aprobación del EIA categoría II
+    grupo: licencia_ambiental
+    autoridad: "MiAmbiente"
+    descripcion: "Resolución de aprobación del EIA de impacto moderado."
+    aplica: { tecnologias: [solar_fv, eolica_tierra], mw_min: 10, mw_max: 50 }
+    requiere: { estudios: [eia], permisos: [participacion_ciudadana] }
+    costo_fijo_usd: { base: 5000, supuesto: "Tasa de evaluación" }
+    costo_usd_mw: { base: 0, supuesto: "—" }
+    duracion_dias: { min: 75, base: 150, max: 300, supuesto: "Plazo legal ≈60 días hábiles; en la práctica 4–8 meses" }
+    prob: { aprobado: 0.72, rechazado: 0.08, info_adicional: 0.20, supuesto: "Ampliaciones frecuentes" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Ampliación del EIA" }, costo_usd: { base: 12000, supuesto: "Consultor" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Decreto Ejecutivo 1 de 2023; umbral de MW supuesto"
+  - id: licencia_ambiental_cat_III
+    nombre: Aprobación del EIA categoría III
+    grupo: licencia_ambiental
+    autoridad: "MiAmbiente"
+    descripcion: "Resolución de aprobación del EIA de impacto significativo."
+    aplica: { tecnologias: [solar_fv, eolica_tierra], mw_min: 50 }
+    requiere: { estudios: [eia], permisos: [participacion_ciudadana] }
+    costo_fijo_usd: { base: 10000, supuesto: "Tasa de evaluación" }
+    costo_usd_mw: { base: 0, supuesto: "—" }
+    duracion_dias: { min: 120, base: 240, max: 450, supuesto: "Plazo legal ≈90 días hábiles; en la práctica 6–15 meses" }
+    prob: { aprobado: 0.65, rechazado: 0.10, info_adicional: 0.25, supuesto: "Proyectos grandes reciben más objeciones" }
+    info_adicional: { retraso_dias: { min: 45, base: 90, max: 180, supuesto: "Ampliación del EIA" }, costo_usd: { base: 25000, supuesto: "Consultor" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Decreto Ejecutivo 1 de 2023; umbral de MW supuesto"
+
+  - id: viabilidad_conexion
+    nombre: Viabilidad de conexión
+    grupo: viabilidad_conexion
+    autoridad: "ETESA"
+    descripcion: "ETESA revisa el estudio de conexión y emite la viabilidad de acceso a la red de transmisión."
+    aplica: {}
+    requiere: { estudios: [conexion], permisos: [] }
+    costo_fijo_usd: { base: 5000, supuesto: "Tasa de revisión" }
+    costo_usd_mw: { base: 100, supuesto: "—" }
+    duracion_dias: { min: 45, base: 100, max: 240, supuesto: "Revisión técnica de ETESA" }
+    prob: { aprobado: 0.80, rechazado: 0.05, info_adicional: 0.15, supuesto: "Congestión en la red del interior" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Nuevas corridas" }, costo_usd: { base: 8000, supuesto: "Consultor" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Reglamento de Transmisión (ASEP); procedimiento de acceso de ETESA"
+
+  - id: licencia_generacion_solar
+    nombre: Licencia de generación (solar)
+    grupo: licencia_generacion
+    autoridad: "ASEP"
+    descripcion: "Licencia para generar y vender energía de una planta solar."
+    aplica: { tecnologias: [solar_fv] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    costo_fijo_usd: { base: 8000, supuesto: "Tasas ASEP y asesoría legal" }
+    costo_usd_mw: { base: 100, supuesto: "—" }
+    duracion_dias: { min: 45, base: 100, max: 240, supuesto: "Trámite ASEP" }
+    prob: { aprobado: 0.88, rechazado: 0.03, info_adicional: 0.09, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    info_adicional: { retraso_dias: { min: 20, base: 45, max: 90, supuesto: "Subsanar documentos" }, costo_usd: { base: 4000, supuesto: "Abogado" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley 6 de 1997 (marco regulatorio del sector eléctrico) y Ley 37 de 2013 (solar)"
+  - id: concesion_generacion_eolica
+    nombre: Concesión de generación (eólica)
+    grupo: licencia_generacion
+    autoridad: "ASEP"
+    descripcion: "Concesión para generar con recurso eólico."
+    aplica: { tecnologias: [eolica_tierra] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas ASEP, fianza y asesoría legal" }
+    costo_usd_mw: { base: 150, supuesto: "—" }
+    duracion_dias: { min: 90, base: 180, max: 360, supuesto: "Concesión con publicación y período de oposición" }
+    prob: { aprobado: 0.83, rechazado: 0.05, info_adicional: 0.12, supuesto: "Más requisitos que una licencia" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Subsanar documentos" }, costo_usd: { base: 6000, supuesto: "Abogado" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley 6 de 1997 y Ley 44 de 2011 (eólica)"
+
+  - id: contrato_acceso_red
+    nombre: Contrato de acceso a la red
+    grupo: contrato_acceso_red
+    autoridad: "ETESA"
+    descripcion: "Contrato de conexión con ETESA y garantía de cumplimiento."
+    aplica: {}
+    requiere: { estudios: [], permisos: [licencia_generacion, viabilidad_conexion] }
+    costo_fijo_usd: { base: 10000, supuesto: "Garantía y abogados" }
+    costo_usd_mw: { base: 500, supuesto: "Garantía por MW" }
+    duracion_dias: { min: 30, base: 60, max: 120, supuesto: "Firma del contrato" }
+    prob: { aprobado: 0.95, rechazado: 0.01, info_adicional: 0.04, supuesto: "Formalidad tras la viabilidad" }
+    info_adicional: { retraso_dias: { min: 15, base: 30, max: 60, supuesto: "Ajustes" }, costo_usd: { base: 2000, supuesto: "Abogado" } }
+    reintentable: true
+    max_intentos_info: 2
+
+# Contratos de venta de energía. El proyecto puede operar sin PPA vendiendo al spot (solo banco comercial).
+ppa:
+  canales:
+    - id: licitacion_etesa
+      nombre: Licitación de ETESA (largo plazo)
+      descripcion: "ETESA compra energía para las distribuidoras en licitaciones de largo plazo. Competida: se gana por precio."
+      precio_usd_mwh: { min: 55, base: 68, max: 85, supuesto: "Precios adjudicados a renovables en licitaciones LPI de ETESA 2020–2024 (≈55–90 USD/MWh, orden de magnitud)" }
+      plazo_anos: 15
+      indexacion_anual: 0.01
+      duracion_dias: { min: 120, base: 210, max: 360, supuesto: "Esperar convocatoria, preparar oferta y adjudicación" }
+      prob_exito: 0.40
+      costo_usd: { base: 25000, supuesto: "Preparación de oferta y fianza de propuesta" }
+      mw_min: 1
+      mw_max: 300
+      requiere_permisos: [viabilidad_conexion]
+      plazo_cod_meses: 36
+      multa_usd_mw_mes: 1500
+    - id: gran_cliente
+      nombre: Contrato con gran cliente
+      descripcion: "Venta directa a un gran cliente (más de 100 kW de demanda): mejor precio, plazo corto y demanda limitada."
+      precio_usd_mwh: { min: 65, base: 78, max: 95, supuesto: "Tarifa de grandes clientes en Panamá ≈130–180 USD/MWh (ASEP 2024); contratos PPA corporativos con descuento" }
+      plazo_anos: 10
+      indexacion_anual: 0.015
+      duracion_dias: { min: 60, base: 120, max: 240, supuesto: "Negociación comercial" }
+      prob_exito: 0.55
+      costo_usd: { base: 15000, supuesto: "Asesoría legal y comercial" }
+      mw_min: 1
+      mw_max: 30
+      requiere_permisos: [licencia_ambiental]
+      plazo_cod_meses: 30
+      multa_usd_mw_mes: 1000
+notas: "Permisos, PPA y finanzas aproximados para el juego; ver docs/MOTOR_FASE2.md."

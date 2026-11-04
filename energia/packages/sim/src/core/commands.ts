@@ -1,4 +1,7 @@
 import type { GameState } from './state';
+import type { SimContext } from './context';
+import type { SimEvent } from './events';
+import { applyProjectCommand, type ProjectCommand } from '../project/commands';
 
 /**
  * Toda acción del jugador (y de la IA) es un comando. La UI nunca modifica el estado directamente.
@@ -6,11 +9,17 @@ import type { GameState } from './state';
  */
 export type Command =
   | { type: 'renameCompany'; name: string }
-  | { type: 'setFocusCountry'; countryCode: string };
+  | { type: 'setFocusCountry'; countryCode: string }
+  | ProjectCommand;
 
 export type CommandResult = { ok: true } | { ok: false; error: string };
 
-export function applyCommand(state: GameState, cmd: Command): CommandResult {
+/**
+ * Aplica un comando. `events` recibe los eventos que produzca (p. ej. proyecto creado).
+ * Los comandos de proyecto necesitan `ctx` (datos y, para crear proyectos, la grilla).
+ */
+export function applyCommand(state: GameState, cmd: Command, ctx?: SimContext, events: SimEvent[] = []): CommandResult {
+  if (state.finance?.bankrupt) return { ok: false, error: 'La empresa quebró: la partida terminó.' };
   switch (cmd.type) {
     case 'renameCompany': {
       const name = cmd.name.trim();
@@ -23,9 +32,7 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       state.focus.countryCode = cmd.countryCode;
       return { ok: true };
     }
-    default: {
-      const never: never = cmd;
-      return { ok: false, error: `Comando desconocido: ${JSON.stringify(never)}` };
-    }
+    default:
+      return applyProjectCommand(state, ctx, cmd, events);
   }
 }

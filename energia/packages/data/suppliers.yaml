@@ -1,0 +1,107 @@
+# Proveedores de equipos y contratistas EPC (nombres genéricos, no marcas reales).
+# factor_precio multiplica la parte del CAPEX que les corresponde (equipos o EPC).
+# calidad y confiabilidad: 0–1. Ver docs/MOTOR_FASE2.md para su efecto.
+fuente_general: "Supuestos calibrados con BNEF PV Module Tier 1 list 2024, IRENA 2023 y diferencias de precio China/Europa (IEA Solar PV Global Supply Chains 2022)"
+
+proveedores:
+  - id: modulos_asia_tier1
+    nombre: "Sunline Asia (módulos Tier 1)"
+    tipo: equipos
+    tecnologias: [solar_fv]
+    origen: CHN
+    descripcion: "Módulos e inversores de fabricante asiático de gran volumen. Barato y confiable, entrega por barco."
+    factor_precio: 0.92
+    calidad: 0.85
+    confiabilidad: 0.85
+    plazo_entrega_dias: { min: 75, base: 100, max: 160, supuesto: "Producción + flete Shanghái–Balboa ≈ 30–40 días" }
+    flete_frac: 0.04
+  - id: modulos_asia_economico
+    nombre: "Brightway (módulos económicos)"
+    tipo: equipos
+    tecnologias: [solar_fv]
+    origen: CHN
+    descripcion: "Fabricante de segundo nivel: el más barato, pero con más defectos y garantías débiles."
+    factor_precio: 0.82
+    calidad: 0.65
+    confiabilidad: 0.7
+    plazo_entrega_dias: { min: 80, base: 110, max: 200, supuesto: "Capacidad de producción irregular" }
+    flete_frac: 0.04
+  - id: modulos_occidente
+    nombre: "Helios Europa (módulos premium)"
+    tipo: equipos
+    tecnologias: [solar_fv]
+    origen: DEU
+    descripcion: "Equipos premium con seguidores de diseño propio y garantías fuertes. Caro."
+    factor_precio: 1.12
+    calidad: 0.95
+    confiabilidad: 0.93
+    plazo_entrega_dias: { min: 90, base: 120, max: 170, supuesto: "Producción + flete trasatlántico" }
+    flete_frac: 0.05
+
+  - id: turbinas_europa
+    nombre: "Nordwind (aerogeneradores europeos)"
+    tipo: equipos
+    tecnologias: [eolica_tierra]
+    origen: DNK
+    descripcion: "Líder occidental: turbinas probadas, servicio técnico regional, precio alto."
+    factor_precio: 1.08
+    calidad: 0.93
+    confiabilidad: 0.92
+    plazo_entrega_dias: { min: 270, base: 360, max: 480, supuesto: "Cola de fabricación de 9–15 meses (2024)" }
+    flete_frac: 0.06
+  - id: turbinas_asia
+    nombre: "Dragon Wind (aerogeneradores asiáticos)"
+    tipo: equipos
+    tecnologias: [eolica_tierra]
+    origen: CHN
+    descripcion: "Turbinas un 20–30 % más baratas (IEA 2023), con poca experiencia en el continente."
+    factor_precio: 0.86
+    calidad: 0.78
+    confiabilidad: 0.78
+    plazo_entrega_dias: { min: 210, base: 300, max: 450, supuesto: "Fabricación rápida, logística larga" }
+    flete_frac: 0.06
+  - id: turbinas_america
+    nombre: "Prairie Turbines (aerogeneradores de EE.UU.)"
+    tipo: equipos
+    tecnologias: [eolica_tierra]
+    origen: USA
+    descripcion: "Precio intermedio, buena red de repuestos en el continente."
+    factor_precio: 1.0
+    calidad: 0.88
+    confiabilidad: 0.88
+    plazo_entrega_dias: { min: 240, base: 330, max: 450, supuesto: "Fabricación en EE.UU. + barco por el Golfo" }
+    flete_frac: 0.05
+
+  - id: epc_local
+    nombre: "Constructora Istmeña (EPC local)"
+    tipo: epc
+    tecnologias: [solar_fv, eolica_tierra]
+    origen: PAN
+    descripcion: "Contratista local: barato y conoce el terreno, con poca experiencia en proyectos grandes."
+    factor_precio: 0.90
+    calidad: 0.7
+    confiabilidad: 0.72
+    factor_plazo: 1.1
+    prob_sobrecosto_hito: 0.28
+  - id: epc_regional
+    nombre: "Andina Energía (EPC regional)"
+    tipo: epc
+    tecnologias: [solar_fv, eolica_tierra]
+    origen: COL
+    descripcion: "EPC latinoamericano con decenas de plantas construidas. Equilibrado."
+    factor_precio: 1.0
+    calidad: 0.82
+    confiabilidad: 0.82
+    factor_plazo: 1.0
+    prob_sobrecosto_hito: 0.18
+  - id: epc_internacional
+    nombre: "Global Power EPC (internacional)"
+    tipo: epc
+    tecnologias: [solar_fv, eolica_tierra]
+    origen: ESP
+    descripcion: "EPC internacional llave en mano con precio cerrado más alto: casi no hay sobrecostos."
+    factor_precio: 1.15
+    calidad: 0.93
+    confiabilidad: 0.92
+    factor_plazo: 0.92
+    prob_sobrecosto_hito: 0.07

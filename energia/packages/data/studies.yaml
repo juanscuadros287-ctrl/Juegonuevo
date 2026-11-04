@@ -1,0 +1,203 @@
+# Estudios de desarrollo de proyectos. Cada estudio pertenece a un "grupo"; un grupo requerido por la
+# tecnología queda cumplido cuando se completa cualquier estudio aplicable de ese grupo.
+# Costos en USD (fijo + por MW), duración en días (triangular min/base/max).
+# resultados: probabilidad de normal / peor de lo esperado / hallazgo que bloquea (suman 1).
+# En la medición de recurso, "peor" no se sortea: sale de comparar la medición con la estimación previa.
+
+estudios:
+  - id: medicion_solar_satelital
+    nombre: Evaluación solar con datos satelitales del sitio
+    grupo: medicion_recurso
+    descripcion: "Series satelitales de 15–20 años adaptadas al sitio (tipo Solargis/NSRDB) y modelo de producción P50/P90."
+    aplica: { tecnologias: [solar_fv] }
+    requiere: []
+    costo_fijo_usd: { min: 4000, base: 7000, max: 12000, supuesto: "Precio de mercado de un informe de recurso satelital + consultor (2024)" }
+    costo_usd_mw: { base: 100, supuesto: "Modelación de producción" }
+    duracion_dias: { min: 15, base: 25, max: 45, supuesto: "Compra de datos y modelación" }
+    sigma_recurso: 0.045
+    resultados: { normal: 1, peor: 0, bloqueo: 0, fuente: "Incertidumbre satelital del GHI anual ±4–6 % (Solargis/NREL NSRDB, validación 2023)" }
+
+  - id: medicion_solar_estacion
+    nombre: Estación solarimétrica en sitio (12 meses)
+    grupo: medicion_recurso
+    descripcion: "Piranómetros de clase A en el sitio durante un año, correlacionados con la serie satelital larga. Exigido por bancos para proyectos grandes."
+    aplica: { tecnologias: [solar_fv] }
+    requiere: []
+    costo_fijo_usd: { min: 30000, base: 45000, max: 70000, supuesto: "Estación + mantenimiento + análisis de 12 meses" }
+    costo_usd_mw: { base: 150, supuesto: "Modelación de producción" }
+    duracion_dias: { min: 330, base: 370, max: 420, supuesto: "12 meses de datos + informe" }
+    sigma_recurso: 0.025
+    resultados: { normal: 1, peor: 0, bloqueo: 0, fuente: "Incertidumbre combinada satélite + medición en sitio ±2–3 % (IEA PVPS T16, 2023)" }
+
+  - id: medicion_eolica_mesoescala
+    nombre: Estudio eólico de mesoescala (sin medición)
+    grupo: medicion_recurso_preliminar
+    descripcion: "Modelo de mesoescala (WRF) y reanálisis ERA5 ajustados al sitio. Sirve para descartar, no para financiar."
+    aplica: { tecnologias: [eolica_tierra] }
+    requiere: []
+    costo_fijo_usd: { min: 8000, base: 15000, max: 25000, supuesto: "Consultor de recurso eólico (2024)" }
+    costo_usd_mw: { base: 50, supuesto: "Micrositing preliminar" }
+    duracion_dias: { min: 20, base: 35, max: 60, supuesto: "Corridas de modelo y ajuste" }
+    sigma_recurso: 0.09
+    resultados: { normal: 1, peor: 0, bloqueo: 0, fuente: "Error de la velocidad media de modelos de mesoescala ±8–12 % (Global Wind Atlas, validación DTU 2019)" }
+
+  - id: medicion_eolica_torre
+    nombre: Campaña de medición con torre y LiDAR (12 meses)
+    grupo: medicion_recurso
+    descripcion: "Torre meteorológica de 100 m y LiDAR durante un año, correlación MCP con serie larga. Estándar bancario."
+    aplica: { tecnologias: [eolica_tierra] }
+    requiere: []
+    costo_fijo_usd: { min: 120000, base: 180000, max: 280000, supuesto: "Torre 100 m + LiDAR + permisos de la torre + análisis (2024)" }
+    costo_usd_mw: { base: 400, supuesto: "Micrositing y estudio de estelas" }
+    duracion_dias: { min: 360, base: 400, max: 480, supuesto: "12 meses de datos + instalación + informe" }
+    sigma_recurso: 0.035
+    resultados: { normal: 1, peor: 0, bloqueo: 0, fuente: "Incertidumbre de la velocidad media tras 12 meses de medición + MCP ≈ 3–5 % (IEC 61400-12 / MEASNET)" }
+
+  - id: prefactibilidad
+    nombre: Estudio de prefactibilidad
+    grupo: prefactibilidad
+    descripcion: "Revisión de tierras y títulos, accesos, distancia a la red, restricciones ambientales y modelo económico preliminar."
+    aplica: {}
+    requiere: []
+    costo_fijo_usd: { min: 12000, base: 20000, max: 35000, supuesto: "Consultoría local (Panamá, 2025)" }
+    costo_usd_mw: { base: 400, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 45, max: 75, supuesto: "Trabajo de escritorio + visita" }
+    resultados: { normal: 0.80, peor: 0.17, bloqueo: 0.03, supuesto: "≈1 de 5 sitios sale peor (accesos largos, red lejana); pocos se descartan" }
+    peor_capex_factor: { min: 1.02, base: 1.04, max: 1.08, supuesto: "Caminos o línea de conexión más larga" }
+    peor_descripcion: "Accesos o conexión más caros de lo previsto"
+    hallazgos: [tierra_disputa]
+
+  - id: factibilidad
+    nombre: Estudio de factibilidad (ingeniería básica y geotecnia)
+    grupo: factibilidad
+    descripcion: "Ingeniería básica, geotecnia, topografía, modelo de producción bancable y presupuesto de obra."
+    aplica: {}
+    requiere: [medicion_recurso, prefactibilidad]
+    costo_fijo_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Ingeniería de propietario (2025)" }
+    costo_usd_mw: { base: 1500, supuesto: "Geotecnia y topografía escalan con el área" }
+    duracion_dias: { min: 60, base: 90, max: 150, supuesto: "Campañas de campo + ingeniería" }
+    resultados: { normal: 0.78, peor: 0.19, bloqueo: 0.03, supuesto: "Suelos difíciles son frecuentes en el arco seco de Panamá (arcillas expansivas, roca)" }
+    peor_capex_factor: { min: 1.02, base: 1.05, max: 1.12, supuesto: "Fundaciones o hincado más caros" }
+    peor_descripcion: "Geotecnia desfavorable: fundaciones más caras"
+    hallazgos: [suelo_inestable]
+
+  - id: eia_cat_I
+    nombre: Estudio de impacto ambiental categoría I
+    grupo: eia
+    descripcion: "EIA de impacto bajo (proyectos pequeños). Incluye participación ciudadana simplificada."
+    aplica: { tecnologias: [solar_fv], mw_max: 10 }
+    requiere: [prefactibilidad]
+    costo_fijo_usd: { min: 10000, base: 18000, max: 30000, supuesto: "Consultor ambiental inscrito en MiAmbiente" }
+    costo_usd_mw: { base: 300, supuesto: "Línea base" }
+    duracion_dias: { min: 45, base: 70, max: 120, supuesto: "Línea base y redacción" }
+    resultados: { normal: 0.85, peor: 0.12, bloqueo: 0.03, supuesto: "Bajo impacto" }
+    peor_capex_factor: { min: 1.005, base: 1.01, max: 1.03, supuesto: "Medidas de mitigación adicionales" }
+    peor_descripcion: "Medidas de mitigación adicionales"
+    hallazgos: [arqueologia, especie_protegida, oposicion_comunitaria]
+
+  - id: eia_cat_II
+    nombre: Estudio de impacto ambiental categoría II
+    grupo: eia
+    descripcion: "EIA de impacto moderado: línea base de una estación, plan de manejo y foro de participación ciudadana."
+    aplica: { tecnologias: [solar_fv, eolica_tierra], mw_min: 10, mw_max: 50 }
+    requiere: [prefactibilidad]
+    costo_fijo_usd: { min: 35000, base: 60000, max: 100000, supuesto: "Consultor ambiental inscrito en MiAmbiente" }
+    costo_usd_mw: { base: 500, supuesto: "Línea base de fauna y flora" }
+    duracion_dias: { min: 90, base: 150, max: 240, supuesto: "Línea base en al menos una estación" }
+    resultados: { normal: 0.78, peor: 0.15, bloqueo: 0.07, supuesto: "Impacto moderado" }
+    peor_capex_factor: { min: 1.01, base: 1.02, max: 1.04, supuesto: "Mitigación y compensación ecológica" }
+    peor_descripcion: "Plan de manejo ambiental más exigente"
+    hallazgos: [arqueologia, especie_protegida, oposicion_comunitaria, aves_migratorias]
+
+  - id: eia_cat_III
+    nombre: Estudio de impacto ambiental categoría III
+    grupo: eia
+    descripcion: "EIA de impacto significativo: línea base de seca y lluviosa, foros públicos y consulta."
+    aplica: { tecnologias: [solar_fv, eolica_tierra], mw_min: 50 }
+    requiere: [prefactibilidad]
+    costo_fijo_usd: { min: 90000, base: 150000, max: 250000, supuesto: "Consultor ambiental inscrito en MiAmbiente" }
+    costo_usd_mw: { base: 600, supuesto: "Línea base de dos estaciones" }
+    duracion_dias: { min: 210, base: 300, max: 420, supuesto: "Línea base en estación seca y lluviosa" }
+    resultados: { normal: 0.72, peor: 0.18, bloqueo: 0.10, supuesto: "Impacto significativo" }
+    peor_capex_factor: { min: 1.01, base: 1.03, max: 1.06, supuesto: "Mitigación, compensación y reubicación de elementos" }
+    peor_descripcion: "Mitigación y compensaciones mayores"
+    hallazgos: [arqueologia, especie_protegida, oposicion_comunitaria, aves_migratorias]
+
+  - id: estudio_conexion
+    nombre: Estudio de conexión a la red (flujos de carga y cortocircuito)
+    grupo: conexion
+    descripcion: "Estudios eléctricos exigidos por ETESA para la solicitud de acceso a la red de transmisión."
+    aplica: {}
+    requiere: [prefactibilidad]
+    costo_fijo_usd: { min: 25000, base: 40000, max: 70000, supuesto: "Consultor de sistemas de potencia" }
+    costo_usd_mw: { base: 300, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 60, base: 100, max: 180, supuesto: "Modelación en PSS/E con la base de datos de ETESA" }
+    resultados: { normal: 0.70, peor: 0.25, bloqueo: 0.05, supuesto: "La red de 115/230 kV del interior tiene congestión; refuerzos son comunes" }
+    peor_capex_factor: { min: 1.02, base: 1.06, max: 1.15, supuesto: "Refuerzos de red a cargo del generador" }
+    peor_descripcion: "Se necesitan refuerzos de red a cargo del proyecto"
+    hallazgos: [sin_capacidad_red]
+
+hallazgos:
+  - id: tierra_disputa
+    nombre: Títulos de tierra en disputa
+    descripcion: "Parte del terreno tiene derechos posesorios no titulados o herencias en litigio."
+    peso: 1
+    mitigable: true
+    costo_mitigacion_fijo_usd: 40000
+    costo_mitigacion_usd_mw: 1500
+    retraso_dias: { min: 60, base: 120, max: 300, supuesto: "Saneamiento de títulos en ANATI" }
+    prob_exito_mitigacion: 0.7
+  - id: suelo_inestable
+    nombre: Suelo inestable o zona inundable
+    descripcion: "Parte del sitio no sirve; hay que rediseñar el layout o comprar terreno adicional."
+    peso: 1
+    mitigable: true
+    costo_mitigacion_fijo_usd: 60000
+    costo_mitigacion_usd_mw: 4000
+    retraso_dias: { min: 60, base: 90, max: 180, supuesto: "Rediseño y nuevas campañas" }
+    prob_exito_mitigacion: 0.8
+  - id: arqueologia
+    nombre: Hallazgo arqueológico
+    descripcion: "Restos precolombinos en el área: el Ministerio de Cultura exige rescate arqueológico antes de seguir."
+    peso: 3
+    mitigable: true
+    costo_mitigacion_fijo_usd: 50000
+    costo_mitigacion_usd_mw: 2000
+    retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Prospección y rescate (Ley 175 de 2020 de patrimonio cultural)" }
+    prob_exito_mitigacion: 0.9
+  - id: especie_protegida
+    nombre: Especie amenazada en el sitio
+    descripcion: "Presencia de una especie de la lista de MiAmbiente: hay que excluir zonas y compensar."
+    peso: 2
+    mitigable: true
+    costo_mitigacion_fijo_usd: 40000
+    costo_mitigacion_usd_mw: 3000
+    retraso_dias: { min: 90, base: 150, max: 300, supuesto: "Plan de rescate y reubicación de fauna" }
+    prob_exito_mitigacion: 0.75
+  - id: oposicion_comunitaria
+    nombre: Oposición comunitaria organizada
+    descripcion: "La comunidad rechaza el proyecto en el foro de participación ciudadana."
+    peso: 2
+    mitigable: true
+    costo_mitigacion_fijo_usd: 80000
+    costo_mitigacion_usd_mw: 2500
+    retraso_dias: { min: 90, base: 180, max: 365, supuesto: "Diálogo, acuerdos de beneficio compartido" }
+    prob_exito_mitigacion: 0.55
+  - id: aves_migratorias
+    nombre: Corredor de aves migratorias
+    descripcion: "El sitio está en la ruta de rapaces migratorias: MiAmbiente exige monitoreo y paradas programadas o reubicar turbinas."
+    peso: 1
+    mitigable: true
+    costo_mitigacion_fijo_usd: 70000
+    costo_mitigacion_usd_mw: 2000
+    retraso_dias: { min: 90, base: 180, max: 365, supuesto: "Un ciclo migratorio de monitoreo" }
+    prob_exito_mitigacion: 0.7
+  - id: sin_capacidad_red
+    nombre: Sin capacidad en la subestación
+    descripcion: "La subestación más cercana no tiene capacidad: hay que construir una línea a otra subestación."
+    peso: 1
+    mitigable: true
+    costo_mitigacion_fijo_usd: 400000
+    costo_mitigacion_usd_mw: 15000
+    retraso_dias: { min: 120, base: 240, max: 480, supuesto: "Diseño y servidumbre de una línea nueva" }
+    prob_exito_mitigacion: 0.85

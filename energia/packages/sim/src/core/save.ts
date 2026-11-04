@@ -1,4 +1,4 @@
-import { SAVE_VERSION, type GameState } from './state';
+import { SAVE_VERSION, newFinanceState, type GameState } from './state';
 
 export interface SaveFile {
   format: 'voltaje-save';
@@ -7,7 +7,10 @@ export interface SaveFile {
 }
 
 /** Migraciones de partidas: clave = versión de origen. */
-const MIGRATIONS: Record<number, (s: any) => any> = {};
+const MIGRATIONS: Record<number, (s: any) => any> = {
+  // v1 (Fase 1) → v2 (Fase 2): la empresa empieza sin proyectos y con la contabilidad vacía.
+  1: (s) => ({ ...s, saveVersion: 2, projects: [], nextProjectId: 1, finance: newFinanceState() }),
+};
 
 export function serialize(state: GameState): string {
   const file: SaveFile = { format: 'voltaje-save', saveVersion: SAVE_VERSION, state };
@@ -39,7 +42,8 @@ export function deserialize(text: string): GameState {
 function validate(s: any) {
   const ok =
     s && typeof s.tick === 'number' && typeof s.seed === 'number' && typeof s.startEpochDay === 'number' &&
-    s.company && typeof s.company.cashUsd === 'number' && s.rng && typeof s.rng === 'object';
+    s.company && typeof s.company.cashUsd === 'number' && s.rng && typeof s.rng === 'object' &&
+    Array.isArray(s.projects) && typeof s.nextProjectId === 'number' && s.finance && typeof s.finance === 'object';
   if (!ok) throw new Error('La partida tiene un formato inválido.');
   for (const k of Object.keys(s.rng)) {
     const r = s.rng[k];
