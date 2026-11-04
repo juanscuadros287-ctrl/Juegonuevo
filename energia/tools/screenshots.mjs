@@ -11,12 +11,17 @@ let chromium;
 try { ({ chromium } = require('playwright')); } catch { ({ chromium } = require('/opt/node-tools/node_modules/playwright')); }
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'docs/capturas');
-const PORT = 4173;
+const PORT = Number(process.env.SCREENS_PORT ?? 4173);
 // Penonomé (Coclé), en el Arco Seco de Panamá
 const SITE = { lat: 8.62, lon: -80.3 };
 
 const server = spawn(process.execPath, [join(ROOT, 'node_modules/vite/bin/vite.js'), 'preview', '--port', String(PORT), '--strictPort'], { cwd: join(ROOT, 'apps/game'), stdio: 'pipe' });
-await new Promise((res) => server.stdout.on('data', (d) => String(d).includes(String(PORT)) && res()));
+let serverErr = '';
+server.stderr.on('data', (d) => (serverErr += d));
+await new Promise((res, rej) => {
+  server.stdout.on('data', (d) => String(d).includes(String(PORT)) && res());
+  server.on('exit', (code) => rej(new Error(`vite preview terminó (${code}): ${serverErr.trim()} — prueba con SCREENS_PORT=otro puerto`)));
+});
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const fail = async (m) => { console.error('FALLO:', m); await browser.close(); server.kill(); process.exit(1); };
@@ -32,7 +37,8 @@ async function newPage(width, height) {
   return page;
 }
 
-const shot = (page, name) => page.screenshot({ path: join(OUT, name) });
+const T0 = Date.now();
+const shot = async (page, name) => { const t = Date.now(); await page.screenshot({ path: join(OUT, name) }); if (process.env.SCREENS_TIMING) console.log(`${((Date.now() - T0) / 1000).toFixed(1)} s · ${name} (${Date.now() - t} ms)`); };
 const speed = async (page, label, ms) => { await page.getByRole('button', { name: label, exact: true }).click(); await page.waitForTimeout(ms); await page.getByRole('button', { name: '❚❚' }).click(); await page.waitForTimeout(300); };
 const tab = (page, id) => page.locator(`[data-tab=${id}]`).first().click();
 

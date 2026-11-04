@@ -1,5 +1,5 @@
 import type { ProjectDetail } from '@voltaje/sim';
-import { useUi } from '../store';
+import { ui, useUi } from '../store';
 import { Pill, Section, Stat } from '../common';
 import { dateOfTick, fmtDate, fmtMoney, fmtNum, fmtPct } from '../format';
 import { cmd } from './ProjectWindow';
@@ -18,6 +18,18 @@ export function CommercialTab({ d }: { d: ProjectDetail }) {
         <Stat label="Energía P50" value={`${fmtNum(d.resource.energyP50MwhYear / 1000, 1)} GWh`} hint="por año" />
         <Stat label="Ingreso anual P50" value={e ? fmtMoney(e.energyP50MwhYear * e.priceUsdMwh) : '—'} />
       </div>
+      {d.contractId && (
+        <div className="notice good row">
+          <span style={{ flex: 1 }}>Este proyecto cumple el contrato <b>{d.contractId}</b> ganado en el mercado: su fecha de operación comercial, multas y garantía están en Contratos.</span>
+          <button onClick={() => ui.openPanel('contracts', d.contractId)}>Ver contrato →</button>
+        </div>
+      )}
+      {!d.contractId && !ppa && (
+        <div className="notice row" style={{ borderColor: 'var(--panel-border)' }}>
+          <span style={{ flex: 1 }} className="dim">También puedes vincular este proyecto a una licitación o solicitud privada del Mercado al armar la oferta.</span>
+          <button onClick={() => ui.openWindow('market')}>Ir al mercado →</button>
+        </div>
+      )}
       {ppa && (
         <Section title="Contrato actual">
           <table className="kv" style={{ maxWidth: 560 }}><tbody>

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { gameData } from '@voltaje/data';
-import type { ProjectDetail } from '@voltaje/sim';
+import type { FinancingPreview, ProjectDetail } from '@voltaje/sim';
 import { sim } from '../../worker/client';
-import type { FinancePreview } from '../../worker/protocol';
 import { ui, useUi } from '../store';
 import { Pill, Section, Stat } from '../common';
 import { dateOfTick, fmtDate, fmtMoney, fmtNum, fmtPct } from '../format';
@@ -18,15 +17,15 @@ export function FinancingTab({ d }: { d: ProjectDetail }) {
   const lender = d.lenders.find((l) => l.id === lenderId);
   const [debt, setDebt] = useState(0.6);
   const [partner, setPartner] = useState(0);
-  const [prev, setPrev] = useState<FinancePreview | null>(null);
+  const [prev, setPrev] = useState<FinancingPreview | null>(null);
   const f = d.financing;
   const debtFrac = lenderId === 'ninguno' ? 0 : Math.min(debt, lender?.maxLeverage ?? 0.7);
 
   useEffect(() => {
     let live = true;
-    const t = setTimeout(() => sim.financePreview(pid, lenderId, debtFrac).then((p) => live && setPrev(p)), 150);
+    const t = setTimeout(() => sim.financePreview(pid, lenderId, debtFrac, partner).then((p) => live && setPrev(p)), 150);
     return () => { live = false; clearTimeout(t); };
-  }, [pid, lenderId, debtFrac, d.costs.capex.totalUsd]);
+  }, [pid, lenderId, debtFrac, partner, d.costs.capex.totalUsd]);
 
   if (f && f.status !== 'fallido') {
     const ld = d.lenders.find((l) => l.id === f.lenderId);
@@ -53,14 +52,15 @@ export function FinancingTab({ d }: { d: ProjectDetail }) {
     );
   }
 
-  const budget = d.costs.capex.totalUsd;
-  const equity = prev ? Math.max(0, budget - prev.debtUsd) : budget * (1 - debtFrac);
-  const partnerPays = equity * partner;
-  const youPay = equity - partnerPays;
-  const premium = partnerPays * fin.socio_equity.prima_desarrollo_frac;
-  const advisors = fin.prestamistas.find((l) => l.id === lenderId)?.costo_asesores_usd.base ?? 0;
+  const budget = prev?.budgetUsd ?? d.costs.capex.totalUsd;
+  const equity = prev ? prev.equityUsd : budget * (1 - debtFrac);
+  const partnerPays = prev ? prev.partnerEquityUsd : equity * partner;
+  const youPay = prev ? prev.ownEquityUsd : equity - partnerPays;
+  const premium = prev ? prev.partnerPremiumUsd : partnerPays * fin.socio_equity.prima_desarrollo_frac;
+  const advisors = prev ? prev.advisorsUsd : fin.prestamistas.find((l) => l.id === lenderId)?.costo_asesores_usd.base ?? 0;
   const cash = g?.company.cashUsd ?? 0;
-  const canGo = d.canFinance.ok && (lenderId === 'ninguno' || !!lender?.available);
+  const canGo = d.canFinance.ok && (lenderId === 'ninguno' || !!lender?.available) && !prev?.belowLenderMinimum;
+  const LIMIT: Record<FinancingPreview['limitedBy'], string> = { apalancamiento: 'limitada por el apalancamiento máximo', pedido: 'lo que pediste', dscr: 'limitada por el DSCR (cobertura del servicio de deuda)', sin_deuda: 'sin deuda' };
 
   return (
     <>
@@ -102,18 +102,22 @@ export function FinancingTab({ d }: { d: ProjectDetail }) {
           </div>
         </Section>
         <Section title="Vista previa del efecto">
-          <table className="kv"><tbody>
+          <table className="kv" data-testid="fin-preview"><tbody>
             <tr><td>Presupuesto de obra</td><td>{fmtMoney(budget)}</td></tr>
-            <tr><td>Deuda que daría el banco</td><td>{fmtMoney(prev?.debtUsd)}{prev && debtFrac > 0 && prev.debtUsd < budget * debtFrac - 1 ? <span style={{ color: 'var(--warn)' }}> (limitada por DSCR)</span> : null}</td></tr>
+            <tr><td>Deuda que daría el banco</td><td>{fmtMoney(prev?.debtUsd)}{prev && debtFrac > 0 && <span style={{ color: prev.limitedBy === 'dscr' || prev.limitedBy === 'apalancamiento' ? 'var(--warn)' : 'var(--text-dim)', fontFamily: 'var(--font)', fontSize: 11 }}> · {LIMIT[prev.limitedBy]}</span>}</td></tr>
+            {prev && prev.debtUsd > 0 && <tr><td>Tasa · plazo · DSCR exigido</td><td>{fmtNum(prev.ratePct, 2)} % · {prev.tenorYears} años · {fmtNum(prev.dscrTarget, 2)}</td></tr>}
             <tr><td>Capital total</td><td>{fmtMoney(equity)}</td></tr>
             <tr><td>Aporte del socio</td><td>{fmtMoney(partnerPays)}</td></tr>
             <tr className="kv-head"><td>Tu aporte de capital</td><td style={{ color: youPay > cash ? 'var(--bad)' : undefined }}>{fmtMoney(youPay)}</td></tr>
             <tr><td>Prima que recibes del socio</td><td style={{ color: 'var(--good)' }}>{fmtMoney(premium)}</td></tr>
-            <tr><td>Asesores (ahora)</td><td>{fmtMoney(lenderId === 'ninguno' ? 0 : advisors)}</td></tr>
+            <tr><td>Asesores (ahora) · comisión de estructuración</td><td>{fmtMoney(lenderId === 'ninguno' ? 0 : advisors)} · {fmtMoney(prev?.structuringFeeUsd ?? 0)}</td></tr>
+            {prev && <tr className="kv-head"><td>Caja neta que pone la empresa</td><td style={{ color: prev.netOwnCashUsd > cash ? 'var(--bad)' : undefined }}>{fmtMoney(prev.netOwnCashUsd)}</td></tr>}
+            {prev && prev.debtUsd > 0 && <tr><td>Probabilidad de aprobación · due diligence</td><td>{fmtPct(prev.approvalProbability, 0)} · {prev.dueDiligenceDays.base} d</td></tr>}
             <tr><td>TIR del capital</td><td>{fmtPct(prev?.irrEquity)}</td></tr>
             <tr><td>VAN del capital (100 %)</td><td>{fmtMoney(prev?.npvEquityUsd)}</td></tr>
-            <tr><td>DSCR mínimo</td><td>{prev?.minDscr ? fmtNum(prev.minDscr, 2) : '—'}</td></tr>
           </tbody></table>
+          {prev?.belowLenderMinimum && <div className="notice bad" style={{ fontSize: 12 }}>La deuda dimensionada queda bajo el monto mínimo de {lender?.nombre ?? 'este banco'}: el cierre fracasaría. Prueba otro banco o solo capital.</div>}
+          {prev && prev.blockers.length > 0 && d.canFinance.ok && <div className="notice warn" style={{ fontSize: 12 }}>{prev.blockers.join(' ')}</div>}
           {youPay > cash && <div style={{ color: 'var(--warn)', fontSize: 11.5, marginTop: 6 }}>Tu caja ({fmtMoney(cash)}) no cubre tu aporte: la obra se paga mes a mes, pero sin caja la empresa entra en números rojos. Considera un socio o más deuda.</div>}
           <button className="primary" style={{ marginTop: 10, width: '100%' }} disabled={!canGo || cash < (lenderId === 'ninguno' ? 0 : advisors)}
             onClick={() => cmd({ type: 'arrangeFinancing', projectId: pid, lenderId, debtFraction: debtFrac, partnerShare: partner })}>

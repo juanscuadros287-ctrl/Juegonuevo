@@ -9,12 +9,14 @@ const SEV: Record<Severity, { color: string; label: string }> = {
   malo: { color: 'var(--bad)', label: 'Problemas' },
 };
 
+const LINK_LABELS: Record<string, string> = { market: 'Mercado', contracts: 'Contratos', research: 'I+D', competitors: 'Competidores', suppliers: 'Proveedores' };
+
 export function EventLog() {
   const log = useUi((s) => s.log);
   const projects = useUi((s) => s.views?.projects ?? []);
   const [sev, setSev] = useState<Severity | 'todos'>('todos');
   const [pid, setPid] = useState<string>('');
-  const list = log.filter((e) => (sev === 'todos' || e.severity === sev) && (!pid || e.projectId === pid)).slice().reverse();
+  const list = log.filter((e) => (sev === 'todos' || e.severity === sev) && (!pid || (pid === '__biz' ? !e.projectId : e.projectId === pid))).slice().reverse();
   const name = (id?: string) => projects.find((p) => p.id === id)?.name;
 
   return (
@@ -26,17 +28,19 @@ export function EventLog() {
         ))}
         <span className="spacer" />
         <select value={pid} onChange={(e) => setPid(e.target.value)}>
-          <option value="">Todos los proyectos</option>
+          <option value="">Todo</option>
+          <option value="__biz">Mercado, contratos, I+D y competencia</option>
           {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
       </div>
       <div className="window-body scroll" style={{ paddingTop: 0 }}>
         {list.length === 0 ? <Empty>Sin eventos todavía.</Empty> : list.map((e) => (
-          <div key={e.id} className={`log-row ${e.projectId ? 'clickable' : ''}`} onClick={() => e.projectId && ui.openProject(e.projectId)}>
+          <div key={e.id} className={`log-row ${e.projectId || e.link ? 'clickable' : ''}`} onClick={() => (e.projectId ? ui.openProject(e.projectId) : e.link && ui.follow(e.link))}>
             <span className="log-dot" style={{ background: SEV[e.severity].color }} />
             <span className="mono dim log-date">{e.date}</span>
             <span style={{ flex: 1 }}>{e.text}</span>
             {e.projectId && <span className="dim log-project ellipsis">{name(e.projectId) ?? e.projectId}</span>}
+            {!e.projectId && e.link && 'window' in e.link && <span className="dim log-project ellipsis">{LINK_LABELS[e.link.window]}</span>}
           </div>
         ))}
       </div>

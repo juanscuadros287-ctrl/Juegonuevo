@@ -15,14 +15,30 @@ import { ProjectWindow } from './ui/project/ProjectWindow';
 import { FinancePanel } from './ui/FinancePanel';
 import { EventLog } from './ui/EventLog';
 import { GameOver } from './ui/GameOver';
-import { ui, useUi, type LogEntry, type ToastKind } from './ui/store';
+import { MarketPanel } from './ui/business/MarketPanel';
+import { ContractsPanel } from './ui/business/ContractsPanel';
+import { ResearchPanel } from './ui/business/ResearchPanel';
+import { CompetitorsPanel } from './ui/business/CompetitorsPanel';
+import { SuppliersPanel } from './ui/business/SuppliersPanel';
+import { BidDialog } from './ui/business/BidDialog';
+import { ui, useUi, type LogEntry, type ToastKind, type UiLink } from './ui/store';
 import { sim } from './worker/client';
 import { saveGame } from './ui/session';
 import { fmtMoney } from './ui/format';
 
 const KIND: Record<string, ToastKind> = { info: 'info', bueno: 'good', malo: 'bad' };
 /** Eventos informativos que también merecen notificación (el resto va solo al registro). */
-const TOAST_INFO = new Set(['projectCreated', 'studyCompleted', 'permitDecided', 'commissioningStarted', 'saleStarted']);
+const TOAST_INFO = new Set(['projectCreated', 'studyCompleted', 'permitDecided', 'commissioningStarted', 'saleStarted', 'bidSubmitted', 'contractSigned', 'researchStarted', 'contractProjectAssigned']);
+
+/** A qué ventana lleva un evento de negocio (Fase 3). */
+function businessLink(e: SimEvent): UiLink | undefined {
+  if ('opportunityId' in e && (e.type.startsWith('bid') || e.type.startsWith('opportunity'))) return { window: 'market', id: e.opportunityId };
+  if ('contractId' in e) return { window: 'contracts', id: e.contractId };
+  if ('nodeId' in e) return { window: 'research', id: e.nodeId };
+  if ('competitorId' in e) return { window: 'competitors', id: e.competitorId };
+  if (e.type === 'supplyPriceChange') return { window: 'suppliers' };
+  return undefined;
+}
 
 function useGameEvents() {
   useEffect(() => {
@@ -31,14 +47,21 @@ function useGameEvents() {
     const cfg = gameData.game.autoguardado;
     return sim.onEvents((events: SimEvent[]) => {
       const g = sim.state;
-      const tick = g?.tick ?? 0;
-      const date = g ? formatDate(fromEpochDay(g.startEpochDay + tick), true) : '';
       const log: Omit<LogEntry, 'id'>[] = [];
       for (const e of events) {
+        // cada evento trae el día en que ocurrió (varios días pueden llegar juntos a velocidad alta)
+        const tick = e.tick ?? g?.tick ?? 0;
+        const date = g ? formatDate(fromEpochDay(g.startEpochDay + tick), true) : '';
         if ('projectId' in e) {
           log.push({ tick, date, text: e.text, severity: e.severity, projectId: e.projectId });
           if (e.severity !== 'info' || TOAST_INFO.has(e.type)) ui.toast(e.text, KIND[e.severity], e.projectId);
           if (e.type === 'projectCreated') ui.openProject(e.projectId);
+          continue;
+        }
+        const link = businessLink(e);
+        if (link && 'text' in e && 'severity' in e) {
+          log.push({ tick, date, text: e.text, severity: e.severity, link });
+          if (e.severity !== 'info' || TOAST_INFO.has(e.type)) ui.toast(e.text, KIND[e.severity], undefined, link);
           continue;
         }
         switch (e.type) {
@@ -83,8 +106,14 @@ function useKeyboard() {
       if (k === 'p') ui.openWindow('projects');
       if (k === 'f') ui.openWindow('finance');
       if (k === 'e') ui.openWindow('events');
+      if (k === 'm') ui.openWindow('market');
+      if (k === 'c') ui.openWindow('contracts');
+      if (k === 'i') ui.openWindow('research');
+      if (k === 'r') ui.openWindow('competitors');
+      if (k === 'v') ui.openWindow('suppliers');
       if (e.key === 'Escape') {
         if (s.dialog) ui.set({ dialog: null });
+        else if (s.bidFor) ui.set({ bidFor: null });
         else if (s.developAt) ui.set({ developAt: null });
         else if (s.window) ui.openWindow(null);
         else ui.set({ selected: null });
@@ -103,6 +132,11 @@ function Windows() {
   if (w === 'project') return <ProjectWindow />;
   if (w === 'finance') return <FinancePanel />;
   if (w === 'events') return <EventLog />;
+  if (w === 'market') return <MarketPanel />;
+  if (w === 'contracts') return <ContractsPanel />;
+  if (w === 'research') return <ResearchPanel />;
+  if (w === 'competitors') return <CompetitorsPanel />;
+  if (w === 'suppliers') return <SuppliersPanel />;
   return null;
 }
 
@@ -134,6 +168,7 @@ export function App() {
           <ZoomButtons />
           <Windows />
           <DevelopDialog />
+          <BidDialog />
           <GameOver />
         </>
       )}

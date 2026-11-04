@@ -1,5 +1,5 @@
-import type { Command, GameState, SimEvent, ViabilityResult } from '@voltaje/sim';
-import type { FinancePreview, FromWorker, SiteEstimate, ToWorker, Views } from './protocol';
+import type { Command, FinancingPreview, GameState, SimEvent, ViabilityResult } from '@voltaje/sim';
+import type { BusinessPanel, FromWorker, QuoteReply, QuoteRequest, SiteEstimate, ToWorker, Views } from './protocol';
 
 type Listener<T> = (v: T) => void;
 type Reply = Extract<FromWorker, { reqId: number }>;
@@ -64,9 +64,18 @@ export class SimClient {
     return this.request<'viability'>((reqId) => ({ t: 'viability', reqId, projectId, runs }));
   }
 
-  async financePreview(projectId: string, lenderId: string, debtFraction: number): Promise<FinancePreview> {
-    return (await this.request<'finPreview'>((reqId) => ({ t: 'finPreview', reqId, projectId, lenderId, debtFraction }))).preview;
+  /** Vista previa del financiamiento (`previewFinancing` del motor). */
+  async financePreview(projectId: string, lenderId: string, debtFraction: number, partnerShare: number): Promise<FinancingPreview | null> {
+    return (await this.request<'finPreview'>((reqId) => ({ t: 'finPreview', reqId, projectId, lenderId, debtFraction, partnerShare }))).preview;
   }
+
+  /** Cotización de una oferta (`selectBidQuote`) y proveedores de la tecnología. */
+  async quote(req: QuoteRequest): Promise<QuoteReply> {
+    return (await this.request<'quote'>((reqId) => ({ t: 'quote', reqId, req }))).reply;
+  }
+
+  /** Panel de negocio abierto (el worker solo calcula sus vistas mientras esté abierto). */
+  panel(panel: BusinessPanel | null) { this.send({ t: 'panel', panel }); }
 
   onState(l: Listener<{ state: GameState; views: Views }>) { this.stateListeners.add(l); return () => void this.stateListeners.delete(l); }
   onEvents(l: Listener<SimEvent[]>) { this.eventListeners.add(l); return () => void this.eventListeners.delete(l); }

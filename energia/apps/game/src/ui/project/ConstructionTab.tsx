@@ -1,18 +1,24 @@
 import { useEffect, useState } from 'react';
+import { gameData } from '@voltaje/data';
 import type { ProjectDetail, SupplierOption } from '@voltaje/sim';
 import { useUi } from '../store';
 import { Bar, Pill, Section, Stat } from '../common';
 import { dateOfTick, fmtDate, fmtMoney, fmtNum, fmtPct } from '../format';
 import { cmd } from './ProjectWindow';
 
-function SupplierTable({ title, list, value, onPick, kind, locked }: { title: string; list: SupplierOption[]; value: string; onPick: (id: string) => void; kind: 'equipos' | 'epc'; locked: boolean }) {
+type Kind = 'equipos' | 'epc' | 'inversores' | 'logistica';
+
+function SupplierTable({ title, list, value, onPick, kind, locked, hint }: { title: string; list: SupplierOption[]; value: string; onPick: (id: string) => void; kind: Kind; locked: boolean; hint?: string }) {
+  const defs = gameData.simData.suppliers;
   return (
-    <Section title={title}>
+    <Section title={title} right={hint ? <span className="dim" style={{ fontSize: 11.5 }}>{hint}</span> : undefined}>
       <table className="grid-table">
         <thead>
           <tr>
             <th style={{ width: 28 }} /><th>Proveedor</th><th>Origen</th><th className="num">Precio</th><th>Calidad</th><th>Confiabilidad</th>
-            {kind === 'equipos' ? <th className="num">Entrega</th> : <><th className="num">Plazo de obra</th><th className="num">Sobrecosto por hito</th></>}
+            {kind === 'epc' ? <><th className="num">Plazo de obra</th><th className="num">Sobrecosto por hito</th></>
+              : kind === 'logistica' ? <><th className="num">Flete</th><th className="num">Plazo de entrega</th></>
+                : <th className="num">Entrega</th>}
           </tr>
         </thead>
         <tbody>
@@ -24,9 +30,11 @@ function SupplierTable({ title, list, value, onPick, kind, locked }: { title: st
               <td className="num mono" style={{ color: s.priceFactor < 1 ? 'var(--good)' : s.priceFactor > 1 ? 'var(--warn)' : undefined }}>{s.priceFactor === 1 ? 'referencia' : `${s.priceFactor > 1 ? '+' : '−'}${fmtPct(Math.abs(s.priceFactor - 1), 0)}`}</td>
               <td><Score v={s.quality} /></td>
               <td><Score v={s.reliability} /></td>
-              {kind === 'equipos'
-                ? <td className="num mono">{s.leadDays ? `${s.leadDays} d` : '—'}</td>
-                : <><td className="num mono">{s.scheduleFactor ? `×${fmtNum(s.scheduleFactor, 2)}` : '—'}</td><td className="num mono">{s.overrunProb !== undefined ? fmtPct(s.overrunProb, 0) : '—'}</td></>}
+              {kind === 'epc'
+                ? <><td className="num mono">{s.scheduleFactor ? `×${fmtNum(s.scheduleFactor, 2)}` : '—'}</td><td className="num mono">{s.overrunProb !== undefined ? fmtPct(s.overrunProb, 0) : '—'}</td></>
+                : kind === 'logistica'
+                  ? <><td className="num mono">{defs[s.id]?.flete_frac !== undefined ? `${fmtPct(defs[s.id].flete_frac!, 1)} de equipos` : '—'}</td><td className="num mono">×{fmtNum(defs[s.id]?.factor_plazo_entrega ?? 1, 2)}</td></>
+                  : <td className="num mono">{s.leadDays ? `${s.leadDays} d` : '—'}</td>}
             </tr>
           ))}
         </tbody>
@@ -45,10 +53,13 @@ export function ConstructionTab({ d }: { d: ProjectDetail }) {
   const sel = d.suppliers.selected;
   const [eq, setEq] = useState(sel?.equipmentId ?? d.suppliers.equipment[0]?.id ?? '');
   const [epc, setEpc] = useState(sel?.epcId ?? d.suppliers.epc[0]?.id ?? '');
-  useEffect(() => { if (sel) { setEq(sel.equipmentId); setEpc(sel.epcId); } }, [sel?.equipmentId, sel?.epcId]);
+  // inversores y logística son opcionales: '' = los incluidos en el paquete del proveedor de equipos
+  const [inv, setInv] = useState(sel?.inverterId ?? '');
+  const [log, setLog] = useState(sel?.logisticsId ?? '');
+  useEffect(() => { if (sel) { setEq(sel.equipmentId); setEpc(sel.epcId); setInv(sel.inverterId ?? ''); setLog(sel.logisticsId ?? ''); } }, [sel?.equipmentId, sel?.epcId, sel?.inverterId, sel?.logisticsId]);
   const k = d.construction;
   const lockedSup = !!k || !!d.operation || d.financing?.status === 'cerrado' || d.financing?.status === 'en_proceso' || !d.summary.active;
-  const changed = !sel || sel.equipmentId !== eq || sel.epcId !== epc;
+  const changed = !sel || sel.equipmentId !== eq || sel.epcId !== epc || (sel.inverterId ?? '') !== inv || (sel.logisticsId ?? '') !== log;
 
   return (
     <>
@@ -92,11 +103,19 @@ export function ConstructionTab({ d }: { d: ProjectDetail }) {
         </div>
       )}
       <SupplierTable title="Proveedor de equipos" list={d.suppliers.equipment} value={eq} onPick={setEq} kind="equipos" locked={lockedSup} />
+      {d.suppliers.inverters.length > 0 && (
+        <SupplierTable title="Inversores" list={d.suppliers.inverters} value={inv} onPick={(id) => setInv(inv === id ? '' : id)} kind="inversores" locked={lockedSup}
+          hint={inv ? 'Clic de nuevo para volver a los del paquete' : 'Opcional: sin elegir, van los del proveedor de equipos (12 % del costo de equipos)'} />
+      )}
       <SupplierTable title="Contratista EPC" list={d.suppliers.epc} value={epc} onPick={setEpc} kind="epc" locked={lockedSup} />
+      {d.suppliers.logistics.length > 0 && (
+        <SupplierTable title="Logística" list={d.suppliers.logistics} value={log} onPick={(id) => setLog(log === id ? '' : id)} kind="logistica" locked={lockedSup}
+          hint={log ? 'Clic de nuevo para volver al flete del proveedor' : 'Opcional: sin elegir, el flete lo pone el proveedor de equipos'} />
+      )}
       {!lockedSup && (
         <div className="row" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
           {sel && !changed && <span className="dim">Proveedores elegidos. CAPEX: {fmtMoney(d.costs.capex.totalUsd)} ({fmtNum(d.costs.capex.perKwUsd, 0)} US$/kW)</span>}
-          <button className="primary" disabled={!changed || !eq || !epc} data-testid="select-suppliers" onClick={() => cmd({ type: 'selectSuppliers', projectId: pid, equipmentId: eq, epcId: epc })}>
+          <button className="primary" disabled={!changed || !eq || !epc} data-testid="select-suppliers" onClick={() => cmd({ type: 'selectSuppliers', projectId: pid, equipmentId: eq, epcId: epc, inverterId: inv || undefined, logisticsId: log || undefined })}>
             {sel ? 'Cambiar proveedores' : 'Elegir estos proveedores'}
           </button>
         </div>

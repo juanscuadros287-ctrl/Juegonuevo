@@ -139,7 +139,8 @@ export class Globe {
     this.controls.minDistance = 1.08;
     this.controls.maxDistance = 6;
     this.controls.zoomSpeed = 0.8;
-    this.controls.addEventListener('start', () => (this.flight = null));
+    this.controls.addEventListener('start', () => { this.flight = null; this.lastInput = performance.now(); });
+    this.controls.addEventListener('change', () => (this.lastInput = performance.now()));
 
     canvas.addEventListener('pointerdown', this.handleDown);
     canvas.addEventListener('pointerup', this.handleUp);
@@ -215,9 +216,16 @@ export class Globe {
 
   private lastDist = -1;
   private lastFrame = performance.now();
+  private lastInput = 0;
+  /**
+   * Con una ventana grande abierta el globo casi no se ve: se dibuja como mucho cada `throttleMs`
+   * (salvo durante un vuelo de cámara o mientras el jugador lo mueve). Ahorra CPU/batería.
+   */
+  throttleMs = 0;
   private loop = () => {
     this.raf = requestAnimationFrame(this.loop);
     const now = performance.now();
+    if (this.throttleMs > 0 && !this.flight && now - this.lastInput > 800 && now - this.lastFrame < this.throttleMs) return;
     const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
     this.lastFrame = now;
     const dist = this.camera.position.length();

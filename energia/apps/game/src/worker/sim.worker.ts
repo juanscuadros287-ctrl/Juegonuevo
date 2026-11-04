@@ -5,11 +5,12 @@
  * (que necesitan datos + grilla, por eso se calculan aquí).
  */
 import {
-  applyCommands, checkViability, createNewGame, deserialize, previewSite, projectEconomics, ResourceGrid, selectCompanyFinancials,
-  selectProjectDetail, selectProjects, serialize, step, type Command, type GameState, type GridMeta, type SimContext, type SimEvent,
+  applyCommands, checkViability, createNewGame, deserialize, previewFinancing, previewSite, ResourceGrid, selectBidQuote, selectBusinessSummary,
+  selectCompanyFinancials, selectCompetitors, selectContracts, selectMyBids, selectOpportunities, selectProjectDetail, selectProjects, selectResearchTree,
+  selectSupplierCatalog, serialize, step, PLAYER_ID, type Command, type GameState, type GridMeta, type SimContext, type SimEvent,
 } from '@voltaje/sim';
 import { gameData } from '@voltaje/data';
-import type { FinancePreview, FromWorker, SiteEstimate, ToWorker, Views } from './protocol';
+import type { BusinessPanel, BusinessViews, FromWorker, QuoteReply, QuoteRequest, SiteEstimate, ToWorker, Views } from './protocol';
 
 const post = (m: FromWorker) => (self as unknown as Worker).postMessage(m);
 
@@ -21,6 +22,7 @@ let pending: Command[] = [];
 let carry = 0;
 let last = performance.now();
 let focus: string | null = null;
+let panel: BusinessPanel | null = null;
 const MAX_DAYS_PER_TICK = 60;
 /** Intervalo mínimo entre instantáneas mientras corre el tiempo (las vistas cuestan algo de CPU). */
 const SNAPSHOT_MS = 100;
@@ -41,10 +43,28 @@ async function loadGrid(gridUrl: string, binUrl: string) {
   }
 }
 
+/** Vistas de negocio: lo liviano siempre; lo de cada panel solo mientras está abierto. */
+function businessViews(s: GameState): BusinessViews | null {
+  if (!s.market?.initialized) return null;
+  const open = s.market.opportunities.filter((o) => o.status === 'abierta' && !o.bids.some((b) => b.actorId === PLAYER_ID && b.status === 'presentada'));
+  const b: BusinessViews = {
+    summary: selectBusinessSummary(s, ctx),
+    competitors: selectCompetitors(s, ctx),
+    biddableCount: open.length,
+  };
+  try {
+    if (panel === 'market') { b.opportunities = selectOpportunities(s, ctx, { includeClosed: true }); b.myBids = selectMyBids(s, ctx); }
+    if (panel === 'contracts') { b.contracts = selectContracts(s, ctx); b.myBids = selectMyBids(s, ctx); }
+    if (panel === 'research') b.research = selectResearchTree(s, ctx);
+    if (panel === 'suppliers') b.suppliers = selectSupplierCatalog(s, ctx);
+  } catch (e) { console.error('Vista de negocio:', e); }
+  return b;
+}
+
 function views(s: GameState): Views {
   let detail = null;
   if (focus) { try { detail = selectProjectDetail(s, ctx, focus); } catch { detail = null; } }
-  return { projects: selectProjects(s, ctx), finance: selectCompanyFinancials(s, ctx), detail };
+  return { projects: selectProjects(s, ctx), finance: selectCompanyFinancials(s, ctx), detail, business: businessViews(s) };
 }
 
 function snapshot(force = true) {
@@ -117,14 +137,16 @@ function estimateSite(techId: string, mw: number, lat: number, lon: number): Sit
   };
 }
 
-function financePreview(projectId: string, lenderId: string, debtFraction: number): FinancePreview {
-  const p = state?.projects.find((x) => x.id === projectId);
-  if (!state || !p) return { debtUsd: 0, equityUsd: 0, irrEquity: null, npvEquityUsd: 0, minDscr: null, ratePct: 0, error: 'Proyecto inexistente.' };
+/** Cotización de una oferta + proveedores de esa tecnología (para elegir equipos y EPC en el diálogo). */
+function quote(req: QuoteRequest): QuoteReply {
+  if (!state) return { quote: null, suppliers: [] };
+  const { opportunityId, ...o } = req;
+  const all = selectSupplierCatalog(state, ctx).suppliers.filter((x) => x.tecnologias.includes(req.techId) && (x.tipo === 'equipos' || x.tipo === 'epc'));
   try {
-    const e = projectEconomics(state, ctx, p, { lenderId: debtFraction > 0 ? lenderId : undefined, debtFraction });
-    return { debtUsd: e.debtUsd, equityUsd: e.investmentUsd - e.debtUsd, irrEquity: e.model.irrEquity, npvEquityUsd: e.npvEquityUsd, minDscr: e.model.minDscr, ratePct: e.debtRate * 100 };
-  } catch (err) {
-    return { debtUsd: 0, equityUsd: 0, irrEquity: null, npvEquityUsd: 0, minDscr: null, ratePct: 0, error: (err as Error).message };
+    return { quote: selectBidQuote(state, ctx, opportunityId, o), suppliers: all };
+  } catch (e) {
+    console.error('Cotización:', e);
+    return { quote: null, suppliers: all };
   }
 }
 
@@ -176,7 +198,18 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
       break;
     }
     case 'finPreview':
-      post({ t: 'finPreview', reqId: m.reqId, preview: financePreview(m.projectId, m.lenderId, m.debtFraction) });
+      try {
+        post({ t: 'finPreview', reqId: m.reqId, preview: state ? previewFinancing(state, ctx, m.projectId, { lenderId: m.lenderId, debtFraction: m.debtFraction, partnerShare: m.partnerShare }) : null });
+      } catch (err) {
+        post({ t: 'finPreview', reqId: m.reqId, preview: null, error: (err as Error).message });
+      }
+      break;
+    case 'quote':
+      post({ t: 'quote', reqId: m.reqId, reply: quote(m.req) });
+      break;
+    case 'panel':
+      panel = m.panel;
+      snapshot();
       break;
     case 'save':
       if (state) post({ t: 'saved', reqId: m.reqId, text: serialize(state) });
