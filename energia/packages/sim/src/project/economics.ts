@@ -56,6 +56,8 @@ export interface EconomicsOptions {
   merchant?: boolean;
   lenderId?: string;
   debtFraction?: number;
+  /** Etapa para la prima de riesgo de la tasa (por defecto la actual). El Monte Carlo usa 'operacion': el riesgo ya lo simula. */
+  stage?: ProjectStage;
 }
 
 export interface Economics {
@@ -166,7 +168,7 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
   const idc = p.construction ? p.construction.idcUsd : rate * debt * constructionYears * 0.5;
   const investment = capex + fees + idc;
   const model = runProjectModel({ ...base, capexUsd: investment, debt: debt > 0 ? { amountUsd: debt, rate, tenorYears: tenor } : undefined });
-  const dr = discountRates(c, p.techId, p.stage, debt / Math.max(1, investment), rate);
+  const dr = discountRates(c, p.techId, opts.stage ?? p.stage, debt / Math.max(1, investment), rate);
   return {
     fc: fcP50, fcP50, fcP90, energyP50MwhYear: energyP50, energyP90MwhYear: energyP90, availability: avail,
     capexUsd: capex, investmentUsd: investment, debtUsd: debt, debtRate: rate,

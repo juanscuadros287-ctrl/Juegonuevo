@@ -136,6 +136,28 @@ export function projectDaily(state: GameState, ctx: SimContext, p: Project, rng:
   updateStage(ctx, p);
 }
 
+/**
+ * Dimensionamiento de la deuda con el caso del banco: recurso P90 y, si no hay PPA, spot con recorte del 20 %;
+ * deuda = mín(apalancamiento máx., pedido, capacidad por DSCR). Lo usan el cierre financiero y la vista previa.
+ */
+export function bankDebtSizing(state: GameState, ctx: SimContext, p: Project, o: { lenderId: string; budgetUsd: number; rate: number; tenorYears: number; dscr: number; requestedFraction: number }) {
+  const c = ctx.data.countries[p.countryCode];
+  const l = c.finanzas.prestamistas.find((x) => x.id === o.lenderId)!;
+  const hasPpa = p.ppa?.status === 'firmado';
+  const eco = projectEconomics(state, ctx, p, { resource: p90(p.estimate.value, p.estimate.sigma), capexUsd: o.budgetUsd, lenderId: l.id });
+  const tech = ctx.data.technologies[p.techId];
+  const bank = runProjectModel({
+    energyMwhYear1: eco.energyP50MwhYear, degradation: tech.degradacion_anual.base, lifeYears: tech.vida_util_anos.base,
+    capexUsd: o.budgetUsd, fixedCostUsdYear: eco.model.rows[0].opexUsd - tech.om_variable_usd_mwh.base * eco.model.rows[0].energyMwh,
+    varCostUsdMwh: tech.om_variable_usd_mwh.base, inflation: c.inflacion_anual.base,
+    ppa: hasPpa ? { priceUsdMwh: p.ppa!.priceUsdMwh, years: p.ppa!.years, indexation: p.ppa!.indexation } : undefined,
+    spotPriceUsdMwh: eco.priceAssumption === 'spot' ? eco.priceUsdMwh * 0.8 : eco.priceUsdMwh, taxRate: c.impuestos.renta.base,
+    depreciationYears: c.impuestos.depreciacion_anos.base, taxCreditUsd: 0, taxCreditMaxFrac: 0, decommissionUsd: 0,
+  });
+  const cfads = bank.rows.map((r) => r.ebitdaUsd - r.taxUnleveredUsd);
+  return sizeDebt({ cfads, dscr: o.dscr, rate: o.rate, tenorYears: o.tenorYears, maxLeverage: l.apalancamiento_max, requestedFraction: o.requestedFraction, budgetUsd: o.budgetUsd });
+}
+
 function closeFinancing(state: GameState, ctx: SimContext, p: Project, rng: Rng, events: SimEvent[]) {
   const f = p.financing!;
   const c = ctx.data.countries[p.countryCode];
@@ -147,20 +169,7 @@ function closeFinancing(state: GameState, ctx: SimContext, p: Project, rng: Rng,
     events.push(note(state, p, 'financingResult', `${l.nombre}: ${f.failReason}`, 'malo', { success: false }));
     return;
   }
-  // Dimensionamiento con el caso del banco: recurso P90 y, si no hay PPA, spot con recorte del 20 %.
-  const hasPpa = p.ppa?.status === 'firmado';
-  const eco = projectEconomics(state, ctx, p, { resource: p90(p.estimate.value, p.estimate.sigma), capexUsd: f.budgetUsd, lenderId: l.id });
-  const tech = ctx.data.technologies[p.techId];
-  const bank = runProjectModel({
-    energyMwhYear1: eco.energyP50MwhYear, degradation: tech.degradacion_anual.base, lifeYears: tech.vida_util_anos.base,
-    capexUsd: f.budgetUsd, fixedCostUsdYear: eco.model.rows[0].opexUsd - tech.om_variable_usd_mwh.base * eco.model.rows[0].energyMwh,
-    varCostUsdMwh: tech.om_variable_usd_mwh.base, inflation: c.inflacion_anual.base,
-    ppa: hasPpa ? { priceUsdMwh: p.ppa!.priceUsdMwh, years: p.ppa!.years, indexation: p.ppa!.indexation } : undefined,
-    spotPriceUsdMwh: eco.priceAssumption === 'spot' ? eco.priceUsdMwh * 0.8 : eco.priceUsdMwh, taxRate: c.impuestos.renta.base,
-    depreciationYears: c.impuestos.depreciacion_anos.base, taxCreditUsd: 0, taxCreditMaxFrac: 0, decommissionUsd: 0,
-  });
-  const cfads = bank.rows.map((r) => r.ebitdaUsd - r.taxUnleveredUsd);
-  const sized = sizeDebt({ cfads, dscr: f.dscrTarget, rate: f.rate, tenorYears: f.tenorYears, maxLeverage: l.apalancamiento_max, requestedFraction: f.requestedDebtFraction, budgetUsd: f.budgetUsd });
+  const sized = bankDebtSizing(state, ctx, p, { lenderId: l.id, budgetUsd: f.budgetUsd, rate: f.rate, tenorYears: f.tenorYears, dscr: f.dscrTarget, requestedFraction: f.requestedDebtFraction });
   if (sized.debtUsd < l.monto_min_usd) {
     f.status = 'fallido';
     f.failReason = `Con la cobertura exigida (DSCR ${f.dscrTarget}) el banco solo prestaría ${fmtUsd(sized.debtUsd)}, menos de su mínimo.`;
@@ -295,6 +304,8 @@ function operationDaily(state: GameState, ctx: SimContext, p: Project, rng: Rng,
     const cost = drawDist(rng, tech.fallas.costo_reparacion_usd_kw) * frac * p.mw * 1000;
     op.outages.push({ fraction: frac, daysLeft: days });
     op.month.repairUsd += cost;
+    (op.failures ??= []).push({ tick: state.tick, fraction: frac, days, costUsd: cost });
+    if (op.failures.length > 100) op.failures.splice(0, op.failures.length - 100);
     if (frac * days >= 0.5) {
       events.push(note(state, p, 'plantFailure', `Falla: ${(frac * 100).toFixed(0)} % de la planta fuera de servicio por ${days} días (reparación ${fmtUsd(cost)}).`, 'malo', { fractionLost: frac, days, costUsd: cost }));
     }

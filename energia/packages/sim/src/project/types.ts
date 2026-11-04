@@ -150,6 +150,8 @@ export interface Operation {
   failureMultiplier: number;
   /** Acumulado del mes en curso. */
   month: { energyMwh: number; availSum: number; days: number; repairUsd: number };
+  /** Fallas (últimas 100): día, fracción de la planta fuera, días y costo de reparación. Opcional (partidas viejas no la traen). */
+  failures?: { tick: number; fraction: number; days: number; costUsd: number }[];
   /** Historial mensual (últimos 120 meses). */
   history: { year: number; month: number; energyMwh: number; revenueUsd: number; opexUsd: number; availability: number }[];
   totalEnergyMwh: number;

@@ -4,7 +4,9 @@
  */
 import type { GameState, MonthlyStatement } from './core/state';
 import type { SimContext } from './core/context';
-import { fromEpochDay, type GameDate } from './core/calendar';
+import { daysInMonth, fromEpochDay, type GameDate } from './core/calendar';
+import { normalizedProfile } from './market/spot';
+import { maturity } from './business/bids';
 import { CATEGORIES, balanceSheet, type BalanceSheet } from './finance/company';
 import { currentCapex, type CapexBreakdown } from './tech/costs';
 import { supplierLeadFactor, supplierPriceFactor, supplierReliability } from './supply/supply';
@@ -17,6 +19,7 @@ import {
   applicablePermits, applicableStudies, financingBlockers, openFindings, permitBlockers, requiredStudyGroups, studyBlockers, studyGroupDone,
 } from './project/requirements';
 import { projectCapex, projectEconomics, type Economics } from './project/economics';
+import { bankDebtSizing } from './project/tick';
 import { remainingDevCostUsd, saleValueUsd, successProbability } from './project/valuation';
 import { TERMINAL_STAGES, type Project, type ProjectStage } from './project/types';
 
@@ -47,6 +50,11 @@ export interface ProjectSummary {
   lon: number;
   /** Avance de obra 0–1 (para el modelo 3D); 1 en operación. */
   buildProgress: number;
+  /**
+   * Avance de la etapa actual 0–1: en desarrollo (identificado → cierre financiero) = estudios requeridos hechos +
+   * permisos aprobados sobre el total; en obra = avance de obra; puesta en marcha = días transcurridos; operación = 1.
+   */
+  stageProgress: number;
   /** Texto corto con lo siguiente que hay que hacer o lo que está en curso. */
   nextStep: string;
   devCostUsd: number;
@@ -88,6 +96,14 @@ function nextStep(ctx: SimContext, p: Project): string {
   return fb[0];
 }
 
+function stageProgress(state: GameState, ctx: SimContext, p: Project): number {
+  if (p.operation || TERMINAL_STAGES.includes(p.stage)) return 1;
+  const k = p.construction;
+  if (k?.commissioningStartTick !== undefined) return Math.min(1, (state.tick - k.commissioningStartTick) / Math.max(1, k.commissioningDays ?? 1));
+  if (k) return k.progress;
+  return maturity(ctx, p);
+}
+
 export function selectProjects(state: GameState, ctx: SimContext): ProjectSummary[] {
   return state.projects.map((p) => {
     const tech = ctx.data.technologies[p.techId];
@@ -102,6 +118,7 @@ export function selectProjects(state: GameState, ctx: SimContext): ProjectSummar
       id: p.id, name: p.name, techId: p.techId, techName: tech?.nombre ?? p.techId, mw: p.mw, stage: p.stage, stageLabel: STAGE_LABELS[p.stage],
       lat: p.site.lat, lon: p.site.lon,
       buildProgress: p.operation ? 1 : p.construction?.progress ?? 0,
+      stageProgress: stageProgress(state, ctx, p),
       nextStep: nextStep(ctx, p),
       devCostUsd: p.devCostUsd,
       resourceP50: p.estimate.value, resourceSigma: p.estimate.sigma,
@@ -116,20 +133,35 @@ export interface TimelineItem { date: GameDate; text: string; kind: 'info' | 'bu
 export interface StudyOption {
   id: string; nombre: string; grupo: string; descripcion: string; costUsd: number; durationDays: { min: number; base: number; max: number };
   sigmaAfter?: number; probs: { normal: number; peor: number; bloqueo: number }; required: boolean;
-  status: 'disponible' | 'bloqueado' | 'en_curso' | 'completado'; blockers: string[]; outcome?: string; endDate?: GameDate;
+  status: 'disponible' | 'bloqueado' | 'en_curso' | 'completado'; blockers: string[]; outcome?: string; startDate?: GameDate; endDate?: GameDate;
 }
 export interface PermitOption {
   id: string; nombre: string; autoridad: string; descripcion: string; costUsd: number; durationDays: { min: number; base: number; max: number };
   probs: { aprobado: number; rechazado: number; info_adicional: number }; approvalProbability: number;
-  status: 'disponible' | 'bloqueado' | 'en_tramite' | 'aprobado' | 'rechazado'; blockers: string[]; endDate?: GameDate; infoRequests: number;
+  status: 'disponible' | 'bloqueado' | 'en_tramite' | 'aprobado' | 'rechazado'; blockers: string[]; startDate?: GameDate; endDate?: GameDate; infoRequests: number;
+}
+
+export interface MonthlyProduction { month: number; p50Mwh: number; p90Mwh: number }
+
+/** Producción esperada por mes (1–12): energía anual repartida según perfil mensual del recurso × días del mes (suma = energía anual). */
+export function expectedMonthlyProduction(ctx: SimContext, p: Project, energyP50Year: number, energyP90Year: number, year: number): MonthlyProduction[] {
+  const prof = normalizedProfile(ctx.data.countries[p.countryCode]?.perfil_recurso_mensual[p.site.layer]);
+  const w = prof.map((f, i) => f * daysInMonth(year, i + 1));
+  const tot = w.reduce((a, b) => a + b, 0);
+  return w.map((x, i) => ({ month: i + 1, p50Mwh: energyP50Year * x / tot, p90Mwh: energyP90Year * x / tot }));
 }
 
 export interface ProjectDetail {
   summary: ProjectSummary;
   techName: string;
   countryName: string;
+  countryCode: string;
   site: { lat: number; lon: number; layer: string; cellValue: number; temperatureC: number };
-  resource: { p50: number; p90: number; sigma: number; source: string; fcP50: number; fcP90: number; energyP50MwhYear: number; energyP90MwhYear: number };
+  resource: {
+    p50: number; p90: number; sigma: number; source: string; fcP50: number; fcP90: number; energyP50MwhYear: number; energyP90MwhYear: number;
+    /** Producción esperada por mes calendario (perfil estacional del país, disponibilidad y degradación de este año). */
+    monthlyMwh: MonthlyProduction[];
+  };
   timeline: TimelineItem[];
   studies: StudyOption[];
   permits: PermitOption[];
@@ -142,7 +174,13 @@ export interface ProjectDetail {
   contractId?: string;
   financing: Project['financing'] | null;
   construction: (NonNullable<Project['construction']> & { startDate: GameDate; expectedEndDate: GameDate }) | null;
-  operation: (Omit<NonNullable<Project['operation']>, 'fcReal'> & { codDate: GameDate; actualFcLast12m: number | null }) | null;
+  operation: (Omit<NonNullable<Project['operation']>, 'fcReal'> & {
+    codDate: GameDate; actualFcLast12m: number | null;
+    /** Producción esperada por mes calendario P50/P90 (igual que `resource.monthlyMwh`). */
+    expectedMonthlyMwh: MonthlyProduction[];
+    /** Fallas pasadas con fecha (las más recientes al final). */
+    failureLog: { date: GameDate; fractionLost: number; days: number; costUsd: number }[];
+  }) | null;
   debt: Project['debt'] | null;
   costs: {
     incurredUsd: { development: number; landOptions: number; construction: number; idc: number; total: number };
@@ -198,7 +236,7 @@ export function selectProjectDetail(state: GameState, ctx: SimContext, projectId
       durationDays: { min: s.duracion_dias.min ?? s.duracion_dias.base, base: s.duracion_dias.base, max: s.duracion_dias.max ?? s.duracion_dias.base },
       sigmaAfter: s.sigma_recurso, probs: { normal: s.resultados.normal, peor: s.resultados.peor, bloqueo: s.resultados.bloqueo },
       required: reqGroups.has(s.grupo) && !studyGroupDone(ctx, p, s.grupo), status, blockers: status === 'bloqueado' ? blockers : [],
-      outcome: rec?.outcome, endDate: rec ? dateOf(state, rec.endTick) : undefined,
+      outcome: rec?.outcome, startDate: rec ? dateOf(state, rec.startTick) : undefined, endDate: rec ? dateOf(state, rec.endTick) : undefined,
     };
   });
   const permits: PermitOption[] = applicablePermits(ctx, p).map((d) => {
@@ -209,7 +247,7 @@ export function selectProjectDetail(state: GameState, ctx: SimContext, projectId
       id: d.id, nombre: d.nombre, autoridad: d.autoridad, descripcion: d.descripcion, costUsd: permitCostUsd(d, p.mw),
       durationDays: { min: d.duracion_dias.min ?? d.duracion_dias.base, base: d.duracion_dias.base, max: d.duracion_dias.max ?? d.duracion_dias.base },
       probs: { aprobado: d.prob.aprobado, rechazado: d.prob.rechazado, info_adicional: d.prob.info_adicional }, approvalProbability: permitApprovalProbability(d),
-      status, blockers: status === 'bloqueado' || status === 'rechazado' ? blockers : [], endDate: rec ? dateOf(state, rec.endTick) : undefined, infoRequests: rec?.infoRequests ?? 0,
+      status, blockers: status === 'bloqueado' || status === 'rechazado' ? blockers : [], startDate: rec ? dateOf(state, rec.startTick) : undefined, endDate: rec ? dateOf(state, rec.endTick) : undefined, infoRequests: rec?.infoRequests ?? 0,
     };
   });
   const findings = p.findings.map((f) => {
@@ -258,6 +296,10 @@ export function selectProjectDetail(state: GameState, ctx: SimContext, projectId
     const hours = last.length * 730;
     actualFc = last.reduce((a, h) => a + h.energyMwh, 0) / (p.mw * hours);
   }
+  // Energía de este año: P50/P90 de la estimación, con degradación si ya opera.
+  const yearNow = dateOf(state, state.tick).year;
+  const degr = p.operation ? Math.pow(1 - tech.degradacion_anual.base, (state.tick - p.operation.codTick) / 365.25) : 1;
+  const monthly = expectedMonthlyProduction(ctx, p, (eco?.energyP50MwhYear ?? 0) * degr, (eco?.energyP90MwhYear ?? 0) * degr, yearNow);
   const fcBlockers = [...fb, ...(p.suppliers ? [] : ['Elegir proveedores.'])];
   const csBlockers: string[] = [];
   if (p.financing?.status !== 'cerrado') csBlockers.push('Falta el cierre financiero.');
@@ -265,11 +307,12 @@ export function selectProjectDetail(state: GameState, ctx: SimContext, projectId
   if (k) csBlockers.push('La obra ya empezó.');
 
   return {
-    summary, techName: tech.nombre, countryName: c.nombre,
+    summary, techName: tech.nombre, countryName: c.nombre, countryCode: p.countryCode,
     site: { lat: p.site.lat, lon: p.site.lon, layer: p.site.layer, cellValue: p.site.cellValue, temperatureC: p.site.temperatureC },
     resource: {
       p50: p.estimate.value, p90: p90(p.estimate.value, p.estimate.sigma), sigma: p.estimate.sigma, source: p.estimate.source,
       fcP50: eco?.fcP50 ?? 0, fcP90: eco?.fcP90 ?? 0, energyP50MwhYear: eco?.energyP50MwhYear ?? 0, energyP90MwhYear: eco?.energyP90MwhYear ?? 0,
+      monthlyMwh: monthly,
     },
     timeline, studies, permits, findings,
     ppa: p.ppa ? { ...p.ppa, channelName: c.ppa.canales.find((x) => x.id === p.ppa!.channelId)?.nombre
@@ -282,7 +325,10 @@ export function selectProjectDetail(state: GameState, ctx: SimContext, projectId
     contractId: p.contractId,
     financing: p.financing ?? null,
     construction: k ? { ...k, startDate: dateOf(state, k.startTick), expectedEndDate: dateOf(state, k.startTick + Math.round(k.plannedDays + k.delayDays)) } : null,
-    operation: op ? (() => { const { fcReal: _hidden, ...rest } = op; void _hidden; return { ...rest, codDate: dateOf(state, op.codTick), actualFcLast12m: actualFc }; })() : null,
+    operation: op ? (() => { const { fcReal: _hidden, ...rest } = op; void _hidden; return {
+      ...rest, codDate: dateOf(state, op.codTick), actualFcLast12m: actualFc, expectedMonthlyMwh: monthly,
+      failureLog: (op.failures ?? []).map((f) => ({ date: dateOf(state, f.tick), fractionLost: f.fraction, days: f.days, costUsd: f.costUsd })),
+    }; })() : null,
     debt: p.debt ?? null,
     costs: {
       incurredUsd: { development: p.devCostUsd, landOptions: p.devExpenseUsd, construction: incurredCons, idc: k?.idcUsd ?? 0, total: p.devCostUsd + p.devExpenseUsd + incurredCons + (k?.idcUsd ?? 0) },
@@ -384,4 +430,88 @@ export const ticksToMonths = (days: number) => days / DAYS_PER_MONTH;
 export function debugRealResource(state: GameState, ctx: SimContext, p: Project): number {
   const tech = ctx.data.technologies[p.techId];
   return p.site.cellValue * hiddenResourceFactor(state.seed, p.site.layer, p.site.lat, p.site.lon, tech.sigma_recurso_sitio);
+}
+
+export interface FinancingPreview {
+  ok: boolean;
+  /** Por qué no se puede pedir hoy (igual que las validaciones de `arrangeFinancing`). */
+  blockers: string[];
+  lenderId: string;
+  lenderName: string;
+  budgetUsd: number;
+  /** Deuda que el banco elegido dimensionaría hoy (caso del banco: P90, spot con recorte si no hay PPA). */
+  debtUsd: number;
+  limitedBy: 'apalancamiento' | 'pedido' | 'dscr' | 'sin_deuda';
+  requestedDebtUsd: number;
+  ratePct: number;
+  tenorYears: number;
+  dscrTarget: number;
+  /** Comisión de estructuración (sobre la deuda) y asesores (se pagan al pedir). */
+  structuringFeeUsd: number;
+  advisorsUsd: number;
+  equityUsd: number;
+  partnerShare: number;
+  partnerEquityUsd: number;
+  ownEquityUsd: number;
+  /** Prima de desarrollo que paga el socio al cierre. */
+  partnerPremiumUsd: number;
+  /** Lo que la empresa debe poner de su caja: aporte propio + asesores + comisión − prima del socio. */
+  netOwnCashUsd: number;
+  approvalProbability: number;
+  dueDiligenceDays: { min: number; base: number; max: number };
+  /** Mínimo que presta el banco: si la deuda dimensionada queda debajo, el cierre fracasa. */
+  belowLenderMinimum: boolean;
+  irrEquity: number | null;
+  npvEquityUsd: number;
+}
+
+/**
+ * Vista previa del financiamiento con un prestamista, fracción de deuda y socio: el mismo dimensionamiento que hará
+ * el banco al cerrar (con la información del jugador). `debtFraction = 0` = solo capital propio y del socio.
+ */
+export function previewFinancing(state: GameState, ctx: SimContext, projectId: string, o: { lenderId: string; debtFraction: number; partnerShare: number }): FinancingPreview | null {
+  const p = state.projects.find((x) => x.id === projectId);
+  if (!p) return null;
+  const c = ctx.data.countries[p.countryCode];
+  const l = c.finanzas.prestamistas.find((x) => x.id === o.lenderId);
+  const blockers: string[] = [...financingBlockers(ctx, p)];
+  if (!p.suppliers) blockers.push('Elige proveedor de equipos y EPC antes de financiar.');
+  if (p.financing && p.financing.status !== 'fallido') blockers.push('Ya hay un financiamiento cerrado o en proceso.');
+  const se = c.finanzas.socio_equity;
+  if (!(o.partnerShare >= 0 && o.partnerShare <= se.participacion_max)) blockers.push(`La participación del socio debe estar entre 0 y ${se.participacion_max * 100} %.`);
+  const budget = p.financing?.status === 'cerrado' ? p.financing.budgetUsd : projectCapex(ctx, p, state).totalUsd;
+  const noDebt = o.debtFraction === 0 || !l;
+  if (!noDebt && l) {
+    if (o.debtFraction > l.apalancamiento_max) blockers.push(`${l.nombre} presta como máximo el ${Math.round(l.apalancamiento_max * 100)} % del costo.`);
+    if (l.requiere_ppa && p.ppa?.status !== 'firmado') blockers.push(`${l.nombre} exige un PPA firmado.`);
+    if (p.estimate.sigma > l.sigma_recurso_max + 1e-9) blockers.push(`${l.nombre} exige una medición de recurso bancable (incertidumbre ≤ ${(l.sigma_recurso_max * 100).toFixed(1)} %).`);
+  }
+  if (!l && o.debtFraction > 0) blockers.push('Prestamista desconocido.');
+  const rate = l ? c.finanzas.tasa_libre_riesgo.base + l.spread.base : 0;
+  const dscr = l ? (p.ppa?.status === 'firmado' ? l.dscr_ppa : l.dscr_merchant) : 0;
+  let debt = 0;
+  let limitedBy: FinancingPreview['limitedBy'] = 'sin_deuda';
+  if (!noDebt && l) {
+    try {
+      const sized = bankDebtSizing(state, ctx, p, { lenderId: l.id, budgetUsd: budget, rate, tenorYears: l.plazo_anos, dscr, requestedFraction: o.debtFraction });
+      debt = sized.debtUsd;
+      limitedBy = sized.limitedBy;
+    } catch { debt = 0; }
+  }
+  const equity = budget - debt;
+  const partnerEquity = equity * o.partnerShare;
+  const premium = partnerEquity * se.prima_desarrollo_frac;
+  const fee = l && !noDebt ? debt * l.comision_estructuracion : 0;
+  const advisors = l && !noDebt ? l.costo_asesores_usd.base : 0;
+  const below = !noDebt && !!l && debt < l.monto_min_usd;
+  let eco: Economics | null = null;
+  try { eco = projectEconomics(state, ctx, p, { capexUsd: budget, lenderId: l?.id, debtFraction: noDebt ? 0 : Math.min(o.debtFraction, debt / Math.max(1, budget)) }); } catch { eco = null; }
+  return {
+    ok: blockers.length === 0 && !below, blockers, lenderId: l?.id ?? 'ninguno', lenderName: l?.nombre ?? 'Sin deuda', budgetUsd: budget, debtUsd: debt, limitedBy,
+    requestedDebtUsd: budget * o.debtFraction, ratePct: rate * 100, tenorYears: l?.plazo_anos ?? 0, dscrTarget: dscr, structuringFeeUsd: fee, advisorsUsd: advisors,
+    equityUsd: equity, partnerShare: o.partnerShare, partnerEquityUsd: partnerEquity, ownEquityUsd: equity - partnerEquity, partnerPremiumUsd: premium,
+    netOwnCashUsd: equity - partnerEquity + fee + advisors - premium, approvalProbability: noDebt ? 1 : l?.prob_aprobacion ?? 0,
+    dueDiligenceDays: l && !noDebt ? { min: l.diligencia_dias.min ?? l.diligencia_dias.base, base: l.diligencia_dias.base, max: l.diligencia_dias.max ?? l.diligencia_dias.base } : { min: 0, base: 0, max: 0 },
+    belowLenderMinimum: below, irrEquity: eco?.model.irrEquity ?? null, npvEquityUsd: eco?.npvEquityUsd ?? 0,
+  };
 }

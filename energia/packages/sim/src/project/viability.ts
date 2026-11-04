@@ -6,7 +6,8 @@ import { currentCapex } from '../tech/costs';
 import { DAYS_PER_MONTH } from './helpers';
 import { drawDays, drawDist, drawPermitDecision, drawStudyOutcome, findingCostUsd, permitCostUsd, studyCostUsd } from './outcomes';
 import { applicablePermits, permitGroupApplicable, requiredStudyGroups, studyGroupApplicable } from './requirements';
-import { bankableStudy } from './valuation';
+import { bankableStudy, remainingDevCostUsd } from './valuation';
+import type { PpaChannelDef } from '../data/types';
 import { projectEconomics } from './economics';
 import type { Project } from './types';
 
@@ -22,8 +23,16 @@ export interface ViabilityResult {
   irrEquityP50: number | null;
   /** P10 = escenario malo (solo el 10 % de las corridas exitosas rinde menos). */
   irrEquityP10: number | null;
-  /** VAN esperado del equity (incluye las corridas que fracasan con su costo hundido). */
+  /**
+   * VAN esperado del equity (incluye las corridas que fracasan con el costo que alcanzaron a gastar).
+   * Las corridas exitosas se descuentan a la tasa SIN prima de etapa (el riesgo de desarrollo ya está simulado)
+   * desde la fecha de COD, y restan el desarrollo pendiente.
+   */
   npvExpectedUsd: number;
+  /** Mismo cálculo sin azar (recurso P50, plazo P50, sin sobrecostos, precio supuesto igual): referencia comparable. */
+  npvDeterministicUsd: number;
+  /** Canal de PPA supuesto en la simulación (null = venta al spot). */
+  ppaChannelId: string | null;
   /** Causas de fracaso: estudio/hallazgo, permiso, financiamiento. */
   failures: Record<string, number>;
 }
@@ -34,14 +43,19 @@ interface RunOut { ok: boolean; reason?: string; days: number; cost: number; irr
  * Verificador de viabilidad: N corridas Monte Carlo del resto del ciclo con un RNG propio.
  * No modifica el estado. Usa la estimación del jugador (P50 ± σ), nunca el recurso real oculto.
  */
-export function checkViability(state: GameState, ctx: SimContext, projectId: string, opts: { runs?: number; seed?: number } = {}): ViabilityResult {
+export function checkViability(state: GameState, ctx: SimContext, projectId: string, opts: { runs?: number; seed?: number; ppaChannelId?: string } = {}): ViabilityResult {
   const p = state.projects.find((x) => x.id === projectId);
   if (!p) throw new Error(`Proyecto inexistente: ${projectId}`);
   const runs = Math.max(1, Math.floor(opts.runs ?? 500));
   const seed = opts.seed ?? ((state.seed ^ hashString(`${projectId}@${state.tick}`)) >>> 0);
   const rng = new Rng(seedStream(seed, 'viabilidad'));
   const outs: RunOut[] = [];
-  for (let i = 0; i < runs; i++) outs.push(runOnce(state, ctx, p, rng));
+  // PPA: el firmado o en proceso; si no, el canal pedido; si no, venta al spot (igual que la economía determinista).
+  const c = ctx.data.countries[p.countryCode];
+  const channel = p.ppa?.status === 'firmado' ? undefined
+    : p.ppa?.status === 'en_proceso' ? c.ppa.canales.find((x) => x.id === p.ppa!.channelId)
+      : opts.ppaChannelId ? c.ppa.canales.find((x) => x.id === opts.ppaChannelId) : undefined;
+  for (let i = 0; i < runs; i++) outs.push(runOnce(state, ctx, p, rng, channel));
   const ok = outs.filter((o) => o.ok);
   const failures: Record<string, number> = {};
   for (const o of outs) if (!o.ok) failures[o.reason!] = (failures[o.reason!] ?? 0) + 1;
@@ -56,11 +70,19 @@ export function checkViability(state: GameState, ctx: SimContext, projectId: str
     irrEquityP50: irrs.length ? percentile(irrs, 0.5) : null,
     irrEquityP10: irrs.length ? percentile(irrs, 0.1) : null,
     npvExpectedUsd: outs.reduce((a, o) => a + o.npv, 0) / runs,
+    npvDeterministicUsd: deterministicNpv(state, ctx, p, ok.length ? percentile(ok.map((o) => o.days), 0.5) : 0, channel?.precio_usd_mwh.base),
+    ppaChannelId: p.ppa?.status === 'firmado' ? p.ppa.channelId : channel?.id ?? null,
     failures,
   };
 }
 
-function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng): RunOut {
+/** VAN sin azar en la misma base que el Monte Carlo (tasa sin prima de etapa, descontado desde el COD, menos desarrollo pendiente). */
+function deterministicNpv(state: GameState, ctx: SimContext, p: Project, codDays: number, ppaPrice?: number): number {
+  const eco = projectEconomics(state, ctx, p, { stage: 'operacion', ppaPriceUsdMwh: ppaPrice, merchant: p.ppa?.status !== 'firmado' && ppaPrice === undefined });
+  return eco.npvEquityUsd / Math.pow(1 + eco.costOfEquity, codDays / 365) - remainingDevCostUsd(ctx, p).totalUsd;
+}
+
+function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng, channel?: PpaChannelDef): RunOut {
   const t0 = state.tick;
   const c = ctx.data.countries[p.countryCode];
   const tech = ctx.data.technologies[p.techId];
@@ -162,8 +184,7 @@ function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng): RunOu
   let ppaEnd = 0;
   if (p.ppa?.status === 'firmado') ppaPrice = p.ppa.priceUsdMwh;
   else {
-    const ch = (p.ppa?.status === 'en_proceso' ? c.ppa.canales.find((x) => x.id === p.ppa!.channelId) : undefined)
-      ?? c.ppa.canales.find((x) => p.mw >= x.mw_min && p.mw <= x.mw_max);
+    const ch = channel && p.mw >= channel.mw_min && p.mw <= channel.mw_max ? channel : undefined;
     if (ch) {
       let start = 0;
       for (const g of ch.requiere_permisos) if (permitGroupApplicable(ctx, p, g)) start = Math.max(start, permitGroupFinish(g));
@@ -239,7 +260,7 @@ function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng): RunOu
   const remainingCapex = Math.max(0, capexTotal - spent);
   // Recurso: incertidumbre del jugador
   const resource = p.estimate.value * Math.max(0.3, 1 + p.estimate.sigma * rng.normal());
-  const eco = projectEconomics(state, ctx, p, { resource, capexUsd: capexTotal, ppaPriceUsdMwh: ppaPrice, merchant: ppaPrice === undefined });
+  const eco = projectEconomics(state, ctx, p, { resource, capexUsd: capexTotal, ppaPriceUsdMwh: ppaPrice, merchant: ppaPrice === undefined, stage: 'operacion' });
   const years = codDays / 365;
   const npv = eco.npvEquityUsd / Math.pow(1 + eco.costOfEquity, years) - dev;
   return { ok: true, days: codDays, cost: dev + remainingCapex, irr: eco.model.irrEquity, npv };

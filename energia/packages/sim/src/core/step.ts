@@ -46,6 +46,7 @@ export function step(state: GameState, commands: readonly Command[] = [], ctx?: 
     events.push({ type: 'newMonth', year: now.year, month: now.month });
     if (now.year !== prev.year) events.push({ type: 'newYear', year: now.year });
   }
+  for (const e of events) if (e.tick === undefined) e.tick = state.tick;
   return events;
 }
 
@@ -60,6 +61,7 @@ export function applyCommands(state: GameState, commands: readonly Command[], ct
     const r = applyCommand(state, cmd, ctx, events);
     if (!r.ok) events.push({ type: 'commandRejected', command: cmd, error: r.error });
   }
+  for (const e of events) if (e.tick === undefined) e.tick = state.tick;
   return events;
 }
 

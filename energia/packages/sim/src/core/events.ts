@@ -8,7 +8,13 @@ import type { StudyOutcome } from '../data/types';
 type P<T extends string, X = object> = { type: T; projectId: string; text: string; severity: Severity } & X;
 export type Severity = 'info' | 'bueno' | 'malo';
 
-export type SimEvent =
+/**
+ * `tick`: día de la partida en que ocurrió. Lo pone `step`/`applyCommands` en TODOS los eventos que devuelven
+ * (los de comandos llevan el día en que se aplicaron; los del avance, el día nuevo).
+ */
+export type SimEvent = SimEventBase & { tick?: number };
+
+export type SimEventBase =
   | { type: 'newMonth'; year: number; month: number }
   | { type: 'newYear'; year: number }
   | { type: 'commandRejected'; command: Command; error: string }
