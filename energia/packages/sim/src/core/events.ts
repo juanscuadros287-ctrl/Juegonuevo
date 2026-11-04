@@ -40,6 +40,34 @@ export type SimEvent =
   | P<'projectSold', { priceUsd: number }>
   | P<'saleFailed'>
   | P<'projectAbandoned', { writeOffUsd: number }>
-  | P<'projectDecommissioned', { costUsd: number }>;
+  | P<'projectDecommissioned', { costUsd: number }>
+  | BusinessEvent;
+
+/** Eventos de negocio (Fase 3): texto en español y severidad. */
+type B<T extends string, X = object> = { type: T; text: string; severity: Severity } & X;
+
+export type BusinessEvent =
+  | B<'opportunityOpened', { opportunityId: string }>
+  | B<'bidSubmitted', { opportunityId: string }>
+  | B<'bidWithdrawn', { opportunityId: string }>
+  | B<'bidResult', { opportunityId: string; won: boolean; rank: number; winnerName: string; winnerPrice: number }>
+  | B<'opportunityDeserted', { opportunityId: string }>
+  | B<'contractSigned', { contractId: string }>
+  | B<'contractProjectAssigned', { contractId: string }>
+  | B<'contractFulfilled', { contractId: string; amountUsd?: number }>
+  | B<'contractTerminated', { contractId: string }>
+  | B<'contractPenalty', { contractId: string; amountUsd: number }>
+  | B<'guaranteeExecuted', { contractId: string; amountUsd: number }>
+  | B<'guaranteeReleased', { contractId: string; amountUsd: number }>
+  | B<'epcDelivered', { contractId: string }>
+  | B<'epcUpdate', { contractId: string; amountUsd?: number }>
+  | B<'researchStarted', { nodeId: string }>
+  | B<'researchCompleted', { nodeId: string }>
+  | B<'researchSetback', { nodeId: string }>
+  | B<'researchCancelled', { nodeId: string }>
+  | B<'supplyPriceChange', { techId: string; changePct: number }>
+  | B<'competitorWonTender', { competitorId: string; opportunityId: string }>
+  | B<'competitorPlantOperational', { competitorId: string; techId: string; mw: number }>
+  | B<'competitorBankrupt', { competitorId: string }>;
 
 export type ProjectEvent = Extract<SimEvent, { projectId: string }>;

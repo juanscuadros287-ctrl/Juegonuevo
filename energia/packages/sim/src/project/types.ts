@@ -144,6 +144,8 @@ export interface Operation {
   fcReal: number;
   /** Factor interanual del año en curso (clima). */
   yearFactor: number;
+  /** Fase 3: multiplicador de FC por I+D vigente al entrar en operación (ya incluido en fcReal). */
+  fcBonus?: number;
   /** Multiplicador de fallas por calidad/confiabilidad del equipo. */
   failureMultiplier: number;
   /** Acumulado del mes en curso. */
@@ -182,7 +184,9 @@ export interface Project {
   findings: Finding[];
   /** Multiplicador acumulado del CAPEX por resultados «peor». */
   capexFactor: number;
-  suppliers?: { equipmentId: string; epcId: string };
+  suppliers?: { equipmentId: string; epcId: string; inverterId?: string; logisticsId?: string };
+  /** Fase 3: contrato (licitación o cliente privado) al que está vinculado el proyecto. */
+  contractId?: string;
   ppa?: PpaContract;
   financing?: Financing;
   construction?: Construction;

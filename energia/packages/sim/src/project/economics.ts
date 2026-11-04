@@ -3,7 +3,8 @@ import type { GameState } from '../core/state';
 import { fromEpochDay } from '../core/calendar';
 import type { CountrySimDef, LenderDef, TechnologyDef } from '../data/types';
 import { capacityFactor } from '../tech/capacityFactor';
-import { annualFixedCosts, capexBreakdown, expectedAvailability, expectedRepairCostUsd } from '../tech/costs';
+import { annualFixedCosts, currentCapex, capexBreakdown, expectedAvailability, expectedRepairCostUsd, type CapexBreakdown } from '../tech/costs';
+import { researchEffects } from '../business/research';
 import { captureFactor, spotPrice } from '../market/spot';
 import { costOfEquity, npv, wacc } from '../finance/math';
 import { runProjectModel, sizeDebt, type ProjectModelInput, type ProjectModelResult } from '../finance/projectModel';
@@ -78,11 +79,17 @@ export interface Economics {
   priceUsdMwh: number;
 }
 
+/** CAPEX del proyecto a precios actuales (con `state`: índices, proveedores, relación e I+D del actor). */
+export function projectCapex(ctx: SimContext, p: Project, state?: GameState): CapexBreakdown {
+  const i = { techId: p.techId, mw: p.mw, countryCode: p.countryCode, capexFactor: p.capexFactor, ...p.suppliers };
+  return state ? currentCapex(state, ctx, i) : capexBreakdown(ctx, i);
+}
+
 /** CAPEX de construcción actual del proyecto (presupuesto + sobrecostos si ya se construye). */
-export function constructionBudget(ctx: SimContext, p: Project): number {
+export function constructionBudget(ctx: SimContext, p: Project, state?: GameState): number {
   if (p.construction) return p.construction.budgetUsd + p.construction.overrunUsd;
   if (p.financing?.status === 'cerrado') return p.financing.budgetUsd;
-  return capexBreakdown(ctx, { techId: p.techId, mw: p.mw, countryCode: p.countryCode, capexFactor: p.capexFactor, equipmentId: p.suppliers?.equipmentId, epcId: p.suppliers?.epcId }).totalUsd;
+  return projectCapex(ctx, p, state).totalUsd;
 }
 
 export function fcFromResource(ctx: SimContext, p: Pick<Project, 'techId' | 'site'>, resource: number): number {
@@ -98,14 +105,17 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
   const c = ctx.data.countries[p.countryCode];
   const resP50 = opts.resource ?? p.estimate.value;
   const resP90 = opts.resource ?? p90(p.estimate.value, p.estimate.sigma);
-  const fcP50 = fcFromResource(ctx, p, resP50);
-  const fcP90 = fcFromResource(ctx, p, resP90);
+  // I+D: el FC de una planta operando ya trae su bono; uno nuevo usa lo investigado hoy.
+  const fx = researchEffects(state, ctx);
+  const fcBonus = p.operation ? p.operation.fcBonus ?? 1 : fx.fcMult(p.techId);
+  const fcP50 = fcFromResource(ctx, p, resP50) * fcBonus;
+  const fcP90 = fcFromResource(ctx, p, resP90) * fcBonus;
   const policy = p.operation?.maintenance ?? 'preventivo';
   const avail = expectedAvailability(tech, p.mw, policy, p.operation?.failureMultiplier ?? 1);
   const energyP50 = p.mw * 8760 * fcP50 * avail;
   const energyP90 = p.mw * 8760 * fcP90 * avail;
-  const capex = opts.capexUsd ?? constructionBudget(ctx, p);
-  const fixed = annualFixedCosts(tech, c, p.mw, capex, policy);
+  const capex = opts.capexUsd ?? constructionBudget(ctx, p, state);
+  const fixed = annualFixedCosts(tech, c, p.mw, capex, policy, fx.omMult(p.techId));
   const repairs = expectedRepairCostUsd(tech, p.mw, policy, p.operation?.failureMultiplier ?? 1);
   const yearNow = currentYear(state), y0 = startYear(state);
   const spot = capturedSpot(c, tech, y0, yearNow);

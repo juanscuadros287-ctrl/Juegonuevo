@@ -2,7 +2,7 @@ import type { GameState } from '../core/state';
 import type { SimContext } from '../core/context';
 import { Rng, hashString, seedStream } from '../core/rng';
 import { percentile } from '../finance/math';
-import { capexBreakdown } from '../tech/costs';
+import { currentCapex } from '../tech/costs';
 import { DAYS_PER_MONTH } from './helpers';
 import { drawDays, drawDist, drawPermitDecision, drawStudyOutcome, findingCostUsd, permitCostUsd, studyCostUsd } from './outcomes';
 import { applicablePermits, permitGroupApplicable, requiredStudyGroups, studyGroupApplicable } from './requirements';
@@ -197,7 +197,7 @@ function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng): RunOu
   const eq = eqId ? ctx.data.suppliers[eqId] : undefined;
   const epc = epcId ? ctx.data.suppliers[epcId] : undefined;
   const budget = p.financing?.status === 'cerrado' ? p.financing.budgetUsd * (capexFactor / p.capexFactor)
-    : capexBreakdown(ctx, { techId: p.techId, mw: p.mw, countryCode: p.countryCode, capexFactor, equipmentId: eqId, epcId }).totalUsd;
+    : currentCapex(state, ctx, { techId: p.techId, mw: p.mw, countryCode: p.countryCode, capexFactor, equipmentId: eqId, epcId, inverterId: p.suppliers?.inverterId, logisticsId: p.suppliers?.logisticsId }).totalUsd;
   const k = p.construction;
   const progress = k?.progress ?? 0;
   const planned = k ? k.plannedDays : drawDist(rng, tech.construccion_meses) * DAYS_PER_MONTH * (epc?.factor_plazo ?? 1);

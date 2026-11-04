@@ -4,7 +4,9 @@ import type { SimEvent } from '../core/events';
 import { Rng } from '../core/rng';
 import { postCash, accrue } from '../finance/company';
 import { hiddenResourceFactor } from '../world/site';
-import { capexBreakdown } from '../tech/costs';
+import { currentCapex } from '../tech/costs';
+import { countryUnlocked, researchEffects, studyUnlocked, techUnlocked, unlockingNode } from '../business/research';
+import { recordOrder, supplierLeadFactor, supplierReliability } from '../supply/supply';
 import { drawDays, drawDist, findingCostUsd, permitCostUsd, studyCostUsd } from './outcomes';
 import { financingBlockers, openFindings, permitBlockers, permitGroupApplicable, permitGroupApproved, studyBlockers } from './requirements';
 import { DAYS_PER_MONTH, fmtUsd, isTerminal, note, payDev, updateStage } from './helpers';
@@ -17,7 +19,7 @@ export type ProjectCommand =
   | { type: 'applyPermit'; projectId: string; permitId: string }
   | { type: 'seekPpa'; projectId: string; channelId: string }
   | { type: 'mitigateFinding'; projectId: string; findingId: string }
-  | { type: 'selectSuppliers'; projectId: string; equipmentId: string; epcId: string }
+  | { type: 'selectSuppliers'; projectId: string; equipmentId: string; epcId: string; inverterId?: string; logisticsId?: string }
   | { type: 'arrangeFinancing'; projectId: string; lenderId: string; debtFraction: number; partnerShare: number }
   | { type: 'startConstruction'; projectId: string }
   | { type: 'setMaintenancePolicy'; projectId: string; policy: 'preventivo' | 'correctivo' }
@@ -54,6 +56,7 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         if (p.construction || p.operation) return fail('Ya no se pueden encargar estudios de desarrollo.');
         const b = studyBlockers(ctx, p, cmd.studyId);
         if (b.length) return fail(b.join(' '));
+        if (!studyUnlocked(state, ctx, cmd.studyId)) return fail(`Requiere investigación: ${unlockingNode(ctx, 'estudios', cmd.studyId)?.nombre ?? 'I+D'}.`);
         const s = ctx.data.studies[cmd.studyId];
         const cost = studyCostUsd(s, p.mw);
         if (!canPay(state, cost)) return noCash(cost);
@@ -71,7 +74,7 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         const cost = permitCostUsd(d, p.mw);
         if (!canPay(state, cost)) return noCash(cost);
         payDev(state, p, cost, d.nombre);
-        const days = drawDays(rng, d.duracion_dias);
+        const days = Math.max(1, Math.round(drawDays(rng, d.duracion_dias) * researchEffects(state, ctx).permitTimeMult));
         const prev = p.permits[d.id];
         p.permits[d.id] = { permitId: d.id, status: 'en_tramite', startTick: state.tick, endTick: state.tick + days, costUsd: (prev?.costUsd ?? 0) + cost, infoRequests: 0, applications: (prev?.applications ?? 0) + 1 };
         events.push(note(state, p, 'permitRequested', `Solicitado: ${d.nombre} ante ${d.autoridad} (${fmtUsd(cost)}).`, 'info', { permitId: d.id }));
@@ -113,8 +116,12 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         const eq = ctx.data.suppliers[cmd.equipmentId], epc = ctx.data.suppliers[cmd.epcId];
         if (!eq || eq.tipo !== 'equipos' || !eq.tecnologias.includes(p.techId)) return fail('Proveedor de equipos inválido para esta tecnología.');
         if (!epc || epc.tipo !== 'epc' || !epc.tecnologias.includes(p.techId)) return fail('Contratista EPC inválido para esta tecnología.');
-        p.suppliers = { equipmentId: eq.id, epcId: epc.id };
-        p.timeline.push({ tick: state.tick, text: `Proveedores elegidos: ${eq.nombre} y ${epc.nombre}.`, kind: 'info' });
+        const inv = cmd.inverterId ? ctx.data.suppliers[cmd.inverterId] : undefined;
+        if (cmd.inverterId && (!inv || inv.tipo !== 'inversores' || !inv.tecnologias.includes(p.techId))) return fail('Proveedor de inversores inválido para esta tecnología.');
+        const log = cmd.logisticsId ? ctx.data.suppliers[cmd.logisticsId] : undefined;
+        if (cmd.logisticsId && (!log || log.tipo !== 'logistica' || !log.tecnologias.includes(p.techId))) return fail('Operador logístico inválido para esta tecnología.');
+        p.suppliers = { equipmentId: eq.id, epcId: epc.id, ...(inv ? { inverterId: inv.id } : {}), ...(log ? { logisticsId: log.id } : {}) };
+        p.timeline.push({ tick: state.tick, text: `Proveedores elegidos: ${[eq, inv, epc, log].filter(Boolean).map((x) => x!.nombre).join(', ')}.`, kind: 'info' });
         return OK;
       }
       case 'arrangeFinancing': {
@@ -126,7 +133,8 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         const se = c.finanzas.socio_equity;
         if (!(cmd.partnerShare >= 0 && cmd.partnerShare <= se.participacion_max)) return fail(`La participación del socio debe estar entre 0 y ${se.participacion_max * 100} %.`);
         if (!(cmd.debtFraction >= 0 && cmd.debtFraction <= 0.95)) return fail('Fracción de deuda inválida.');
-        const budget = capexBreakdown(ctx, { techId: p.techId, mw: p.mw, countryCode: p.countryCode, capexFactor: p.capexFactor, equipmentId: p.suppliers.equipmentId, epcId: p.suppliers.epcId }).totalUsd;
+        // El presupuesto se fija con los precios del día (índices, colas, relación, I+D).
+        const budget = currentCapex(state, ctx, { techId: p.techId, mw: p.mw, countryCode: p.countryCode, capexFactor: p.capexFactor, ...p.suppliers }).totalUsd;
         if (cmd.debtFraction === 0) {
           // Todo con capital propio (y del socio): cierre inmediato, sin banco.
           p.financing = { status: 'cerrado', lenderId: 'ninguno', startTick: state.tick, endTick: state.tick, requestedDebtFraction: 0, partnerShare: cmd.partnerShare, rate: 0, tenorYears: 0, dscrTarget: 0, budgetUsd: budget, debtUsd: 0, equityUsd: budget, feesUsd: 0, partnerPremiumUsd: 0 };
@@ -166,9 +174,16 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
           const s = acc; acc += m.fraccion;
           return { id: m.id, nombre: m.nombre, fraction: m.fraccion, start: s, end: Math.min(1, acc), done: false };
         });
+        const log = p.suppliers.logisticsId ? ctx.data.suppliers[p.suppliers.logisticsId] : undefined;
+        // Plazo: el del proveedor × cola de pedidos y demanda mundial (Fase 3) × operador logístico.
         let lead = eq.plazo_entrega_dias ? drawDays(rng, eq.plazo_entrega_dias) : 90;
+        lead = Math.round(lead * supplierLeadFactor(state, ctx, eq.id) * (log?.factor_plazo_entrega ?? 1));
         let late = 0;
-        if (rng.chance(1 - eq.confiabilidad)) { late = Math.round(lead * (rng.triangular(1.1, 1.3, 1.8) - 1)); lead += late; }
+        const reliability = supplierReliability(state, ctx, eq.id) * (log ? 0.5 + 0.5 * log.confiabilidad / 0.85 : 1);
+        if (rng.chance(1 - Math.min(0.99, reliability))) { late = Math.round(lead * (rng.triangular(1.1, 1.3, 1.8) - 1)); lead += late; }
+        recordOrder(state, eq.id, p.mw);
+        recordOrder(state, epc.id, p.mw);
+        if (p.suppliers.inverterId) recordOrder(state, p.suppliers.inverterId, p.mw);
         p.construction = {
           startTick: state.tick, plannedDays: planned, progress: 0, milestones, equipmentArrivalTick: state.tick + lead, equipmentArrived: false,
           equipmentLateDays: late, stoppedDays: 0, delayDays: 0, budgetUsd: p.financing.budgetUsd, overrunUsd: 0, spentUsd: 0, idcUsd: 0,
@@ -241,6 +256,7 @@ export function decommission(state: GameState, ctx: SimContext, p: Project, even
 function createProject(state: GameState, ctx: SimContext, cmd: Extract<ProjectCommand, { type: 'createProject' }>, _rng: Rng, events: SimEvent[]): Result {
   const tech = ctx.data.technologies[cmd.techId];
   if (!tech) return fail('Tecnología desconocida.');
+  if (!techUnlocked(state, ctx, tech.id)) return fail(`${tech.nombre}: requiere investigación (${unlockingNode(ctx, 'tecnologias', tech.id)?.nombre ?? 'I+D'}).`);
   if (!ctx.grid) return fail('La grilla de recursos no está cargada.');
   if (!(cmd.mw >= tech.escala_mw.min && cmd.mw <= tech.escala_mw.max)) return fail(`${tech.nombre}: entre ${tech.escala_mw.min} y ${tech.escala_mw.max} MW.`);
   if (!(Math.abs(cmd.lat) <= 90 && Math.abs(cmd.lon) <= 180)) return fail('Ubicación inválida.');
@@ -248,12 +264,14 @@ function createProject(state: GameState, ctx: SimContext, cmd: Extract<ProjectCo
   if (!cell.land || !cell.country) return fail('El sitio no está en tierra firme.');
   const country = ctx.data.countries[cell.country.code];
   if (!country) return fail(`Todavía no se puede desarrollar en ${cell.country.nombre}.`);
+  if (!countryUnlocked(state, ctx, country.iso3)) return fail(`Mercado cerrado: ${country.nombre} requiere investigación (${unlockingNode(ctx, 'paises', country.iso3)?.nombre ?? 'I+D'}).`);
   if (!tech.recurso) return fail('Tecnología sin recurso de grilla.');
   const value = cell.values[tech.recurso] ?? 0;
   if (!(value > 0)) return fail('El sitio no tiene recurso para esta tecnología.');
   const cost = country.costos.prospeccion_usd.base;
   if (!canPay(state, cost)) return noCash(cost);
-  const id = `P${state.nextProjectId++}`;
+  // Los proyectos de los competidores llevan su prefijo (C1-P3) para que los id sean únicos en la partida.
+  const id = `${state.actorId ? `${state.actorId}-` : ''}P${state.nextProjectId++}`;
   const name = (cmd.name?.trim() || `${tech.nombre} ${cmd.mw} MW (${id})`).slice(0, 60);
   const p: Project = {
     id, name, techId: tech.id, countryCode: country.iso3, mw: cmd.mw, createdTick: state.tick, stage: 'identificado',

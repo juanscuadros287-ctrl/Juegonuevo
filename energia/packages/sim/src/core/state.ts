@@ -3,9 +3,14 @@ import { seedStream } from './rng';
 import { parseIsoDate, toEpochDay } from './calendar';
 import type { SimConfig } from './config';
 import type { Project } from '../project/types';
+import { newBusinessState, newMarketState, type BusinessState, type CompetitorState, type MarketState } from '../business/types';
 
-/** v2 (Fase 2): proyectos y finanzas de la empresa. Las partidas v1 se migran (ver save.ts). */
-export const SAVE_VERSION = 2;
+/**
+ * v2 (Fase 2): proyectos y finanzas de la empresa.
+ * v3 (Fase 3): licitaciones, contratos, I+D, cadena de suministro y competidores IA.
+ * Las partidas anteriores se migran (ver save.ts).
+ */
+export const SAVE_VERSION = 3;
 
 /** Movimiento contable de caja de la empresa. */
 export interface LedgerEntry { day: number; concept: string; amountUsd: number }
@@ -62,15 +67,31 @@ export interface GameState {
   projects: Project[];
   nextProjectId: number;
   finance: FinanceState;
+  /** Fase 3: licitaciones, contratos, I+D, reputación y relación con proveedores del jugador. */
+  business: BusinessState;
+  /** Fase 3: mundo compartido (oportunidades, índices de precios y colas de proveedores). */
+  market: MarketState;
+  /** Fase 3: competidores IA (cada uno con su empresa, proyectos y negocio). */
+  competitors: CompetitorState[];
+  /**
+   * Solo en vistas de actor (ver business/actor.ts): id del competidor IA cuyo estado se está procesando.
+   * Nunca se guarda: en la partida es siempre `undefined` (= jugador).
+   */
+  actorId?: string;
 }
 
-export const RNG_STREAMS = ['world', 'market', 'projects', 'events', 'ai'] as const;
+/** `supply`, `tenders` y `business` se agregaron en la Fase 3 (la migración 2→3 los siembra). */
+export const RNG_STREAMS = ['world', 'market', 'projects', 'events', 'ai', 'supply', 'tenders', 'business'] as const;
 
 export function newFinanceState(): FinanceState {
   return { month: {}, statements: [], taxLossCarryforwardUsd: 0, taxCreditUsd: 0, emergencyDebtUsd: 0, negativeCashMonths: 0, bankrupt: false };
 }
 
-export function createNewGame(config: SimConfig, opts: { seed: number; companyName: string }): GameState {
+/**
+ * Partida nueva. Los competidores IA, los índices de precios y las oportunidades se inicializan en el
+ * primer `step` con datos (`ctx`), porque dependen de los YAML. `competitors: false` los desactiva.
+ */
+export function createNewGame(config: SimConfig, opts: { seed: number; companyName: string; competitors?: boolean }): GameState {
   const rng: Record<string, RngState> = {};
   for (const s of RNG_STREAMS) rng[s] = seedStream(opts.seed, s);
   return {
@@ -91,5 +112,8 @@ export function createNewGame(config: SimConfig, opts: { seed: number; companyNa
     projects: [],
     nextProjectId: 1,
     finance: newFinanceState(),
+    business: newBusinessState(),
+    market: newMarketState(opts.competitors ?? true),
+    competitors: [],
   };
 }

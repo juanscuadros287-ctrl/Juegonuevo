@@ -6,7 +6,9 @@ import type { GameState, MonthlyStatement } from './core/state';
 import type { SimContext } from './core/context';
 import { fromEpochDay, type GameDate } from './core/calendar';
 import { CATEGORIES, balanceSheet, type BalanceSheet } from './finance/company';
-import { capexBreakdown, type CapexBreakdown } from './tech/costs';
+import { currentCapex, type CapexBreakdown } from './tech/costs';
+import { supplierLeadFactor, supplierPriceFactor, supplierReliability } from './supply/supply';
+import { studyUnlocked, unlockingNode } from './business/research';
 import { capacityFactor } from './tech/capacityFactor';
 import { hiddenResourceFactor, p90 } from './world/site';
 import { DAYS_PER_MONTH } from './project/helpers';
@@ -14,7 +16,7 @@ import { findingCostUsd, permitApprovalProbability, permitCostUsd, studyCostUsd 
 import {
   applicablePermits, applicableStudies, financingBlockers, openFindings, permitBlockers, requiredStudyGroups, studyBlockers, studyGroupDone,
 } from './project/requirements';
-import { projectEconomics, type Economics } from './project/economics';
+import { projectCapex, projectEconomics, type Economics } from './project/economics';
 import { remainingDevCostUsd, saleValueUsd, successProbability } from './project/valuation';
 import { TERMINAL_STAGES, type Project, type ProjectStage } from './project/types';
 
@@ -135,7 +137,9 @@ export interface ProjectDetail {
   ppa: Project['ppa'] & { channelName?: string } | null;
   ppaChannels: { id: string; nombre: string; descripcion: string; priceUsdMwh: { min: number; base: number; max: number }; years: number; probability: number; costUsd: number; available: boolean; reason?: string }[];
   lenders: { id: string; nombre: string; descripcion: string; ratePct: number; tenorYears: number; maxLeverage: number; dscr: number; requiresPpa: boolean; maxSigma: number; available: boolean; reason?: string }[];
-  suppliers: { equipment: SupplierOption[]; epc: SupplierOption[]; selected?: { equipmentId: string; epcId: string } };
+  suppliers: { equipment: SupplierOption[]; epc: SupplierOption[]; inverters: SupplierOption[]; logistics: SupplierOption[]; selected?: { equipmentId: string; epcId: string; inverterId?: string; logisticsId?: string } };
+  /** Fase 3: contrato vinculado (licitación o cliente privado). */
+  contractId?: string;
   financing: Project['financing'] | null;
   construction: (NonNullable<Project['construction']> & { startDate: GameDate; expectedEndDate: GameDate }) | null;
   operation: (Omit<NonNullable<Project['operation']>, 'fcReal'> & { codDate: GameDate; actualFcLast12m: number | null }) | null;
@@ -153,7 +157,13 @@ export interface ProjectDetail {
   canStartConstruction: { ok: boolean; blockers: string[] };
 }
 
-export interface SupplierOption { id: string; nombre: string; origen: string; descripcion: string; priceFactor: number; quality: number; reliability: number; leadDays?: number; scheduleFactor?: number; overrunProb?: number }
+export interface SupplierOption {
+  id: string; nombre: string; origen: string; descripcion: string;
+  /** Factor de precio ACTUAL para este jugador (cola del proveedor y relación); `basePriceFactor` = el del YAML. */
+  priceFactor: number; basePriceFactor: number; quality: number; reliability: number;
+  /** Plazo de entrega típico actual (días, con cola y demanda mundial). */
+  leadDays?: number; scheduleFactor?: number; overrunProb?: number;
+}
 
 export function selectProjectDetail(state: GameState, ctx: SimContext, projectId: string): ProjectDetail | null {
   const p = state.projects.find((x) => x.id === projectId);
@@ -181,6 +191,7 @@ export function selectProjectDetail(state: GameState, ctx: SimContext, projectId
   const studies: StudyOption[] = applicableStudies(ctx, p).map((s) => {
     const rec = p.studies[s.id];
     const blockers = studyBlockers(ctx, p, s.id);
+    if (!studyUnlocked(state, ctx, s.id)) blockers.push(`Requiere investigación: ${unlockingNode(ctx, 'estudios', s.id)?.nombre ?? 'I+D'}.`);
     const status: StudyOption['status'] = rec ? (rec.status === 'en_curso' ? 'en_curso' : 'completado') : blockers.length ? 'bloqueado' : 'disponible';
     return {
       id: s.id, nombre: s.nombre, grupo: s.grupo, descripcion: s.descripcion, costUsd: studyCostUsd(s, p.mw),
@@ -230,12 +241,13 @@ export function selectProjectDetail(state: GameState, ctx: SimContext, projectId
     };
   });
   const supp = Object.values(ctx.data.suppliers).filter((s) => s.tecnologias.includes(p.techId)).map<SupplierOption & { tipo: string }>((s) => ({
-    id: s.id, nombre: s.nombre, origen: s.origen, descripcion: s.descripcion, priceFactor: s.factor_precio, quality: s.calidad, reliability: s.confiabilidad,
-    leadDays: s.plazo_entrega_dias?.base, scheduleFactor: s.factor_plazo, overrunProb: s.prob_sobrecosto_hito, tipo: s.tipo,
+    id: s.id, nombre: s.nombre, origen: s.origen, descripcion: s.descripcion, priceFactor: supplierPriceFactor(state, ctx, s.id), basePriceFactor: s.factor_precio,
+    quality: s.calidad, reliability: supplierReliability(state, ctx, s.id),
+    leadDays: s.plazo_entrega_dias ? Math.round(s.plazo_entrega_dias.base * supplierLeadFactor(state, ctx, s.id)) : undefined, scheduleFactor: s.factor_plazo, overrunProb: s.prob_sobrecosto_hito, tipo: s.tipo,
   }));
 
   const k = p.construction;
-  const capex = capexBreakdown(ctx, { techId: p.techId, mw: p.mw, countryCode: p.countryCode, capexFactor: p.capexFactor, equipmentId: p.suppliers?.equipmentId, epcId: p.suppliers?.epcId });
+  const capex = projectCapex(ctx, p, state);
   const rem = remainingDevCostUsd(ctx, p);
   const consRemaining = p.operation || !active ? 0 : k ? Math.max(0, k.budgetUsd + k.overrunUsd - k.spentUsd) : (p.financing?.status === 'cerrado' ? p.financing.budgetUsd : capex.totalUsd);
   const incurredCons = k?.spentUsd ?? 0;
@@ -260,9 +272,14 @@ export function selectProjectDetail(state: GameState, ctx: SimContext, projectId
       fcP50: eco?.fcP50 ?? 0, fcP90: eco?.fcP90 ?? 0, energyP50MwhYear: eco?.energyP50MwhYear ?? 0, energyP90MwhYear: eco?.energyP90MwhYear ?? 0,
     },
     timeline, studies, permits, findings,
-    ppa: p.ppa ? { ...p.ppa, channelName: c.ppa.canales.find((x) => x.id === p.ppa!.channelId)?.nombre } : null,
+    ppa: p.ppa ? { ...p.ppa, channelName: c.ppa.canales.find((x) => x.id === p.ppa!.channelId)?.nombre
+      ?? (() => { const k = state.business?.contracts.find((x) => x.id === p.contractId); return k ? `Contrato ${k.id}: ${k.clientName}` : undefined; })() } : null,
     ppaChannels, lenders,
-    suppliers: { equipment: supp.filter((s) => s.tipo === 'equipos'), epc: supp.filter((s) => s.tipo === 'epc'), selected: p.suppliers },
+    suppliers: {
+      equipment: supp.filter((s) => s.tipo === 'equipos'), epc: supp.filter((s) => s.tipo === 'epc'),
+      inverters: supp.filter((s) => s.tipo === 'inversores'), logistics: supp.filter((s) => s.tipo === 'logistica'), selected: p.suppliers,
+    },
+    contractId: p.contractId,
     financing: p.financing ?? null,
     construction: k ? { ...k, startDate: dateOf(state, k.startTick), expectedEndDate: dateOf(state, k.startTick + Math.round(k.plannedDays + k.delayDays)) } : null,
     operation: op ? (() => { const { fcReal: _hidden, ...rest } = op; void _hidden; return { ...rest, codDate: dateOf(state, op.codTick), actualFcLast12m: actualFc }; })() : null,
@@ -355,7 +372,7 @@ export function previewSite(_state: GameState, ctx: SimContext, techId: string, 
   return {
     ok: true, techId, mw, countryCode: c.iso3, cellValue: v, sigma: tech.sigma_recurso_sitio, resourceP90: p90(v, tech.sigma_recurso_sitio),
     fcP50: fc50, fcP90: fc90, energyP50MwhYear: fc50 * mw * 8760,
-    capexUsd: capexBreakdown(ctx, { techId, mw, countryCode: c.iso3 }).totalUsd, prospectingUsd: c.costos.prospeccion_usd.base,
+    capexUsd: currentCapex(_state, ctx, { techId, mw, countryCode: c.iso3 }).totalUsd, prospectingUsd: c.costos.prospeccion_usd.base,
     landHa: tech.uso_suelo_ha_mw.base * mw,
   };
 }

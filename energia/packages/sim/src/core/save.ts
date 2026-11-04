@@ -1,4 +1,6 @@
 import { SAVE_VERSION, newFinanceState, type GameState } from './state';
+import { seedStream } from './rng';
+import { newBusinessState, newMarketState } from '../business/types';
 
 export interface SaveFile {
   format: 'voltaje-save';
@@ -10,9 +12,16 @@ export interface SaveFile {
 const MIGRATIONS: Record<number, (s: any) => any> = {
   // v1 (Fase 1) → v2 (Fase 2): la empresa empieza sin proyectos y con la contabilidad vacía.
   1: (s) => ({ ...s, saveVersion: 2, projects: [], nextProjectId: 1, finance: newFinanceState() }),
+  // v2 (Fase 2) → v3 (Fase 3): negocio vacío del jugador, mundo sin inicializar (se arma en el próximo step
+  // con datos: competidores, índices y oportunidades) y flujos de RNG nuevos sembrados desde la semilla.
+  2: (s) => ({
+    ...s, saveVersion: 3, business: newBusinessState(), market: newMarketState(true), competitors: [],
+    rng: { ...s.rng, supply: seedStream(s.seed, 'supply'), tenders: seedStream(s.seed, 'tenders'), business: seedStream(s.seed, 'business') },
+  }),
 };
 
 export function serialize(state: GameState): string {
+  if (state.actorId !== undefined) throw new Error('No se puede guardar una vista de actor.');
   const file: SaveFile = { format: 'voltaje-save', saveVersion: SAVE_VERSION, state };
   return JSON.stringify(file);
 }
@@ -43,7 +52,8 @@ function validate(s: any) {
   const ok =
     s && typeof s.tick === 'number' && typeof s.seed === 'number' && typeof s.startEpochDay === 'number' &&
     s.company && typeof s.company.cashUsd === 'number' && s.rng && typeof s.rng === 'object' &&
-    Array.isArray(s.projects) && typeof s.nextProjectId === 'number' && s.finance && typeof s.finance === 'object';
+    Array.isArray(s.projects) && typeof s.nextProjectId === 'number' && s.finance && typeof s.finance === 'object' &&
+    s.business && typeof s.business === 'object' && s.market && Array.isArray(s.market.opportunities) && Array.isArray(s.competitors);
   if (!ok) throw new Error('La partida tiene un formato inválido.');
   for (const k of Object.keys(s.rng)) {
     const r = s.rng[k];

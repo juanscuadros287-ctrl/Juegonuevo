@@ -2,6 +2,9 @@ import type { GameState } from './state';
 import type { SimContext } from './context';
 import type { SimEvent } from './events';
 import { applyProjectCommand, type ProjectCommand } from '../project/commands';
+import { applyBidCommand, type BidCommand } from '../business/bids';
+import { applyContractCommand, type ContractCommand } from '../business/contracts';
+import { applyResearchCommand, type ResearchCommand } from '../business/research';
 
 /**
  * Toda acción del jugador (y de la IA) es un comando. La UI nunca modifica el estado directamente.
@@ -10,7 +13,10 @@ import { applyProjectCommand, type ProjectCommand } from '../project/commands';
 export type Command =
   | { type: 'renameCompany'; name: string }
   | { type: 'setFocusCountry'; countryCode: string }
-  | ProjectCommand;
+  | ProjectCommand
+  | BidCommand
+  | ContractCommand
+  | ResearchCommand;
 
 export type CommandResult = { ok: true } | { ok: false; error: string };
 
@@ -32,6 +38,16 @@ export function applyCommand(state: GameState, cmd: Command, ctx?: SimContext, e
       state.focus.countryCode = cmd.countryCode;
       return { ok: true };
     }
+    case 'submitBid':
+    case 'withdrawBid':
+      return applyBidCommand(state, ctx, cmd, events);
+    case 'assignContractProject':
+      return applyContractCommand(state, ctx, cmd, events);
+    case 'startResearch':
+    case 'queueResearch':
+    case 'cancelResearch':
+    case 'setResearchBudget':
+      return applyResearchCommand(state, ctx, cmd, events);
     default:
       return applyProjectCommand(state, ctx, cmd, events);
   }

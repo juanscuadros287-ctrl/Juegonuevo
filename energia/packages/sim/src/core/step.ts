@@ -2,10 +2,12 @@ import { fromEpochDay } from './calendar';
 import { applyCommand, type Command } from './commands';
 import type { SimContext } from './context';
 import type { SimEvent } from './events';
-import { Rng } from './rng';
 import type { GameState } from './state';
-import { closeMonth, postCash } from '../finance/company';
-import { projectDaily, projectMonthly, projectNewYear } from '../project/tick';
+import { actorDaily, actorMonthly } from '../business/tick';
+import { ensureWorld } from '../business/world';
+import { opportunitiesDaily, generateOpportunities } from '../business/opportunities';
+import { supplyMonthly } from '../supply/supply';
+import { competitorsDaily, competitorsDecide, competitorsMonthly } from '../ai/competitors';
 
 export type { SimEvent } from './events';
 
@@ -14,31 +16,33 @@ export type { SimEvent } from './events';
  * Determinista: depende solo de `state`, `commands` y `ctx` (datos estáticos).
  * Sin `ctx` solo corren el calendario y los gastos fijos (útil en pruebas mínimas).
  * Con la empresa en quiebra no avanza (fin de la partida).
+ *
+ * Orden de un día: (1) comandos del jugador, (2) decisiones de la IA (mismos comandos), (3) avance del
+ * jugador y de cada competidor (proyectos, I+D, contratos), (4) licitaciones (cierres y adjudicaciones),
+ * (5) al cambiar de mes: cierre contable de cada actor, mercado de equipos y nuevas oportunidades.
  */
 export function step(state: GameState, commands: readonly Command[] = [], ctx?: SimContext): SimEvent[] {
   if (state.finance.bankrupt) return [];
   const events = applyCommands(state, commands, ctx);
+  if (ctx) competitorsDecide(state, ctx);
 
   const prev = fromEpochDay(state.startEpochDay + state.tick);
   state.tick += 1;
   const now = fromEpochDay(state.startEpochDay + state.tick);
 
   if (ctx) {
-    const rng = new Rng(state.rng.projects);
-    for (const p of state.projects) projectDaily(state, ctx, p, rng, prev, events);
-    if (now.year !== prev.year) for (const p of state.projects) projectNewYear(ctx, p, rng);
+    actorDaily(state, ctx, prev, now, events);
+    competitorsDaily(state, ctx, prev, now, events);
+    opportunitiesDaily(state, ctx, events);
   }
 
   if (now.month !== prev.month) {
-    // Cierre del mes que terminó: proyectos, gastos fijos (nada es gratis), impuestos y caja.
+    actorMonthly(state, ctx, prev, events);
     if (ctx) {
-      const rng = new Rng(state.rng.projects);
-      for (const p of state.projects) projectMonthly(state, ctx, p, rng, prev.year, prev.month, events);
+      competitorsMonthly(state, ctx, prev, events);
+      supplyMonthly(state, ctx, prev.year, prev.month, events);
+      generateOpportunities(state, ctx, events);
     }
-    const c = state.company;
-    postCash(state, 'gastos_fijos', -c.monthlyFixedCostUsd, 'Gastos fijos (personal y oficina)');
-    if (ctx) closeMonth(state, ctx, prev.year, prev.month, events);
-    else closeMonth(state, { data: { technologies: {}, studies: {}, findings: {}, suppliers: {}, countries: {} } }, prev.year, prev.month, events);
     events.push({ type: 'newMonth', year: now.year, month: now.month });
     if (now.year !== prev.year) events.push({ type: 'newYear', year: now.year });
   }
@@ -51,6 +55,7 @@ export function step(state: GameState, commands: readonly Command[] = [], ctx?: 
  */
 export function applyCommands(state: GameState, commands: readonly Command[], ctx?: SimContext): SimEvent[] {
   const events: SimEvent[] = [];
+  if (ctx) ensureWorld(state, ctx, events);
   for (const cmd of commands) {
     const r = applyCommand(state, cmd, ctx, events);
     if (!r.ok) events.push({ type: 'commandRejected', command: cmd, error: r.error });

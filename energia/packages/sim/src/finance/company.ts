@@ -37,10 +37,19 @@ export const CATEGORIES = {
   socio_aporte: { pnl: false, cash: 'financing', label: 'Aportes de socios' },
   socio_distribucion: { pnl: false, cash: 'financing', label: 'Dividendos a socios' },
   credito_emergencia: { pnl: false, cash: 'financing', label: 'Crédito de emergencia' },
+  // Fase 3
+  ingresos_potencia: { pnl: true, cash: 'operating', label: 'Pagos por potencia firme' },
+  ingresos_epc: { pnl: true, cash: 'operating', label: 'Ingresos EPC (obras para terceros)' },
+  costos_epc: { pnl: true, cash: 'operating', label: 'Costos EPC (obras para terceros)' },
+  licitaciones: { pnl: true, cash: 'operating', label: 'Preparación de ofertas' },
+  garantias_comision: { pnl: true, cash: 'operating', label: 'Comisiones de garantías bancarias' },
+  garantias_ejecutadas: { pnl: true, cash: 'operating', label: 'Garantías ejecutadas' },
+  investigacion: { pnl: true, cash: 'operating', label: 'Investigación y desarrollo' },
+  garantias: { pnl: false, cash: 'investing', label: 'Caja inmovilizada en garantías (neto)' },
 } as const;
 export type Category = keyof typeof CATEGORIES;
 
-const EBITDA_EXCLUDE: Category[] = ['intereses', 'impuestos', 'depreciacion', 'castigos', 'resultado_venta'];
+const EBITDA_EXCLUDE: Category[] = ['intereses', 'impuestos', 'depreciacion', 'castigos', 'resultado_venta', 'garantias_ejecutadas'];
 const LEDGER_KEEP_DAYS = 730;
 const STATEMENTS_KEEP = 120;
 
@@ -73,6 +82,8 @@ export function operatingAssetsNet(state: GameState): number {
 
 export interface BalanceSheet {
   cashUsd: number;
+  /** Fase 3: caja inmovilizada en garantías bancarias (incluida en el activo total). */
+  restrictedCashUsd: number;
   developmentAssetsUsd: number;
   constructionAssetsUsd: number;
   operatingAssetsUsd: number;
@@ -92,9 +103,10 @@ export function balanceSheet(state: GameState): BalanceSheet {
     if (p.financing?.status === 'cerrado') partner += p.financing.partnerShare * p.financing.equityUsd;
   }
   const debt = totalDebt(state);
-  const total = state.company.cashUsd + dev + cons + op;
+  const restricted = state.business?.restrictedCashUsd ?? 0;
+  const total = state.company.cashUsd + restricted + dev + cons + op;
   return {
-    cashUsd: state.company.cashUsd, developmentAssetsUsd: dev, constructionAssetsUsd: cons, operatingAssetsUsd: op,
+    cashUsd: state.company.cashUsd, restrictedCashUsd: restricted, developmentAssetsUsd: dev, constructionAssetsUsd: cons, operatingAssetsUsd: op,
     totalAssetsUsd: total, debtUsd: debt, partnerInterestUsd: partner, equityUsd: total - debt - partner,
   };
 }

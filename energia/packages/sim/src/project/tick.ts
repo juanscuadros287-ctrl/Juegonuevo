@@ -16,6 +16,8 @@ import { financingBlockers } from './requirements';
 import { projectEconomics, startYear } from './economics';
 import { runProjectModel, sizeDebt } from '../finance/projectModel';
 import { p90 } from '../world/site';
+import { researchEffects } from '../business/research';
+import { recordLateDelivery } from '../supply/supply';
 import type { Project } from './types';
 
 /** Avance diario de un proyecto (`day` = día que acaba de transcurrir). */
@@ -188,6 +190,7 @@ function constructionDaily(state: GameState, ctx: SimContext, p: Project, rng: R
 
   if (!k.equipmentArrived && t >= k.equipmentArrivalTick) {
     k.equipmentArrived = true;
+    if (k.equipmentLateDays > 0 && p.suppliers) recordLateDelivery(state, p.suppliers.equipmentId);
     events.push(note(state, p, 'equipmentArrived', k.equipmentLateDays > 0 ? `Llegaron los equipos con ${k.equipmentLateDays} días de retraso.` : 'Llegaron los equipos a tiempo.', k.equipmentLateDays > 0 ? 'malo' : 'bueno', { lateDays: k.equipmentLateDays }));
   }
 
@@ -245,13 +248,15 @@ function startOperation(state: GameState, ctx: SimContext, p: Project, rng: Rng,
   // Se liquida el gasto pendiente del mes antes de pasar a operación
   settleConstructionMonth(state, ctx, p, events);
   const gross = p.devCostUsd + k.spentUsd + k.idcUsd;
-  const fcReal = capacityFactor(tech, p.site.cellValue * p.site.realFactor, p.site.temperatureC);
+  const fcBonus = researchEffects(state, ctx).fcMult(p.techId);
+  const fcReal = capacityFactor(tech, p.site.cellValue * p.site.realFactor, p.site.temperatureC) * fcBonus;
   p.operation = {
     codTick: state.tick,
     endOfLifeTick: state.tick + Math.round(tech.vida_util_anos.base * 365.25),
     maintenance: 'preventivo',
     outages: [],
     fcReal,
+    fcBonus,
     yearFactor: Math.max(0.6, 1 + tech.variabilidad.interanual * rng.normal()),
     failureMultiplier: 1 + (1 - eq.confiabilidad) * 2,
     month: { energyMwh: 0, availSum: 0, days: 0, repairUsd: 0 },
@@ -393,7 +398,7 @@ function operationMonthly(state: GameState, ctx: SimContext, p: Project, year: n
   const revenue = energy * price;
   const infl = Math.pow(1 + c.inflacion_anual.base, Math.max(0, year - startYear(state)));
   const omF = op.maintenance === 'preventivo' ? tech.mantenimiento.preventivo_om_factor : tech.mantenimiento.correctivo_om_factor;
-  const om = tech.om_fijo_usd_kw_ano.base * p.mw * 1000 * omF / 12 * infl + tech.om_variable_usd_mwh.base * energy;
+  const om = tech.om_fijo_usd_kw_ano.base * p.mw * 1000 * omF / 12 * infl * researchEffects(state, ctx).omMult(p.techId) + tech.om_variable_usd_mwh.base * energy;
   const ins = c.costos.seguro_frac_capex_ano.base * op.grossAssetUsd / 12;
   const land = landHa(tech, p.mw) * c.costos.arriendo_terreno_usd_ha_ano.base / 12 * infl;
   const repairs = op.month.repairUsd;
