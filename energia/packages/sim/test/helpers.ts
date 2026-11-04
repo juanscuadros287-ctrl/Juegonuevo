@@ -18,8 +18,8 @@ export const SITES = {
   eolica: { lat: 8.6, lon: -80.3 },
 };
 
-export function newGame(seed = 1, cash?: number): GameState {
-  const s = createNewGame(gameData.sim, { seed, companyName: 'Prueba S.A.' });
+export function newGame(seed = 1, cash?: number, competitors = true): GameState {
+  const s = createNewGame(gameData.sim, { seed, companyName: 'Prueba S.A.', competitors });
   if (cash !== undefined) { s.company.cashUsd = cash; s.company.ledger[0].amountUsd = cash; }
   return s;
 }

@@ -76,7 +76,8 @@ export function stateHash(state: GameState): string {
 function canonical(v: unknown): string {
   if (Array.isArray(v)) return '[' + v.map(canonical).join(',') + ']';
   if (v && typeof v === 'object') {
-    return '{' + Object.keys(v as object).sort().map((k) => JSON.stringify(k) + ':' + canonical((v as any)[k])).join(',') + '}';
+    // Las claves con valor `undefined` no se guardan en JSON: se ignoran para que guardar/cargar no cambie el hash.
+    return '{' + Object.keys(v as object).filter((k) => (v as any)[k] !== undefined).sort().map((k) => JSON.stringify(k) + ':' + canonical((v as any)[k])).join(',') + '}';
   }
   return JSON.stringify(v);
 }

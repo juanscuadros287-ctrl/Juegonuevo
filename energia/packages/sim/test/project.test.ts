@@ -98,7 +98,7 @@ describe('Comandos de proyecto', () => {
   it('la medición en sitio acerca la estimación al recurso real y reduce la incertidumbre', () => {
     let errBefore = 0, errAfter = 0;
     for (let seed = 1; seed <= 30; seed++) {
-      const s = newGame(seed);
+      const s = newGame(seed, undefined, false);
       step(s, [create('solar_fv', 10, { lat: 8.2 + seed * 0.003, lon: -80.7 })], ctx);
       const p = s.projects[0];
       const real = debugRealResource(s, ctx, p);

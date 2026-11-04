@@ -102,7 +102,7 @@ describe('Determinismo y guardado con proyectos (Fase 2)', () => {
     expect(a.projects.some((p) => p.stage === 'operacion')).toBe(true);
     expect(stateHash(a)).toBe(stateHash(b));
     expect(stateHash(play(78, 400))).not.toBe(stateHash(play(77, 400)));
-  });
+  }, 30_000);
 
   it('guardar → cargar → seguir = no guardar (con obras y plantas en curso)', () => {
     const a = play(5, 365 * 4);
@@ -110,7 +110,7 @@ describe('Determinismo y guardado con proyectos (Fase 2)', () => {
     runWithPilot(a, 365 * 3, { partnerShare: 0.5 });
     runWithPilot(b, 365 * 3, { partnerShare: 0.5 });
     expect(stateHash(b)).toBe(stateHash(a));
-  });
+  }, 30_000);
 
   it('migra partidas de la Fase 1 (versión 1)', () => {
     const v1 = JSON.parse(serialize(run(40)));

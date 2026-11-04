@@ -136,10 +136,10 @@ export function technicalScore(state: GameState, ctx: SimContext, opp: Opportuni
   return Math.max(0, Math.min(100, t));
 }
 
-/** Experiencia y reputación (0–100): mitad MW de experiencia frente al tamaño pedido, mitad reputación. */
+/** Experiencia y reputación (0–100): base 30 + 35 por MW de experiencia frente al tamaño pedido + 0,35 × reputación. */
 export function experienceScore(state: GameState, opp: Pick<Opportunity, 'mw'>): number {
   const exp = experienceMw(state);
-  return 50 * Math.min(1, exp / Math.max(2 * opp.mw, 20)) + 0.5 * (state.business?.reputation ?? 0);
+  return 30 + 35 * Math.min(1, exp / Math.max(2 * opp.mw, 20)) + 0.35 * (state.business?.reputation ?? 0);
 }
 
 /** Cotización: costo de equilibrio y precio sugerido (misma función para jugador e IA). No usa información oculta. */
