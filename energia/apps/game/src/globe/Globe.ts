@@ -79,8 +79,8 @@ export interface PickResult { lat: number; lon: number }
 /** Globo 3D interactivo. Solo dibuja: no conoce reglas del juego. */
 export class Globe {
   private renderer: THREE.WebGLRenderer;
-  private scene = new THREE.Scene();
-  private camera: THREE.PerspectiveCamera;
+  readonly scene = new THREE.Scene();
+  readonly camera: THREE.PerspectiveCamera;
   private controls: OrbitControls;
   private material: THREE.ShaderMaterial;
   private globe: THREE.Mesh;
@@ -91,6 +91,10 @@ export class Globe {
   private resizeObs: ResizeObserver;
   autoRotate = false;
   onPick: (p: PickResult) => void = () => {};
+  /** Antes de elegir una celda: si devuelve true el clic lo consumió otro objeto (p. ej. un sitio). */
+  onPickScreen: (x: number, y: number) => boolean = () => false;
+  /** Llamadas por cuadro (animación de objetos sobre el globo). */
+  readonly frameHooks = new Set<(dt: number, camera: THREE.PerspectiveCamera) => void>();
   onZoom: (distance: number) => void = () => {};
 
   constructor(private canvas: HTMLCanvasElement, private world: World) {
@@ -193,6 +197,7 @@ export class Globe {
     if (!this.down || Math.hypot(e.clientX - this.down.x, e.clientY - this.down.y) > 5) return;
     this.down = null;
     const r = this.canvas.getBoundingClientRect();
+    if (this.onPickScreen(e.clientX - r.left, e.clientY - r.top)) return;
     const ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     const ray = new THREE.Raycaster();
     ray.setFromCamera(ndc, this.camera);
@@ -235,8 +240,18 @@ export class Globe {
     if (Math.abs(dist - this.lastDist) > 0.002) { this.lastDist = dist; this.onZoom(dist); }
     // el sol sigue a la cámara (siempre se ve la cara iluminada) con un leve desfase
     this.material.uniforms.uSunDir.value.copy(this.camera.position).normalize().add(new THREE.Vector3(0.35, 0.45, 0)).normalize();
+    for (const h of this.frameHooks) h(dt, this.camera);
     this.renderer.render(this.scene, this.camera);
   };
+
+  /** Proyecta un punto 3D a píxeles del lienzo; null si está detrás del globo. */
+  toScreen(p: THREE.Vector3): { x: number; y: number } | null {
+    const cam = this.camera.position;
+    // oculto si la normal del punto mira en sentido contrario a la cámara
+    if (p.clone().normalize().dot(cam.clone().sub(p).normalize()) < 0.02) return null;
+    const v = p.clone().project(this.camera);
+    return { x: ((v.x + 1) / 2) * this.canvas.clientWidth, y: ((1 - v.y) / 2) * this.canvas.clientHeight };
+  }
 
   setLayer(layer: LayerDef | null, opacity = theme.globe.layerOpacity) {
     const u = this.material.uniforms;
