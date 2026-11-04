@@ -3,6 +3,7 @@ import type { World } from '../world/loadWorld';
 import { getGlobe } from '../globe/GlobeView';
 import { ui, useUi } from './store';
 import { fmtCompact, fmtLat, fmtLon, fmtNum } from './format';
+import { StageBadge } from './common';
 
 const RATED = new Set(['ghi', 'dni', 'viento_tierra', 'viento_mar', 'geotermia', 'hidro', 'biomasa']);
 
@@ -17,6 +18,7 @@ function rating(layer: LayerDef, v: number): { text: string; color: string; scor
 export function Inspector({ world }: { world: World }) {
   const sel = useUi((s) => s.selected);
   const layerId = useUi((s) => s.layerId);
+  const projects = useUi((s) => s.views?.projects);
   if (!sel) return null;
   const cell = world.grid.cell(sel.lat, sel.lon);
   const where = cell.land ? 'tierra' : 'mar';
@@ -25,6 +27,9 @@ export function Inspector({ world }: { world: World }) {
   const best = rated.filter((x) => x.r.score >= 0.5);
   const country = cell.country;
   const cdata = country ? gameData.countries[country.code] : undefined;
+  const canDevelop = cell.land && !!country && !!gameData.simData.countries[country.code];
+  const half = world.grid.res / 2;
+  const here = (projects ?? []).filter((p) => p.active && Math.abs(p.lat - cell.lat) <= half && Math.abs(p.lon - cell.lon) <= half);
 
   return (
     <div className="panel scroll" style={{ position: 'absolute', top: 72, right: 12, width: 320, maxHeight: 'calc(100% - 96px)', padding: 14 }} data-testid="inspector">
@@ -36,6 +41,22 @@ export function Inspector({ world }: { world: World }) {
       </div>
       <div className="dim mono" style={{ fontSize: 11, marginBottom: 10 }}>
         {fmtLat(cell.lat)} · {fmtLon(cell.lon)} · celda {world.grid.res}° (≈{Math.round(world.grid.res * 111 * Math.cos((cell.lat * Math.PI) / 180))}×{Math.round(world.grid.res * 111)} km)
+      </div>
+
+      <div style={{ marginBottom: 12 }}>
+        <button className="primary" style={{ width: '100%' }} data-testid="develop" disabled={!canDevelop}
+          onClick={() => ui.set({ developAt: { lat: cell.lat, lon: cell.lon } })}>Desarrollar proyecto aquí</button>
+        {!canDevelop && (
+          <div className="dim" style={{ fontSize: 11, marginTop: 4 }}>
+            {!cell.land ? 'Solo en tierra firme (eólica marina en una fase posterior).' : `Mercado de ${country?.nombre ?? 'esta zona'} aún no disponible.`}
+          </div>
+        )}
+        {here.map((p) => (
+          <button key={p.id} className="row" style={{ width: '100%', marginTop: 6, textAlign: 'left' }} onClick={() => ui.openProject(p.id)}>
+            <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+            <StageBadge stage={p.stage} label={p.stageLabel} />
+          </button>
+        ))}
       </div>
 
       <h3>Recursos</h3>
