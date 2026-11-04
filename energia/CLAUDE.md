@@ -5,6 +5,7 @@ Juego independiente de Dinastía (el juego Godot de la raíz del repo). Vive en 
 ## Estado actual
 - **Fase 1 completa**: globo 3D, capas de recursos, tiempo con velocidades, guardado/carga, menú principal, CI para Mac.
 - **Fase 2 (motor) lista**: núcleo económico, Panamá (permisos, PPA, bancos, impuestos), solar FV y eólica con ciclo completo de proyecto, estados financieros, quiebra, Monte Carlo. Detalle en `docs/MOTOR_FASE2.md`.
+- **Fase 3 (motor) lista**: licitaciones y clientes, ofertas por puntaje, contratos con garantías y penalidades, EPC para terceros, cadena de suministro dinámica, 5 competidores IA con los mismos comandos, árbol de I+D. Detalle en `docs/MOTOR_FASE3.md`. Siguiente: UI de la Fase 3.
 - **Fase 2 (UI) lista**: desarrollar en un sitio, panel y detalle de proyectos (Gantt, estudios, permisos, PPA, financiación, construcción, operación, viabilidad), finanzas de la empresa, registro de eventos, quiebra, sitios 3D en el globo. Detalle en `docs/UI.md`.
 
 ## Comandos (desde `energia/`)
@@ -28,8 +29,12 @@ packages/sim    motor puro TS: sin DOM, sin Math.random/Date.now. Determinista.
   finance/      VAN, TIR, LCOE, WACC, deuda, modelo anual de proyecto; company.ts: contabilidad, cierre mensual, quiebra
   market/       spot simple (interfaz SpotMarket para la Fase 5)
   project/      tipos, comandos, avance diario/mensual, requisitos (grafo), sorteos, economía, valoración, viabilidad (Monte Carlo)
-  selectors.ts  vistas para la UI (lista/detalle de proyectos, finanzas de la empresa, vista previa de sitio)
-packages/data   YAML editables + esquemas Zod (game, layers, countries/*, technologies/*, studies, suppliers, resources/anclas)
+  selectors.ts  vistas para la UI (lista/detalle de proyectos, finanzas de la empresa, vista previa de sitio y de financiamiento)
+  business/     Fase 3: actores (vistas), I+D, ofertas, oportunidades, contratos/EPC, garantías, avance por actor
+  supply/       Fase 3: índices de materiales, curvas de aprendizaje, colas y relación con proveedores
+  ai/           Fase 3: competidores IA (decisiones por estrategia; corren el mismo código vía vistas de actor)
+  selectorsBusiness.ts  vistas de la Fase 3 (oportunidades, cotización, ofertas, contratos, competidores, I+D, proveedores)
+packages/data   YAML editables + esquemas Zod (game, layers, countries/*, technologies/*, studies, suppliers, research, clients, competitors, resources/anclas)
   generated/    grid.bin, grid.json, world.json (salida de tools/build-resources.ts; se sirven como estáticos)
 apps/game       Vite + React + Three.js
   worker/       el GameState vive solo en un Web Worker (carga la grilla y calcula las vistas de los selectores); la UI recibe instantáneas + vistas y envía comandos
@@ -43,7 +48,10 @@ tools/          build-resources.ts, screenshots.mjs
 Reglas:
 - Todo cambio de estado pasa por un `Command` (`applyCommand` / `step`). La IA usará los mismos comandos.
 - En pausa los comandos se aplican con `applyCommands` sin avanzar el tiempo.
-- Un flujo de RNG por subsistema (`world`, `market`, `projects`, `events`, `ai`).
+- Un flujo de RNG por subsistema (`world`, `market`, `projects`, `events`, `ai`, `supply`, `tenders`, `business`, y `ai_<id>` por competidor).
+- Actores: el jugador (raíz del estado) y cada competidor (`state.competitors[i]`) tienen empresa, finanzas, proyectos y `business`. La IA usa `actorView` y corre exactamente el mismo código; nunca agregar reglas solo para la IA. La IA solo lee información pública (`publicOpportunity`, `p.estimate`); hay prueba.
+- El mundo de la Fase 3 se inicializa perezosamente en el primer `step`/`applyCommands` con datos (`business/world.ts`).
+- Precios de equipos: usar `currentCapex(state, ctx, …)` (índices, proveedores, relación, I+D), no `capexBreakdown` directo.
 - 1 tick = 1 día. Gastos fijos se cobran al cambiar de mes.
 - Cada valor real en YAML lleva `fuente` o `supuesto` (lo exige el esquema `sourced`).
 - Partidas: `{format:'voltaje-save', saveVersion, state}`. Si cambia el estado, subir `SAVE_VERSION` y añadir migración en `core/save.ts`.
@@ -69,14 +77,20 @@ Reglas:
 | 2026-11-04 | Contabilidad consolidada (impuesto a nivel empresa, mensual, con arrastre de pérdidas); estudios y permisos se capitalizan y se castigan si se abandona. |
 | 2026-11-04 | Quiebra: 3 meses de caja negativa sin crédito de emergencia (hasta 50 % del valor neto de las plantas). |
 | 2026-11-04 | SAVE_VERSION 2 con migración desde v1 (las partidas de la Fase 1 cargan sin proyectos). |
+| 2026-11-04 | Fase 3: la IA es un actor completo con vistas de actor (`actorView`) sobre el mismo código; decisiones deterministas por (semilla, competidor, día). |
+| 2026-11-04 | Fase 3: ofertantes externos (distribución alrededor del precio de referencia) además de las 5 IA, para que siempre haya competencia. |
+| 2026-11-04 | Fase 3: garantías con 50 % de colateral en caja y 1,5 %/año; ejecución = se pierde el valor completo. Reputación 0–100 (jugador 25). |
+| 2026-11-04 | Fase 3: SAVE_VERSION 3 con migración desde v2; `stateHash` ignora claves `undefined`. |
+| 2026-11-04 | Viabilidad: mismo supuesto de precio que la economía (spot si no hay PPA) y tasa sin prima de etapa (el riesgo se simula); `npvDeterministicUsd` comparable. |
 | 2026-11-04 | UI Fase 2: los selectores corren en el worker (tienen datos + grilla) y viajan con cada instantánea; detalle solo del proyecto enfocado; viabilidad y vistas previas bajo pedido. |
 | 2026-11-04 | Vista previa de sitio = `previewSite` + `createProject` sobre una copia del estado para obtener TIR/VAN/LCOE con los mismos selectores (sin tocar la partida). |
 | 2026-11-04 | Registro de eventos solo en la UI; al cargar se reconstruye con las líneas de tiempo de los proyectos (no se cambia el formato de guardado). |
 | 2026-11-04 | Sitios del globo vía `globe/siteVisual.ts` sobre `src/models` (escala 0,008, anillo de avance por etapa, clic por proximidad en pantalla). |
 
 ## Pendientes conocidos
-- Operación: la producción esperada mensual se dibuja plana (P50/12 por días); el motor no expone el perfil estacional por mes.
-- Los eventos no llevan `tick`: el registro les pone la fecha de la última instantánea (a ×8 puede diferir unos días).
+- UI: el motor ya expone `resource.monthlyMwh`/`operation.expectedMonthlyMwh` (perfil estacional) y `SimEvent.tick`; falta usarlos en la UI.
+- Fase 3: la UI de licitaciones, contratos, competidores, I+D y proveedores está por hacer (selectores en `selectorsBusiness.ts`).
+- Fase 3: precios de licitaciones, garantías y pesos aproximados (`supuesto`); la IA empieza sin plantas (su experiencia histórica solo da puntaje).
 - Falta una captura de una planta en operación (requiere años de juego); la pestaña Operación solo se probó vacía.
 - Permisos, plazos y probabilidades de Panamá son aproximados (marcados `supuesto`); calibrar con desarrolladores locales si se consigue información.
 - Reemplazar sol y viento por NASA POWER cuando haya red (script por escribir).

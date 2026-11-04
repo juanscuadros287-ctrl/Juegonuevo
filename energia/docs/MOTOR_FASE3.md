@@ -110,6 +110,15 @@ Dónde se aplican los efectos: CAPEX en `currentCapex` (presupuesto del financia
 ### Eventos (todos con `text` y `severity`)
 `opportunityOpened, bidSubmitted, bidWithdrawn, bidResult {won, rank, winnerName, winnerPrice}, opportunityDeserted, contractSigned, contractProjectAssigned, contractFulfilled, contractTerminated, contractPenalty, guaranteeExecuted, guaranteeReleased, epcDelivered, epcUpdate, researchStarted, researchCompleted, researchSetback, researchCancelled, supplyPriceChange, competitorWonTender, competitorPlantOperational, competitorBankrupt`.
 
+### Pedidos de la UI de la Fase 2 (agregados)
+- `SimEvent.tick`: `step` y `applyCommands` lo ponen en todos los eventos (los de comandos, el día en que se aplicaron).
+- `ProjectDetail.countryCode`; `ProjectSummary.stageProgress` (0–1: madurez del desarrollo, avance de obra, puesta en marcha, 1 en operación).
+- `StudyOption.startDate`, `PermitOption.startDate`.
+- `ProjectDetail.resource.monthlyMwh` y `operation.expectedMonthlyMwh`: `{month, p50Mwh, p90Mwh}[12]` con el perfil estacional del país (suma = energía anual; con degradación si opera). `expectedMonthlyProduction()` exportada.
+- `operation.failureLog`: fallas pasadas con fecha, fracción, días y costo (el estado guarda `operation.failures`, últimas 100; las partidas viejas no las traen).
+- `previewFinancing(state, ctx, projectId, {lenderId, debtFraction, partnerShare})` → `FinancingPreview`: presupuesto, deuda dimensionada por ese banco (mismo cálculo que el cierre: `bankDebtSizing`), qué la limita, tasa, plazo, DSCR, comisión, asesores, aporte propio y del socio, prima del socio, caja neta propia, probabilidad, días de due diligence, si queda bajo el mínimo del banco, TIR/VAN con esa estructura, bloqueos.
+- **Viabilidad (bug corregido)**: el Monte Carlo suponía siempre un PPA de licitación (≈68 USD/MWh, 40 % de éxito) mientras la economía determinista usaba el spot (≈98) y, además, descontaba con la prima de riesgo de etapa (17,6 % en estudios) un riesgo que ya simula. Resultado: VAN esperado −1,5 M con 95 % de éxito y TIR P50 10,8 % frente a 15,2 %. Ahora: mismo precio que la economía (PPA firmado o en proceso; el canal de `opts.ppaChannelId` si se pide; si no, spot), tasa sin prima de etapa descontando desde el COD, y `npvDeterministicUsd` (misma base, sin azar) y `ppaChannelId` en el resultado. El VAN de `projectEconomics` sigue siendo el «ajustado por etapa» (más conservador): la UI debe comparar `npvExpectedUsd` con `npvDeterministicUsd`.
+
 ### Contabilidad
 Conceptos nuevos: `ingresos_potencia, ingresos_epc, costos_epc, licitaciones, garantias_comision, garantias_ejecutadas, investigacion` (resultados) y `garantias` (caja inmovilizada, inversión).
 
