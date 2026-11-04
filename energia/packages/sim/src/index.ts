@@ -24,3 +24,15 @@ export * from './project/valuation';
 export * from './project/viability';
 export type { ProjectCommand } from './project/commands';
 export * from './selectors';
+// Fase 3
+export * from './business/types';
+export * from './business/actor';
+export * from './business/research';
+export * from './business/bids';
+export * from './business/opportunities';
+export * from './business/contracts';
+export * from './business/bonds';
+export * from './supply/supply';
+export * from './ai/brain';
+export * from './ai/competitors';
+export * from './selectorsBusiness';

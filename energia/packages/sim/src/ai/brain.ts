@@ -8,6 +8,7 @@ import { applicablePermits, financingBlockers, openFindings, permitBlockers, req
 import { findingCostUsd, permitCostUsd, studyCostUsd } from '../project/outcomes';
 import { isTerminal } from '../project/helpers';
 import { projectCapex, projectEconomics } from '../project/economics';
+import { currentCapex } from '../tech/costs';
 import { siteKey } from '../world/site';
 import { researchBlockers, researchNodes, studyUnlocked, techUnlocked } from '../business/research';
 import { bidBlockers, nameplateMw, quoteBid, realisticDeliveryMonths } from '../business/bids';
@@ -119,24 +120,33 @@ function projectSteps(view: GameState, ctx: SimContext, p: Project, ai: AiContex
   }
   if (!p.financing || p.financing.status === 'fallido') {
     const capex = projectCapex(ctx, p, view).totalUsd;
-    const ownNeed = capex * (1 - def.apalancamiento) * (1 - def.socio);
-    if (budget.cash < ownNeed * (def.estrategia === 'agresiva' ? 0.4 : 0.8) + 60_000) {
+    const c = ctx.data.countries[p.countryCode];
+    // Si la caja no alcanza, busca más socio de capital (hasta el máximo del país) antes de rendirse.
+    const factor = def.estrategia === 'agresiva' ? 0.6 : 1.1;
+    const ownNeed = (share: number) => capex * (1 - def.apalancamiento) * (1 - share) * factor + 60_000;
+    let partner = def.socio;
+    while (budget.cash < ownNeed(partner) && partner + 0.1 <= c.finanzas.socio_equity.participacion_max + 1e-9) partner = Math.round((partner + 0.1) * 10) / 10;
+    if (budget.cash < ownNeed(partner)) {
       if (view.tick - p.createdTick > 365 * 5) out.push({ type: 'sellProject', projectId: id });
       return out;
     }
-    const c = ctx.data.countries[p.countryCode];
     const dev = c.finanzas.prestamistas.find((l) => l.tipo === 'desarrollo');
     const useDev = dev && p.ppa?.status === 'firmado' && p.estimate.sigma <= dev.sigma_recurso_max && capex * def.apalancamiento >= dev.monto_min_usd && def.estrategia !== 'agresiva';
     const lender = useDev ? dev! : c.finanzas.prestamistas.find((l) => l.tipo === 'comercial')!;
     const debt = Math.min(def.apalancamiento, lender.apalancamiento_max);
-    if (spend(lender.costo_asesores_usd.base)) out.push({ type: 'arrangeFinancing', projectId: id, lenderId: lender.id, debtFraction: debt, partnerShare: def.socio });
+    if (spend(lender.costo_asesores_usd.base)) out.push({ type: 'arrangeFinancing', projectId: id, lenderId: lender.id, debtFraction: debt, partnerShare: partner });
     return out;
   }
   if (p.financing.status === 'cerrado') {
-    const need = ownEquityNeed(p) * (def.estrategia === 'agresiva' ? 0.5 : 1);
+    const need = ownEquityNeed(p) * (def.estrategia === 'agresiva' ? 0.85 : 1.1);
     if (budget.cash >= need) { budget.cash -= need; out.push({ type: 'startConstruction', projectId: id }); }
+    else if (view.tick - p.financing.endTick > 270 && !p.contractId) out.push({ type: 'sellProject', projectId: id });
   }
   return out;
+}
+
+function projectCapexPerMw(view: GameState, ctx: SimContext, techId: string): number {
+  return currentCapex(view, ctx, { techId, mw: 10, countryCode: view.company.homeCountry }).totalUsd / 10;
 }
 
 function techFor(view: GameState, ctx: SimContext, def: CompetitorDef, allowed: string[]): string | undefined {
@@ -218,7 +228,9 @@ export function decideCompetitor(view: GameState, ctx: SimContext, ai: AiContext
     const site = techId ? pickSite(view, ctx, ai, techId, view.company.homeCountry) : undefined;
     if (techId && site) {
       const tech = ctx.data.technologies[techId];
-      const lo = Math.max(def.mw.min, tech.escala_mw.min), hi = Math.min(def.mw.max, tech.escala_mw.max);
+      // Tamaño que su caja puede sostener (con el máximo de socio y la deuda que suele pedir).
+      const perMw = projectCapexPerMw(view, ctx, techId) * (1 - def.apalancamiento) * 0.35;
+      const lo = Math.max(def.mw.min, tech.escala_mw.min), hi = Math.max(lo, Math.min(def.mw.max, tech.escala_mw.max, Math.floor(budget.cash / perMw)));
       const mw = Math.round(lo + (hi - lo) * rng.next());
       cmds.push({ type: 'createProject', techId, mw, lat: site.lat, lon: site.lon, name: `${def.nombre.split(' ')[0]} ${tech.nombre} ${mw} MW` });
       ai.occupiedSites.add(siteKey(site.lat, site.lon));
@@ -254,7 +266,8 @@ export function decideCompetitor(view: GameState, ctx: SimContext, ai: AiContext
       const realistic = realisticDeliveryMonths(view, ctx, opp, techId, link?.id);
       const slack = def.estrategia === 'agresiva' ? 0.95 : def.estrategia === 'conservadora' ? 1.15 : 1.05;
       const delivery = Math.min(opp.codMonths, Math.ceil(realistic * slack));
-      if (delivery < realistic * 0.9 && def.estrategia !== 'agresiva') continue;
+      // No promete lo que no puede cumplir: el agresivo arriesga hasta la mitad del atraso tolerado.
+      if (realistic > opp.codMonths + (def.estrategia === 'agresiva' ? 0.5 * opp.maxDelayMonths : 0)) continue;
       const effort = def.estrategia === 'conservadora' || def.estrategia === 'estatal' ? 'reforzada' as const : 'estandar' as const;
       const bond = opp.bidBondUsd + opp.prepCostUsd * (effort === 'reforzada' ? 2.5 : 1);
       if (budget.cash < bond + opp.performanceBondUsd || view.business.restrictedCashUsd + opp.performanceBondUsd > 0.5 * Math.max(0, balanceSheet(view).equityUsd)) continue;

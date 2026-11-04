@@ -90,12 +90,17 @@ export interface QuoteOptions {
   effort?: 'estandar' | 'reforzada';
 }
 
+/** Meses de obra según tamaño: las plantas pequeñas se construyen más rápido (× (MW/típico)^0,3, entre 0,4 y 1,3). */
+export function buildMonths(tech: { construccion_meses: { base: number }; escala_mw: { tipico: number } }, mw: number): number {
+  return tech.construccion_meses.base * Math.min(1.3, Math.max(0.4, Math.pow(mw / tech.escala_mw.tipico, 0.3)));
+}
+
 /** Plazo realista (meses): desarrollo pendiente + obra + puesta en marcha. */
 export function realisticDeliveryMonths(state: GameState, ctx: SimContext, opp: Opportunity, techId: string, projectId?: string): number {
   const tech = ctx.data.technologies[techId];
   if (!tech) return opp.codMonths;
   const build = tech.construccion_meses.base + tech.puesta_en_marcha_dias.base / 30.44;
-  if (opp.contract === 'epc') return build + 2;
+  if (opp.contract === 'epc') return buildMonths(tech, opp.mw) + 1.5;
   const p = projectId ? state.projects.find((x) => x.id === projectId) : undefined;
   if (p?.operation) return 1;
   if (p?.construction) return Math.max(1, (1 - p.construction.progress) * p.construction.plannedDays / 30.44 + 1);

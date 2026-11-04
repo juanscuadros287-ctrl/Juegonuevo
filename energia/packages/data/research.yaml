@@ -1,0 +1,202 @@
+# Árbol de investigación y desarrollo (I+D). Fase 3.
+# Cada nodo: costo total (USD), duración mínima (meses, con presupuesto suficiente), prerrequisitos y efectos.
+# El avance diario = min(1/duración, presupuesto mensual/costo): con poco presupuesto tarda más.
+# prob_contratiempo: al terminar, chance de volver 10–30 % atrás (una vez).
+# Efectos: fracciones relativas (−0,05 = −5 %); clave '*' = todas las tecnologías.
+# fase_modelo: lo que desbloquea aún no tiene modelo completo (llega en esa fase); el nodo se puede investigar igual.
+supuesto_general: "Costos y plazos de I+D supuestos para el juego: equipos de 2–8 personas (≈ 6–12 kUSD/mes por persona en la región) más pilotos, licencias y certificaciones. Efectos en el rango de mejoras documentadas por NREL ATB 2024 e IRENA 2023."
+
+nodos:
+  # ───────── Iniciales (sin costo) ─────────
+  - { id: tec_solar_fv, nombre: "Solar FV a escala de red", rama: tecnologias, descripcion: "Conocimiento inicial de la empresa.", costo_usd: 0, meses: 1, requiere: [], inicial: true, prob_contratiempo: 0, efectos: { tecnologias: [solar_fv] }, supuesto: "Punto de partida" }
+  - { id: tec_eolica_tierra, nombre: "Eólica en tierra", rama: tecnologias, descripcion: "Conocimiento inicial de la empresa.", costo_usd: 0, meses: 1, requiere: [], inicial: true, prob_contratiempo: 0, efectos: { tecnologias: [eolica_tierra] }, supuesto: "Punto de partida" }
+  - { id: est_basicos, nombre: "Estudios básicos", rama: estudios, descripcion: "Medición satelital, mesoescala, torre, prefactibilidad, factibilidad, EIA y conexión.", costo_usd: 0, meses: 1, requiere: [], inicial: true, prob_contratiempo: 0, efectos: {}, supuesto: "Punto de partida" }
+  - { id: mercado_panama, nombre: "Mercado de Panamá", rama: mercados, descripcion: "País de origen de la empresa.", costo_usd: 0, meses: 1, requiere: [], inicial: true, prob_contratiempo: 0, efectos: { paises: [PAN] }, supuesto: "Punto de partida" }
+  - { id: contrato_ppa_simple, nombre: "PPA simple", rama: contratos, descripcion: "Contratos de suministro de energía a largo plazo con ETESA y distribuidoras.", costo_usd: 0, meses: 1, requiere: [], inicial: true, prob_contratiempo: 0, efectos: { contratos: [ppa_simple] }, supuesto: "Punto de partida" }
+
+  # ───────── Tipos de contrato ─────────
+  - id: contrato_ppa_corporativo
+    nombre: "PPA corporativo"
+    rama: contratos
+    descripcion: "Equipo comercial y modelo legal para vender energía a grandes clientes privados (industria, minería, hoteles, centros de datos)."
+    costo_usd: 90000
+    meses: 4
+    requiere: [contrato_ppa_simple]
+    prob_contratiempo: 0.1
+    efectos: { contratos: [ppa_corporativo] }
+    supuesto: "Abogado especialista + gerente comercial 4 meses + plantillas contractuales"
+  - id: contrato_epc
+    nombre: "EPC llave en mano para terceros"
+    rama: contratos
+    descripcion: "Área de ingeniería y construcción propia: construir plantas para clientes con precio cerrado."
+    costo_usd: 220000
+    meses: 6
+    requiere: [contrato_ppa_simple]
+    prob_contratiempo: 0.15
+    efectos: { contratos: [epc_llave_en_mano] }
+    supuesto: "Ingeniería de propuestas, seguros de obra y certificación ISO 9001 (≈ 6 meses)"
+  - id: contrato_potencia
+    nombre: "Contratos de potencia firme"
+    rama: contratos
+    descripcion: "Modelos de suficiencia y disponibilidad para ofertar potencia firme en las licitaciones de ETESA."
+    costo_usd: 150000
+    meses: 5
+    requiere: [contrato_ppa_corporativo]
+    prob_contratiempo: 0.12
+    efectos: { contratos: [contrato_potencia] }
+    supuesto: "Modelos de despacho y potencia firme + asesoría regulatoria"
+  - id: contrato_bot
+    nombre: "Contratos BOT con el Estado"
+    rama: contratos
+    descripcion: "Construir, operar y transferir: proyectos para entidades públicas que al final quedan en manos del Estado."
+    costo_usd: 180000
+    meses: 6
+    requiere: [contrato_ppa_corporativo]
+    prob_contratiempo: 0.12
+    efectos: { contratos: [bot] }
+    supuesto: "Estructuración legal de APP (Ley 93 de 2019 de Panamá, aproximado)"
+
+  # ───────── Tipos de estudio ─────────
+  - id: est_lidar
+    nombre: "Medición con LiDAR de escaneo"
+    rama: estudios
+    descripcion: "Habilita el estudio de recurso eólico con LiDAR (bancable en 8 meses en lugar de 13)."
+    costo_usd: 120000
+    meses: 4
+    requiere: [est_basicos, tec_eolica_tierra]
+    prob_contratiempo: 0.1
+    efectos: { estudios: [medicion_eolica_lidar] }
+    supuesto: "Capacitación y validación de un LiDAR contra torre de referencia"
+  - id: est_prefactibilidad_digital
+    nombre: "Prefactibilidad digital (drones y SIG)"
+    rama: estudios
+    descripcion: "Habilita la prefactibilidad con drones y SIG (más rápida y con menos sorpresas)."
+    costo_usd: 70000
+    meses: 3
+    requiere: [est_basicos]
+    prob_contratiempo: 0.08
+    efectos: { estudios: [prefactibilidad_digital] }
+    supuesto: "Dron RTK, licencias SIG y analista (≈ 70 kUSD)"
+  - id: est_geofisica
+    nombre: "Prospección geofísica (geotermia)"
+    rama: estudios
+    descripcion: "Magnetotelúrica y gravimetría para ubicar reservorios geotérmicos."
+    costo_usd: 250000
+    meses: 8
+    requiere: [est_basicos]
+    prob_contratiempo: 0.2
+    fase_modelo: 4
+    efectos: { estudios: [prospeccion_geofisica] }
+    supuesto: "Equipos MT y geólogos (campaña ≈ 0,5–1 MUSD en la práctica; aquí solo la capacidad)"
+  - id: est_batimetria
+    nombre: "Batimetría y metoceánica (eólica marina)"
+    rama: estudios
+    descripcion: "Estudios del lecho marino, oleaje y corrientes para parques en el mar."
+    costo_usd: 300000
+    meses: 8
+    requiere: [est_lidar]
+    prob_contratiempo: 0.2
+    fase_modelo: 4
+    efectos: { estudios: [estudio_metoceanico] }
+    supuesto: "Campañas con boya LiDAR y sonar (orden de magnitud)"
+
+  # ───────── Tecnologías (modelo completo en la Fase 4) ─────────
+  - { id: tec_baterias, nombre: "Baterías (BESS)", rama: tecnologias, descripcion: "Almacenamiento con ion-litio para arbitraje y potencia firme.", costo_usd: 350000, meses: 8, requiere: [tec_solar_fv], prob_contratiempo: 0.15, fase_modelo: 4, efectos: { tecnologias: [baterias] }, supuesto: "Integración y seguridad de BESS (NFPA 855)" }
+  - { id: tec_hidro_pasada, nombre: "Hidro de pasada", rama: tecnologias, descripcion: "Pequeñas centrales en ríos de Chiriquí y Veraguas.", costo_usd: 400000, meses: 10, requiere: [est_basicos], prob_contratiempo: 0.15, fase_modelo: 4, efectos: { tecnologias: [hidro_pasada] }, supuesto: "Hidrología, obras civiles y concesiones de agua" }
+  - { id: tec_hidro_embalse, nombre: "Hidro con embalse", rama: tecnologias, descripcion: "Centrales con embalse: potencia firme, mucha geotecnia y riesgo social.", costo_usd: 700000, meses: 14, requiere: [tec_hidro_pasada], prob_contratiempo: 0.2, fase_modelo: 4, efectos: { tecnologias: [hidro_embalse] }, supuesto: "Presas y gestión social" }
+  - { id: tec_hidro_bombeo, nombre: "Hidro de bombeo", rama: tecnologias, descripcion: "Almacenamiento por bombeo entre dos embalses.", costo_usd: 600000, meses: 12, requiere: [tec_hidro_embalse, tec_baterias], prob_contratiempo: 0.2, fase_modelo: 4, efectos: { tecnologias: [hidro_bombeo] }, supuesto: "Turbinas reversibles" }
+  - { id: tec_geotermica, nombre: "Geotérmica", rama: tecnologias, descripcion: "Perforación de pozos (pueden salir secos) y planta binaria o flash.", costo_usd: 800000, meses: 14, requiere: [est_geofisica], prob_contratiempo: 0.25, fase_modelo: 4, efectos: { tecnologias: [geotermica] }, supuesto: "Ingeniería de reservorios y perforación" }
+  - { id: tec_csp, nombre: "Solar de concentración (CSP)", rama: tecnologias, descripcion: "Torre o cilindro-parabólico con almacenamiento térmico.", costo_usd: 650000, meses: 12, requiere: [tec_solar_fv, tec_baterias], prob_contratiempo: 0.25, fase_modelo: 4, efectos: { tecnologias: [csp] }, supuesto: "Campo solar y sales fundidas" }
+  - { id: tec_eolica_marina, nombre: "Eólica marina", rama: tecnologias, descripcion: "Parques en el mar con turbinas de 12–15 MW.", costo_usd: 900000, meses: 16, requiere: [tec_eolica_tierra, est_batimetria], prob_contratiempo: 0.25, fase_modelo: 4, efectos: { tecnologias: [eolica_marina] }, supuesto: "Logística marina y fundaciones" }
+  - { id: tec_biomasa, nombre: "Biomasa y biogás", rama: tecnologias, descripcion: "Bagazo, residuos agroindustriales y rellenos sanitarios.", costo_usd: 300000, meses: 8, requiere: [est_basicos], prob_contratiempo: 0.15, fase_modelo: 4, efectos: { tecnologias: [biomasa, biogas] }, supuesto: "Cadena de suministro de combustible" }
+  - { id: tec_gas, nombre: "Gas natural (ciclo combinado)", rama: tecnologias, descripcion: "Térmica con GNL importado por Colón.", costo_usd: 500000, meses: 10, requiere: [contrato_potencia], prob_contratiempo: 0.15, fase_modelo: 4, efectos: { tecnologias: [gas_natural] }, supuesto: "Contratos de GNL y turbinas de gas" }
+  - { id: tec_hidrogeno, nombre: "Hidrógeno verde", rama: tecnologias, descripcion: "Electrólisis con renovables para bunkering en el Canal.", costo_usd: 1200000, meses: 18, requiere: [tec_baterias, ef_compras_globales], prob_contratiempo: 0.3, fase_modelo: 4, efectos: { tecnologias: [hidrogeno_verde] }, supuesto: "Electrolizadores PEM/alcalinos" }
+
+  # ───────── Mercados (países con datos completos en la Fase 4) ─────────
+  - { id: mercado_regional, nombre: "Oficina regional (Centroamérica)", rama: mercados, descripcion: "Capacidad legal y comercial para trabajar fuera de Panamá.", costo_usd: 200000, meses: 6, requiere: [mercado_panama], prob_contratiempo: 0.1, efectos: {}, supuesto: "Abogados y gestores regionales" }
+  - { id: mercado_costa_rica, nombre: "Mercado de Costa Rica", rama: mercados, descripcion: "ICE y generación privada limitada.", costo_usd: 180000, meses: 6, requiere: [mercado_regional], prob_contratiempo: 0.12, fase_modelo: 4, efectos: { paises: [CRI] }, supuesto: "Estudio regulatorio y socio local" }
+  - { id: mercado_colombia, nombre: "Mercado de Colombia", rama: mercados, descripcion: "Subastas de largo plazo y mercado mayorista grande.", costo_usd: 300000, meses: 8, requiere: [mercado_regional], prob_contratiempo: 0.15, fase_modelo: 4, efectos: { paises: [COL] }, supuesto: "Registro ante la CREG/XM y oficina en Bogotá" }
+  - { id: mercado_rep_dominicana, nombre: "Mercado de República Dominicana", rama: mercados, descripcion: "Licitaciones de las distribuidoras y crecimiento de la demanda.", costo_usd: 200000, meses: 6, requiere: [mercado_regional], prob_contratiempo: 0.12, fase_modelo: 4, efectos: { paises: [DOM] }, supuesto: "Estudio regulatorio y socio local" }
+  - { id: mercado_chile, nombre: "Mercado de Chile", rama: mercados, descripcion: "Mercado competitivo con el mejor sol del mundo (Atacama).", costo_usd: 400000, meses: 10, requiere: [mercado_colombia], prob_contratiempo: 0.15, fase_modelo: 4, efectos: { paises: [CHL] }, supuesto: "Oficina en Santiago y registro ante el Coordinador" }
+
+  # ───────── Eficiencia y reducción de costos ─────────
+  - id: ef_compras_globales
+    nombre: "Compras globales y estandarización"
+    rama: eficiencia
+    descripcion: "Diseños estándar y compras consolidadas con fabricantes Tier 1."
+    costo_usd: 250000
+    meses: 6
+    requiere: [tec_solar_fv]
+    prob_contratiempo: 0.1
+    efectos: { capex_frac: { '*': -0.04 } }
+    supuesto: "Estandarización de BOS y compras por volumen: −3 a −6 % del CAPEX (NREL 2023, PV system cost benchmark)"
+  - id: ef_construccion_modular
+    nombre: "Construcción modular FV"
+    rama: eficiencia
+    descripcion: "Prefabricación de bloques de potencia y montaje robotizado de seguidores."
+    costo_usd: 300000
+    meses: 8
+    requiere: [ef_compras_globales]
+    prob_contratiempo: 0.15
+    efectos: { capex_frac: { solar_fv: -0.05 } }
+    supuesto: "Montaje mecanizado: −15–25 % de mano de obra ≈ −4–6 % del CAPEX (NREL 2023)"
+  - id: ef_seguidores_bifaciales
+    nombre: "Módulos bifaciales con seguimiento optimizado"
+    rama: eficiencia
+    descripcion: "Diseño bifacial y algoritmos de retroseguimiento."
+    costo_usd: 180000
+    meses: 6
+    requiere: [tec_solar_fv]
+    prob_contratiempo: 0.12
+    efectos: { fc_frac: { solar_fv: 0.04 } }
+    supuesto: "Ganancia bifacial con seguidor ≈ +4–7 % de energía (NREL, Pelaez et al. 2019)"
+  - id: ef_rotores_grandes
+    nombre: "Rotores grandes y control de estela"
+    rama: eficiencia
+    descripcion: "Turbinas de mayor rotor y control coordinado del parque."
+    costo_usd: 280000
+    meses: 8
+    requiere: [tec_eolica_tierra]
+    prob_contratiempo: 0.15
+    efectos: { fc_frac: { eolica_tierra: 0.05 } }
+    supuesto: "Wake steering +1–3 % y rotor mayor +3–5 % de energía (NREL 2022)"
+  - id: ef_om_predictivo
+    nombre: "O&M predictivo"
+    rama: eficiencia
+    descripcion: "Monitoreo en línea, analítica de fallas y repuestos estratégicos."
+    costo_usd: 200000
+    meses: 6
+    requiere: [est_basicos]
+    prob_contratiempo: 0.1
+    efectos: { om_frac: { '*': -0.10 } }
+    supuesto: "Mantenimiento predictivo: −8 a −12 % del O&M (IRENA 2023; NREL O&M cost model)"
+  - id: ef_om_drones
+    nombre: "Inspección con drones y limpieza robotizada"
+    rama: eficiencia
+    descripcion: "Termografía con drones y robots de limpieza de módulos."
+    costo_usd: 120000
+    meses: 4
+    requiere: [ef_om_predictivo, est_prefactibilidad_digital]
+    prob_contratiempo: 0.1
+    efectos: { om_frac: { solar_fv: -0.08 }, fc_frac: { solar_fv: 0.01 } }
+    supuesto: "Limpieza robotizada en clima con polvo: +1 % de energía y −5–10 % de O&M (supuesto)"
+  - id: ef_permisos
+    nombre: "Gestión ambiental y de permisos"
+    rama: eficiencia
+    descripcion: "Equipo propio de relaciones comunitarias y expedientes estandarizados."
+    costo_usd: 160000
+    meses: 6
+    requiere: [est_basicos]
+    prob_contratiempo: 0.1
+    efectos: { permisos_tiempo_frac: -0.15 }
+    supuesto: "Expedientes completos reducen pedidos de información y plazos ≈ 10–20 % (supuesto)"
+  - id: ef_ofertas
+    nombre: "Oficina de licitaciones"
+    rama: eficiencia
+    descripcion: "Ingeniería de propuestas y biblioteca técnica: mejores puntajes técnicos."
+    costo_usd: 110000
+    meses: 4
+    requiere: [contrato_ppa_simple]
+    prob_contratiempo: 0.08
+    efectos: { puntaje_tecnico: 6 }
+    supuesto: "Propuestas más completas suben el puntaje técnico (supuesto)"

@@ -10,7 +10,7 @@ import { bookValue } from '../project/valuation';
 import type { Project } from '../project/types';
 import { changeReputation } from './actor';
 import { executeBond, postBond, releaseBond } from './bonds';
-import { bidBlockers, defaultSuppliers } from './bids';
+import { bidBlockers, buildMonths, defaultSuppliers } from './bids';
 import type { Bid, Contract, Opportunity } from './types';
 
 /**
@@ -114,7 +114,7 @@ function startEpc(state: GameState, ctx: SimContext, k: Contract, b: Bid) {
   const budget = cap.equipmentUsd + cap.freightUsd + cap.tariffsUsd + cap.epcUsd + 0.5 * cap.otherUsd;
   const rng = new Rng(state.rng.business);
   const epc = ctx.data.suppliers[sup.epcId!];
-  const planned = Math.round(tech.construccion_meses.base * DPM * (epc?.factor_plazo ?? 1) * rng.triangular(0.9, 1, 1.25));
+  const planned = Math.round(buildMonths(tech, k.mw) * DPM * (epc?.factor_plazo ?? 1) * rng.triangular(0.9, 1, 1.25));
   k.status = 'en_desarrollo';
   k.epc = {
     budgetUsd: budget, spentUsd: 0, progress: 0, plannedDays: planned, startTick: state.tick, stoppedDays: 0, delayDays: 0, overrunUsd: 0,

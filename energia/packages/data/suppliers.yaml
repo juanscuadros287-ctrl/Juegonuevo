@@ -1,6 +1,7 @@
 # Proveedores de equipos y contratistas EPC (nombres genéricos, no marcas reales).
 # factor_precio multiplica la parte del CAPEX que les corresponde (equipos o EPC).
-# calidad y confiabilidad: 0–1. Ver docs/MOTOR_FASE2.md para su efecto.
+# calidad y confiabilidad: 0–1. Ver docs/MOTOR_FASE2.md y docs/MOTOR_FASE3.md para su efecto.
+# Fase 3: capacidad_mw_ano (cola de pedidos), inversores y logística aparte, y dinámica de precios al final.
 fuente_general: "Supuestos calibrados con BNEF PV Module Tier 1 list 2024, IRENA 2023 y diferencias de precio China/Europa (IEA Solar PV Global Supply Chains 2022)"
 
 proveedores:
@@ -15,6 +16,7 @@ proveedores:
     confiabilidad: 0.85
     plazo_entrega_dias: { min: 75, base: 100, max: 160, supuesto: "Producción + flete Shanghái–Balboa ≈ 30–40 días" }
     flete_frac: 0.04
+    capacidad_mw_ano: 900   # MW/año que asigna a Centroamérica y el Caribe (supuesto)
   - id: modulos_asia_economico
     nombre: "Brightway (módulos económicos)"
     tipo: equipos
@@ -26,6 +28,7 @@ proveedores:
     confiabilidad: 0.7
     plazo_entrega_dias: { min: 80, base: 110, max: 200, supuesto: "Capacidad de producción irregular" }
     flete_frac: 0.04
+    capacidad_mw_ano: 400   # MW/año que asigna a Centroamérica y el Caribe (supuesto)
   - id: modulos_occidente
     nombre: "Helios Europa (módulos premium)"
     tipo: equipos
@@ -37,6 +40,7 @@ proveedores:
     confiabilidad: 0.93
     plazo_entrega_dias: { min: 90, base: 120, max: 170, supuesto: "Producción + flete trasatlántico" }
     flete_frac: 0.05
+    capacidad_mw_ano: 250   # MW/año que asigna a Centroamérica y el Caribe (supuesto)
 
   - id: turbinas_europa
     nombre: "Nordwind (aerogeneradores europeos)"
@@ -49,6 +53,7 @@ proveedores:
     confiabilidad: 0.92
     plazo_entrega_dias: { min: 270, base: 360, max: 480, supuesto: "Cola de fabricación de 9–15 meses (2024)" }
     flete_frac: 0.06
+    capacidad_mw_ano: 350   # MW/año que asigna a Centroamérica y el Caribe (supuesto)
   - id: turbinas_asia
     nombre: "Dragon Wind (aerogeneradores asiáticos)"
     tipo: equipos
@@ -60,6 +65,7 @@ proveedores:
     confiabilidad: 0.78
     plazo_entrega_dias: { min: 210, base: 300, max: 450, supuesto: "Fabricación rápida, logística larga" }
     flete_frac: 0.06
+    capacidad_mw_ano: 450   # MW/año que asigna a Centroamérica y el Caribe (supuesto)
   - id: turbinas_america
     nombre: "Prairie Turbines (aerogeneradores de EE.UU.)"
     tipo: equipos
@@ -71,6 +77,7 @@ proveedores:
     confiabilidad: 0.88
     plazo_entrega_dias: { min: 240, base: 330, max: 450, supuesto: "Fabricación en EE.UU. + barco por el Golfo" }
     flete_frac: 0.05
+    capacidad_mw_ano: 300   # MW/año que asigna a Centroamérica y el Caribe (supuesto)
 
   - id: epc_local
     nombre: "Constructora Istmeña (EPC local)"
@@ -83,6 +90,7 @@ proveedores:
     confiabilidad: 0.72
     factor_plazo: 1.1
     prob_sobrecosto_hito: 0.28
+    capacidad_mw_ano: 80   # MW/año que asigna a Centroamérica y el Caribe (supuesto)
   - id: epc_regional
     nombre: "Andina Energía (EPC regional)"
     tipo: epc
@@ -94,6 +102,7 @@ proveedores:
     confiabilidad: 0.82
     factor_plazo: 1.0
     prob_sobrecosto_hito: 0.18
+    capacidad_mw_ano: 300   # MW/año que asigna a Centroamérica y el Caribe (supuesto)
   - id: epc_internacional
     nombre: "Global Power EPC (internacional)"
     tipo: epc
@@ -105,3 +114,121 @@ proveedores:
     confiabilidad: 0.92
     factor_plazo: 0.92
     prob_sobrecosto_hito: 0.07
+    capacidad_mw_ano: 500   # MW/año que asigna a Centroamérica y el Caribe (supuesto)
+
+  - id: epc_asia
+    nombre: "Sino Overseas Build (EPC asiático)"
+    tipo: epc
+    tecnologias: [solar_fv, eolica_tierra]
+    origen: CHN
+    descripcion: "Contratista asiático que llega con su propia cuadrilla: rápido y barato, pero choca con la normativa local y genera reclamos."
+    factor_precio: 0.88
+    calidad: 0.76
+    confiabilidad: 0.74
+    factor_plazo: 0.95
+    prob_sobrecosto_hito: 0.22
+    capacidad_mw_ano: 250
+    supuesto: "EPC asiáticos en América Latina: 10–15 % más baratos con más reclamos laborales y de calidad (orden de magnitud)"
+
+  # Inversores (solo FV): reemplazan la fracción `fraccion_inversores` del paquete de equipos.
+  - id: inversores_asia
+    nombre: "Volta Power Electronics (inversores asiáticos)"
+    tipo: inversores
+    tecnologias: [solar_fv]
+    origen: CHN
+    descripcion: "Inversores string de gran volumen: muy baratos, servicio técnico regional limitado."
+    factor_precio: 0.85
+    calidad: 0.84
+    confiabilidad: 0.85
+    plazo_entrega_dias: { min: 45, base: 70, max: 120, supuesto: "Inversores en stock regional + flete" }
+    capacidad_mw_ano: 1200
+    supuesto: "Inversores asiáticos ≈ 0,03–0,05 USD/W frente a 0,06–0,08 europeos (Wood Mackenzie 2023, orden de magnitud)"
+  - id: inversores_europa
+    nombre: "Alpen Inverter (inversores europeos)"
+    tipo: inversores
+    tecnologias: [solar_fv]
+    origen: DEU
+    descripcion: "Inversores centrales con garantía extendida y repuestos en la región."
+    factor_precio: 1.15
+    calidad: 0.95
+    confiabilidad: 0.93
+    plazo_entrega_dias: { min: 60, base: 90, max: 150, supuesto: "Fabricación bajo pedido + flete" }
+    capacidad_mw_ano: 400
+    supuesto: "Prima de precio de marcas europeas ≈ 15–30 % (Wood Mackenzie 2023)"
+
+  # Logística: flete marítimo, aduana y transporte especial hasta el sitio. Reemplaza el flete del proveedor de equipos.
+  - id: logistica_economica
+    nombre: "Carga Istmo (logística económica)"
+    tipo: logistica
+    tecnologias: [solar_fv, eolica_tierra]
+    origen: PAN
+    descripcion: "Flete consolidado y agente aduanal local: barato, pero las demoras en puerto son frecuentes."
+    factor_precio: 1.0
+    calidad: 0.7
+    confiabilidad: 0.68
+    flete_frac: 0.035
+    factor_plazo_entrega: 1.15
+    supuesto: "Flete marítimo Asia–Panamá ≈ 3–5 % del valor de los equipos (Drewry 2024)"
+  - id: logistica_estandar
+    nombre: "Pacific Freight Partners (logística estándar)"
+    tipo: logistica
+    tecnologias: [solar_fv, eolica_tierra]
+    origen: USA
+    descripcion: "Operador logístico con experiencia en cargas sobredimensionadas (palas y torres)."
+    factor_precio: 1.0
+    calidad: 0.82
+    confiabilidad: 0.85
+    flete_frac: 0.05
+    factor_plazo_entrega: 1.0
+    supuesto: "Logística de proyecto ≈ 5 % del valor de los equipos (IRENA 2023)"
+  - id: logistica_premium
+    nombre: "Atlas Project Logistics (logística premium)"
+    tipo: logistica
+    tecnologias: [solar_fv, eolica_tierra]
+    origen: NLD
+    descripcion: "Fletamento dedicado y seguimiento en tiempo real: caro, rápido y confiable."
+    factor_precio: 1.0
+    calidad: 0.93
+    confiabilidad: 0.94
+    flete_frac: 0.07
+    factor_plazo_entrega: 0.85
+    supuesto: "Buques dedicados ≈ +40 % de costo de flete a cambio de 10–20 % menos de plazo (supuesto)"
+
+# ───────────── Fase 3: dinámica de precios y plazos ─────────────
+# Índices = 1 al inicio de la partida (precios de los YAML de 2026). Proceso log-normal mensual con reversión a 1.
+materiales:
+  - { id: polisilicio, nombre: Polisilicio, volatilidad_anual: 0.35, reversion_anual: 0.35, min: 0.4, max: 3.0,
+      fuente: "Precio spot del polisilicio 2020–2024: ≈10 → 40 → 5 USD/kg (BNEF, PVInsights)" }
+  - { id: acero, nombre: Acero, volatilidad_anual: 0.18, reversion_anual: 0.4, min: 0.55, max: 2.0,
+      fuente: "Bobina de acero laminado en caliente 2019–2024 (World Bank Pink Sheet)" }
+  - { id: cobre, nombre: Cobre, volatilidad_anual: 0.2, reversion_anual: 0.3, min: 0.5, max: 2.2,
+      fuente: "Cobre LME 2015–2024, volatilidad anual ≈ 20 % (World Bank Pink Sheet)" }
+
+curvas_aprendizaje:
+  - { tecnologia: solar_fv, equipos_anual: -0.035, epc_anual: -0.012, exposicion: { polisilicio: 0.18, acero: 0.12, cobre: 0.06 },
+      fuente: "NREL ATB 2024 escenario moderado (CAPEX FV −2 a −3 %/año a 2035); tasa de aprendizaje de módulos ≈ 20–24 % (IRENA 2023)" }
+  - { tecnologia: eolica_tierra, equipos_anual: -0.012, epc_anual: -0.005, exposicion: { acero: 0.30, cobre: 0.08 },
+      fuente: "NREL ATB 2024 escenario moderado (eólica en tierra ≈ −1 %/año); el acero domina la masa de una turbina (NREL 2023)" }
+
+demanda_global:
+  volatilidad_anual: 0.12
+  reversion_anual: 0.5
+  min: 0.75
+  max: 1.5
+  elasticidad_precio: 0.3
+  elasticidad_plazo: 0.8
+  supuesto: "Ciclos de escasez 2021–2022: plazos de turbinas y transformadores ×1,5–2 y precios +10–20 % (IEA 2023)"
+
+cola:
+  umbral: 0.5
+  prima_precio: 0.08
+  plazo_por_cola: 0.6
+  supuesto: "Con la cola por encima de 6 meses de capacidad el proveedor cobra prima y alarga plazos (supuesto)"
+
+relacion:
+  descuento_por_pedido: 0.015
+  descuento_max: 0.06
+  confiabilidad_por_pedido: 0.01
+  confiabilidad_max: 0.05
+  penalidad_retraso: 0.02
+  supuesto: "Clientes recurrentes obtienen 1–2 % por pedido hasta ≈ 6 % y prioridad de fabricación (supuesto de práctica comercial)"

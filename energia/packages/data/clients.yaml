@@ -1,0 +1,270 @@
+# Clientes y oportunidades (Fase 3). Cada tipo genera oportunidades con frecuencia de Poisson (por año).
+# precio_referencia: USD/MWh (ppa, bot), USD/kW-mes de potencia firme (potencia), USD/kW instalado (epc), en 2026.
+# El precio de referencia sigue al mercado (costo de equipos e inflación) a lo largo de la partida.
+# precio_reserva_factor: lo máximo que acepta el cliente = referencia × factor (público si publica_precio_tope).
+# pesos: evaluación por puntaje (precio + técnica + experiencia/reputación + plazo); suman 1.
+# tipo_contrato: nodo de I+D (research.yaml) que habilita ofertar.
+
+garantias:
+  comision_anual: 0.015
+  colateral_frac: 0.5
+  supuesto: "Fianzas de oferta y cumplimiento en Panamá: comisión ≈ 1–2 %/año; a una empresa sin historial el banco le pide ≈ 50 % de colateral en efectivo"
+
+jugador:
+  reputacion_inicial: 25
+  experiencia_mw_inicial: 0
+  supuesto: "Empresa nueva: sin plantas construidas y poca reputación (escala 0–100)"
+
+potencia_firme_frac: { solar_fv: 0.05, eolica_tierra: 0.20, baterias: 0.95, hidro_embalse: 0.90, gas_natural: 0.95 }
+potencia_firme_fuente: "Potencia firme reconocida por tecnología, orden de magnitud de la metodología de ASEP/CND (Reglas Comerciales del Mercado Mayorista de Panamá); supuesto"
+
+epc:
+  anticipo_frac: 0.10
+  retencion_frac: 0.10
+  ld_frac_semana: 0.005
+  ld_tope_frac: 0.10
+  contingencia_frac: 0.05
+  fuente: "Condiciones típicas FIDIC Silver Book: anticipo 10 %, retención 5–10 %, daños por atraso 0,5 %/semana con tope del 10 %"
+
+meses_asignar_proyecto: 9
+
+tipos:
+  - id: etesa_energia
+    nombre: Licitación de energía de largo plazo (ETESA)
+    pais: PAN
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "ETESA compra bloques de energía para las distribuidoras (ENSA, Naturgy). Precio tope publicado; gana el mejor puntaje, sobre todo por precio."
+    nombres_cliente: ["ETESA – LPI de energía renovable", "ETESA – Licitación de largo plazo", "ETESA – Bloque de energía para distribuidoras"]
+    frecuencia_anual: 2
+    mw: { min: 10, base: 30, max: 80, supuesto: "Bloques adjudicados por oferente en las LPI de ETESA 2020–2024 (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de 10–20 años" }
+    tecnologias: [solar_fv, eolica_tierra, hidro_pasada, biomasa]
+    precio_referencia: { min: 55, base: 66, max: 80, supuesto: "Precios adjudicados a renovables en licitaciones de ETESA 2020–2024 ≈ 55–90 USD/MWh" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 120, supuesto: "Pliego publicado 2–4 meses antes" }
+    evaluacion_dias: { min: 30, base: 45, max: 75, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 30, max: 36, supuesto: "Inicio de suministro 2–3 años después" }
+    garantia_seriedad_usd_mw: 10000
+    garantia_cumplimiento_usd_mw: 50000
+    pesos: { precio: 0.6, tecnica: 0.15, experiencia: 0.15, plazo: 0.1 }
+    experiencia_mw_min: 0
+    capital_min_usd: 0
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 25000, base: 35000, max: 60000, supuesto: "Pliego, asesoría legal, modelo y visita técnica" }
+    ofertantes_externos: { media: 2.5, precio_factor: { min: 0.9, base: 1.04, max: 1.25, supuesto: "Dispersión de ofertas en licitaciones latinoamericanas ≈ ±15 %" } }
+    indexacion_anual: 0.01
+    supuesto: "Licitaciones de largo plazo de ETESA (Ley 6 de 1997, reglamento de compras), aproximado"
+
+  - id: etesa_potencia
+    nombre: Licitación de potencia firme (ETESA)
+    pais: PAN
+    tipo: licitacion_publica
+    contrato: potencia
+    tipo_contrato: contrato_potencia
+    descripcion: "ETESA contrata potencia firme para la suficiencia del sistema. Solo cuenta la potencia firme reconocida por tecnología."
+    nombres_cliente: ["ETESA – Licitación de potencia", "ETESA – Suficiencia de largo plazo"]
+    frecuencia_anual: 0.7
+    mw: { min: 5, base: 15, max: 40, supuesto: "MW firmes por oferente" }
+    plazo_anos: { min: 8, base: 10, max: 15, supuesto: "Contratos de potencia de 5–15 años" }
+    tecnologias: [eolica_tierra, baterias, hidro_embalse, gas_natural]
+    precio_referencia: { min: 9, base: 12, max: 16, supuesto: "Cargo por potencia ≈ 9–16 USD/kW-mes en contratos de Panamá (orden de magnitud)" }
+    precio_reserva_factor: { min: 1.0, base: 1.15, max: 1.3, supuesto: "Tope sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 120, supuesto: "Pliego" }
+    evaluacion_dias: { min: 30, base: 45, max: 75, supuesto: "Evaluación" }
+    plazo_cod_meses: { min: 24, base: 30, max: 40, supuesto: "Inicio 2–3 años después" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 30000
+    pesos: { precio: 0.55, tecnica: 0.2, experiencia: 0.15, plazo: 0.1 }
+    experiencia_mw_min: 20
+    capital_min_usd: 0
+    multa_usd_mw_mes: 2500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 30000, base: 45000, max: 70000, supuesto: "Estudios de potencia firme y garantías" }
+    ofertantes_externos: { media: 2, precio_factor: { min: 0.9, base: 1.0, max: 1.2, supuesto: "Dispersión ±15 %" } }
+    indexacion_anual: 0.015
+    supuesto: "Contratos de potencia del mercado mayorista de Panamá, aproximado"
+
+  - id: mineria
+    nombre: PPA para minería
+    pais: PAN
+    tipo: solicitud_privada
+    contrato: ppa
+    tipo_contrato: ppa_corporativo
+    descripcion: "Una minera busca energía renovable de largo plazo para bajar costos y emisiones. Exige experiencia y solvencia."
+    nombres_cliente: ["Minera del Istmo", "Cobre Veraguas S.A.", "Oro de Coclé"]
+    frecuencia_anual: 0.4
+    mw: { min: 20, base: 40, max: 100, supuesto: "Demanda de una mina mediana" }
+    plazo_anos: { min: 10, base: 12, max: 15, supuesto: "Vida de la mina" }
+    tecnologias: [solar_fv, eolica_tierra]
+    precio_referencia: { min: 65, base: 75, max: 90, supuesto: "Grandes clientes en Panamá pagan ≈ 130–180 USD/MWh en tarifa (ASEP 2024); PPA corporativo con descuento" }
+    precio_reserva_factor: { min: 0.95, base: 1.05, max: 1.15, supuesto: "Disposición a pagar privada" }
+    publica_precio_tope: false
+    plazo_oferta_dias: { min: 45, base: 60, max: 90, supuesto: "Solicitud de propuestas privada" }
+    evaluacion_dias: { min: 20, base: 30, max: 45, supuesto: "Negociación" }
+    plazo_cod_meses: { min: 18, base: 24, max: 30, supuesto: "Necesidad de la mina" }
+    garantia_seriedad_usd_mw: 8000
+    garantia_cumplimiento_usd_mw: 40000
+    pesos: { precio: 0.5, tecnica: 0.2, experiencia: 0.2, plazo: 0.1 }
+    experiencia_mw_min: 10
+    capital_min_usd: 2000000
+    multa_usd_mw_mes: 2000
+    meses_max_atraso: 9
+    costo_preparacion_usd: { min: 20000, base: 30000, max: 50000, supuesto: "Propuesta técnica y comercial" }
+    ofertantes_externos: { media: 1.5, precio_factor: { min: 0.92, base: 1.03, max: 1.2, supuesto: "Dispersión ±12 %" } }
+    indexacion_anual: 0.015
+    supuesto: "PPA corporativos mineros en América Latina (BNEF Corporate PPA 2024), aproximado"
+
+  - id: industria
+    nombre: PPA para industria
+    pais: PAN
+    tipo: solicitud_privada
+    contrato: ppa
+    tipo_contrato: ppa_corporativo
+    descripcion: "Cementeras, cerveceras y plantas de alimentos piden energía solar o eólica con contrato de 10 años."
+    nombres_cliente: ["Cementos del Pacífico", "Cervecería Istmeña", "Alimentos Chiriquí", "Papelera Nacional"]
+    frecuencia_anual: 1.2
+    mw: { min: 2, base: 6, max: 15, supuesto: "Demanda de una planta industrial" }
+    plazo_anos: { min: 8, base: 10, max: 12, supuesto: "Contratos corporativos" }
+    tecnologias: [solar_fv, eolica_tierra]
+    precio_referencia: { min: 70, base: 80, max: 95, supuesto: "Descuento sobre la tarifa industrial (ASEP 2024)" }
+    precio_reserva_factor: { min: 0.95, base: 1.05, max: 1.15, supuesto: "Disposición a pagar privada" }
+    publica_precio_tope: false
+    plazo_oferta_dias: { min: 30, base: 45, max: 75, supuesto: "Solicitud de propuestas" }
+    evaluacion_dias: { min: 15, base: 30, max: 45, supuesto: "Negociación" }
+    plazo_cod_meses: { min: 15, base: 20, max: 28, supuesto: "Plazo del cliente" }
+    garantia_seriedad_usd_mw: 5000
+    garantia_cumplimiento_usd_mw: 20000
+    pesos: { precio: 0.55, tecnica: 0.15, experiencia: 0.15, plazo: 0.15 }
+    experiencia_mw_min: 0
+    capital_min_usd: 0
+    multa_usd_mw_mes: 1200
+    meses_max_atraso: 9
+    costo_preparacion_usd: { min: 8000, base: 15000, max: 25000, supuesto: "Propuesta comercial" }
+    ofertantes_externos: { media: 1.2, precio_factor: { min: 0.92, base: 1.03, max: 1.2, supuesto: "Dispersión ±12 %" } }
+    indexacion_anual: 0.015
+    supuesto: "PPA corporativos medianos en Centroamérica, aproximado"
+
+  - id: centro_datos
+    nombre: PPA para centro de datos
+    pais: PAN
+    tipo: solicitud_privada
+    contrato: ppa
+    tipo_contrato: ppa_corporativo
+    descripcion: "Un centro de datos quiere energía 100 % renovable con contrato largo. Muy exigente en experiencia y plazo."
+    nombres_cliente: ["Istmo Data Center", "Cloud Panamá Pacífico", "Nodo Digital Colón"]
+    frecuencia_anual: 0.3
+    mw: { min: 10, base: 20, max: 40, supuesto: "Centro de datos de 10–40 MW" }
+    plazo_anos: { min: 12, base: 15, max: 20, supuesto: "Contratos largos de hiperescala" }
+    tecnologias: [solar_fv, eolica_tierra]
+    precio_referencia: { min: 62, base: 72, max: 85, supuesto: "PPA de centros de datos en la región (orden de magnitud)" }
+    precio_reserva_factor: { min: 0.95, base: 1.05, max: 1.15, supuesto: "Disposición a pagar privada" }
+    publica_precio_tope: false
+    plazo_oferta_dias: { min: 45, base: 60, max: 90, supuesto: "RFP privada" }
+    evaluacion_dias: { min: 20, base: 30, max: 60, supuesto: "Negociación" }
+    plazo_cod_meses: { min: 18, base: 24, max: 30, supuesto: "Puesta en marcha del centro" }
+    garantia_seriedad_usd_mw: 8000
+    garantia_cumplimiento_usd_mw: 40000
+    pesos: { precio: 0.45, tecnica: 0.25, experiencia: 0.2, plazo: 0.1 }
+    experiencia_mw_min: 20
+    capital_min_usd: 3000000
+    multa_usd_mw_mes: 2500
+    meses_max_atraso: 6
+    costo_preparacion_usd: { min: 20000, base: 30000, max: 50000, supuesto: "Propuesta técnica y comercial" }
+    ofertantes_externos: { media: 1.5, precio_factor: { min: 0.92, base: 1.02, max: 1.18, supuesto: "Dispersión ±12 %" } }
+    indexacion_anual: 0.02
+    supuesto: "PPA de hiperescaladores (BNEF Corporate PPA 2024), aproximado"
+
+  - id: hotel_epc
+    nombre: Planta solar llave en mano (hoteles y turismo)
+    pais: PAN
+    tipo: solicitud_privada
+    contrato: epc
+    tipo_contrato: epc_llave_en_mano
+    descripcion: "Un hotel o complejo turístico encarga una planta solar propia: tú la construyes y la entregas con margen."
+    nombres_cliente: ["Resort Playa Blanca", "Hotel Bocas Bay", "Complejo Coronado", "Hotel Boquete Highlands"]
+    frecuencia_anual: 1.5
+    mw: { min: 1, base: 2, max: 5, supuesto: "Autoconsumo de un complejo turístico" }
+    plazo_anos: { base: 1, supuesto: "Obra (sin operación)" }
+    tecnologias: [solar_fv]
+    precio_referencia: { min: 950, base: 1150, max: 1400, supuesto: "EPC solar comercial en Panamá ≈ 0,95–1,40 USD/W (2025)" }
+    precio_reserva_factor: { min: 0.95, base: 1.08, max: 1.2, supuesto: "Presupuesto del cliente" }
+    publica_precio_tope: false
+    plazo_oferta_dias: { min: 20, base: 35, max: 60, supuesto: "Cotización" }
+    evaluacion_dias: { min: 10, base: 20, max: 30, supuesto: "Decisión del cliente" }
+    plazo_cod_meses: { min: 6, base: 9, max: 12, supuesto: "Obra de 6–12 meses" }
+    garantia_seriedad_usd_mw: 5000
+    garantia_cumplimiento_usd_mw: 110000
+    pesos: { precio: 0.5, tecnica: 0.25, experiencia: 0.15, plazo: 0.1 }
+    experiencia_mw_min: 0
+    capital_min_usd: 0
+    multa_usd_mw_mes: 0
+    meses_max_atraso: 6
+    costo_preparacion_usd: { min: 5000, base: 8000, max: 12000, supuesto: "Ingeniería de propuesta" }
+    ofertantes_externos: { media: 3, precio_factor: { min: 0.88, base: 1.02, max: 1.2, supuesto: "Muchos instaladores locales" } }
+    indexacion_anual: 0
+    supuesto: "Garantía de cumplimiento ≈ 10 % del valor de la obra (FIDIC)"
+
+  - id: zona_franca_epc
+    nombre: Planta solar llave en mano (zonas francas)
+    pais: PAN
+    tipo: solicitud_privada
+    contrato: epc
+    tipo_contrato: epc_llave_en_mano
+    descripcion: "Empresas de la Zona Libre de Colón y Panamá Pacífico encargan plantas en techos y terrenos."
+    nombres_cliente: ["Zona Libre de Colón – Logística", "Panamá Pacífico – Parque Industrial", "Zona Franca de Albrook"]
+    frecuencia_anual: 0.8
+    mw: { min: 2, base: 5, max: 12, supuesto: "Techos de bodegas y terrenos" }
+    plazo_anos: { base: 1, supuesto: "Obra (sin operación)" }
+    tecnologias: [solar_fv]
+    precio_referencia: { min: 900, base: 1050, max: 1250, supuesto: "EPC solar comercial-industrial en Panamá ≈ 0,9–1,25 USD/W (2025)" }
+    precio_reserva_factor: { min: 0.95, base: 1.08, max: 1.2, supuesto: "Presupuesto del cliente" }
+    publica_precio_tope: false
+    plazo_oferta_dias: { min: 20, base: 40, max: 60, supuesto: "Cotización" }
+    evaluacion_dias: { min: 10, base: 20, max: 30, supuesto: "Decisión del cliente" }
+    plazo_cod_meses: { min: 8, base: 11, max: 14, supuesto: "Obra de 8–14 meses" }
+    garantia_seriedad_usd_mw: 5000
+    garantia_cumplimiento_usd_mw: 100000
+    pesos: { precio: 0.55, tecnica: 0.2, experiencia: 0.15, plazo: 0.1 }
+    experiencia_mw_min: 0
+    capital_min_usd: 0
+    multa_usd_mw_mes: 0
+    meses_max_atraso: 6
+    costo_preparacion_usd: { min: 6000, base: 10000, max: 15000, supuesto: "Ingeniería de propuesta" }
+    ofertantes_externos: { media: 2.5, precio_factor: { min: 0.88, base: 1.02, max: 1.2, supuesto: "Instaladores locales y regionales" } }
+    indexacion_anual: 0
+    supuesto: "Garantía de cumplimiento ≈ 10 % del valor de la obra (FIDIC)"
+
+  - id: municipio_bot
+    nombre: BOT solar para entidades públicas
+    pais: PAN
+    tipo: licitacion_publica
+    contrato: bot
+    tipo_contrato: bot
+    descripcion: "Un municipio o institución pública licita una planta que construyes, operas y al final transfieres al Estado."
+    nombres_cliente: ["Municipio de David", "IDAAN – Plantas potabilizadoras", "Municipio de Santiago", "Aeropuerto de Tocumen"]
+    frecuencia_anual: 0.4
+    mw: { min: 5, base: 10, max: 25, supuesto: "Consumo de una entidad pública" }
+    plazo_anos: { min: 15, base: 20, max: 25, supuesto: "Concesión BOT" }
+    tecnologias: [solar_fv]
+    precio_referencia: { min: 68, base: 78, max: 92, supuesto: "Tarifa pública con descuento (orden de magnitud)" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.2, supuesto: "Precio tope publicado" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 120, supuesto: "Pliego APP" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación pública" }
+    plazo_cod_meses: { min: 24, base: 30, max: 36, supuesto: "Construcción" }
+    garantia_seriedad_usd_mw: 10000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.5, tecnica: 0.25, experiencia: 0.15, plazo: 0.1 }
+    experiencia_mw_min: 10
+    capital_min_usd: 1000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 30000, base: 45000, max: 70000, supuesto: "Pliego APP, legal y financiero" }
+    ofertantes_externos: { media: 1.5, precio_factor: { min: 0.92, base: 1.04, max: 1.2, supuesto: "Dispersión ±12 %" } }
+    indexacion_anual: 0.015
+    supuesto: "Asociaciones público-privadas (Ley 93 de 2019 de Panamá), aproximado"

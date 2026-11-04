@@ -1,0 +1,149 @@
+# Competidores IA (Fase 3). Usan los mismos comandos y reglas que el jugador (ver docs/MOTOR_FASE3.md).
+# No conocen el recurso real: deciden con su estimación, como el jugador.
+# margen_objetivo: margen sobre el precio de equilibrio al ofertar; tasa_descuento: la que usan para cotizar.
+# apalancamiento y socio: fracción de deuda y de socio de capital que piden al financiar.
+# reserva_meses: caja mínima (en meses de gastos fijos) que no arriesgan.
+# vende: 'listo_para_construir' vende los proyectos listos sin contrato; 'en_crisis' vende si le falta caja.
+# Nombres ficticios.
+
+empresas:
+  - id: solaris
+    nombre: "Solaris Andina"
+    estrategia: agresiva
+    estrategia_aparente: "Agresiva en precio: oferta barato, equipos económicos, mucha deuda"
+    descripcion: "Desarrolladora regional de solar con equipos baratos y mucha deuda; compite por precio y vende proyectos listos para construir."
+    caja_inicial_usd: 6000000
+    gastos_fijos_mensuales_usd: 30000
+    reputacion_inicial: 40
+    experiencia_mw_inicial: 60
+    tecnologias: [solar_fv]
+    margen_objetivo: 0.03
+    tasa_descuento: 0.075
+    apalancamiento: 0.75
+    socio: 0.5
+    max_proyectos: 3
+    mw: { min: 15, max: 50 }
+    proveedores: baratos
+    prob_ofertar: 0.8
+    ofertar_epc: true
+    dias_decision: 14
+    reserva_meses: 4
+    vende: listo_para_construir
+    investigacion: { presupuesto_mensual_usd: 25000, prioridades: [ef_compras_globales, contrato_epc, contrato_ppa_corporativo, ef_construccion_modular] }
+    supuesto: "Perfil de desarrolladora mediana latinoamericana (caja y gastos de orden de magnitud)"
+
+  - id: istmo_gen
+    nombre: "Istmo Generación"
+    estrategia: conservadora
+    estrategia_aparente: "Conservadora: márgenes altos, proveedores de calidad, poca deuda"
+    descripcion: "Generadora familiar panameña con plantas hidro; entra en renovables con prudencia."
+    caja_inicial_usd: 12000000
+    gastos_fijos_mensuales_usd: 40000
+    reputacion_inicial: 60
+    experiencia_mw_inicial: 150
+    tecnologias: [eolica_tierra, solar_fv]
+    margen_objetivo: 0.14
+    tasa_descuento: 0.10
+    apalancamiento: 0.6
+    socio: 0.3
+    max_proyectos: 2
+    mw: { min: 20, max: 60 }
+    proveedores: calidad
+    prob_ofertar: 0.5
+    ofertar_epc: false
+    dias_decision: 21
+    reserva_meses: 8
+    vende: nunca
+    investigacion: { presupuesto_mensual_usd: 30000, prioridades: [ef_om_predictivo, contrato_ppa_corporativo, ef_permisos, ef_rotores_grandes] }
+    supuesto: "Perfil de generador local establecido (orden de magnitud)"
+
+  - id: egesa_r
+    nombre: "EGESA Renovables"
+    estrategia: estatal
+    estrategia_aparente: "Ligada al Estado: mucha experiencia y reputación, precios moderados"
+    descripcion: "Filial de una empresa de generación del Estado: mucha caja, reputación y experiencia; decide despacio."
+    caja_inicial_usd: 20000000
+    gastos_fijos_mensuales_usd: 50000
+    reputacion_inicial: 75
+    experiencia_mw_inicial: 400
+    tecnologias: [solar_fv, eolica_tierra]
+    margen_objetivo: 0.08
+    tasa_descuento: 0.07
+    apalancamiento: 0.6
+    socio: 0
+    max_proyectos: 2
+    mw: { min: 30, max: 80 }
+    proveedores: equilibrados
+    prob_ofertar: 0.6
+    ofertar_epc: false
+    dias_decision: 30
+    reserva_meses: 10
+    vende: nunca
+    investigacion: { presupuesto_mensual_usd: 20000, prioridades: [ef_permisos, contrato_ppa_corporativo, contrato_bot, contrato_potencia] }
+    supuesto: "Empresa estatal de generación (EGESA existe; esta filial es ficticia)"
+
+  - id: vientos
+    nombre: "Vientos del Istmo Tech"
+    estrategia: especialista
+    estrategia_aparente: "Especialista en eólica: invierte en tecnología y medición"
+    descripcion: "Especialista en eólica con fuerte inversión en I+D (LiDAR, rotores grandes)."
+    caja_inicial_usd: 8000000
+    gastos_fijos_mensuales_usd: 35000
+    reputacion_inicial: 45
+    experiencia_mw_inicial: 100
+    tecnologias: [eolica_tierra]
+    margen_objetivo: 0.10
+    tasa_descuento: 0.085
+    apalancamiento: 0.7
+    socio: 0.4
+    max_proyectos: 2
+    mw: { min: 30, max: 90 }
+    proveedores: calidad
+    prob_ofertar: 0.7
+    ofertar_epc: false
+    dias_decision: 14
+    reserva_meses: 6
+    vende: en_crisis
+    investigacion: { presupuesto_mensual_usd: 50000, prioridades: [est_lidar, ef_rotores_grandes, contrato_ppa_corporativo, contrato_potencia, ef_om_predictivo] }
+    supuesto: "Especialista tecnológico (orden de magnitud)"
+
+  - id: meridian
+    nombre: "Meridian Infra Fund"
+    estrategia: fondo
+    estrategia_aparente: "Fondo financiero: capital barato, ofertas ajustadas, sin prisa"
+    descripcion: "Fondo de infraestructura con capital barato: acepta retornos bajos y financia con deuda de banca de desarrollo."
+    caja_inicial_usd: 25000000
+    gastos_fijos_mensuales_usd: 35000
+    reputacion_inicial: 50
+    experiencia_mw_inicial: 200
+    tecnologias: [solar_fv, eolica_tierra]
+    margen_objetivo: 0.05
+    tasa_descuento: 0.065
+    apalancamiento: 0.7
+    socio: 0
+    max_proyectos: 3
+    mw: { min: 20, max: 50 }
+    proveedores: equilibrados
+    prob_ofertar: 0.6
+    ofertar_epc: false
+    dias_decision: 21
+    reserva_meses: 6
+    vende: nunca
+    investigacion: { presupuesto_mensual_usd: 10000, prioridades: [contrato_ppa_corporativo, ef_compras_globales] }
+    supuesto: "Fondo de infraestructura con costo de capital ≈ 6–7 % (IEA Cost of Capital Observatory 2024)"
+
+# Sitios donde la IA busca terrenos (públicos: zonas con buen recurso conocidas). El recurso real de cada sitio es oculto.
+sitios_fuente: "Zonas con proyectos solares y eólicos reales o en trámite en Panamá (ASEP, registro de licencias 2024), aproximadas"
+sitios_candidatos:
+  - { nombre: "Arco seco – Coclé", pais: PAN, tecnologia: solar_fv, lat: 8.2, lon: -80.7 }
+  - { nombre: "Aguadulce", pais: PAN, tecnologia: solar_fv, lat: 8.25, lon: -80.5 }
+  - { nombre: "Chitré", pais: PAN, tecnologia: solar_fv, lat: 7.95, lon: -80.45 }
+  - { nombre: "Las Tablas", pais: PAN, tecnologia: solar_fv, lat: 7.75, lon: -80.3 }
+  - { nombre: "Santiago de Veraguas", pais: PAN, tecnologia: solar_fv, lat: 8.1, lon: -80.95 }
+  - { nombre: "David – Chiriquí", pais: PAN, tecnologia: solar_fv, lat: 8.42, lon: -82.4 }
+  - { nombre: "Antón", pais: PAN, tecnologia: solar_fv, lat: 8.4, lon: -80.25 }
+  - { nombre: "Penonomé", pais: PAN, tecnologia: eolica_tierra, lat: 8.6, lon: -80.3 }
+  - { nombre: "Penonomé norte", pais: PAN, tecnologia: eolica_tierra, lat: 8.7, lon: -80.4 }
+  - { nombre: "Toabré", pais: PAN, tecnologia: eolica_tierra, lat: 8.65, lon: -80.2 }
+  - { nombre: "Llano de Antón", pais: PAN, tecnologia: eolica_tierra, lat: 8.55, lon: -80.15 }
+  - { nombre: "Boquerón – Chiriquí", pais: PAN, tecnologia: eolica_tierra, lat: 8.5, lon: -82.6 }

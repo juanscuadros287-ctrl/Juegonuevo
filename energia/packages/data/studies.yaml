@@ -53,6 +53,18 @@ estudios:
     sigma_recurso: 0.035
     resultados: { normal: 1, peor: 0, bloqueo: 0, fuente: "Incertidumbre de la velocidad media tras 12 meses de medición + MCP ≈ 3–5 % (IEC 61400-12 / MEASNET)" }
 
+  - id: medicion_eolica_lidar
+    nombre: Campaña con LiDAR de escaneo (8 meses, Fase 3)
+    grupo: medicion_recurso
+    descripcion: "LiDAR de escaneo 3D sin torre, correlacionado con serie larga. Misma incertidumbre bancable que la torre en menos tiempo. Requiere I+D."
+    aplica: { tecnologias: [eolica_tierra] }
+    requiere: []
+    costo_fijo_usd: { min: 110000, base: 150000, max: 230000, supuesto: "Alquiler de LiDAR de escaneo + análisis (2024)" }
+    costo_usd_mw: { base: 300, supuesto: "Micrositing y estelas" }
+    duracion_dias: { min: 210, base: 240, max: 300, supuesto: "8 meses de datos + informe" }
+    sigma_recurso: 0.035
+    resultados: { normal: 1, peor: 0, bloqueo: 0, fuente: "LiDAR validado frente a torre: incertidumbre comparable (IEA Wind Task 32, 2021)" }
+
   - id: prefactibilidad
     nombre: Estudio de prefactibilidad
     grupo: prefactibilidad
@@ -64,6 +76,21 @@ estudios:
     duracion_dias: { min: 30, base: 45, max: 75, supuesto: "Trabajo de escritorio + visita" }
     resultados: { normal: 0.80, peor: 0.17, bloqueo: 0.03, supuesto: "≈1 de 5 sitios sale peor (accesos largos, red lejana); pocos se descartan" }
     peor_capex_factor: { min: 1.02, base: 1.04, max: 1.08, supuesto: "Caminos o línea de conexión más larga" }
+    peor_descripcion: "Accesos o conexión más caros de lo previsto"
+    hallazgos: [tierra_disputa]
+
+  # Fase 3: estudios desbloqueados por I+D (research.yaml)
+  - id: prefactibilidad_digital
+    nombre: Prefactibilidad digital (drones y SIG)
+    grupo: prefactibilidad
+    descripcion: "Levantamiento con drones, análisis SIG de restricciones y catastro digital. Más rápido y detecta antes los problemas de acceso. Requiere I+D."
+    aplica: {}
+    requiere: []
+    costo_fijo_usd: { min: 16000, base: 24000, max: 38000, supuesto: "Vuelo de dron + licencias SIG + consultor (2025)" }
+    costo_usd_mw: { base: 420, supuesto: "Escala con el área volada" }
+    duracion_dias: { min: 12, base: 20, max: 35, supuesto: "Vuelo en días; procesamiento automático" }
+    resultados: { normal: 0.85, peor: 0.12, bloqueo: 0.03, supuesto: "Mejor información temprana: menos sorpresas de costo (supuesto)" }
+    peor_capex_factor: { min: 1.02, base: 1.035, max: 1.07, supuesto: "Caminos o conexión algo más largos" }
     peor_descripcion: "Accesos o conexión más caros de lo previsto"
     hallazgos: [tierra_disputa]
 

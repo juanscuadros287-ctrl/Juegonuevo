@@ -12,6 +12,7 @@ capex_usd_kw:
 desglose_capex:
   { equipos: 0.55, epc: 0.35, otros: 0.10,
     supuesto: "Módulos + inversores + seguidores ≈ 50–60 % del CAPEX (IRENA 2023, desglose de costos de FV); resto obra civil, montaje, BOS eléctrico y desarrollo." }
+fraccion_inversores: 0.12   # parte de los equipos que son inversores (IRENA 2023: inversores ≈ 5–8 % del CAPEX total de FV)
 om_fijo_usd_kw_ano: { min: 10, base: 16, max: 24, fuente: "IRENA 2023 (O&M FV 8–20 USD/kW·año fuera de la OCDE); NREL ATB 2024 ~22 USD/kWac·año" }
 om_variable_usd_mwh: { base: 0, fuente: "NREL ATB 2024: O&M variable de FV ≈ 0 (todo en fijo)" }
 factor_capacidad_ref: { min: 0.14, base: 0.19, max: 0.30, fuente: "IRENA 2023: FC medio mundial FV 2023 ≈ 16,2 %; con seguidor y buen recurso 20–30 %" }
