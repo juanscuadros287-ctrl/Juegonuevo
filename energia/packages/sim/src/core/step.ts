@@ -15,11 +15,7 @@ const LEDGER_KEEP_DAYS = 730;
  * Determinista: depende solo de `state` y `commands`.
  */
 export function step(state: GameState, commands: readonly Command[] = []): SimEvent[] {
-  const events: SimEvent[] = [];
-  for (const cmd of commands) {
-    const r = applyCommand(state, cmd);
-    if (!r.ok) events.push({ type: 'commandRejected', command: cmd, error: r.error });
-  }
+  const events = applyCommands(state, commands);
 
   const prev = fromEpochDay(state.startEpochDay + state.tick);
   state.tick += 1;
@@ -35,6 +31,19 @@ export function step(state: GameState, commands: readonly Command[] = []): SimEv
     events.push({ type: 'newMonth', year: now.year, month: now.month });
     if (now.year !== prev.year) events.push({ type: 'newYear', year: now.year });
     if (c.cashUsd < 0) events.push({ type: 'cashNegative', cashUsd: c.cashUsd });
+  }
+  return events;
+}
+
+/**
+ * Aplica comandos en el tick actual sin avanzar el tiempo (p. ej. con el juego en pausa).
+ * Equivale a pasarlos al inicio del siguiente step().
+ */
+export function applyCommands(state: GameState, commands: readonly Command[]): SimEvent[] {
+  const events: SimEvent[] = [];
+  for (const cmd of commands) {
+    const r = applyCommand(state, cmd);
+    if (!r.ok) events.push({ type: 'commandRejected', command: cmd, error: r.error });
   }
   return events;
 }

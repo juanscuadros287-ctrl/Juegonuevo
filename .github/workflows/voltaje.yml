@@ -1,0 +1,41 @@
+# Voltaje (carpeta energia/): pruebas en cada push y .dmg para Mac Apple Silicon.
+name: Voltaje
+on:
+  push:
+    paths: ['energia/**', '.github/workflows/voltaje.yml']
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: energia
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: energia/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  mac:
+    needs: test
+    runs-on: macos-14 # Apple Silicon
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: energia/package-lock.json }
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: aarch64-apple-darwin }
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: energia/apps/game/src-tauri }
+      - run: npm ci
+      - run: npm run mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Voltaje-macOS-AppleSilicon
+          path: energia/apps/game/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error

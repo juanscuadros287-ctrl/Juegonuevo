@@ -1,7 +1,7 @@
 # Plan de arquitectura y roadmap — Simulador de empresa de energía global
 
 > Nombre provisional: **Voltaje** (se cambia en `packages/data/game.yaml`).
-> Estado: **Fase 0 aprobada** (stack aprobado, país inicial Panamá, repo propio).
+> Estado: **Fase 1 completa.** Detalle del estado en `CLAUDE.md`.
 
 ---
 

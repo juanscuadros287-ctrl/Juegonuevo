@@ -34,6 +34,31 @@ function gridImage(grid: ResourceGrid, color: (i: number) => number[] | null): H
   return c;
 }
 
+/** Desenfoque de caja 3×3 aplicado `passes` veces (suaviza los escalones de la grilla). */
+function boxBlur(canvas: HTMLCanvasElement, passes: number) {
+  const ctx = canvas.getContext('2d')!;
+  const { width: w, height: h } = canvas;
+  const img = ctx.getImageData(0, 0, w, h);
+  let src = img.data;
+  for (let p = 0; p < passes; p++) {
+    const out = new Uint8ClampedArray(src.length);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      for (let ch = 0; ch < 4; ch++) {
+        let s = 0, n = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          const yy = y + dy;
+          if (yy < 0 || yy >= h) continue;
+          for (let dx = -1; dx <= 1; dx++) { s += src[(yy * w + ((x + dx + w) % w)) * 4 + ch]; n++; }
+        }
+        out[(y * w + x) * 4 + ch] = s / n;
+      }
+    }
+    src = out;
+  }
+  img.data.set(src);
+  ctx.putImageData(img, 0, 0);
+}
+
 /** Mapa base: océano con profundidad aproximada y tierra coloreada por bioma (lluvia, temperatura, relieve). */
 export function buildBaseTexture(grid: ResourceGrid, shapes: CountryShape[], width = 4096): THREE.CanvasTexture {
   const g = theme.globe;
@@ -49,6 +74,7 @@ export function buildBaseTexture(grid: ResourceGrid, shapes: CountryShape[], wid
     const d = grid.valueAt('dist_costa_km', i);
     return mix(shallow, deep, Math.min(1, Math.sqrt(d / 600)));
   });
+  boxBlur(ocean, 2);
   ctx.drawImage(ocean, 0, 0, W, H);
 
   const C = { ice: hex(g.ice), desert: hex(g.desert), steppe: hex(g.steppe), grass: hex(g.grass), forest: hex(g.forest), rain: hex(g.rainforest), mtn: hex(g.mountain) };

@@ -19,14 +19,14 @@
   unidad: m/s
   aplica: tierra
   rango: [3, 11]
-  rampa: ["#f1f5f9", "#9ad0ec", "#3b8bd6", "#2f4fb0", "#5a1e8c"]
+  rampa: ["#5b6b4f", "#8fb3a0", "#4fa3d9", "#3a5fcd", "#7b2fbf"]
   tecnologias: [Eólica en tierra]
 - id: viento_mar
   nombre: Viento mar adentro a 100 m
   unidad: m/s
   aplica: mar
   rango: [4, 12]
-  rampa: ["#e0f2fe", "#7dd3fc", "#0ea5e9", "#1d4ed8", "#4c1d95"]
+  rampa: ["#1e3a5f", "#2b7bb9", "#38bdf8", "#a78bfa", "#f0abfc"]
   tecnologias: [Eólica marina]
 - id: geotermia
   nombre: Flujo de calor geotérmico

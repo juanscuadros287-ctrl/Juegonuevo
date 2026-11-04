@@ -3,8 +3,8 @@
 # IMPORTANTE (honestidad de datos): este entorno de desarrollo no tiene acceso a NASA POWER,
 # Global Solar Atlas ni Global Wind Atlas. Estos valores son aproximaciones redondeadas del
 # orden de magnitud que publican esas fuentes para cada lugar, no extracciones del dataset.
-# Error esperado: GHI ±10 %, viento ±1,5 m/s, lluvia ±30 %. Cuando haya red, tools/fetch-nasa-power.ts
-# reemplazará solar y viento por datos reales (ver CLAUDE.md).
+# Error esperado: GHI ±10 %, viento ±1,5 m/s, lluvia ±30 %. Pendiente: un script que, con acceso a red,
+# reemplace solar y viento por datos reales de NASA POWER (ver CLAUDE.md, "Pendientes").
 #
 # Formato: [nombre, lat, lon, GHI kWh/m²/día, viento a 100 m (m/s), lluvia mm/año, radio km (opcional)]
 # null = sin dato (se usa el modelo base).
