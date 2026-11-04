@@ -41,7 +41,7 @@ export function FinancingTab({ d }: { d: ProjectDetail }) {
         </div>
         <Section title="Condiciones">
           <table className="kv" style={{ maxWidth: 620 }}><tbody>
-            <tr><td>Prestamista</td><td style={{ fontFamily: 'inherit' }}>{ld?.nombre ?? 'Sin deuda (solo capital)'}</td></tr>
+            <tr><td>Prestamista</td><td style={{ fontFamily: 'inherit', whiteSpace: 'normal' }}>{ld?.nombre ?? 'Sin deuda (solo capital)'}</td></tr>
             <tr><td>Deuda pedida</td><td>{fmtPct(f.requestedDebtFraction, 0)}</td></tr>
             <tr><td>Comisiones y asesores</td><td>{fmtMoney(f.feesUsd)}</td></tr>
             <tr><td>Prima de desarrollo del socio</td><td>{fmtMoney(f.partnerPremiumUsd)}</td></tr>

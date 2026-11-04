@@ -34,10 +34,9 @@ function useGameEvents() {
       const tick = g?.tick ?? 0;
       const date = g ? formatDate(fromEpochDay(g.startEpochDay + tick), true) : '';
       const log: Omit<LogEntry, 'id'>[] = [];
-      const name = (id: string) => g?.projects.find((p) => p.id === id)?.name ?? id;
       for (const e of events) {
         if ('projectId' in e) {
-          log.push({ tick, date, text: `${name(e.projectId)}: ${e.text}`, severity: e.severity, projectId: e.projectId });
+          log.push({ tick, date, text: e.text, severity: e.severity, projectId: e.projectId });
           if (e.severity !== 'info' || TOAST_INFO.has(e.type)) ui.toast(e.text, KIND[e.severity], e.projectId);
           if (e.type === 'projectCreated') ui.openProject(e.projectId);
           continue;
@@ -111,6 +110,8 @@ export function App() {
   const [world, setWorld] = useState<World | null>(null);
   const [error, setError] = useState('');
   const screen = useUi((s) => s.screen);
+  // con una ventana grande abierta se ocultan los paneles laterales (el globo sigue visible detrás)
+  const win = useUi((s) => s.window);
   useGameEvents();
   useKeyboard();
 
@@ -128,8 +129,8 @@ export function App() {
       {screen === 'game' && (
         <>
           <TopBar />
-          <LayerPanel />
-          <Inspector world={world} />
+          {!win && <LayerPanel />}
+          {!win && <Inspector world={world} />}
           <ZoomButtons />
           <Windows />
           <DevelopDialog />
@@ -144,7 +145,7 @@ export function App() {
 
 function ZoomButtons() {
   return (
-    <div className="panel" style={{ position: 'absolute', bottom: 16, right: 12, display: 'grid', padding: 4, gap: 4 }}>
+    <div className="panel" style={{ position: 'absolute', bottom: 16, left: 12, display: 'grid', padding: 4, gap: 4 }}>
       <button onClick={() => getGlobe()?.zoomBy(0.8)} title="Acercar (+)">＋</button>
       <button onClick={() => getGlobe()?.zoomBy(1.25)} title="Alejar (−)">−</button>
     </div>

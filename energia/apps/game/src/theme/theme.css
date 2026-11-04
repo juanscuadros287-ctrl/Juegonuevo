@@ -19,7 +19,7 @@
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; height: 100%; overflow: hidden; }
 body { background: radial-gradient(ellipse at 50% 40%, #12263d 0%, var(--bg) 70%); color: var(--text); font: 13px/1.4 var(--font); user-select: none; -webkit-user-select: none; }
-button { font: inherit; color: inherit; cursor: pointer; border: 1px solid var(--panel-border); background: rgba(255,255,255,0.06); border-radius: 7px; padding: 6px 11px; transition: background .12s, border-color .12s; }
+button { font: inherit; color: inherit; cursor: pointer; border: 1px solid var(--panel-border); background: rgba(255,255,255,0.06); border-radius: 7px; padding: 6px 11px; }
 button:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
 button:disabled { opacity: .45; cursor: default; }
 button.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; font-weight: 600; }
@@ -37,7 +37,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .spacer { flex: 1; }
 table.kv { width: 100%; border-collapse: collapse; }
 table.kv td { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top; }
-table.kv td:last-child { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+table.kv td:last-child { white-space: nowrap; padding-left: 10px; text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .badge { display: inline-block; padding: 1px 7px; border-radius: 99px; font-size: 11px; font-weight: 600; }
 .scroll { overflow-y: auto; }
 .scroll::-webkit-scrollbar { width: 8px; }
@@ -70,7 +70,7 @@ button.link:hover:not(:disabled) { background: none; filter: brightness(1.2); }
 .modal { padding: 20px; background: var(--panel-solid); max-height: calc(100% - 40px); overflow-y: auto; }
 
 .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--panel-border); flex-wrap: wrap; }
-.tab { border: none; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 12px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 6px; }
+.tab { transition: none; border: none; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 12px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 6px; }
 .tab:hover:not(:disabled) { background: rgba(255,255,255,.05); color: var(--text); }
 .tab.active { color: var(--text); border-bottom-color: var(--accent); background: none; }
 .tab-dot { min-width: 16px; height: 16px; border-radius: 8px; color: #111; font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; padding: 0 4px; }

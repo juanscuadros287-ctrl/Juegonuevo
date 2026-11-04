@@ -10,7 +10,7 @@ import { loadWorld } from '../world/loadWorld';
 function rebuildLog() {
   const g = sim.state;
   const entries: Omit<LogEntry, 'id'>[] = [];
-  for (const p of g?.projects ?? []) for (const t of p.timeline) entries.push({ tick: t.tick, date: formatDate(fromEpochDay(g!.startEpochDay + t.tick), true), text: `${p.name}: ${t.text}`, severity: t.kind, projectId: p.id });
+  for (const p of g?.projects ?? []) for (const t of p.timeline) entries.push({ tick: t.tick, date: formatDate(fromEpochDay(g!.startEpochDay + t.tick), true), text: t.text, severity: t.kind, projectId: p.id });
   entries.sort((a, b) => a.tick - b.tick);
   ui.set({ log: [], unread: 0 });
   ui.log(entries.slice(-LOG_MAX));

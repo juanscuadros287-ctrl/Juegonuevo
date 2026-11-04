@@ -21,7 +21,7 @@ export function CommercialTab({ d }: { d: ProjectDetail }) {
       {ppa && (
         <Section title="Contrato actual">
           <table className="kv" style={{ maxWidth: 560 }}><tbody>
-            <tr><td>Canal</td><td style={{ fontFamily: 'inherit' }}>{ppa.channelName}</td></tr>
+            <tr><td>Canal</td><td style={{ fontFamily: 'inherit', whiteSpace: 'normal' }}>{ppa.channelName}</td></tr>
             <tr><td>Estado</td><td>{ppa.status === 'firmado' ? <Pill tone="good">Firmado</Pill> : ppa.status === 'en_proceso' ? <Pill tone="info">Resultado el {g ? fmtDate(dateOfTick(g, ppa.endTick)) : ''}</Pill> : <Pill tone="bad">No adjudicado</Pill>}</td></tr>
             {ppa.status === 'firmado' && g && <>
               <tr><td>Precio inicial</td><td>{fmtNum(ppa.priceUsdMwh, 2)} US$/MWh</td></tr>

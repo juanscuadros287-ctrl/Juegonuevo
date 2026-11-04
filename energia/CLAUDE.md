@@ -5,7 +5,7 @@ Juego independiente de Dinastía (el juego Godot de la raíz del repo). Vive en 
 ## Estado actual
 - **Fase 1 completa**: globo 3D, capas de recursos, tiempo con velocidades, guardado/carga, menú principal, CI para Mac.
 - **Fase 2 (motor) lista**: núcleo económico, Panamá (permisos, PPA, bancos, impuestos), solar FV y eólica con ciclo completo de proyecto, estados financieros, quiebra, Monte Carlo. Detalle en `docs/MOTOR_FASE2.md`.
-- Siguiente: UI de la Fase 2 (paneles de proyecto y empresa, modelos 3D por avance) usando los selectores del motor.
+- **Fase 2 (UI) lista**: desarrollar en un sitio, panel y detalle de proyectos (Gantt, estudios, permisos, PPA, financiación, construcción, operación, viabilidad), finanzas de la empresa, registro de eventos, quiebra, sitios 3D en el globo. Detalle en `docs/UI.md`.
 
 ## Comandos (desde `energia/`)
 | Comando | Qué hace |
@@ -32,9 +32,9 @@ packages/sim    motor puro TS: sin DOM, sin Math.random/Date.now. Determinista.
 packages/data   YAML editables + esquemas Zod (game, layers, countries/*, technologies/*, studies, suppliers, resources/anclas)
   generated/    grid.bin, grid.json, world.json (salida de tools/build-resources.ts; se sirven como estáticos)
 apps/game       Vite + React + Three.js
-  worker/       el GameState vive solo en un Web Worker; la UI recibe instantáneas y envía comandos
-  globe/        Globe.ts (shader propio: mapa base, capa, máscara de costa, cuadrícula, selección, facetas)
-  ui/           paneles React; store.ts = estado de UI (no de juego)
+  worker/       el GameState vive solo en un Web Worker (carga la grilla y calcula las vistas de los selectores); la UI recibe instantáneas + vistas y envía comandos
+  globe/        Globe.ts (shader propio: mapa base, capa, máscara de costa, cuadrícula, selección, facetas); sites.ts + siteVisual.ts (adaptador único a models/)
+  ui/           paneles React; store.ts = estado de UI (no de juego); project/ = pestañas del detalle de proyecto
   storage/      partidas en IndexedDB + exportar/importar .json
   theme/        theme.ts (colores del globo) y theme.css (UI): el estilo se cambia aquí
   src-tauri/    envoltorio nativo de Mac
@@ -69,9 +69,15 @@ Reglas:
 | 2026-11-04 | Contabilidad consolidada (impuesto a nivel empresa, mensual, con arrastre de pérdidas); estudios y permisos se capitalizan y se castigan si se abandona. |
 | 2026-11-04 | Quiebra: 3 meses de caja negativa sin crédito de emergencia (hasta 50 % del valor neto de las plantas). |
 | 2026-11-04 | SAVE_VERSION 2 con migración desde v1 (las partidas de la Fase 1 cargan sin proyectos). |
+| 2026-11-04 | UI Fase 2: los selectores corren en el worker (tienen datos + grilla) y viajan con cada instantánea; detalle solo del proyecto enfocado; viabilidad y vistas previas bajo pedido. |
+| 2026-11-04 | Vista previa de sitio = `previewSite` + `createProject` sobre una copia del estado para obtener TIR/VAN/LCOE con los mismos selectores (sin tocar la partida). |
+| 2026-11-04 | Registro de eventos solo en la UI; al cargar se reconstruye con las líneas de tiempo de los proyectos (no se cambia el formato de guardado). |
+| 2026-11-04 | Sitios del globo vía `globe/siteVisual.ts` sobre `src/models` (escala 0,008, anillo de avance por etapa, clic por proximidad en pantalla). |
 
 ## Pendientes conocidos
-- El worker del juego aún no carga la grilla: hasta que la UI la pase en el `SimContext`, `createProject` se rechaza en el juego.
+- Operación: la producción esperada mensual se dibuja plana (P50/12 por días); el motor no expone el perfil estacional por mes.
+- Los eventos no llevan `tick`: el registro les pone la fecha de la última instantánea (a ×8 puede diferir unos días).
+- Falta una captura de una planta en operación (requiere años de juego); la pestaña Operación solo se probó vacía.
 - Permisos, plazos y probabilidades de Panamá son aproximados (marcados `supuesto`); calibrar con desarrolladores locales si se consigue información.
 - Reemplazar sol y viento por NASA POWER cuando haya red (script por escribir).
 - El `.dmg` solo se ha configurado, no se ha compilado aquí (este entorno es Linux). Revisar el primer run de GitHub Actions.

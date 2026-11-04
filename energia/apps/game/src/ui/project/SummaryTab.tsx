@@ -156,7 +156,7 @@ export function SummaryTab({ d }: { d: ProjectDetail }) {
             <tr><td>Recurso P50</td><td>{fmtNum(d.resource.p50, 2)} <span className="dim">{layer?.unidad}</span></td></tr>
             <tr><td>Recurso P90</td><td>{fmtNum(d.resource.p90, 2)} <span className="dim">{layer?.unidad}</span></td></tr>
             <tr><td>Incertidumbre</td><td>± {fmtPct(d.resource.sigma)}</td></tr>
-            <tr><td>Fuente</td><td style={{ fontFamily: 'inherit' }}>{d.resource.source === 'celda' ? 'Valor de la celda' : d.studies.find((s) => s.id === d.resource.source)?.nombre ?? d.resource.source}</td></tr>
+            <tr><td>Fuente</td><td style={{ fontFamily: 'inherit', whiteSpace: 'normal' }}>{d.resource.source === 'celda' ? 'Valor de la celda' : d.studies.find((s) => s.id === d.resource.source)?.nombre ?? d.resource.source}</td></tr>
             <tr><td>FC P50 / P90</td><td>{fmtPct(d.resource.fcP50)} / {fmtPct(d.resource.fcP90)}</td></tr>
             <tr><td>Energía P50</td><td>{fmtNum(d.resource.energyP50MwhYear / 1000, 1)} <span className="dim">GWh/año</span></td></tr>
             <tr><td>Energía P90</td><td>{fmtNum(d.resource.energyP90MwhYear / 1000, 1)} <span className="dim">GWh/año</span></td></tr>

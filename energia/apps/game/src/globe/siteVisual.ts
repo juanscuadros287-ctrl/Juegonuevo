@@ -46,7 +46,7 @@ export const STAGE_COLORS: Record<ProjectStage, string> = {
   vendido: '#64748b', abandonado: '#64748b', desmantelado: '#64748b',
 };
 
-const SCALE = 0.011;
+const SCALE = 0.008;
 const RING_IN = 0.66, RING_OUT = 0.76;
 
 function toPlantState(v: SiteView) {
