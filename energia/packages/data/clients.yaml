@@ -15,7 +15,7 @@ jugador:
   experiencia_mw_inicial: 0
   supuesto: "Empresa nueva: sin plantas construidas y poca reputación (escala 0–100)"
 
-potencia_firme_frac: { solar_fv: 0.05, eolica_tierra: 0.20, baterias: 0.95, hidro_embalse: 0.90, gas_natural: 0.95 }
+potencia_firme_frac: { solar_fv: 0.05, eolica_tierra: 0.20, baterias: 0.95, hidro_embalse: 0.90, gas_natural: 0.95, hidro_bombeo: 0.95, geotermica: 0.90, carbon: 0.90, petroleo: 0.90, nuclear: 0.92, smr: 0.92, biomasa: 0.80, csp: 0.60, hidro_pasada: 0.40, eolica_marina: 0.30 }
 potencia_firme_fuente: "Potencia firme reconocida por tecnología, orden de magnitud de la metodología de ASEP/CND (Reglas Comerciales del Mercado Mayorista de Panamá); supuesto"
 
 epc:
@@ -40,7 +40,7 @@ tipos:
     frecuencia_anual: 2
     mw: { min: 10, base: 30, max: 80, supuesto: "Bloques adjudicados por oferente en las LPI de ETESA 2020–2024 (orden de magnitud)" }
     plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de 10–20 años" }
-    tecnologias: [solar_fv, eolica_tierra, hidro_pasada, biomasa]
+    tecnologias: [solar_fv, eolica_tierra, hidro_pasada, biomasa, geotermica, biogas]
     precio_referencia: { min: 55, base: 66, max: 80, supuesto: "Precios adjudicados a renovables en licitaciones de ETESA 2020–2024 ≈ 55–90 USD/MWh" }
     precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
     publica_precio_tope: true
@@ -268,3 +268,496 @@ tipos:
     ofertantes_externos: { media: 1.5, precio_factor: { min: 0.92, base: 1.04, max: 1.2, supuesto: "Dispersión ±12 %" } }
     indexacion_anual: 0.015
     supuesto: "Asociaciones público-privadas (Ley 93 de 2019 de Panamá), aproximado"
+
+  # ───────── Fase 4: clientes de los países nuevos (solo se generan si algún actor tiene presencia) ─────────
+  - id: cri_ice
+    nombre: "Concurso de generación privada (ICE)"
+    pais: CRI
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "El ICE convoca bloques de energía renovable privada bajo la Ley 7200."
+    nombres_cliente: ["ICE – Concurso Ley 7200", "ICE – Bloque renovable"]
+    frecuencia_anual: 0.6
+    mw: { min: 5, base: 20, max: 50, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [solar_fv, eolica_tierra, hidro_pasada, biomasa]
+    precio_referencia: { min: 60, base: 75, max: 94, supuesto: "Tarifas ARESEP para generación privada ≈ 65–95 USD/MWh" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: USD
+    supuesto: "Subasta pública de energía del país (ver countries/CRI.yaml)"
+
+  - id: col_subasta
+    nombre: "Subasta de largo plazo (MinEnergía/UPME)"
+    pais: COL
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "Subasta de contratos de largo plazo en pesos para comercializadores."
+    nombres_cliente: ["Subasta CLPE", "Subasta de expansión UPME"]
+    frecuencia_anual: 1.0
+    mw: { min: 20, base: 80, max: 200, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [solar_fv, eolica_tierra, eolica_marina, hidro_pasada, biomasa, geotermica]
+    precio_referencia: { min: 38, base: 48, max: 60, supuesto: "Subasta 2021 ≈ 155 COP/kWh (≈ 40–45 USD/MWh)" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: local
+    supuesto: "Subasta pública de energía del país (ver countries/COL.yaml)"
+
+  - id: dom_edes
+    nombre: "Licitación de las distribuidoras (EDEs)"
+    pais: DOM
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "Las EDEs estatales licitan energía renovable de largo plazo."
+    nombres_cliente: ["EDENORTE – Licitación", "EDESUR – Licitación", "EDEESTE – Licitación"]
+    frecuencia_anual: 0.8
+    mw: { min: 10, base: 40, max: 100, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [solar_fv, eolica_tierra, baterias, gas_natural]
+    precio_referencia: { min: 58, base: 72, max: 90, supuesto: "Licitaciones 2023–2024 ≈ 60–85 USD/MWh" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: USD
+    supuesto: "Subasta pública de energía del país (ver countries/DOM.yaml)"
+
+  - id: chl_cne
+    nombre: "Licitación de suministro (CNE)"
+    pais: CHL
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "Licitación pública para clientes regulados, en USD."
+    nombres_cliente: ["CNE – Licitación de suministro", "CNE – Bloque 24/7"]
+    frecuencia_anual: 1.0
+    mw: { min: 50, base: 150, max: 400, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [solar_fv, eolica_tierra, csp, geotermica, hidro_pasada, baterias]
+    precio_referencia: { min: 42, base: 52, max: 65, supuesto: "Licitaciones 2021–2023 ≈ 23–57 USD/MWh" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: USD
+    supuesto: "Subasta pública de energía del país (ver countries/CHL.yaml)"
+
+  - id: mex_cfe
+    nombre: "Contrato de largo plazo con CFE"
+    pais: MEX
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "CFE contrata energía de privados bajo el esquema mixto de 2025."
+    nombres_cliente: ["CFE – Contrato mixto", "CFE – Convocatoria renovable"]
+    frecuencia_anual: 0.7
+    mw: { min: 50, base: 150, max: 400, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [solar_fv, eolica_tierra, geotermica, gas_natural, baterias]
+    precio_referencia: { min: 38, base: 48, max: 60, supuesto: "Contratos 2025 con CFE ≈ 40–60 USD/MWh (aprox.)" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: USD
+    supuesto: "Subasta pública de energía del país (ver countries/MEX.yaml)"
+
+  - id: bra_leilao
+    nombre: "Leilão de energia nova (ANEEL)"
+    pais: BRA
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "Subasta regulada en reales indexados al IPCA."
+    nombres_cliente: ["Leilão A-4", "Leilão A-6", "Leilão de reserva"]
+    frecuencia_anual: 1.2
+    mw: { min: 30, base: 100, max: 300, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [solar_fv, eolica_tierra, hidro_pasada, biomasa, gas_natural]
+    precio_referencia: { min: 26, base: 33, max: 41, supuesto: "LEN 2021–2022 ≈ 160–180 BRL/MWh" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: local
+    supuesto: "Subasta pública de energía del país (ver countries/BRA.yaml)"
+
+  - id: ken_kplc
+    nombre: "Licitación de KPLC (subasta renovable)"
+    pais: KEN
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "KPLC contrata energía renovable con subastas tras la moratoria."
+    nombres_cliente: ["KPLC – Renewable Energy Auction", "KPLC – Geothermal IPP"]
+    frecuencia_anual: 0.5
+    mw: { min: 10, base: 35, max: 100, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [solar_fv, eolica_tierra, geotermica, hidro_pasada]
+    precio_referencia: { min: 60, base: 75, max: 94, supuesto: "FiT 2021 / subastas ≈ 7–10 USc/kWh" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: USD
+    supuesto: "Subasta pública de energía del país (ver countries/KEN.yaml)"
+
+  - id: isl_industria
+    nombre: "Licitación de suministro industrial (fundiciones)"
+    pais: ISL
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "Una fundición de aluminio o un centro de datos licita energía firme en USD."
+    nombres_cliente: ["Fundición Reyðarfjörður", "Centro de datos Keflavík"]
+    frecuencia_anual: 0.4
+    mw: { min: 20, base: 60, max: 150, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [geotermica, hidro_pasada, eolica_tierra]
+    precio_referencia: { min: 34, base: 42, max: 52, supuesto: "Contratos industriales ≈ 30–50 USD/MWh" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: USD
+    supuesto: "Subasta pública de energía del país (ver countries/ISL.yaml)"
+
+  - id: esp_reer
+    nombre: "Subasta REER (MITECO)"
+    pais: ESP
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "Subasta del Régimen Económico de Energías Renovables en EUR."
+    nombres_cliente: ["Subasta REER", "Subasta REER (eólica marina flotante)"]
+    frecuencia_anual: 0.8
+    mw: { min: 50, base: 150, max: 400, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [solar_fv, eolica_tierra, eolica_marina, csp, baterias]
+    precio_referencia: { min: 32, base: 40, max: 50, supuesto: "Subastas REER 2021 ≈ 26–31 EUR/MWh; CSP más cara" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: local
+    supuesto: "Subasta pública de energía del país (ver countries/ESP.yaml)"
+
+  - id: idn_pln
+    nombre: "Licitación de PLN (IPP)"
+    pais: IDN
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "PLN licita proyectos IPP con precio tope de la Perpres 112/2022."
+    nombres_cliente: ["PLN – IPP Geotermia", "PLN – IPP Solar Java"]
+    frecuencia_anual: 0.8
+    mw: { min: 20, base: 60, max: 150, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [geotermica, solar_fv, hidro_pasada, biomasa]
+    precio_referencia: { min: 64, base: 80, max: 100, supuesto: "Perpres 112/2022 ≈ 6–13 USc/kWh" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: USD
+    supuesto: "Subasta pública de energía del país (ver countries/IDN.yaml)"
+
+  - id: phl_gea
+    nombre: "Subasta de energía verde (GEA, DOE)"
+    pais: PHL
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "Subasta del DOE en pesos por 20 años."
+    nombres_cliente: ["GEA – Solar", "GEA – Eólica marina", "GEA – Geotermia"]
+    frecuencia_anual: 1.0
+    mw: { min: 20, base: 80, max: 250, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [solar_fv, eolica_tierra, eolica_marina, geotermica, hidro_pasada]
+    precio_referencia: { min: 62, base: 78, max: 98, supuesto: "GEA 2022–2023 ≈ 4,4–6 PHP/kWh" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: local
+    supuesto: "Subasta pública de energía del país (ver countries/PHL.yaml)"
+
+  - id: usa_utility
+    nombre: "Solicitud de propuestas de una utility (ERCOT)"
+    pais: USA
+    tipo: licitacion_publica
+    contrato: ppa
+    tipo_contrato: ppa_simple
+    descripcion: "Una utility o gran comprador de Texas pide PPA a 12–15 años."
+    nombres_cliente: ["Austin Energy RFP", "CPS Energy RFP", "Tech Co. VPPA"]
+    frecuencia_anual: 1.2
+    mw: { min: 50, base: 150, max: 400, supuesto: "Bloques por oferente (orden de magnitud)" }
+    plazo_anos: { min: 10, base: 15, max: 20, supuesto: "Contratos de largo plazo" }
+    tecnologias: [solar_fv, eolica_tierra, baterias, gas_natural, geotermica]
+    precio_referencia: { min: 44, base: 55, max: 69, supuesto: "LevelTen 2024 ERCOT ≈ 50–60 USD/MWh" }
+    precio_reserva_factor: { min: 1.0, base: 1.1, max: 1.25, supuesto: "Precio tope ≈ 10–20 % sobre la referencia" }
+    publica_precio_tope: true
+    plazo_oferta_dias: { min: 60, base: 90, max: 150, supuesto: "Pliego publicado 2–5 meses antes" }
+    evaluacion_dias: { min: 30, base: 60, max: 90, supuesto: "Evaluación y adjudicación" }
+    plazo_cod_meses: { min: 24, base: 36, max: 48, supuesto: "Inicio de suministro" }
+    garantia_seriedad_usd_mw: 15000
+    garantia_cumplimiento_usd_mw: 60000
+    pesos: { precio: 0.7, tecnica: 0.1, experiencia: 0.15, plazo: 0.05 }
+    experiencia_mw_min: 20
+    capital_min_usd: 5000000
+    multa_usd_mw_mes: 1500
+    meses_max_atraso: 12
+    costo_preparacion_usd: { min: 40000, base: 60000, max: 100000, supuesto: "Pliego, asesoría legal y modelo" }
+    ofertantes_externos: { media: 4, precio_factor: { min: 0.85, base: 1.0, max: 1.2, supuesto: "Subastas muy competidas" } }
+    indexacion_anual: 0.02
+    moneda: USD
+    supuesto: "Subasta pública de energía del país (ver countries/USA.yaml)"
+
+  - id: col_industria_epc
+    nombre: "Llave en mano industrial (Colombia)"
+    pais: COL
+    tipo: solicitud_privada
+    contrato: epc
+    tipo_contrato: epc_llave_en_mano
+    descripcion: "Una industria encarga llave en mano una planta propia, baterías, biogás o un paquete de eficiencia energética (ahorro garantizado)."
+    nombres_cliente: ["Cementos Andinos", "Floricultora Sabana", "Textiles Medellín"]
+    frecuencia_anual: 1.0
+    mw: { min: 1, base: 4, max: 15, supuesto: "Autoconsumo industrial" }
+    plazo_anos: { base: 1, supuesto: "Obra (sin operación)" }
+    tecnologias: [solar_fv, baterias, biogas, eficiencia_energetica]
+    precio_referencia: { min: 800, base: 1000, max: 1300, supuesto: "EPC industrial en Colombia ≈ 0,8–1,3 USD/W" }
+    precio_reserva_factor: { min: 0.95, base: 1.08, max: 1.2, supuesto: "Presupuesto del cliente" }
+    publica_precio_tope: false
+    plazo_oferta_dias: { min: 20, base: 40, max: 60, supuesto: "Cotización" }
+    evaluacion_dias: { min: 10, base: 20, max: 40, supuesto: "Decisión del cliente" }
+    plazo_cod_meses: { min: 6, base: 10, max: 14, supuesto: "Obra industrial" }
+    garantia_seriedad_usd_mw: 5000
+    garantia_cumplimiento_usd_mw: 110000
+    pesos: { precio: 0.5, tecnica: 0.25, experiencia: 0.15, plazo: 0.1 }
+    experiencia_mw_min: 0
+    capital_min_usd: 0
+    multa_usd_mw_mes: 0
+    meses_max_atraso: 6
+    costo_preparacion_usd: { min: 6000, base: 10000, max: 15000, supuesto: "Auditoría preliminar e ingeniería de propuesta" }
+    ofertantes_externos: { media: 3, precio_factor: { min: 0.88, base: 1.03, max: 1.2, supuesto: "ESCO e instaladores locales" } }
+    indexacion_anual: 0
+    supuesto: "Contratos llave en mano y ESCO industriales (FIDIC / IPMVP)"
+
+  - id: mex_industria_epc
+    nombre: "Llave en mano industrial (México)"
+    pais: MEX
+    tipo: solicitud_privada
+    contrato: epc
+    tipo_contrato: epc_llave_en_mano
+    descripcion: "Una industria encarga llave en mano una planta propia, baterías, biogás o un paquete de eficiencia energética (ahorro garantizado)."
+    nombres_cliente: ["Autopartes del Bajío", "Cervecera del Norte", "Acerera Monterrey"]
+    frecuencia_anual: 1.5
+    mw: { min: 1, base: 4, max: 15, supuesto: "Autoconsumo industrial" }
+    plazo_anos: { base: 1, supuesto: "Obra (sin operación)" }
+    tecnologias: [solar_fv, baterias, biogas, eficiencia_energetica]
+    precio_referencia: { min: 760, base: 950, max: 1235, supuesto: "EPC industrial en México ≈ 0,8–1,2 USD/W" }
+    precio_reserva_factor: { min: 0.95, base: 1.08, max: 1.2, supuesto: "Presupuesto del cliente" }
+    publica_precio_tope: false
+    plazo_oferta_dias: { min: 20, base: 40, max: 60, supuesto: "Cotización" }
+    evaluacion_dias: { min: 10, base: 20, max: 40, supuesto: "Decisión del cliente" }
+    plazo_cod_meses: { min: 6, base: 10, max: 14, supuesto: "Obra industrial" }
+    garantia_seriedad_usd_mw: 5000
+    garantia_cumplimiento_usd_mw: 110000
+    pesos: { precio: 0.5, tecnica: 0.25, experiencia: 0.15, plazo: 0.1 }
+    experiencia_mw_min: 0
+    capital_min_usd: 0
+    multa_usd_mw_mes: 0
+    meses_max_atraso: 6
+    costo_preparacion_usd: { min: 6000, base: 10000, max: 15000, supuesto: "Auditoría preliminar e ingeniería de propuesta" }
+    ofertantes_externos: { media: 3, precio_factor: { min: 0.88, base: 1.03, max: 1.2, supuesto: "ESCO e instaladores locales" } }
+    indexacion_anual: 0
+    supuesto: "Contratos llave en mano y ESCO industriales (FIDIC / IPMVP)"
+
+  - id: bra_industria_epc
+    nombre: "Llave en mano industrial (Brasil)"
+    pais: BRA
+    tipo: solicitud_privada
+    contrato: epc
+    tipo_contrato: epc_llave_en_mano
+    descripcion: "Una industria encarga llave en mano una planta propia, baterías, biogás o un paquete de eficiencia energética (ahorro garantizado)."
+    nombres_cliente: ["Usina de açúcar Paulista", "Frigorífico Goiás", "Têxtil Nordeste"]
+    frecuencia_anual: 1.5
+    mw: { min: 1, base: 4, max: 15, supuesto: "Autoconsumo industrial" }
+    plazo_anos: { base: 1, supuesto: "Obra (sin operación)" }
+    tecnologias: [solar_fv, baterias, biogas, eficiencia_energetica]
+    precio_referencia: { min: 720, base: 900, max: 1170, supuesto: "EPC industrial en Brasil ≈ 0,7–1,2 USD/W" }
+    precio_reserva_factor: { min: 0.95, base: 1.08, max: 1.2, supuesto: "Presupuesto del cliente" }
+    publica_precio_tope: false
+    plazo_oferta_dias: { min: 20, base: 40, max: 60, supuesto: "Cotización" }
+    evaluacion_dias: { min: 10, base: 20, max: 40, supuesto: "Decisión del cliente" }
+    plazo_cod_meses: { min: 6, base: 10, max: 14, supuesto: "Obra industrial" }
+    garantia_seriedad_usd_mw: 5000
+    garantia_cumplimiento_usd_mw: 110000
+    pesos: { precio: 0.5, tecnica: 0.25, experiencia: 0.15, plazo: 0.1 }
+    experiencia_mw_min: 0
+    capital_min_usd: 0
+    multa_usd_mw_mes: 0
+    meses_max_atraso: 6
+    costo_preparacion_usd: { min: 6000, base: 10000, max: 15000, supuesto: "Auditoría preliminar e ingeniería de propuesta" }
+    ofertantes_externos: { media: 3, precio_factor: { min: 0.88, base: 1.03, max: 1.2, supuesto: "ESCO e instaladores locales" } }
+    indexacion_anual: 0
+    supuesto: "Contratos llave en mano y ESCO industriales (FIDIC / IPMVP)"
+
+  - id: esp_industria_epc
+    nombre: "Llave en mano industrial (España)"
+    pais: ESP
+    tipo: solicitud_privada
+    contrato: epc
+    tipo_contrato: epc_llave_en_mano
+    descripcion: "Una industria encarga llave en mano una planta propia, baterías, biogás o un paquete de eficiencia energética (ahorro garantizado)."
+    nombres_cliente: ["Cerámica Castellón", "Agroalimentaria Murcia", "Papelera Navarra"]
+    frecuencia_anual: 1.2
+    mw: { min: 1, base: 4, max: 15, supuesto: "Autoconsumo industrial" }
+    plazo_anos: { base: 1, supuesto: "Obra (sin operación)" }
+    tecnologias: [solar_fv, baterias, biogas, eficiencia_energetica]
+    precio_referencia: { min: 840, base: 1050, max: 1365, supuesto: "EPC industrial en España ≈ 0,8–1,3 EUR/W" }
+    precio_reserva_factor: { min: 0.95, base: 1.08, max: 1.2, supuesto: "Presupuesto del cliente" }
+    publica_precio_tope: false
+    plazo_oferta_dias: { min: 20, base: 40, max: 60, supuesto: "Cotización" }
+    evaluacion_dias: { min: 10, base: 20, max: 40, supuesto: "Decisión del cliente" }
+    plazo_cod_meses: { min: 6, base: 10, max: 14, supuesto: "Obra industrial" }
+    garantia_seriedad_usd_mw: 5000
+    garantia_cumplimiento_usd_mw: 110000
+    pesos: { precio: 0.5, tecnica: 0.25, experiencia: 0.15, plazo: 0.1 }
+    experiencia_mw_min: 0
+    capital_min_usd: 0
+    multa_usd_mw_mes: 0
+    meses_max_atraso: 6
+    costo_preparacion_usd: { min: 6000, base: 10000, max: 15000, supuesto: "Auditoría preliminar e ingeniería de propuesta" }
+    ofertantes_externos: { media: 3, precio_factor: { min: 0.88, base: 1.03, max: 1.2, supuesto: "ESCO e instaladores locales" } }
+    indexacion_anual: 0
+    supuesto: "Contratos llave en mano y ESCO industriales (FIDIC / IPMVP)"

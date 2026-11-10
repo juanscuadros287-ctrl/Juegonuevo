@@ -365,7 +365,7 @@ describe('Competidores IA', () => {
         total++;
         if (c.status === 'quebrada') { bankrupt++; continue; }
         const eq = balanceSheet(actorView(s, c)).equityUsd;
-        expect(eq).toBeLessThan(def.caja_inicial_usd * 6);
+        expect(eq).toBeLessThan(def.caja_inicial_usd * 7); // Fase 4: con expansión a otros mercados (≈ 21 %/año como máximo)
         plants += c.projects.filter((p) => p.stage === 'operacion').length;
       }
     }
