@@ -6,6 +6,7 @@ Juego independiente de Dinastía (el juego Godot de la raíz del repo). Vive en 
 - **Fase 1 completa**: globo 3D, capas de recursos, tiempo con velocidades, guardado/carga, menú principal, CI para Mac.
 - **Fase 2 (motor) lista**: núcleo económico, Panamá (permisos, PPA, bancos, impuestos), solar FV y eólica con ciclo completo de proyecto, estados financieros, quiebra, Monte Carlo. Detalle en `docs/MOTOR_FASE2.md`.
 - **Fase 3 (motor) lista**: licitaciones y clientes, ofertas por puntaje, contratos con garantías y penalidades, EPC para terceros, cadena de suministro dinámica, 5 competidores IA con los mismos comandos, árbol de I+D. Detalle en `docs/MOTOR_FASE3.md`. Siguiente: UI de la Fase 3.
+- **Fase 4 (motor) lista**: 18 tecnologías nuevas (geotermia con pozos secos, hidro pasada/embalse/bombeo, CSP, eólica marina, biomasa, biogás, gas, carbón, petróleo, nuclear, SMR, baterías, H2 verde, líneas, interconexiones, ESCO), 12 países con permisos propios, presencia por país, tipo de cambio y combustibles, catálogo y fichas de país. Detalle en `docs/MOTOR_FASE4.md`. Siguiente: UI de las fases 3 y 4.
 - **Fase 2 (UI) lista**: desarrollar en un sitio, panel y detalle de proyectos (Gantt, estudios, permisos, PPA, financiación, construcción, operación, viabilidad), finanzas de la empresa, registro de eventos, quiebra, sitios 3D en el globo. Detalle en `docs/UI.md`.
 
 ## Comandos (desde `energia/`)
@@ -25,16 +26,18 @@ packages/sim    motor puro TS: sin DOM, sin Math.random/Date.now. Determinista.
   core/         rng (xoshiro128**), calendario, estado, comandos, eventos, step(), guardado + hash, SimContext
   data/         types.ts: forma de los datos que recibe el motor (SimData)
   world/        ResourceGrid; site.ts: recurso real oculto por sitio
-  tech/         factor de capacidad (solar PR/temperatura, eólica Weibull + curva), CAPEX con proveedores/aranceles
+  tech/         factor de capacidad (solar PR/temperatura, eólica Weibull + curva, hidro, CSP…), CAPEX con proveedores/aranceles;
+                Fase 4: models.ts (modo económico por tecnología, pozos geotérmicos, despacho, arbitraje), siting.ts (restricciones de sitio)
   finance/      VAN, TIR, LCOE, WACC, deuda, modelo anual de proyecto; company.ts: contabilidad, cierre mensual, quiebra
-  market/       spot simple (interfaz SpotMarket para la Fase 5)
+  market/       spot simple (interfaz SpotMarket para la Fase 5); macro.ts (Fase 4): tipo de cambio real por país y combustibles
   project/      tipos, comandos, avance diario/mensual, requisitos (grafo), sorteos, economía, valoración, viabilidad (Monte Carlo)
   selectors.ts  vistas para la UI (lista/detalle de proyectos, finanzas de la empresa, vista previa de sitio y de financiamiento)
   business/     Fase 3: actores (vistas), I+D, ofertas, oportunidades, contratos/EPC, garantías, avance por actor
   supply/       Fase 3: índices de materiales, curvas de aprendizaje, colas y relación con proveedores
   ai/           Fase 3: competidores IA (decisiones por estrategia; corren el mismo código vía vistas de actor)
   selectorsBusiness.ts  vistas de la Fase 3 (oportunidades, cotización, ofertas, contratos, competidores, I+D, proveedores)
-packages/data   YAML editables + esquemas Zod (game, layers, countries/*, technologies/*, studies, suppliers, research, clients, competitors, resources/anclas)
+  selectorsWorld.ts     vistas de la Fase 4 (catálogo de tecnologías con LCOE típico por país, ficha de país con permisos como grafo, países, combustibles)
+packages/data   YAML editables + esquemas Zod (game, layers, countries/*, technologies/*, studies, suppliers, research, clients, competitors, markets, resources/anclas)
   generated/    grid.bin, grid.json, world.json (salida de tools/build-resources.ts; se sirven como estáticos)
 apps/game       Vite + React + Three.js
   worker/       el GameState vive solo en un Web Worker (carga la grilla y calcula las vistas de los selectores); la UI recibe instantáneas + vistas y envía comandos
@@ -48,7 +51,7 @@ tools/          build-resources.ts, screenshots.mjs
 Reglas:
 - Todo cambio de estado pasa por un `Command` (`applyCommand` / `step`). La IA usará los mismos comandos.
 - En pausa los comandos se aplican con `applyCommands` sin avanzar el tiempo.
-- Un flujo de RNG por subsistema (`world`, `market`, `projects`, `events`, `ai`, `supply`, `tenders`, `business`, y `ai_<id>` por competidor).
+- Un flujo de RNG por subsistema (`world`, `market`, `projects`, `events`, `ai`, `supply`, `tenders`, `business`, `fx`, `fuels`, y `ai_<id>` por competidor).
 - Actores: el jugador (raíz del estado) y cada competidor (`state.competitors[i]`) tienen empresa, finanzas, proyectos y `business`. La IA usa `actorView` y corre exactamente el mismo código; nunca agregar reglas solo para la IA. La IA solo lee información pública (`publicOpportunity`, `p.estimate`); hay prueba.
 - El mundo de la Fase 3 se inicializa perezosamente en el primer `step`/`applyCommands` con datos (`business/world.ts`).
 - Precios de equipos: usar `currentCapex(state, ctx, …)` (índices, proveedores, relación, I+D), no `capexBreakdown` directo.
@@ -59,6 +62,9 @@ Reglas:
 - El recurso real (`Site.realFactor`, `Operation.fcReal`) está en el estado pero ningún selector lo expone; la UI debe usar los selectores.
 - Sorteos compartidos entre la simulación y el Monte Carlo en `project/outcomes.ts` (misma probabilidad en ambos).
 - Todo movimiento de caja pasa por `postCash(state, categoría, monto, concepto)` (`finance/company.ts`).
+- Fase 4: precio/combustible/despacho de cualquier tecnología solo con `productTerms` (`tech/models.ts`); restricciones de sitio solo con `evaluateSite` (`tech/siting.ts`); CAPEX de un proyecto con `projectCapex` (incluye el factor de sitio).
+- Fase 4: para operar fuera del país de origen hace falta el nodo de mercado de I+D y presencia (`openPresence`); las oportunidades de un país solo se generan si algún actor está allí (`openCountries`).
+- Fase 4: precios en USD = inflación del USD × tipo de cambio real (moneda fija al USD ⇒ inflación local); contratos en moneda local siguen al tipo de cambio desde la firma; la deuda siempre en USD.
 
 ## Decisiones
 | Fecha | Decisión |
@@ -86,6 +92,11 @@ Reglas:
 | 2026-11-04 | Vista previa de sitio = `previewSite` + `createProject` sobre una copia del estado para obtener TIR/VAN/LCOE con los mismos selectores (sin tocar la partida). |
 | 2026-11-04 | Registro de eventos solo en la UI; al cargar se reconstruye con las líneas de tiempo de los proyectos (no se cambia el formato de guardado). |
 | 2026-11-04 | Sitios del globo vía `globe/siteVisual.ts` sobre `src/models` (escala 0,008, anillo de avance por etapa, clic por proximidad en pantalla). |
+| 2026-11-10 | Fase 4: cada tecnología tiene un modo económico (generación, térmica, almacenamiento, hidrógeno, transmisión, eficiencia) con un «producto» en MWh y un precio; sin mercado horario (factores punta/valle por país). |
+| 2026-11-10 | Fase 4: 12 países nuevos (CRI, COL, DOM, CHL, MEX, BRA, KEN, ISL, ESP, IDN, PHL, USA solo Texas/ERCOT); nuclear solo en MEX y USA. |
+| 2026-11-10 | Fase 4: expansión = I+D del mercado + presencia (constitución + representante mensual); oficinas completas en la Fase 6 (`Presence.level`). |
+| 2026-11-10 | Fase 4: SAVE_VERSION 4 con migración desde v3 (presencia vacía, flujos `fx`/`fuels`). |
+| 2026-11-10 | Fase 4: la prueba de balance de la IA pasa a máximo < 12× y mediana < 4× del capital inicial (la venta de proyectos merchant en Panamá es muy rentable y la expansión cambia las trayectorias). |
 
 ## Pendientes conocidos
 - UI: el motor ya expone `resource.monthlyMwh`/`operation.expectedMonthlyMwh` (perfil estacional) y `SimEvent.tick`; falta usarlos en la UI.
@@ -96,6 +107,10 @@ Reglas:
 - Reemplazar sol y viento por NASA POWER cuando haya red (script por escribir).
 - El `.dmg` solo se ha configurado, no se ha compilado aquí (este entorno es Linux). Revisar el primer run de GitHub Actions.
 - Costas a máximo zoom muestran el píxel de la máscara (≈5 km); si molesta, pasar a geometría vectorial.
+
+- Fase 4: datos de los 12 países aproximados (marcados `supuesto`); calibrar spot, permisos y probabilidades con fuentes locales. Profundidad del mar aproximada por distancia a la costa.
+- Fase 4: la UI debe usar `selectTechCatalog`, `selectCountrySheet`, `selectCountries`, `previewSite(..., to?)` (líneas) y `ProjectSummary.visualKind`; comandos `openPresence`/`closePresence`.
+- Fase 4: sin despacho horario (Fase 5): baterías y bombeo usan factores punta/valle; las térmicas despachan por margen mensual.
 
 ## Preferencias del usuario
 - Respuestas cortas y al punto.
