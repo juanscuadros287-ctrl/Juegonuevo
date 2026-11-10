@@ -16,6 +16,8 @@ const PORT = Number(process.env.SCREENS_PORT ?? 4173);
 const SITE = { lat: 8.62, lon: -80.3 };
 
 const server = spawn(process.execPath, [join(ROOT, 'node_modules/vite/bin/vite.js'), 'preview', '--port', String(PORT), '--strictPort'], { cwd: join(ROOT, 'apps/game'), stdio: 'pipe' });
+// el servidor muere con el script aunque falle una espera de Playwright
+process.on('exit', () => server.kill());
 let serverErr = '';
 server.stderr.on('data', (d) => (serverErr += d));
 await new Promise((res, rej) => {
@@ -73,8 +75,11 @@ async function startProject(page, suffix) {
   await shot(page, `11-estudios${suffix}.png`);
 }
 
+// SCREENS_ONLY=3 corre solo la parte de la Fase 3 (para iterar más rápido)
+const ONLY = process.env.SCREENS_ONLY ?? '';
+
 // ---------------------------------------------------------------- 1600×960: recorrido completo
-{
+if (!ONLY) {
   const page = await newPage(1600, 960);
   await shot(page, '01-menu.png');
   await page.getByText('Nueva partida').click();
@@ -187,7 +192,7 @@ async function startProject(page, suffix) {
 }
 
 // ---------------------------------------------------------------- 1280×800: pantallas clave
-{
+if (!ONLY) {
   const page = await newPage(1280, 800);
   await startProject(page, '-1280');
   await page.getByTestId('project-window').getByRole('button', { name: '✕' }).first().click();
@@ -205,6 +210,104 @@ async function startProject(page, suffix) {
   await page.getByTestId('finance-panel').waitFor();
   await page.waitForTimeout(500);
   await shot(page, '21-finanzas-1280.png');
+  await page.close();
+}
+
+
+// ---------------------------------------------------------------- Fase 3: mercado, oferta, I+D, competidores, proveedores
+// Semilla 59: hay una licitación de energía de ETESA abierta en enero de 2026 (31 MW, adjudica en mayo).
+const SEED = 59;
+async function newSeeded(page) {
+  await page.getByText('Nueva partida').click();
+  await page.locator('form input[type=number]').fill(String(SEED));
+  await page.getByText('Fundar empresa').click();
+  await page.waitForTimeout(2500);
+}
+const key = async (page, k, testId) => { await page.keyboard.press(k); await page.getByTestId(testId).waitFor({ timeout: 5000 }).catch(() => fail(`no se abrió ${testId} con la tecla ${k}\n${errors.join('\n')}`)); await page.waitForTimeout(350); };
+
+/** Abre el mercado, elige la primera oportunidad en la que se puede ofertar y arma la oferta. */
+async function armBid(page, suffix) {
+  await key(page, 'm', 'market-panel');
+  const row = page.locator('[data-opp]', { hasText: 'Puedes ofertar' }).first();
+  await row.waitFor({ timeout: 5000 }).catch(() => fail('no hay oportunidades en las que se pueda ofertar'));
+  await row.click();
+  await page.waitForTimeout(300);
+  if (!suffix) await shot(page, '30-mercado.png');
+  await page.getByTestId('open-bid').click();
+  await page.getByTestId('bid-dialog').waitFor();
+  await page.waitForFunction(() => !document.querySelector('[data-testid=bid-price]')?.textContent?.includes('—'), null, { timeout: 15000 });
+  // margen bajo para competir en precio
+  await page.getByTestId('bid-margin').fill('0.03');
+  await page.waitForTimeout(700);
+  await shot(page, `31-oferta${suffix}.png`);
+}
+
+if (!ONLY || ONLY === '3') {
+  const page = await newPage(1600, 960);
+  await newSeeded(page);
+  // I+D: presupuesto y primera investigación
+  await key(page, 'i', 'research-panel');
+  await page.locator('[data-budget="100000"]').click();
+  await page.locator('[data-node=contrato_ppa_corporativo]').click();
+  await page.waitForTimeout(250);
+  await page.getByTestId('research-start').click();
+  await page.waitForTimeout(500);
+  const rd = await page.getByTestId('research-panel').textContent();
+  if (!rd.includes('PPA corporativo')) await fail('la investigación no se inició');
+
+  await armBid(page, '');
+  await page.getByTestId('bid-dialog').getByRole('button', { name: 'Presentar oferta' }).click();
+  await page.getByTestId('bid-dialog').getByRole('button', { name: 'Confirmar' }).click();
+  await page.waitForTimeout(700);
+  const card = await page.getByTestId('opp-card').textContent();
+  if (!card.includes('Tu oferta')) await fail('la oferta no quedó presentada: ' + card.slice(0, 200));
+  await shot(page, '32-oferta-enviada.png');
+
+  // avanzar hasta la adjudicación (mayo de 2026)
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: '×8', exact: true }).click();
+  await page.waitForFunction(() => /(mayo|junio|julio) de 2026/.test(document.querySelector('[data-testid=date]')?.textContent ?? ''), null, { timeout: 30000 });
+  await page.waitForTimeout(1500);
+  await page.getByRole('button', { name: '❚❚' }).click();
+  await page.waitForTimeout(300);
+  await key(page, 'm', 'market-panel');
+  await page.locator('[data-tab=mias]').click();
+  await page.locator('[data-mybid]').first().waitFor();
+  const st = await page.locator('[data-mybid]').first().textContent();
+  if (/Presentada/.test(st)) await fail('la oferta sigue sin adjudicar: ' + st);
+  if (!(await page.getByTestId('ranking').isVisible())) await page.locator('[data-mybid]').first().click();
+  await page.getByTestId('ranking').waitFor({ timeout: 3000 });
+  await page.waitForTimeout(300);
+  await shot(page, '33-resultado.png');
+  console.log('Licitación:', st.replace(/\s+/g, ' ').slice(0, 120));
+
+  await key(page, 'c', 'contracts-panel');
+  await shot(page, '34-contratos.png');
+  await key(page, 'i', 'research-panel');
+  await shot(page, '35-investigacion.png');
+  await key(page, 'r', 'competitors-panel');
+  await page.waitForTimeout(300);
+  await shot(page, '36-competidores.png');
+  await key(page, 'v', 'suppliers-panel');
+  await shot(page, '37-proveedores.png');
+  await page.locator('[data-tab=precios]').click();
+  await page.waitForTimeout(500);
+  await shot(page, '38-proveedores-precios.png');
+  await page.keyboard.press('Escape');
+  const rivals = await page.evaluate(() => window.__voltaje.rivalSites());
+  console.log('Plantas visibles de competidores:', rivals.length);
+  await page.close();
+}
+
+if (!ONLY || ONLY === '3') {
+  const page = await newPage(1280, 800);
+  await newSeeded(page);
+  await armBid(page, '-1280');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('i');
+  await page.getByTestId('research-panel').waitFor();
+  await page.waitForTimeout(400);
+  await shot(page, '35-investigacion-1280.png');
   await page.close();
 }
 

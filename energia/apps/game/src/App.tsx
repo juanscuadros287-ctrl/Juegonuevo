@@ -92,8 +92,11 @@ function useKeyboard() {
     let lastSpeed = gameData.game.velocidades[0].id;
     const onKey = (e: KeyboardEvent) => {
       const s = ui.get();
-      const tag = (e.target as HTMLElement).tagName;
-      if (s.screen !== 'game' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      const el = e.target as HTMLInputElement;
+      const tag = el.tagName;
+      // en campos de texto solo Esc (cerrar); deslizadores y casillas no capturan las teclas
+      const typing = tag === 'TEXTAREA' || tag === 'SELECT' || (tag === 'INPUT' && !['range', 'radio', 'checkbox'].includes(el.type));
+      if (s.screen !== 'game' || (typing && e.key !== 'Escape')) return;
       if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); ui.set({ dialog: 'save' }); return; }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === ' ') {

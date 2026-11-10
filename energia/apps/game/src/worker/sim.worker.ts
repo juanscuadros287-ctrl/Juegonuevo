@@ -158,12 +158,15 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
       break;
     case 'new':
       state = createNewGame(gameData.sim, { seed: m.seed, companyName: m.companyName });
+      // el mundo de la Fase 3 (mercado, competidores, I+D) se arma en el primer applyCommands/step: así el mercado se ve en pausa
+      { const ev = applyCommands(state, [], ctx); if (ev.length) post({ t: 'events', events: ev }); }
       pending = []; carry = 0; daysPerSecond = 0; focus = null;
       snapshot();
       break;
     case 'load':
       try {
         state = deserialize(m.text);
+        applyCommands(state, [], ctx);
         pending = []; carry = 0; daysPerSecond = 0; focus = null;
         post({ t: 'loaded', reqId: m.reqId });
         snapshot();

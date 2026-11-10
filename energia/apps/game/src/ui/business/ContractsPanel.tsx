@@ -7,12 +7,15 @@ import { Bar, ConfirmButton, Empty, Pill, Section, Stat, Window } from '../commo
 import { fmtDate, fmtMoney, fmtNum, fmtPct } from '../format';
 import { fmtDaysLeft, fmtPrice, techShort } from './labels';
 
+/** Arreglo vacío estable (useSyncExternalStore exige la misma referencia si no hay cambios). */
+const EMPTY: never[] = [];
+
 const STATUS_TONE: Record<string, 'good' | 'bad' | 'warn' | 'info' | 'dim'> = {
   sin_proyecto: 'warn', en_desarrollo: 'info', operando: 'good', cumplido: 'good', incumplido: 'bad', cedido: 'dim',
 };
 
 export function ContractsPanel() {
-  const list = useUi((s) => s.views?.business?.contracts ?? []);
+  const list = useUi((s) => s.views?.business?.contracts ?? EMPTY);
   const pick = useUi((s) => s.pick.contracts);
   const [showAll, setShowAll] = useState(false);
   const shown = list.filter((k) => showAll || k.active);
@@ -128,8 +131,8 @@ function EpcBlock({ k }: { k: ContractView }) {
 
 /** Asignar un proyecto propio a un contrato «con proyecto nuevo». */
 function AssignProject({ k }: { k: ContractView }) {
-  const projects = useUi((s) => s.views?.projects ?? []);
-  const raw = useUi((s) => s.game?.projects ?? []);
+  const projects = useUi((s) => s.views?.projects ?? EMPTY);
+  const raw = useUi((s) => s.game?.projects ?? EMPTY);
   const need = k.kind === 'potencia' ? nameplateMw({ data: gameData.simData }, { contract: 'potencia', mw: k.mw }, k.techId) : k.mw;
   const ok = projects.filter((p) => {
     const r = raw.find((x) => x.id === p.id);
