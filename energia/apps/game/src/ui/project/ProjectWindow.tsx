@@ -102,7 +102,7 @@ function ViabilityCard({ v, d, onClose, stale }: { v: { busy: boolean; result?: 
       {r && (
         <div className="viab-grid">
           <div className="viab-big">
-            <div className="stat-label">Probabilidad de llegar a operación</div>
+            <div className="stat-label">Prob. de llegar a operación</div>
             <div className="mono" style={{ fontSize: 34, fontWeight: 800, color: r.probCod >= 0.6 ? 'var(--good)' : r.probCod >= 0.35 ? 'var(--warn)' : 'var(--bad)' }}>{fmtPct(r.probCod, 0)}</div>
             <div className="dim" style={{ fontSize: 11 }}>Estimación del motor sin simular: {fmtPct(d.successProbability, 0)}</div>
             <div className="dim" style={{ fontSize: 11 }}>Precio supuesto: {r.ppaChannelId ? `PPA (${d.ppa?.channelName ?? r.ppaChannelId})` : 'spot'}</div>

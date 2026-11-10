@@ -82,13 +82,14 @@ export class SiteLayer {
     for (const [id, e] of this.entries) if (!seen.has(id)) { e.visual.dispose(); this.entries.delete(id); }
   }
 
-  /** Proyecto bajo el punto de pantalla (radio de 22 px). */
+  /** Proyecto bajo el punto de pantalla (radio de 22 px; las propias primero). */
   pickAt(x: number, y: number): string | null {
     let best: string | null = null, bestD = 22;
     for (const [id, e] of this.entries) {
       const s = this.globe.toScreen(e.pos);
       if (!s) continue;
-      const d = Math.hypot(s.x - x, s.y - y);
+      // las plantas propias tienen prioridad cuando se superponen con las de un competidor
+      const d = Math.hypot(s.x - x, s.y - y) + (this.rivalOwner.has(id) ? 10 : 0);
       if (d < bestD) { bestD = d; best = id; }
     }
     return best;

@@ -99,7 +99,9 @@ export class Globe {
 
   constructor(private canvas: HTMLCanvasElement, private world: World) {
     const g = theme.globe;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    // `?aa=0` (prueba de humo en CPU): sin antialias, que en swiftshader es lo más caro de cada cuadro
+    const params = new URLSearchParams(location.search);
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: params.get('aa') !== '0', alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
@@ -107,7 +109,9 @@ export class Globe {
     this.camera.position.set(0, 0, 3.2);
 
     // Texturas de mapa: 8192 px en Apple Silicon (costas nítidas al acercarse), 4096 si la GPU no da más.
-    const texSize = Math.min(8192, this.renderer.capabilities.maxTextureSize);
+    // `?tex=4096` (prueba de humo en CPU) baja la resolución para cargar más rápido.
+    const texParam = Number(params.get('tex')) || 8192;
+    const texSize = Math.min(texParam, 8192, this.renderer.capabilities.maxTextureSize);
     this.material = new THREE.ShaderMaterial({
       vertexShader: vertex,
       fragmentShader: fragment,

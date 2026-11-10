@@ -29,20 +29,53 @@ const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--ena
 const fail = async (m) => { console.error('FALLO:', m); await browser.close(); server.kill(); process.exit(1); };
 const errors = [];
 
+// Una sola página para todo el recorrido: cargar el mundo y armar las texturas del globo en CPU (swiftshader)
+// es lo más lento. Entre partes se vuelve al menú y se cambia el tamaño de la ventana.
+// `?tex=4096&aa=0`: texturas del globo a 4096 px y sin antialias (en el juego real, 8192 px con antialias).
+let shared = null;
 async function newPage(width, height) {
+  if (shared) {
+    await toMenu(shared);
+    await shared.setViewportSize({ width, height });
+    await shared.waitForTimeout(500);
+    return shared;
+  }
   const page = await browser.newPage({ viewport: { width, height } });
-  page.on('pageerror', (e) => errors.push(`[${width}] ${e.message}`));
-  page.on('console', (m) => m.type() === 'error' && errors.push(`[${width}] ${m.text()}`));
-  await page.goto(`http://localhost:${PORT}/`);
+  page.on('pageerror', (e) => errors.push(`[${page.viewportSize().width}] ${e.message}`));
+  page.on('console', (m) => m.type() === 'error' && errors.push(`[${page.viewportSize().width}] ${m.text()}`));
+  await page.goto(`http://localhost:${PORT}/?tex=4096&aa=0`);
   await page.getByText('Nueva partida').waitFor({ timeout: 30000 });
   await page.waitForTimeout(1200);
+  shared = page;
   return page;
+}
+
+/** Vuelve al menú principal (cierra ventanas y sale de la partida). */
+async function toMenu(page) {
+  if (await page.getByText('Nueva partida').isVisible()) return;
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Menú', exact: true }).click();
+  page.once('dialog', (d) => d.accept());
+  await page.getByRole('button', { name: 'Salir al menú principal' }).click();
+  await page.getByText('Nueva partida').waitFor({ timeout: 10000 });
+  await page.waitForTimeout(600);
 }
 
 const T0 = Date.now();
 const shot = async (page, name) => { const t = Date.now(); await page.screenshot({ path: join(OUT, name) }); if (process.env.SCREENS_TIMING) console.log(`${((Date.now() - T0) / 1000).toFixed(1)} s · ${name} (${Date.now() - t} ms)`); };
 const speed = async (page, label, ms) => { await page.getByRole('button', { name: label, exact: true }).click(); await page.waitForTimeout(ms); await page.getByRole('button', { name: '❚❚' }).click(); await page.waitForTimeout(300); };
 const tab = (page, id) => page.locator(`[data-tab=${id}]`).first().click();
+
+/** Captura la misma pantalla en 1280×800 y vuelve a 1600×960 (sin otra partida). */
+async function at1280(page, name, before) {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.waitForTimeout(500);
+  if (before) await before();
+  await shot(page, name);
+  await page.setViewportSize({ width: 1600, height: 960 });
+  await page.waitForTimeout(400);
+}
 
 /** Nueva partida → celda en Coclé → proyecto solar de 10 MW → primer estudio. */
 async function startProject(page, suffix) {
@@ -63,6 +96,7 @@ async function startProject(page, suffix) {
   const txt = await page.getByTestId('develop-dialog').textContent();
   if (!txt.includes('TIR del capital')) await fail('la vista previa del sitio no cargó');
   await shot(page, `10-desarrollar${suffix}.png`);
+  await at1280(page, `10-desarrollar-1280.png`);
   await page.getByTestId('create-project').click();
   await page.getByTestId('project-window').waitFor({ timeout: 5000 });
   await page.waitForTimeout(400);
@@ -73,6 +107,7 @@ async function startProject(page, suffix) {
   await page.getByTestId('study-prefactibilidad').click();
   await page.waitForTimeout(500);
   await shot(page, `11-estudios${suffix}.png`);
+  await at1280(page, `11-estudios-1280.png`);
 }
 
 // SCREENS_ONLY=3 corre solo la parte de la Fase 3 (para iterar más rápido)
@@ -152,7 +187,7 @@ if (!ONLY) {
   await shot(page, '18-proyecto-financiacion.png');
   await tab(page, 'resumen'); await page.waitForTimeout(200);
   await page.getByTestId('viability').click();
-  await page.getByTestId('viability-card').getByText('Probabilidad de llegar a operación').waitFor({ timeout: 30000 });
+  await page.getByTestId('viability-card').getByText('Prob. de llegar a operación').waitFor({ timeout: 30000 });
   await page.waitForTimeout(300);
   await shot(page, '19-viabilidad.png');
 
@@ -174,29 +209,9 @@ if (!ONLY) {
   await shot(page, '23-eventos.png');
   await page.keyboard.press('Escape');
 
-  // guardar → recargar → continuar (el proyecto debe seguir)
-  const dateS = await page.getByTestId('date').textContent();
-  await page.getByRole('button', { name: 'Guardar', exact: true }).click();
-  await page.locator('form').getByRole('button', { name: 'Guardar' }).click();
+  // 1280×800: pantallas clave del proyecto y finanzas
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.waitForTimeout(500);
-  await shot(page, '06-guardar.png');
-  await page.reload();
-  await page.getByText('Continuar').click();
-  await page.waitForTimeout(1800);
-  const date2 = await page.getByTestId('date').textContent();
-  if (date2 !== dateS) await fail(`la carga no restauró la fecha (${date2} ≠ ${dateS})`);
-  await page.keyboard.press('p');
-  await page.locator('[data-project=P1]').waitFor({ timeout: 3000 });
-  console.log('Guardado/carga OK:', date2, '· proyecto P1 restaurado');
-  await page.close();
-}
-
-// ---------------------------------------------------------------- 1280×800: pantallas clave
-if (!ONLY) {
-  const page = await newPage(1280, 800);
-  await startProject(page, '-1280');
-  await page.getByTestId('project-window').getByRole('button', { name: '✕' }).first().click();
-  await speed(page, '×8', 4000);
   await page.keyboard.press('p');
   await page.locator('[data-project=P1]').click();
   await page.getByTestId('project-window').waitFor();
@@ -210,9 +225,27 @@ if (!ONLY) {
   await page.getByTestId('finance-panel').waitFor();
   await page.waitForTimeout(500);
   await shot(page, '21-finanzas-1280.png');
-  await page.close();
-}
+  await page.keyboard.press('Escape');
+  await page.setViewportSize({ width: 1600, height: 960 });
+  await page.waitForTimeout(400);
 
+  // guardar → salir → continuar (el proyecto debe seguir)
+  const dateS = await page.getByTestId('date').textContent();
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click();
+  await page.locator('form').getByRole('button', { name: 'Guardar' }).click();
+  await page.waitForTimeout(500);
+  await shot(page, '06-guardar.png');
+  // salir al menú y continuar desde la partida guardada (IndexedDB) en lugar de recargar la página: recargar
+  // vuelve a armar las texturas del globo en CPU (~15 s)
+  await toMenu(page);
+  await page.getByText('Continuar').click();
+  await page.waitForTimeout(1800);
+  const date2 = await page.getByTestId('date').textContent();
+  if (date2 !== dateS) await fail(`la carga no restauró la fecha (${date2} ≠ ${dateS})`);
+  await page.keyboard.press('p');
+  await page.locator('[data-project=P1]').waitFor({ timeout: 3000 });
+  console.log('Guardado/carga OK:', date2, '· proyecto P1 restaurado');
+}
 
 // ---------------------------------------------------------------- Fase 3: mercado, oferta, I+D, competidores, proveedores
 // Semilla 59: hay una licitación de energía de ETESA abierta en enero de 2026 (31 MW, adjudica en mayo).
@@ -226,7 +259,7 @@ async function newSeeded(page) {
 const key = async (page, k, testId) => { await page.keyboard.press(k); await page.getByTestId(testId).waitFor({ timeout: 5000 }).catch(() => fail(`no se abrió ${testId} con la tecla ${k}\n${errors.join('\n')}`)); await page.waitForTimeout(350); };
 
 /** Abre el mercado, elige la primera oportunidad en la que se puede ofertar y arma la oferta. */
-async function armBid(page, suffix) {
+async function armBid(page, suffix = '') {
   await key(page, 'm', 'market-panel');
   const row = page.locator('[data-opp]', { hasText: 'Puedes ofertar' }).first();
   await row.waitFor({ timeout: 5000 }).catch(() => fail('no hay oportunidades en las que se pueda ofertar'));
@@ -252,10 +285,21 @@ if (!ONLY || ONLY === '3') {
   await page.waitForTimeout(250);
   await page.getByTestId('research-start').click();
   await page.waitForTimeout(500);
+  // la segunda queda en cola y seguirá en curso al llegar a la adjudicación
+  await page.locator('[data-node=contrato_epc]').click();
+  await page.waitForTimeout(250);
+  await page.getByTestId('research-start').click();
+  await page.waitForTimeout(400);
   const rd = await page.getByTestId('research-panel').textContent();
   if (!rd.includes('PPA corporativo')) await fail('la investigación no se inició');
 
   await armBid(page, '');
+  // el mismo diálogo en 1280×800 (sin otra partida: solo se cambia el tamaño de la ventana)
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.waitForTimeout(700);
+  await shot(page, '31-oferta-1280.png');
+  await page.setViewportSize({ width: 1600, height: 960 });
+  await page.waitForTimeout(500);
   await page.getByTestId('bid-dialog').getByRole('button', { name: 'Presentar oferta' }).click();
   await page.getByTestId('bid-dialog').getByRole('button', { name: 'Confirmar' }).click();
   await page.waitForTimeout(700);
@@ -296,20 +340,17 @@ if (!ONLY || ONLY === '3') {
   await page.keyboard.press('Escape');
   const rivals = await page.evaluate(() => window.__voltaje.rivalSites());
   console.log('Plantas visibles de competidores:', rivals.length);
-  await page.close();
-}
-
-if (!ONLY || ONLY === '3') {
-  const page = await newPage(1280, 800);
-  await newSeeded(page);
-  await armBid(page, '-1280');
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('i');
-  await page.getByTestId('research-panel').waitFor();
+  if (rivals.length) {
+    await page.evaluate(() => window.__voltaje.flyTo(8.4, -80.2, 1.22, 0.1));
+    await page.waitForTimeout(1200);
+    await shot(page, '39-rivales-globo.png');
+  }
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await key(page, 'i', 'research-panel');
   await page.waitForTimeout(400);
   await shot(page, '35-investigacion-1280.png');
-  await page.close();
 }
+
 
 if (errors.length) await fail('errores en consola:\n' + errors.join('\n'));
 console.log('Capturas en docs/capturas/');

@@ -5,7 +5,8 @@ Juego independiente de Dinastía (el juego Godot de la raíz del repo). Vive en 
 ## Estado actual
 - **Fase 1 completa**: globo 3D, capas de recursos, tiempo con velocidades, guardado/carga, menú principal, CI para Mac.
 - **Fase 2 (motor) lista**: núcleo económico, Panamá (permisos, PPA, bancos, impuestos), solar FV y eólica con ciclo completo de proyecto, estados financieros, quiebra, Monte Carlo. Detalle en `docs/MOTOR_FASE2.md`.
-- **Fase 3 (motor) lista**: licitaciones y clientes, ofertas por puntaje, contratos con garantías y penalidades, EPC para terceros, cadena de suministro dinámica, 5 competidores IA con los mismos comandos, árbol de I+D. Detalle en `docs/MOTOR_FASE3.md`. Siguiente: UI de la Fase 3.
+- **Fase 3 (motor) lista**: licitaciones y clientes, ofertas por puntaje, contratos con garantías y penalidades, EPC para terceros, cadena de suministro dinámica, 5 competidores IA con los mismos comandos, árbol de I+D. Detalle en `docs/MOTOR_FASE3.md`.
+- **Fase 3 (UI) lista**: Mercado (oportunidades, armar oferta con cotización y puntaje, mis ofertas y resultados con ranking), Contratos (obligaciones, asignar proyecto), I+D (árbol con prerrequisitos, presupuesto, cola), Competidores (tabla, fichas, gráfica, plantas en el globo), Proveedores (catálogo, índices), inversores/logística en Construcción, `previewFinancing`, perfil estacional, `stageProgress`. Detalle en `docs/UI.md`.
 - **Fase 2 (UI) lista**: desarrollar en un sitio, panel y detalle de proyectos (Gantt, estudios, permisos, PPA, financiación, construcción, operación, viabilidad), finanzas de la empresa, registro de eventos, quiebra, sitios 3D en el globo. Detalle en `docs/UI.md`.
 
 ## Comandos (desde `energia/`)
@@ -39,7 +40,7 @@ packages/data   YAML editables + esquemas Zod (game, layers, countries/*, techno
 apps/game       Vite + React + Three.js
   worker/       el GameState vive solo en un Web Worker (carga la grilla y calcula las vistas de los selectores); la UI recibe instantáneas + vistas y envía comandos
   globe/        Globe.ts (shader propio: mapa base, capa, máscara de costa, cuadrícula, selección, facetas); sites.ts + siteVisual.ts (adaptador único a models/)
-  ui/           paneles React; store.ts = estado de UI (no de juego); project/ = pestañas del detalle de proyecto
+  ui/           paneles React; store.ts = estado de UI (no de juego); project/ = pestañas del detalle de proyecto; business/ = mercado, oferta, contratos, I+D, competidores, proveedores
   storage/      partidas en IndexedDB + exportar/importar .json
   theme/        theme.ts (colores del globo) y theme.css (UI): el estilo se cambia aquí
   src-tauri/    envoltorio nativo de Mac
@@ -86,10 +87,15 @@ Reglas:
 | 2026-11-04 | Vista previa de sitio = `previewSite` + `createProject` sobre una copia del estado para obtener TIR/VAN/LCOE con los mismos selectores (sin tocar la partida). |
 | 2026-11-04 | Registro de eventos solo en la UI; al cargar se reconstruye con las líneas de tiempo de los proyectos (no se cambia el formato de guardado). |
 | 2026-11-04 | Sitios del globo vía `globe/siteVisual.ts` sobre `src/models` (escala 0,008, anillo de avance por etapa, clic por proximidad en pantalla). |
+| 2026-11-10 | UI Fase 3: vistas de negocio pesadas solo con su ventana abierta (`sim.panel`); resumen y competidores siempre. Cotización y vista previa de financiamiento bajo pedido. |
+| 2026-11-10 | UI Fase 3: Mercado/Contratos/I+D en la barra y Competidores/Proveedores en «Más ▾»; atajos M, C, I, R, V. |
+| 2026-11-10 | Globo: plantas visibles de la IA con `siteVisual` + anillo exterior del color de la empresa; el clic prefiere las propias. Con ventana abierta el globo se dibuja a ~4 cuadros/s. |
+| 2026-11-10 | Prueba de humo en una sola página con `?tex=4096&aa=0` (≈ 2–2,5 min en CPU); semilla 59 para la licitación de la Fase 3. |
 
 ## Pendientes conocidos
-- UI: el motor ya expone `resource.monthlyMwh`/`operation.expectedMonthlyMwh` (perfil estacional) y `SimEvent.tick`; falta usarlos en la UI.
-- Fase 3: la UI de licitaciones, contratos, competidores, I+D y proveedores está por hacer (selectores en `selectorsBusiness.ts`).
+- Motor: cuando la IA gana una licitación, `signContract` publica `contractSigned` (ids `C1-K1`) en los eventos del jugador; la UI los descarta por el prefijo. Debería ir al `sink` de la IA.
+- Motor (para la UI): ubicación de las oportunidades (marcadores en el globo), historial de cuota de mercado, país en `ContractView`, proyectos elegibles por contrato (hoy la UI replica el filtro de `assignContractProject`).
+- La prueba de humo pierde la licitación (empresa nueva: reputación y experiencia bajas); la ventana Contratos solo se capturó vacía.
 - Fase 3: precios de licitaciones, garantías y pesos aproximados (`supuesto`); la IA empieza sin plantas (su experiencia histórica solo da puntaje).
 - Falta una captura de una planta en operación (requiere años de juego); la pestaña Operación solo se probó vacía.
 - Permisos, plazos y probabilidades de Panamá son aproximados (marcados `supuesto`); calibrar con desarrolladores locales si se consigue información.

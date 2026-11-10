@@ -58,6 +58,8 @@ function useGameEvents() {
           if (e.type === 'projectCreated') ui.openProject(e.projectId);
           continue;
         }
+        // el motor publica también la firma de contratos de la IA (ids «C2-K1»): no son del jugador
+        if ('contractId' in e && /^C\d+-/.test(e.contractId)) continue;
         const link = businessLink(e);
         if (link && 'text' in e && 'severity' in e) {
           log.push({ tick, date, text: e.text, severity: e.severity, link });

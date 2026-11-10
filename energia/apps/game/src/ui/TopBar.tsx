@@ -35,7 +35,7 @@ function MoreMenu() {
   return (
     <div className="menu-wrap" ref={ref}>
       <button className={active ? 'active' : ''} data-nav="more" onClick={() => setOpen(!open)} title="Competidores y proveedores">
-        {win === 'competitors' ? 'Competidores' : win === 'suppliers' ? 'Proveedores' : 'Más'} ▾
+        Más ▾
       </button>
       {open && (
         <div className="panel menu">
@@ -72,13 +72,13 @@ export function TopBar() {
         <NavButton id="projects" label={`Proyectos${active ? ` · ${active}` : ''}`} keyHint="P" badge={alerts} tone="var(--warn)" />
         <NavButton id="market" label="Mercado" keyHint="M" title="Licitaciones y ofertas" badge={biz?.biddableCount} tone="var(--info)" />
         <NavButton id="contracts" label="Contratos" keyHint="C" badge={contractAlerts} tone="var(--warn)" />
-        <NavButton id="research" label={researching ? 'I+D ◔' : 'I+D'} keyHint="I" title="Investigación y desarrollo" />
+        <NavButton id="research" label="I+D" keyHint="I" title={researching ? 'Investigación y desarrollo (investigando)' : 'Investigación y desarrollo: nada en curso'} badge={researching ? 0 : 1} tone="var(--warn)" />
         <NavButton id="finance" label="Finanzas" keyHint="F" />
         <NavButton id="events" label="Eventos" keyHint="E" badge={unread} />
         <MoreMenu />
       </div>
       <div className="spacer" />
-      <div className="mono date" data-testid="date">{formatDate(date)}</div>
+      <div className="mono date" title={formatDate(date)}><span className="date-long" data-testid="date">{formatDate(date)}</span><span className="date-short">{formatDate(date, true)}</span></div>
       <div className="row" style={{ gap: 4 }}>
         <button className={speedId === null ? 'active' : ''} onClick={() => ui.setSpeed(null)} title="Pausa (Espacio)">❚❚</button>
         {gameData.game.velocidades.map((v, i) => (
@@ -89,7 +89,7 @@ export function TopBar() {
       <div className="spacer" />
       <button className="cash" onClick={() => ui.openWindow('finance')}
         title={`Caja · ${runway === null ? 'la empresa genera caja' : `alcanza para ~${fmtNum(runway, 0)} meses`}${risk ? ` · riesgo de quiebra: ${risk.label.toLowerCase()}` : ''}`}>
-        <span className="dim">Caja </span>
+        <span className="dim cash-label">Caja </span>
         <span className="mono" style={{ fontSize: 15, fontWeight: 700, color: cash < 0 ? 'var(--bad)' : runway !== null && runway < 6 ? 'var(--warn)' : 'var(--good)' }} data-testid="cash">{fmtMoney(cash)}</span>
         {runway !== null && <span className="dim mono" style={{ fontSize: 11 }}> · {fmtNum(runway, 0)} m</span>}
       </button>

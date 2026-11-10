@@ -22,7 +22,8 @@ export function CompetitorsPanel() {
     const o = baseOption(rows.map((r) => r.name), { unit: ' MW' }) as Record<string, unknown>;
     return {
       ...o,
-      grid: { left: 150, right: 18, top: 30, bottom: 22 },
+      grid: { left: 150, right: 18, top: 8, bottom: 22 },
+      legend: { show: false },
       xAxis: { type: 'value', splitLine: { lineStyle: { color: CHART.grid } }, axisLabel: { color: CHART.text, formatter: (v: number) => `${v} MW` } },
       yAxis: { type: 'category', inverse: true, data: rows.map((r) => r.name), axisLabel: { color: CHART.text, width: 135, overflow: 'truncate' }, axisLine: { lineStyle: { color: CHART.grid } } },
       series: [
@@ -41,7 +42,7 @@ export function CompetitorsPanel() {
       <div className="stats-row">
         <Stat label="MW renovables en operación" value={`${fmtNum(ov.totalOperatingMw, 0)} MW`} hint="empresas del juego" />
         <Stat label="Tu cuota" value={fmtPct(ov.player.marketShare, 0)} tone={ov.player.marketShare > 0 ? 'good' : undefined} hint={`${fmtNum(ov.player.operatingMw, 0)} MW`} />
-        <Stat label="Líder" value={leader && leader.marketShare > ov.player.marketShare ? leader.name : ov.player.name} hint={leader ? `${fmtPct(Math.max(leader.marketShare, ov.player.marketShare), 0)} del mercado` : undefined} />
+        <Stat label="Líder" value={ov.totalOperatingMw <= 0 ? 'Nadie aún' : leader && leader.marketShare > ov.player.marketShare ? leader.name : ov.player.name} hint={ov.totalOperatingMw <= 0 ? 'ninguna planta en operación' : `${fmtPct(Math.max(leader?.marketShare ?? 0, ov.player.marketShare), 0)} del mercado`} />
         <Stat label="Tu reputación" value={fmtNum(ov.player.reputation, 0)} />
         <Stat label="Competidores activos" value={list.filter((c) => c.status === 'activa').length} hint={list.some((c) => c.status === 'quebrada') ? `${list.filter((c) => c.status === 'quebrada').length} quebrada(s)` : undefined} />
       </div>
@@ -68,7 +69,7 @@ export function CompetitorsPanel() {
                 ))}
               </tbody>
             </table>
-            <Section title="Capacidad por empresa">{chartOpt && <Chart option={chartOpt} height={250} />}</Section>
+            <Section title="Capacidad por empresa" right={<span className="dim" style={{ fontSize: 11 }}>barra llena: en operación · clara: en desarrollo visible · ◆ experiencia acreditada</span>}>{chartOpt && <Chart option={chartOpt} height={250} />}</Section>
           </div>
           {sel && <CompetitorCard c={sel} index={list.indexOf(sel)} />}
         </div>

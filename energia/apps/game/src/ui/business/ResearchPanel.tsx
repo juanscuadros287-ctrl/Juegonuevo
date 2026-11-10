@@ -100,8 +100,8 @@ export function ResearchPanel() {
                 const x1 = a.x + NODE_W, y1 = a.y + NODE_H / 2, x2 = p.x, y2 = p.y + NODE_H / 2;
                 const mx = (x1 + x2) / 2;
                 const hot = sel && (sel.id === p.n.id || sel.id === r.id);
-                const c = r.done ? 'rgba(74,222,128,.55)' : 'rgba(140,180,220,.35)';
-                return <path key={`${r.id}-${p.n.id}`} d={`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`} stroke={hot ? '#ffcb3d' : c} strokeWidth={hot ? 2.2 : 1.4} fill="none" strokeDasharray={r.done ? undefined : '4 3'} />;
+                const c = r.done ? 'rgba(74,222,128,.22)' : 'rgba(140,180,220,.35)';
+                return <path key={`${r.id}-${p.n.id}`} d={`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`} stroke={hot ? '#ffcb3d' : c} strokeWidth={hot ? 2.2 : 1.2} fill="none" strokeDasharray={r.done ? undefined : '4 3'} />;
               }))}
             </svg>
             {[...L.placed.values()].map(({ n, x, y }) => (
@@ -174,7 +174,7 @@ function NodeDetail({ n, t }: { n: ResearchNodeView; t: ResearchTreeView }) {
       <table className="kv"><tbody>
         <tr><td>Costo</td><td>{fmtMoney(n.costUsd)}</td></tr>
         <tr><td>Duración mínima</td><td>{n.months} meses</td></tr>
-        <tr><td>Con tu presupuesto</td><td>{n.monthsAtBudget === null ? <span style={{ color: 'var(--warn)' }}>sin presupuesto</span> : `${fmtNum(n.monthsAtBudget, 1)} meses`}</td></tr>
+        {n.status !== 'completado' && <tr><td>Con tu presupuesto</td><td>{n.monthsAtBudget === null ? <span style={{ color: 'var(--warn)' }}>sin presupuesto</span> : `${fmtNum(n.monthsAtBudget, 1)} meses`}</td></tr>}
         <tr><td>Prob. de contratiempo</td><td>{fmtPct(n.setbackProbability, 0)}</td></tr>
         {n.progress > 0 && n.status !== 'completado' && <tr><td>Avance</td><td>{fmtPct(n.progress, 0)}</td></tr>}
       </tbody></table>

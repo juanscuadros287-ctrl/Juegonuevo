@@ -20,12 +20,12 @@ export function SuppliersPanel() {
   if (!cat) return <Window title="Proveedores" onClose={() => ui.openWindow(null)} testId="suppliers-panel"><Empty>Cargando…</Empty></Window>;
   const sol = cat.techIndices.find((t) => t.techId === 'solar_fv');
   const wind = cat.techIndices.find((t) => t.techId === 'eolica_tierra');
-  const chg = (v: number | null) => (v === null ? 'sin historial de 12 meses' : `${v >= 0 ? '+' : '−'}${fmtPct(Math.abs(v), 1)} en 12 meses`);
+  const chg = (v: number | null) => (v === null ? 'vs. inicio de la partida' : `${v >= 0 ? '+' : '−'}${fmtPct(Math.abs(v), 1)} en 12 meses`);
   return (
     <Window title="Proveedores y cadena de suministro" subtitle="Precios actuales, plazos de entrega, colas de pedidos y tu relación con cada proveedor" width={1300} onClose={() => ui.openWindow(null)} testId="suppliers-panel">
       <div className="stats-row">
-        {sol && <Stat label="CAPEX solar FV hoy" value={`${fmtNum(sol.capexUsdKwNow, 0)} US$/kW`} hint={`equipos ×${fmtNum(sol.equipment, 3)} · ${chg(sol.equipmentChange12m)}`} tone={sol.equipmentChange12m !== null ? (sol.equipmentChange12m > 0 ? 'warn' : 'good') : undefined} />}
-        {wind && <Stat label="CAPEX eólica hoy" value={`${fmtNum(wind.capexUsdKwNow, 0)} US$/kW`} hint={`equipos ×${fmtNum(wind.equipment, 3)} · ${chg(wind.equipmentChange12m)}`} tone={wind.equipmentChange12m !== null ? (wind.equipmentChange12m > 0 ? 'warn' : 'good') : undefined} />}
+        {sol && <Stat label="CAPEX solar FV hoy" value={`${fmtNum(sol.capexUsdKwNow, 0)} US$/kW`} hint={`equipos ×${fmtNum(sol.equipment, 2)}${sol.equipmentChange12m !== null ? ` · ${chg(sol.equipmentChange12m)}` : ''}`} tone={sol.equipmentChange12m !== null ? (sol.equipmentChange12m > 0 ? 'warn' : 'good') : undefined} />}
+        {wind && <Stat label="CAPEX eólica hoy" value={`${fmtNum(wind.capexUsdKwNow, 0)} US$/kW`} hint={`equipos ×${fmtNum(wind.equipment, 2)}${wind.equipmentChange12m !== null ? ` · ${chg(wind.equipmentChange12m)}` : ''}`} tone={wind.equipmentChange12m !== null ? (wind.equipmentChange12m > 0 ? 'warn' : 'good') : undefined} />}
         {cat.materials.map((m) => <Stat key={m.id} label={m.nombre} value={`×${fmtNum(m.index, 2)}`} hint={chg(m.change12m)} tone={m.index > 1.1 ? 'warn' : m.index < 0.9 ? 'good' : undefined} />)}
         <Stat label="Demanda mundial" value={`×${fmtNum(cat.demandIndex, 2)}`} hint="alarga plazos y sube precios" tone={cat.demandIndex > 1.1 ? 'warn' : undefined} />
       </div>

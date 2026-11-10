@@ -1,4 +1,5 @@
 import { Fragment, useState } from 'react';
+import { gameData } from '@voltaje/data';
 import type { MyBidView, OpportunityView, RankingEntry } from '@voltaje/sim';
 import { ui, useUi } from '../store';
 import { ConfirmButton, Empty, Pill, Section, Stat, Tabs, Window } from '../common';
@@ -66,13 +67,13 @@ function OpportunityTable({ list, sel, onPick, closed }: { list: OpportunityView
       <thead>
         <tr>
           <th>Cliente</th><th>Contrato</th><th className="num">Tamaño</th><th className="num">{closed ? 'Adjudicada' : 'Cierre'}</th>
-          <th className="num">Precio ref.</th><th className="num">Garantía</th><th>{closed ? 'Resultado' : 'Estado'}</th>
+          <th className="num">Precio ref.</th><th>{closed ? 'Resultado' : 'Estado'}</th>
         </tr>
       </thead>
       <tbody>
         {list.map((o) => (
           <tr key={o.id} className={`clickable ${sel === o.id ? 'selected' : ''}`} data-opp={o.id} onClick={() => onPick(o.id)}>
-            <td style={{ maxWidth: 260 }}>
+            <td style={{ maxWidth: 240 }}>
               <div className="row" style={{ gap: 6 }}>
                 <Pill tone={o.kind === 'licitacion_publica' ? 'info' : 'warn'}>{o.kind === 'licitacion_publica' ? 'Pública' : 'Privada'}</Pill>
                 <b className="ellipsis">{o.clientName}</b>
@@ -80,8 +81,8 @@ function OpportunityTable({ list, sel, onPick, closed }: { list: OpportunityView
               <div className="dim ellipsis" style={{ fontSize: 11 }}>{o.clientTypeName}</div>
             </td>
             <td>
-              <div className="row" style={{ gap: 5 }}><span className="dim">{CONTRACT_ICON[o.contract]}</span>{o.contractLabel}</div>
-              <div className="dim" style={{ fontSize: 11 }}>{o.techs.map((t) => techShort(t.id)).join(' · ')}</div>
+              <div className="row" style={{ gap: 5, whiteSpace: 'nowrap' }}><span className="dim">{CONTRACT_ICON[o.contract]}</span>{o.contractLabel}</div>
+              <div className="dim ellipsis" style={{ fontSize: 11, maxWidth: 170 }} title={o.techs.map((t) => techShort(t.id)).join(' · ')}>{o.techs.map((t) => techShort(t.id)).join(' · ')}</div>
             </td>
             <td className="num mono">
               {fmtNum(o.mw, 0)} MW{o.contract === 'potencia' ? ' firmes' : ''}
@@ -95,7 +96,6 @@ function OpportunityTable({ list, sel, onPick, closed }: { list: OpportunityView
               {fmtPrice(o.referencePrice, o.unit)}
               <div className="dim" style={{ fontSize: 11 }}>{o.ceilingPrice !== undefined ? `tope ${fmtNum(o.ceilingPrice, 1)}` : 'tope oculto'}</div>
             </td>
-            <td className="num mono">{fmtMoney(o.bidBondUsd)}</td>
             <td>{closed ? <ResultCell o={o} /> : <StatusCell o={o} />}</td>
           </tr>
         ))}
@@ -134,6 +134,25 @@ function OpportunityCard({ o }: { o: OpportunityView }) {
           <div className="dim" style={{ fontSize: 11.5 }}>{o.kindLabel} · {o.clientTypeName}</div>
         </div>
       </div>
+      {closed ? <ResultBlock o={o} /> : o.myBid ? (
+        <div className="notice good" style={{ marginTop: 10 }}>
+          <b>Tu oferta:</b> {fmtPrice(o.myBid.price, o.unit)} · {o.myBid.deliveryMonths} meses · {techShort(o.myBid.techId)}{o.myBid.projectId ? ` · ${o.myBid.projectId}` : ' · proyecto nuevo'}
+          <div className="dim" style={{ fontSize: 11.5 }}>Garantía {fmtMoney(o.myBid.bondUsd)} (colateral en caja {fmtMoney(o.myBid.bondUsd * (gameData.simData.clients?.garantias.colateral_frac ?? 0.5))}) · se adjudica el {fmtDate(o.awardDate)}</div>
+          {o.status === 'abierta' && (
+            <div style={{ marginTop: 6 }}>
+              <ConfirmButton confirm="Se recupera la garantía; el costo de preparación no." onConfirm={() => sim.command({ type: 'withdrawBid', opportunityId: o.id })}>Retirar oferta</ConfirmButton>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {!o.canBid.ok && o.status === 'abierta' && <div className="notice warn" style={{ marginTop: 10 }}><b>No puedes ofertar:</b> {o.canBid.blockers.join(' ')}</div>}
+          <button className="primary" style={{ width: '100%', marginTop: 10 }} data-testid="open-bid" disabled={o.status !== 'abierta' || !o.techs.some((t) => t.modeled && t.unlocked)}
+            onClick={() => ui.set({ bidFor: o.id })} title={cash < o.prepCostUsd ? 'Caja insuficiente' : undefined}>
+            Armar oferta…
+          </button>
+        </>
+      )}
       <table className="kv" style={{ marginTop: 8 }}><tbody>
         <tr><td>Contrato</td><td>{o.contractLabel}</td></tr>
         <tr><td>{o.contract === 'potencia' ? 'Potencia firme' : 'Capacidad'}</td><td>{fmtNum(o.mw, 0)} MW{o.contract !== 'epc' ? ` · ${o.years} años` : ''}</td></tr>
@@ -157,28 +176,14 @@ function OpportunityCard({ o }: { o: OpportunityView }) {
       <div className="stat-label" style={{ margin: '10px 0 4px' }}>Criterios de evaluación</div>
       <div className="weights">
         {([['Precio', w.precio], ['Técnica', w.tecnica], ['Experiencia', w.experiencia], ['Plazo', w.plazo]] as const).map(([k, v]) => (
-          <div key={k} style={{ flex: v }} title={`${k}: ${fmtPct(v, 0)}`}><span>{k} {fmtPct(v, 0)}</span></div>
+          <div key={k} style={{ flex: v }} title={`${k}: ${fmtPct(v, 0)}`} />
         ))}
       </div>
-      {closed ? <ResultBlock o={o} /> : o.myBid ? (
-        <div className="notice good" style={{ marginTop: 12 }}>
-          <b>Tu oferta:</b> {fmtPrice(o.myBid.price, o.unit)} · {o.myBid.deliveryMonths} meses · {techShort(o.myBid.techId)}{o.myBid.projectId ? ` · ${o.myBid.projectId}` : ' · proyecto nuevo'}
-          <div className="dim" style={{ fontSize: 11.5 }}>Garantía inmovilizada {fmtMoney(o.myBid.bondUsd)} · se adjudica el {fmtDate(o.awardDate)}</div>
-          {o.status === 'abierta' && (
-            <div style={{ marginTop: 6 }}>
-              <ConfirmButton confirm="Se recupera la garantía; el costo de preparación no." onConfirm={() => sim.command({ type: 'withdrawBid', opportunityId: o.id })}>Retirar oferta</ConfirmButton>
-            </div>
-          )}
-        </div>
-      ) : (
-        <>
-          {!o.canBid.ok && o.status === 'abierta' && <div className="notice warn" style={{ marginTop: 12 }}><b>No puedes ofertar:</b> {o.canBid.blockers.join(' ')}</div>}
-          <button className="primary" style={{ width: '100%', marginTop: 12 }} data-testid="open-bid" disabled={o.status !== 'abierta' || !o.techs.some((t) => t.modeled && t.unlocked)}
-            onClick={() => ui.set({ bidFor: o.id })} title={cash < o.prepCostUsd ? 'Caja insuficiente' : undefined}>
-            Armar oferta…
-          </button>
-        </>
-      )}
+      <div className="weights-legend">
+        {([['Precio', w.precio], ['Técnica', w.tecnica], ['Experiencia', w.experiencia], ['Plazo', w.plazo]] as const).map(([k, v], i) => (
+          <span key={k}><i className={`wl wl${i}`} />{k} <b className="mono">{fmtPct(v, 0)}</b></span>
+        ))}
+      </div>
     </div>
   );
 }
