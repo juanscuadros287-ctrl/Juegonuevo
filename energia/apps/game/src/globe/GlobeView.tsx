@@ -19,10 +19,12 @@ export function GlobeView({ world }: { world: World }) {
     const sites = new SiteLayer(g);
     sitesRef = sites;
     sites.onPick = (id) => { if (ui.get().screen === 'game') ui.openProject(id); };
+    sites.onPickRival = (id) => { if (ui.get().screen === 'game') ui.openPanel('competitors', id); };
     // gancho para la prueba de humo (tools/screenshots.mjs): mover la cámara y ubicar sitios
     (window as unknown as { __voltaje?: object }).__voltaje = {
       flyTo: (lat: number, lon: number, d: number, s = 0.1) => g.flyTo(lat, lon, d, s),
       siteScreenPos: (id: string) => sites.screenPos(id),
+      rivalSites: () => sites.rivalIds(),
     };
     const home = world.grid.countriesByCode.get(gameData.game.pais_inicial);
     g.jumpTo(home?.lat ?? 0, (home?.lon ?? 0) + 40, 3.4);
@@ -35,11 +37,13 @@ export function GlobeView({ world }: { world: World }) {
     const sync = () => {
       const s = ui.get();
       g.autoRotate = s.screen === 'menu';
+      // ventanas grandes o diálogos tapan el globo: se redibuja a ~4 cuadros por segundo
+      g.throttleMs = s.screen === 'game' && (s.window || s.developAt || s.bidFor || s.dialog) ? 250 : 0;
       if (s.layerId !== prev.layerId || s.layerOpacity !== prev.layerOpacity || s === prev) {
         g.setLayer(gameData.layers.find((l) => l.id === s.layerId) ?? null, s.layerOpacity);
       }
       if (s.selected !== prev.selected) g.setSelection(s.selected);
-      if (s.views !== prev.views || s.screen !== prev.screen) sites.sync(s.screen === 'game' ? s.views?.projects ?? [] : [], s.game);
+      if (s.views !== prev.views || s.screen !== prev.screen) sites.sync(s.screen === 'game' ? s.views?.projects ?? [] : [], s.game, s.screen === 'game' ? s.views?.business?.competitors : null);
       prev = s;
     };
     sync();
