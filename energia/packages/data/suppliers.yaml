@@ -82,7 +82,7 @@ proveedores:
   - id: epc_local
     nombre: "Constructora Istmeña (EPC local)"
     tipo: epc
-    tecnologias: [solar_fv, eolica_tierra]
+    tecnologias: [solar_fv, eolica_tierra, hidro_pasada, biomasa, biogas, petroleo, baterias, linea_transmision, eficiencia_energetica]
     origen: PAN
     descripcion: "Contratista local: barato y conoce el terreno, con poca experiencia en proyectos grandes."
     factor_precio: 0.90
@@ -94,7 +94,7 @@ proveedores:
   - id: epc_regional
     nombre: "Andina Energía (EPC regional)"
     tipo: epc
-    tecnologias: [solar_fv, eolica_tierra]
+    tecnologias: [solar_fv, eolica_tierra, geotermica, hidro_pasada, hidro_embalse, hidro_bombeo, csp, biomasa, biogas, gas_natural, carbon, petroleo, baterias, hidrogeno_verde, linea_transmision, interconexion, eficiencia_energetica]
     origen: COL
     descripcion: "EPC latinoamericano con decenas de plantas construidas. Equilibrado."
     factor_precio: 1.0
@@ -106,7 +106,7 @@ proveedores:
   - id: epc_internacional
     nombre: "Global Power EPC (internacional)"
     tipo: epc
-    tecnologias: [solar_fv, eolica_tierra]
+    tecnologias: [solar_fv, eolica_tierra, geotermica, hidro_pasada, hidro_embalse, hidro_bombeo, csp, eolica_marina, biomasa, biogas, gas_natural, carbon, petroleo, nuclear, smr, baterias, hidrogeno_verde, linea_transmision, interconexion, eficiencia_energetica]
     origen: ESP
     descripcion: "EPC internacional llave en mano con precio cerrado más alto: casi no hay sobrecostos."
     factor_precio: 1.15
@@ -119,7 +119,7 @@ proveedores:
   - id: epc_asia
     nombre: "Sino Overseas Build (EPC asiático)"
     tipo: epc
-    tecnologias: [solar_fv, eolica_tierra]
+    tecnologias: [solar_fv, eolica_tierra, hidro_pasada, hidro_embalse, hidro_bombeo, csp, eolica_marina, biomasa, gas_natural, carbon, petroleo, baterias, hidrogeno_verde, linea_transmision, interconexion]
     origen: CHN
     descripcion: "Contratista asiático que llega con su propia cuadrilla: rápido y barato, pero choca con la normativa local y genera reclamos."
     factor_precio: 0.88
@@ -129,6 +129,284 @@ proveedores:
     prob_sobrecosto_hito: 0.22
     capacidad_mw_ano: 250
     supuesto: "EPC asiáticos en América Latina: 10–15 % más baratos con más reclamos laborales y de calidad (orden de magnitud)"
+
+  # ───────── Fase 4: equipos de las tecnologías nuevas (nombres ficticios) ─────────
+  - id: geo_occidente
+    nombre: "Magma Turbines (turbinas geotérmicas)"
+    tipo: equipos
+    tecnologias: [geotermica]
+    origen: JPN
+    descripcion: "Turbinas flash y binarias probadas en campos de todo el mundo."
+    factor_precio: 1.05
+    calidad: 0.93
+    confiabilidad: 0.9
+    plazo_entrega_dias: { min: 300, base: 420, max: 600, supuesto: "Fabricación a pedido de turbinas geotérmicas (12–18 meses)" }
+    flete_frac: 0.06
+    capacidad_mw_ano: 300
+  - id: geo_binaria
+    nombre: "Orca Binary (plantas binarias modulares)"
+    tipo: equipos
+    tecnologias: [geotermica]
+    origen: ISR
+    descripcion: "Módulos ORC para recursos de menor temperatura; más baratos, algo menos eficientes."
+    factor_precio: 0.92
+    calidad: 0.85
+    confiabilidad: 0.85
+    plazo_entrega_dias: { min: 240, base: 330, max: 480, supuesto: "Módulos ORC estándar" }
+    flete_frac: 0.06
+    capacidad_mw_ano: 250
+  - id: hidro_europa
+    nombre: "Alpenhydro (turbinas hidráulicas europeas)"
+    tipo: equipos
+    tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo]
+    origen: AUT
+    descripcion: "Turbinas Francis, Pelton y reversibles de alta gama."
+    factor_precio: 1.1
+    calidad: 0.95
+    confiabilidad: 0.92
+    plazo_entrega_dias: { min: 300, base: 420, max: 600, supuesto: "Fabricación a pedido" }
+    flete_frac: 0.06
+    capacidad_mw_ano: 800
+  - id: hidro_asia
+    nombre: "Yangtze Hydro Equipment"
+    tipo: equipos
+    tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo]
+    origen: CHN
+    descripcion: "Equipos hidráulicos más baratos con financiamiento chino."
+    factor_precio: 0.85
+    calidad: 0.82
+    confiabilidad: 0.8
+    plazo_entrega_dias: { min: 240, base: 360, max: 540, supuesto: "Gran capacidad de fábrica" }
+    flete_frac: 0.06
+    capacidad_mw_ano: 1500
+  - id: csp_torre
+    nombre: "Heliotower (CSP de torre)"
+    tipo: equipos
+    tecnologias: [csp]
+    origen: ESP
+    descripcion: "Heliostatos, receptor y sales fundidas (experiencia en Noor y Cerro Dominador)."
+    factor_precio: 1.05
+    calidad: 0.88
+    confiabilidad: 0.85
+    plazo_entrega_dias: { min: 300, base: 420, max: 600, supuesto: "Pocos proveedores en el mundo" }
+    flete_frac: 0.07
+    capacidad_mw_ano: 300
+  - id: csp_asia
+    nombre: "Sunfire Thermal (CSP asiático)"
+    tipo: equipos
+    tecnologias: [csp]
+    origen: CHN
+    descripcion: "Tecnología de torre china (Dunhuang), más barata."
+    factor_precio: 0.85
+    calidad: 0.8
+    confiabilidad: 0.78
+    plazo_entrega_dias: { min: 270, base: 380, max: 540, supuesto: "Fabricación china" }
+    flete_frac: 0.07
+    capacidad_mw_ano: 400
+  - id: offshore_europa
+    nombre: "Nordsee Offshore (turbinas marinas)"
+    tipo: equipos
+    tecnologias: [eolica_marina]
+    origen: DNK
+    descripcion: "Turbinas marinas de 15 MW con buques de instalación propios."
+    factor_precio: 1.08
+    calidad: 0.93
+    confiabilidad: 0.9
+    plazo_entrega_dias: { min: 360, base: 480, max: 720, supuesto: "Cola de turbinas y buques (2024)" }
+    flete_frac: 0.08
+    capacidad_mw_ano: 1500
+  - id: offshore_asia
+    nombre: "East Sea Wind (turbinas marinas asiáticas)"
+    tipo: equipos
+    tecnologias: [eolica_marina]
+    origen: CHN
+    descripcion: "Turbinas marinas de 16–18 MW, más baratas, poca experiencia fuera de China."
+    factor_precio: 0.85
+    calidad: 0.8
+    confiabilidad: 0.78
+    plazo_entrega_dias: { min: 300, base: 420, max: 600, supuesto: "Fabricación china" }
+    flete_frac: 0.08
+    capacidad_mw_ano: 2000
+  - id: caldera_biomasa
+    nombre: "Verde Boilers (calderas de biomasa)"
+    tipo: equipos
+    tecnologias: [biomasa, biogas]
+    origen: BRA
+    descripcion: "Calderas, digestores y motores para bagazo y residuos (experiencia en ingenios)."
+    factor_precio: 0.95
+    calidad: 0.85
+    confiabilidad: 0.85
+    plazo_entrega_dias: { min: 180, base: 270, max: 400, supuesto: "Fabricación regional" }
+    flete_frac: 0.05
+    capacidad_mw_ano: 400
+  - id: turbinas_gas
+    nombre: "Atlas Gas Turbines"
+    tipo: equipos
+    tecnologias: [gas_natural, petroleo]
+    origen: USA
+    descripcion: "Turbinas de gas, motores y ciclos combinados de primera línea."
+    factor_precio: 1.05
+    calidad: 0.93
+    confiabilidad: 0.92
+    plazo_entrega_dias: { min: 420, base: 540, max: 720, supuesto: "Cola de turbinas de gas 2024–2026 (≈ 3–5 años para grandes)" }
+    flete_frac: 0.05
+    capacidad_mw_ano: 3000
+  - id: turbinas_gas_asia
+    nombre: "Hanbit Power Machinery"
+    tipo: equipos
+    tecnologias: [gas_natural, petroleo, carbon]
+    origen: KOR
+    descripcion: "Turbinas, motores y calderas asiáticas: más baratas y rápidas."
+    factor_precio: 0.9
+    calidad: 0.85
+    confiabilidad: 0.85
+    plazo_entrega_dias: { min: 330, base: 450, max: 600, supuesto: "Fabricación asiática" }
+    flete_frac: 0.05
+    capacidad_mw_ano: 2500
+  - id: caldera_carbon
+    nombre: "Ironclad Steam (calderas y turbinas de vapor)"
+    tipo: equipos
+    tecnologias: [carbon]
+    origen: DEU
+    descripcion: "Calderas supercríticas y turbinas de vapor."
+    factor_precio: 1.05
+    calidad: 0.9
+    confiabilidad: 0.88
+    plazo_entrega_dias: { min: 420, base: 600, max: 800, supuesto: "Fabricación a pedido" }
+    flete_frac: 0.06
+    capacidad_mw_ano: 1500
+  - id: nuclear_occidente
+    nombre: "Westbridge Nuclear (reactor Gen III+)"
+    tipo: equipos
+    tecnologias: [nuclear]
+    origen: USA
+    descripcion: "Reactor de agua a presión de 1.100 MW con cadena de suministro certificada."
+    factor_precio: 1.0
+    calidad: 0.9
+    confiabilidad: 0.82
+    plazo_entrega_dias: { min: 1100, base: 1460, max: 2200, supuesto: "Componentes forjados de larga fabricación" }
+    flete_frac: 0.03
+    capacidad_mw_ano: 2500
+  - id: nuclear_asia
+    nombre: "Hanul Nuclear (reactor APR)"
+    tipo: equipos
+    tecnologias: [nuclear]
+    origen: KOR
+    descripcion: "Reactor coreano construido a tiempo en Barakah (EAU)."
+    factor_precio: 0.9
+    calidad: 0.92
+    confiabilidad: 0.88
+    plazo_entrega_dias: { min: 900, base: 1200, max: 1800, supuesto: "Experiencia de Barakah" }
+    flete_frac: 0.03
+    capacidad_mw_ano: 2800
+  - id: smr_fabricante
+    nombre: "ModuCore SMR"
+    tipo: equipos
+    tecnologias: [smr]
+    origen: CAN
+    descripcion: "SMR de agua en ebullición de 300 MW (primeros de su clase)."
+    factor_precio: 1.0
+    calidad: 0.85
+    confiabilidad: 0.75
+    plazo_entrega_dias: { min: 720, base: 1000, max: 1500, supuesto: "Primeras unidades" }
+    flete_frac: 0.03
+    capacidad_mw_ano: 1200
+  - id: baterias_asia
+    nombre: "Lumen Cells (BESS LFP)"
+    tipo: equipos
+    tecnologias: [baterias]
+    origen: CHN
+    descripcion: "Contenedores LFP integrados de gran fabricante: baratos y confiables."
+    factor_precio: 0.88
+    calidad: 0.88
+    confiabilidad: 0.88
+    plazo_entrega_dias: { min: 90, base: 150, max: 240, supuesto: "Gran capacidad de fábrica" }
+    flete_frac: 0.04
+    capacidad_mw_ano: 5000
+  - id: baterias_occidente
+    nombre: "Fortis Storage (BESS integrador occidental)"
+    tipo: equipos
+    tecnologias: [baterias]
+    origen: USA
+    descripcion: "Integrador con control propio y garantía de desempeño; cumple reglas de contenido local de EE. UU."
+    factor_precio: 1.12
+    calidad: 0.94
+    confiabilidad: 0.92
+    plazo_entrega_dias: { min: 150, base: 210, max: 300, supuesto: "Integración y pruebas" }
+    flete_frac: 0.04
+    capacidad_mw_ano: 2000
+  - id: electrolizador_occidente
+    nombre: "Hydra Electrolysis (PEM)"
+    tipo: equipos
+    tecnologias: [hidrogeno_verde]
+    origen: DEU
+    descripcion: "Electrolizadores PEM con buena flexibilidad."
+    factor_precio: 1.1
+    calidad: 0.88
+    confiabilidad: 0.85
+    plazo_entrega_dias: { min: 300, base: 420, max: 600, supuesto: "Fábricas en escala inicial" }
+    flete_frac: 0.05
+    capacidad_mw_ano: 1000
+  - id: electrolizador_asia
+    nombre: "Qingyuan Alkaline"
+    tipo: equipos
+    tecnologias: [hidrogeno_verde]
+    origen: CHN
+    descripcion: "Electrolizadores alcalinos baratos, menos flexibles."
+    factor_precio: 0.75
+    calidad: 0.78
+    confiabilidad: 0.8
+    plazo_entrega_dias: { min: 180, base: 270, max: 400, supuesto: "Gran capacidad china" }
+    flete_frac: 0.05
+    capacidad_mw_ano: 3000
+  - id: conductores
+    nombre: "Highline Conductors & Towers"
+    tipo: equipos
+    tecnologias: [linea_transmision, interconexion]
+    origen: BRA
+    descripcion: "Torres, conductores y transformadores para líneas de 230–500 kV."
+    factor_precio: 1.0
+    calidad: 0.88
+    confiabilidad: 0.86
+    plazo_entrega_dias: { min: 240, base: 330, max: 480, supuesto: "Transformadores con plazos largos (2024)" }
+    flete_frac: 0.05
+    capacidad_mw_ano: 5000
+  - id: conductores_asia
+    nombre: "State Grid Equipment Export"
+    tipo: equipos
+    tecnologias: [linea_transmision, interconexion]
+    origen: CHN
+    descripcion: "Equipos de transmisión más baratos."
+    factor_precio: 0.85
+    calidad: 0.82
+    confiabilidad: 0.8
+    plazo_entrega_dias: { min: 210, base: 300, max: 450, supuesto: "Fabricación china" }
+    flete_frac: 0.05
+    capacidad_mw_ano: 8000
+  - id: equipos_eficiencia
+    nombre: "Ecomotion (motores y variadores)"
+    tipo: equipos
+    tecnologias: [eficiencia_energetica]
+    origen: DEU
+    descripcion: "Motores IE4, variadores, recuperadores de calor y medición."
+    factor_precio: 1.0
+    calidad: 0.9
+    confiabilidad: 0.9
+    plazo_entrega_dias: { min: 45, base: 75, max: 120, supuesto: "Catálogo estándar" }
+    flete_frac: 0.04
+    capacidad_mw_ano: 500
+  - id: equipos_eficiencia_local
+    nombre: "Industrias Eficientes (integrador regional)"
+    tipo: equipos
+    tecnologias: [eficiencia_energetica]
+    origen: MEX
+    descripcion: "Integrador regional más barato."
+    factor_precio: 0.88
+    calidad: 0.8
+    confiabilidad: 0.8
+    plazo_entrega_dias: { min: 30, base: 60, max: 100, supuesto: "Stock regional" }
+    flete_frac: 0.03
+    capacidad_mw_ano: 300
 
   # Inversores (solo FV): reemplazan la fracción `fraccion_inversores` del paquete de equipos.
   - id: inversores_asia
@@ -209,6 +487,21 @@ curvas_aprendizaje:
       fuente: "NREL ATB 2024 escenario moderado (CAPEX FV −2 a −3 %/año a 2035); tasa de aprendizaje de módulos ≈ 20–24 % (IRENA 2023)" }
   - { tecnologia: eolica_tierra, equipos_anual: -0.012, epc_anual: -0.005, exposicion: { acero: 0.30, cobre: 0.08 },
       fuente: "NREL ATB 2024 escenario moderado (eólica en tierra ≈ −1 %/año); el acero domina la masa de una turbina (NREL 2023)" }
+
+  - { tecnologia: baterias, equipos_anual: -0.06, epc_anual: -0.02, exposicion: { cobre: 0.08, acero: 0.05 },
+      fuente: "NREL ATB 2024 escenario moderado (BESS ≈ −5 a −7 %/año a 2030); BNEF Battery Price Survey 2024 (−20 % en 2024)" }
+  - { tecnologia: hidrogeno_verde, equipos_anual: -0.06, epc_anual: -0.02, exposicion: { acero: 0.1 },
+      fuente: "IEA Global Hydrogen Review 2024 (electrolizadores −40 a −60 % a 2030 en escenarios anunciados)" }
+  - { tecnologia: eolica_marina, equipos_anual: -0.015, epc_anual: -0.01, exposicion: { acero: 0.35, cobre: 0.08 },
+      fuente: "NREL ATB 2024 escenario moderado (eólica marina ≈ −1 a −2 %/año)" }
+  - { tecnologia: csp, equipos_anual: -0.02, epc_anual: -0.01, exposicion: { acero: 0.2 },
+      fuente: "NREL ATB 2024 escenario moderado (CSP ≈ −2 %/año)" }
+  - { tecnologia: smr, equipos_anual: -0.02, epc_anual: -0.01, exposicion: { acero: 0.15 },
+      fuente: "NEA/OECD 2024: aprendizaje de SMR por fabricación en serie (supuesto moderado)" }
+  - { tecnologia: geotermica, equipos_anual: -0.005, epc_anual: -0.005, exposicion: { acero: 0.15 },
+      fuente: "NREL ATB 2024 escenario moderado (hidrotermal casi sin aprendizaje)" }
+  - { tecnologia: linea_transmision, equipos_anual: 0, epc_anual: 0, exposicion: { cobre: 0.2, acero: 0.2 },
+      fuente: "Supuesto: costo de líneas ligado al cobre/aluminio y al acero" }
 
 demanda_global:
   volatilidad_anual: 0.12

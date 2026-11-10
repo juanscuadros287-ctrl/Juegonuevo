@@ -1,16 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { gameData, buildGameData, anchorsSchema, DataError } from '../src';
+import { gameData, buildGameData, anchorsSchema, DataError, rawGameData } from '../src';
 import anclas from '../resources/anclas.yaml';
 import game from '../game.yaml';
 import layers from '../layers.yaml';
-import studies from '../studies.yaml';
-import suppliers from '../suppliers.yaml';
-import solar from '../technologies/solar_fv.yaml';
-import eolica from '../technologies/eolica_tierra.yaml';
-import pan from '../countries/PAN.yaml';
-import research from '../research.yaml';
-import clients from '../clients.yaml';
-import competitors from '../competitors.yaml';
 
 describe('Datos del juego', () => {
   it('todos los YAML cumplen su esquema', () => {
@@ -31,12 +23,17 @@ describe('Datos del juego', () => {
   });
 });
 
+/** Todos los YAML (claves = nombre del archivo) para pruebas que modifican datos. */
+const base = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k.split('/').pop()!, v]));
+const allRaw = () => structuredClone({ ...rawGameData, countries: base(rawGameData.countries), technologies: base(rawGameData.technologies) }) as any;
+
 describe('Datos de la Fase 2', () => {
-  const raw = () => structuredClone({ game, layers, countries: { 'PAN.yaml': pan }, technologies: { 'solar_fv.yaml': solar, 'eolica_tierra.yaml': eolica }, studies, suppliers }) as any;
+  const raw = allRaw;
 
   it('tecnologías, estudios, proveedores y Panamá cargan y se cruzan bien', () => {
     const d = gameData.simData;
-    expect(Object.keys(d.technologies).sort()).toEqual(['eolica_tierra', 'solar_fv']);
+    expect(Object.keys(d.technologies)).toEqual(expect.arrayContaining(['eolica_tierra', 'solar_fv']));
+    expect(Object.keys(d.technologies).length).toBeGreaterThanOrEqual(20); // Fase 4
     expect(Object.keys(d.studies).length).toBeGreaterThanOrEqual(9);
     expect(Object.values(d.suppliers).filter((s) => s.tipo === 'epc').length).toBeGreaterThanOrEqual(2);
     for (const t of ['solar_fv', 'eolica_tierra']) {
@@ -89,7 +86,7 @@ describe('Datos de la Fase 2', () => {
 });
 
 describe('Datos de la Fase 3', () => {
-  const raw = () => structuredClone({ game, layers, countries: { 'PAN.yaml': pan }, technologies: { 'solar_fv.yaml': solar, 'eolica_tierra.yaml': eolica }, studies, suppliers, research, clients, competitors }) as any;
+  const raw = allRaw;
 
   it('I+D, clientes, competidores y dinámica de proveedores cargan y se cruzan bien', () => {
     const d = gameData.simData;
@@ -114,7 +111,7 @@ describe('Datos de la Fase 3', () => {
   });
 
   it('rechaza tecnologías sin modelo si el nodo no declara fase_modelo, y nodos sin fuente', () => {
-    const r = raw(); delete r.research.nodos.find((n: any) => n.id === 'tec_geotermica').fase_modelo;
+    const r = raw(); delete r.technologies['geotermica.yaml'];
     expect(() => buildGameData(r)).toThrow(/geotermica/);
     const r2 = raw(); delete r2.research.nodos.find((n: any) => n.id === 'ef_permisos').supuesto;
     expect(() => buildGameData(r2)).toThrow(/fuente|supuesto/);

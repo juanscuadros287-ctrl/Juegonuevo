@@ -1,0 +1,70 @@
+# Solar de concentración (torre) con almacenamiento térmico en sales fundidas.
+id: csp
+nombre: Solar de concentración (CSP)
+categoria: solar
+recurso: dni
+recurso_tipico: 8.0
+modelo_fc: csp
+visual: csp
+
+capex_usd_kw: { min: 5000, base: 7000, max: 9500, fuente: "IRENA 2023 (CSP ≈ 6.589 USD/kW en 2023); NREL ATB 2024 torre 10 h ≈ 7.000–8.000" }
+desglose_capex: { equipos: 0.45, epc: 0.4, otros: 0.15, supuesto: "Campo de heliostatos y receptor ≈ 45 %, obra e integración ≈ 40 %" }
+om_fijo_usd_kw_ano: { min: 50, base: 70, max: 90, fuente: "NREL ATB 2024 (≈ 65–70 USD/kW·año)" }
+om_variable_usd_mwh: { min: 1, base: 3, max: 5, supuesto: "Agua de limpieza y químicos" }
+factor_capacidad_ref: { min: 0.3, base: 0.48, max: 0.65, fuente: "IRENA 2023 / Cerro Dominador, Noor III" }
+vida_util_anos: { min: 25, base: 30, max: 35, fuente: "NREL ATB 2024" }
+degradacion_anual: { min: 0.001, base: 0.002, max: 0.005, supuesto: "Espejos y receptor" }
+construccion_meses: { min: 24, base: 30, max: 42, fuente: "Proyectos 2015–2021 (Noor III, Cerro Dominador)" }
+puesta_en_marcha_dias: { min: 60, base: 120, max: 240, supuesto: "Puesta en marcha de sales fundidas (lenta)" }
+emisiones_gco2_kwh: { min: 9, base: 27, max: 63, fuente: "IPCC AR5 WGIII Anexo III" }
+uso_suelo_ha_mw: { min: 3, base: 4, max: 6, fuente: "NREL Land-Use Requirements 2013 (≈ 10 acres/MW)" }
+escala_mw: { min: 20, max: 300, tipico: 110 }
+
+sigma_recurso_sitio: 0.08
+variabilidad: { diaria: 0.25, interanual: 0.05, supuesto: "El almacenamiento suaviza la variación diaria" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.005, base: 0.01, max: 0.03, supuesto: "Receptor, bombas de sales" }
+  fraccion_afectada: { min: 0.1, base: 0.5, max: 1.0, supuesto: "Un equipo crítico detiene la planta" }
+  duracion_dias: { min: 2, base: 10, max: 60, supuesto: "Reparación" }
+  costo_reparacion_usd_kw: { min: 5, base: 30, max: 150, supuesto: "Receptor y tanques" }
+mantenimiento:
+  programado_perdida: 0.04
+  preventivo_om_factor: 1.08
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.92
+  supuesto: "Mantenimiento anual"
+costo_desmantelamiento_frac_capex: { min: 0.03, base: 0.05, max: 0.1, supuesto: "Sales y heliostatos" }
+
+estudios_requeridos: [medicion_recurso, prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: preparacion, nombre: "Preparación del terreno", fraccion: 0.1, sensible_lluvia: true }
+  - { id: heliostatos, nombre: "Campo de heliostatos", fraccion: 0.35, requiere_equipos: true }
+  - { id: torre, nombre: "Torre y receptor", fraccion: 0.2 }
+  - { id: bloque, nombre: "Tanques de sales y bloque de potencia", fraccion: 0.25, requiere_equipos: true }
+  - { id: pruebas, nombre: "Pruebas", fraccion: 0.1 }
+
+riesgos:
+  - { id: tecnologia, nombre: "Tecnología compleja", descripcion: "Pocas plantas en el mundo; la puesta en marcha suele atrasarse." }
+  - { id: agua, nombre: "Agua", descripcion: "Limpieza de espejos en zonas áridas." }
+
+sitio:
+  superficie: tierra
+  recurso_min: 6.0
+  supuesto: "Con DNI < 6 kWh/m²/día (≈ 2.200 kWh/m²/año) la CSP no es viable (IRENA)"
+
+csp:
+  horas_almacenamiento: 10
+  sm_base: 1.2
+  sm_por_hora: 0.12
+  eficiencia_relativa: 0.62
+  fc_max: 0.65
+  supuesto: "Múltiplo solar ≈ 1,2 + 0,12·horas (SAM/NREL); calibrado con Andasol (7,5 h, DNI 5,9 ⇒ ≈ 35–40 %) y torres de 10–17 h (DNI 9–10 ⇒ 55–65 %)"
+
+riesgo_obra:
+  sobrecosto_prob_factor: 1.3
+  sobrecosto_magnitud_factor: 1.3
+  retraso_prob_mensual: 0.03
+  retraso_dias: { min: 10, base: 30, max: 120, supuesto: "Integración del receptor" }
+  supuesto: "Experiencia de Crescent Dunes y Cerro Dominador"

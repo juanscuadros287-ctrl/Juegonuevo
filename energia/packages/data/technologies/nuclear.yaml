@@ -1,0 +1,71 @@
+# Reactor de agua ligera de ~1.100 MW (Gen III+).
+id: nuclear
+nombre: Nuclear (gran reactor)
+categoria: termica
+modelo_fc: termica
+visual: nuclear
+
+capex_usd_kw: { min: 6000, base: 8500, max: 14000, fuente: "Lazard LCOE+ 2024 (8.750–14.000 USD/kW); NREL ATB 2024 ≈ 7.500–8.000; Vogtle 3-4 > 10.000" }
+desglose_capex: { equipos: 0.4, epc: 0.45, otros: 0.15, supuesto: "Isla nuclear y turbina ≈ 40 %, obra civil ≈ 45 %" }
+om_fijo_usd_kw_ano: { min: 120, base: 150, max: 190, fuente: "NREL ATB 2024 (≈ 145–160 USD/kW·año)" }
+om_variable_usd_mwh: { min: 2, base: 2.5, max: 4, fuente: "NREL ATB 2024" }
+factor_capacidad_ref: { min: 0.37, base: 0.92, max: 0.92, supuesto: "Disponibilidad máxima; el despacho real depende del margen sobre el costo marginal" }
+vida_util_anos: { min: 40, base: 60, max: 80, fuente: "NRC: licencias de 40 + 20 años" }
+degradacion_anual: { min: 0.001, base: 0.002, max: 0.005, supuesto: "Pérdida de eficiencia entre mantenimientos mayores" }
+construccion_meses: { min: 72, base: 96, max: 150, fuente: "IAEA PRIS: plazo medio de construcción ≈ 7–9 años (2015–2023)" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Pruebas de desempeño" }
+emisiones_gco2_kwh: { min: 4, base: 12, max: 110, fuente: "IPCC AR5 WGIII Anexo III" }
+uso_suelo_ha_mw: { min: 0.1, base: 0.3, max: 0.6, supuesto: "Sitio y zona de exclusión" }
+escala_mw: { min: 600, max: 2400, tipico: 1100 }
+
+sigma_recurso_sitio: 0.02
+variabilidad: { diaria: 0.03, interanual: 0.02, supuesto: "Disponibilidad diaria estable; el despacho se calcula aparte" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.002, base: 0.004, max: 0.01, supuesto: "Paradas forzadas de unidades térmicas ≈ 3–8 % de tasa de salida forzada (NERC GADS 2023)" }
+  fraccion_afectada: { min: 0.1, base: 0.4, max: 1.0, supuesto: "Una unidad o un equipo principal" }
+  duracion_dias: { min: 2, base: 10, max: 45, supuesto: "Reparación de caldera, turbina o generador" }
+  costo_reparacion_usd_kw: { min: 5, base: 25, max: 120, supuesto: "Repuestos y mano de obra especializada" }
+mantenimiento:
+  programado_perdida: 0.06
+  preventivo_om_factor: 1.08
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.92
+  supuesto: "Paradas programadas de 3–5 semanas al año (overhaul); preventivo reduce fallas ≈ 40 %"
+costo_desmantelamiento_frac_capex: { min: 0.03, base: 0.05, max: 0.1, supuesto: "Desmantelamiento y remediación" }
+
+estudios_requeridos: [prefactibilidad, sitio_nuclear, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: excavacion, nombre: "Excavación e isla nuclear", fraccion: 0.3, sensible_lluvia: true }
+  - { id: contencion, nombre: "Contención y estructuras", fraccion: 0.25 }
+  - { id: reactor, nombre: "Reactor y sistemas nucleares", fraccion: 0.3, requiere_equipos: true }
+  - { id: pruebas, nombre: "Carga de combustible y pruebas", fraccion: 0.15 }
+
+riesgos:
+  - { id: sobrecosto, nombre: "Sobrecosto", descripcion: "Los grandes reactores recientes duplicaron su presupuesto y plazo (Vogtle, Flamanville, Hinkley)." }
+  - { id: permisos, nombre: "Permisos", descripcion: "Licencia del regulador nuclear: 3–6 años." }
+  - { id: opinion, nombre: "Opinión pública", descripcion: "Oposición social y política." }
+
+sitio:
+  superficie: tierra
+  agua_indice_min: 30
+  agua_dist_costa_km: 20
+  supuesto: "Refrigeración: río caudaloso o costa (< 20 km)"
+
+termica:
+  fc_max: 0.92
+  prima_captura: 1.0
+  despacho: base
+  supuesto: "Despacha según el margen precio/costo marginal; la captura refleja si opera en horas caras"
+
+combustible:
+  tipo: uranio
+  heat_rate_btu_kwh: { min: 10000, base: 10400, max: 10500, fuente: "EIA: heat rate nuclear ≈ 10.400 Btu/kWh" }
+
+riesgo_obra:
+  sobrecosto_prob_factor: 3.0
+  sobrecosto_magnitud_factor: 3.0
+  retraso_prob_mensual: 0.06
+  retraso_dias: { min: 30, base: 90, max: 240, supuesto: "Rediseños, inspecciones del regulador, cadena de suministro" }
+  supuesto: "Vogtle 3-4: +100 % de costo y +7 años; Flamanville 3: ×4 costo (IAEA, auditorías públicas)"

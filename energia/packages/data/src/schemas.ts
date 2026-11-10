@@ -36,7 +36,7 @@ const srcMsg = { message: 'Falta "fuente" o "supuesto"' };
 const src = { fuente: z.string().optional(), supuesto: z.string().optional() };
 const prob01 = z.number().min(0).max(1);
 const month12 = z.array(z.number().positive()).length(12);
-const applicability = z.object({ tecnologias: z.array(z.string()).optional(), mw_min: z.number().optional(), mw_max: z.number().optional() });
+const applicability = z.object({ tecnologias: z.array(z.string()).optional(), mw_min: z.number().optional(), mw_max: z.number().optional(), excluye: z.array(z.string()).optional() });
 const sumsToOne = (keys: string[]) => (v: Record<string, unknown>) => Math.abs(keys.reduce((a, k) => a + (v[k] as number), 0) - 1) < 1e-6;
 
 export const permitSchema = z.object({
@@ -74,6 +74,9 @@ export const ppaChannelSchema = z.object({
   requiere_permisos: z.array(z.string()),
   plazo_cod_meses: z.number().int().positive(),
   multa_usd_mw_mes: z.number().nonnegative(),
+  // Fase 4
+  moneda: z.enum(['USD', 'local']).optional(),
+  tecnologias: z.array(z.string()).optional(),
 });
 
 export const lenderSchema = z.object({
@@ -100,7 +103,11 @@ export const countrySchema = z.object({
   nombre: z.string(),
   iso_num: z.number().int(),
   moneda: z.object({ codigo: z.string(), nombre: z.string(), usd_por_unidad: z.number().positive() }),
-  tipo_cambio: z.object({ deriva_anual: z.number(), volatilidad_anual: z.number().nonnegative(), ...src }).refine(hasSource, srcMsg),
+  tipo_cambio: z.object({
+    deriva_anual: z.number(), volatilidad_anual: z.number().nonnegative(),
+    // Fase 4: reversión del tipo de cambio real y shocks (devaluaciones).
+    reversion_anual: z.number().min(0).max(1).optional(), shock_prob_anual: prob01.optional(), shock_magnitud: sourced.optional(), ...src,
+  }).refine(hasSource, srcMsg),
   inflacion_anual: sourced,
   prima_riesgo_pais: sourced,
   regulador: z.string(),
@@ -112,6 +119,10 @@ export const countrySchema = z.object({
     perfil_spot_mensual: month12,
     perfil_spot_fuente: z.string().min(1),
     matriz: z.record(z.union([z.number(), z.string()])),
+    // Fase 4
+    factor_punta: z.number().positive().optional(),
+    factor_valle: z.number().positive().optional(),
+    moneda_contratos: z.enum(['USD', 'local']).optional(),
   }),
   perfil_recurso_mensual: z.record(month12),
   perfil_recurso_fuente: z.string().min(1),
@@ -129,6 +140,7 @@ export const countrySchema = z.object({
     opcion_terreno_usd_ha_ano: sourced,
     arriendo_terreno_usd_ha_ano: sourced,
     seguro_frac_capex_ano: sourced,
+    fraccion_costos_locales: prob01.optional(),
   }),
   finanzas: z.object({
     tasa_libre_riesgo: sourced,
@@ -154,6 +166,13 @@ export const countrySchema = z.object({
   permisos: z.array(permitSchema).min(1),
   ppa: z.object({ canales: z.array(ppaChannelSchema).min(1) }),
   notas: z.string().optional(),
+  // ───────── Fase 4 ─────────
+  expansion: z.object({ constitucion_usd: sourced, dias: sourced, representante_mensual_usd: sourced }).optional(),
+  combustibles: z.record(z.object({ indice: z.string(), factor: z.number().positive(), ...src }).refine(hasSource, srcMsg)).optional(),
+  carbono: z.object({ precio_usd_tco2: sourced, crecimiento_anual: z.number().min(-0.2).max(0.3) }).optional(),
+  zona: z.object({ nombre: z.string(), lat_min: z.number(), lat_max: z.number(), lon_min: z.number(), lon_max: z.number() }).optional(),
+  restricciones: z.object({ tecnologias_prohibidas: z.array(z.string()), motivo: z.string(), ...src }).refine(hasSource, srcMsg).optional(),
+  permisos_fuente: z.string().optional(),
 });
 
 const milestoneSchema = z.object({
@@ -166,7 +185,7 @@ export const technologySchema = z.object({
   nombre: z.string(),
   categoria: z.string(),
   recurso: z.string().optional(),
-  modelo_fc: z.enum(['solar_fv', 'eolica', 'fijo']),
+  modelo_fc: z.enum(['solar_fv', 'eolica', 'fijo', 'geotermia', 'hidro', 'csp', 'termica', 'almacenamiento', 'hidrogeno', 'transmision', 'eficiencia']),
   capex_usd_kw: sourced,
   desglose_capex: z.object({ equipos: prob01, epc: prob01, otros: prob01, ...src })
     .refine(hasSource, srcMsg)
@@ -202,11 +221,46 @@ export const technologySchema = z.object({
     cizalle_alfa: z.number(), ...src,
   }).refine(hasSource, srcMsg).optional(),
   fraccion_inversores: prob01.optional(),
-  // Fase 4 (opcionales): térmicas y almacenamiento.
+  // Fase 4 (opcionales): térmicas, almacenamiento y modelos nuevos.
   combustible: z.object({ tipo: z.string(), heat_rate_btu_kwh: sourced, precio_usd_mmbtu: sourced.optional() }).optional(),
-  almacenamiento: z.object({ eficiencia_ida_vuelta: sourced, horas: sourced, ciclos_vida: sourced.optional() }).optional(),
+  almacenamiento: z.object({
+    eficiencia_ida_vuelta: sourced, horas: sourced, ciclos_vida: sourced.optional(),
+    ciclos_ano_max: z.number().positive().optional(), degradacion_por_ciclo: z.number().nonnegative().max(0.01).optional(),
+  }).optional(),
+  recurso_tipico: z.number().positive().optional(),
+  visual: z.string().optional(),
+  sitio: z.object({
+    superficie: z.enum(['tierra', 'mar']), recurso_min: z.number().optional(), dist_costa_km_min: z.number().nonnegative().optional(),
+    dist_costa_km_max: z.number().positive().optional(), profundidad_max_m: z.number().positive().optional(), profundidad_m_por_km: z.number().positive().optional(),
+    flotante_desde_m: z.number().positive().optional(), flotante_capex_extra: z.number().nonnegative().optional(), capex_extra_por_km: z.number().nonnegative().optional(),
+    km_ref: z.number().nonnegative().optional(), relieve_min: z.number().min(0).max(1).optional(), agua_indice_min: z.number().nonnegative().optional(),
+    agua_dist_costa_km: z.number().nonnegative().optional(), ...src,
+  }).refine(hasSource, srcMsg).optional(),
+  geotermia: z.object({
+    calidad_min_mw_m2: z.number(), calidad_max_mw_m2: z.number(), prob_seco_calidad0: prob01, prob_seco_calidad1: prob01,
+    prob_baja_calidad0: prob01, prob_baja_calidad1: prob01, factor_seco_desarrollo: prob01, mw_pozo_calidad0: z.number().positive(),
+    mw_pozo_calidad1: z.number().positive(), costo_pozo_usd: sourced, reinyectores_por_productor: z.number().nonnegative(), frac_capex_perforacion: prob01, ...src,
+  }).refine(hasSource, srcMsg).refine((g) => g.calidad_max_mw_m2 > g.calidad_min_mw_m2, { message: 'calidad_max debe superar calidad_min' }).optional(),
+  hidro: z.object({ fc_min: prob01, fc_max: prob01, exponente: z.number().positive(), regulacion: prob01, lluvia_ref_mm: z.number().positive(), ...src }).refine(hasSource, srcMsg).optional(),
+  csp: z.object({ horas_almacenamiento: z.number().nonnegative(), sm_base: z.number().positive(), sm_por_hora: z.number().nonnegative(), eficiencia_relativa: prob01, fc_max: prob01, ...src }).refine(hasSource, srcMsg).optional(),
+  termica: z.object({ fc_max: prob01, prima_captura: z.number().positive(), despacho: z.enum(['base', 'media', 'punta']), ...src }).refine(hasSource, srcMsg).optional(),
+  hidrogeno: z.object({ kwh_por_kg: sourced, precio_venta_usd_kg: sourced, utilizacion: prob01, agua_usd_kg: z.number().nonnegative(), factor_precio_electricidad: z.number().positive(), ...src }).refine(hasSource, srcMsg).optional(),
+  transmision: z.object({
+    costo_usd_mw_km: sourced, perdidas_frac_100km: prob01, peaje_usd_mwh: sourced, utilizacion: prob01, interconexion: z.boolean(),
+    longitud_min_km: z.number().nonnegative(), longitud_max_km: z.number().positive(), captura_diferencial: prob01, ...src,
+  }).refine(hasSource, srcMsg).optional(),
+  eficiencia: z.object({ precio_ahorro_usd_mwh: sourced, ahorro_garantizado_frac: prob01, factor_carga: prob01, ...src }).refine(hasSource, srcMsg).optional(),
+  riesgo_obra: z.object({ sobrecosto_prob_factor: z.number().positive(), sobrecosto_magnitud_factor: z.number().positive(), retraso_prob_mensual: prob01, retraso_dias: sourced, ...src }).refine(hasSource, srcMsg).optional(),
 }).refine((t) => t.modelo_fc !== 'solar_fv' || t.solar, { message: 'modelo_fc solar_fv exige el bloque "solar"' })
-  .refine((t) => t.modelo_fc !== 'eolica' || t.eolica, { message: 'modelo_fc eolica exige el bloque "eolica"' });
+  .refine((t) => t.modelo_fc !== 'eolica' || t.eolica, { message: 'modelo_fc eolica exige el bloque "eolica"' })
+  .refine((t) => t.modelo_fc !== 'geotermia' || t.geotermia, { message: 'modelo_fc geotermia exige el bloque "geotermia"' })
+  .refine((t) => t.modelo_fc !== 'hidro' || t.hidro, { message: 'modelo_fc hidro exige el bloque "hidro"' })
+  .refine((t) => t.modelo_fc !== 'csp' || t.csp, { message: 'modelo_fc csp exige el bloque "csp"' })
+  .refine((t) => t.modelo_fc !== 'termica' || (t.termica && t.combustible), { message: 'modelo_fc termica exige los bloques "termica" y "combustible"' })
+  .refine((t) => t.modelo_fc !== 'almacenamiento' || t.almacenamiento, { message: 'modelo_fc almacenamiento exige el bloque "almacenamiento"' })
+  .refine((t) => t.modelo_fc !== 'hidrogeno' || t.hidrogeno, { message: 'modelo_fc hidrogeno exige el bloque "hidrogeno"' })
+  .refine((t) => t.modelo_fc !== 'transmision' || t.transmision, { message: 'modelo_fc transmision exige el bloque "transmision"' })
+  .refine((t) => t.modelo_fc !== 'eficiencia' || t.eficiencia, { message: 'modelo_fc eficiencia exige el bloque "eficiencia"' });
 
 export const findingSchema = z.object({
   id: z.string(),
@@ -237,6 +291,8 @@ export const studySchema = z.object({
   peor_capex_factor: sourced.optional(),
   peor_descripcion: z.string().optional(),
   hallazgos: z.array(z.string()).optional(),
+  pozos_exploratorios: z.number().int().positive().optional(),
+  hallazgo_pozos_secos: z.string().optional(),
 });
 
 export const studiesFileSchema = z.object({ estudios: z.array(studySchema).min(1), hallazgos: z.array(findingSchema) });
@@ -350,6 +406,7 @@ export const clientTypeSchema = withSource({
   costo_preparacion_usd: sourced,
   ofertantes_externos: z.object({ media: z.number().nonnegative(), precio_factor: sourced }),
   indexacion_anual: z.number(),
+  moneda: z.enum(['USD', 'local']).optional(),
 });
 
 export const clientsFileSchema = z.object({
@@ -386,6 +443,7 @@ export const competitorSchema = withSource({
   reserva_meses: z.number().nonnegative(),
   vende: z.enum(['nunca', 'listo_para_construir', 'en_crisis']),
   investigacion: z.object({ presupuesto_mensual_usd: z.number().nonnegative(), prioridades: z.array(z.string()) }),
+  expansion: z.object({ paises: z.array(z.string().length(3)), caja_min_usd: z.number().nonnegative() }).optional(),
 });
 
 export const competitorsFileSchema = z.object({
@@ -393,6 +451,13 @@ export const competitorsFileSchema = z.object({
   sitios_candidatos: z.array(z.object({ nombre: z.string(), pais: z.string().length(3), tecnologia: z.string(), lat: z.number(), lon: z.number() })),
   sitios_fuente: z.string().min(1),
 });
+
+// ───────────── Fase 4: combustibles e inflación del USD ─────────────
+export const fuelSchema = withSource({
+  id: z.string(), nombre: z.string(), precio_usd_mmbtu: sourced, volatilidad_anual: z.number().nonnegative().max(1.5), reversion_anual: prob01,
+  min: z.number().positive(), max: z.number().positive(), emisiones_kgco2_mmbtu: z.number().nonnegative(),
+});
+export const marketsFileSchema = z.object({ inflacion_usd: sourced, combustibles: z.array(fuelSchema).min(1) });
 
 const anchorLand = z.tuple([z.string(), z.number(), z.number(), z.number().nullable(), z.number().nullable(), z.number().nullable()]).rest(z.number());
 export const anchorsSchema = z.object({

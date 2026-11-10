@@ -1,0 +1,63 @@
+# Digestores anaerobios con motores de gas (residuos agroindustriales, estiércol, rellenos).
+id: biogas
+nombre: Biogás
+categoria: bioenergia
+recurso: biomasa
+recurso_tipico: 1800
+modelo_fc: termica
+visual: biogas
+
+capex_usd_kw: { min: 2000, base: 3500, max: 6000, fuente: "IRENA 2023 (biogás 2.000–6.000 USD/kW); Lazard LCOE+ 2024" }
+desglose_capex: { equipos: 0.5, epc: 0.35, otros: 0.15, supuesto: "Digestores y motores ≈ 50 %" }
+om_fijo_usd_kw_ano: { min: 90, base: 140, max: 200, supuesto: "Motores de gas: O&M alto (IRENA 2012)" }
+om_variable_usd_mwh: { min: 8, base: 12, max: 20, supuesto: "Mantenimiento de motores por hora de uso" }
+factor_capacidad_ref: { min: 0.34, base: 0.85, max: 0.85, supuesto: "Disponibilidad máxima; el despacho real depende del margen sobre el costo marginal" }
+vida_util_anos: { min: 15, base: 20, max: 25, supuesto: "Motores con overhaul" }
+degradacion_anual: { min: 0.001, base: 0.002, max: 0.005, supuesto: "Pérdida de eficiencia entre mantenimientos mayores" }
+construccion_meses: { min: 8, base: 12, max: 18, supuesto: "Plantas modulares" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Pruebas de desempeño" }
+emisiones_gco2_kwh: { min: 10, base: 30, max: 80, supuesto: "Metano evitado vs fugas (IPCC)" }
+uso_suelo_ha_mw: { min: 0.3, base: 0.8, max: 2, supuesto: "Digestores y lagunas" }
+escala_mw: { min: 0.5, max: 20, tipico: 3 }
+
+sigma_recurso_sitio: 0.12
+variabilidad: { diaria: 0.03, interanual: 0.02, supuesto: "Disponibilidad diaria estable; el despacho se calcula aparte" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.002, base: 0.004, max: 0.01, supuesto: "Paradas forzadas de unidades térmicas ≈ 3–8 % de tasa de salida forzada (NERC GADS 2023)" }
+  fraccion_afectada: { min: 0.1, base: 0.4, max: 1.0, supuesto: "Una unidad o un equipo principal" }
+  duracion_dias: { min: 2, base: 10, max: 45, supuesto: "Reparación de caldera, turbina o generador" }
+  costo_reparacion_usd_kw: { min: 5, base: 25, max: 120, supuesto: "Repuestos y mano de obra especializada" }
+mantenimiento:
+  programado_perdida: 0.06
+  preventivo_om_factor: 1.08
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.92
+  supuesto: "Paradas programadas de 3–5 semanas al año (overhaul); preventivo reduce fallas ≈ 40 %"
+costo_desmantelamiento_frac_capex: { min: 0.03, base: 0.05, max: 0.1, supuesto: "Desmantelamiento y remediación" }
+
+estudios_requeridos: [medicion_recurso, prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: obra_civil, nombre: "Obra civil y fundaciones", fraccion: 0.25, sensible_lluvia: true }
+  - { id: equipos, nombre: "Montaje de turbinas/calderas", fraccion: 0.45, requiere_equipos: true }
+  - { id: bop, nombre: "Balance de planta", fraccion: 0.2 }
+  - { id: pruebas, nombre: "Pruebas", fraccion: 0.1 }
+
+riesgos:
+  - { id: sustrato, nombre: "Sustrato", descripcion: "Depende de acuerdos con agroindustrias; la calidad del sustrato cambia la producción." }
+
+sitio:
+  superficie: tierra
+  recurso_min: 400
+  supuesto: "Zonas agrícolas con residuos suficientes"
+
+termica:
+  fc_max: 0.85
+  prima_captura: 1.0
+  despacho: base
+  supuesto: "Despacha según el margen precio/costo marginal; la captura refleja si opera en horas caras"
+
+combustible:
+  tipo: biogas
+  heat_rate_btu_kwh: { min: 9500, base: 11000, max: 12500, fuente: "Motores de biogás: eficiencia eléctrica ≈ 31–36 %" }

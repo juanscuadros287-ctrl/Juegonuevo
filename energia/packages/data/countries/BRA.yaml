@@ -1,0 +1,347 @@
+# Brasil — Fase 4. Datos macro, de mercado y de permisos aproximados (2024–2025); ver docs/MOTOR_FASE4.md.
+iso3: BRA
+nombre: Brasil
+iso_num: 76
+moneda: { codigo: BRL, nombre: "Real brasileño", usd_por_unidad: 0.18 }
+tipo_cambio: { deriva_anual: 0, volatilidad_anual: 0.17, reversion_anual: 0.25, shock_prob_anual: 0.1, shock_magnitud: { min: 0.1, base: 0.2, max: 0.35, supuesto: "Devaluaciones históricas" }, fuente: "BCB: real muy volátil (2015 −35 %, 2020 −25 %)" }
+inflacion_anual: { base: 0.05, fuente: "BCB / IPCA 2025 (≈ 5 %)" }
+prima_riesgo_pais: { base: 0.032, fuente: "Damodaran, Country Risk Premiums ene-2025 (aprox. según calificación Ba1/BB)" }
+regulador: "ANEEL / MME"
+operador_sistema: "ONS (Operador Nacional do Sistema) / CCEE"
+mercado:
+  demanda_anual_twh: { base: 700, fuente: "ONS / EPE 2024" }
+  pico_mw: { base: 102000, fuente: "ONS / EPE 2024" }
+  precio_spot_medio_usd_mwh: { min: 15, base: 45, max: 150, fuente: "CCEE: PLD 2023–2024 ≈ 60–300 BRL/MWh (mucha hidro)" }
+  perfil_spot_mensual: [0.75, 0.70, 0.70, 0.80, 0.95, 1.10, 1.20, 1.30, 1.35, 1.25, 1.00, 0.90]
+  perfil_spot_fuente: "Supuesto: período seco de may–oct en el Sudeste (embalses bajan)"
+  matriz: { hidro: 0.6, eolica: 0.14, solar: 0.08, biomasa: 0.08, gas: 0.06, nuclear: 0.02, otros: 0.02, fuente: "EPE BEN 2024" }
+  factor_punta: 1.3
+  factor_valle: 0.8
+  moneda_contratos: local
+
+perfil_recurso_mensual:
+  ghi: [1.05, 1.05, 1.00, 0.95, 0.90, 0.88, 0.92, 1.00, 1.05, 1.08, 1.06, 1.06]
+  dni: [0.95, 0.98, 0.98, 1.00, 1.00, 1.00, 1.05, 1.08, 1.05, 1.00, 0.95, 0.96]
+  viento_tierra: [0.75, 0.65, 0.60, 0.65, 0.85, 1.05, 1.25, 1.40, 1.45, 1.30, 1.10, 0.85]
+  hidro: [1.45, 1.55, 1.50, 1.25, 0.95, 0.75, 0.65, 0.55, 0.55, 0.70, 0.90, 1.15]
+  viento_mar: [0.80, 0.70, 0.65, 0.70, 0.85, 1.05, 1.25, 1.35, 1.40, 1.25, 1.10, 0.90]
+  biomasa: [0.40, 0.30, 0.30, 0.80, 1.40, 1.50, 1.50, 1.50, 1.50, 1.30, 0.90, 0.60]
+perfil_recurso_fuente: "Supuesto: viento del Nordeste máximo en ago–oct (complementario con la hidro); zafra de caña abr–nov"
+
+impuestos:
+  renta: { base: 0.34, fuente: "IRPJ + CSLL (34 %); ICMS/PIS/COFINS ≈ 17 % sobre equipos" }
+  depreciacion_anos: { base: 10, supuesto: "Vida fiscal de equipos de generación (aprox.)" }
+  itbms: { base: 0.17, fuente: "IRPJ + CSLL (34 %); ICMS/PIS/COFINS ≈ 17 % sobre equipos" }
+  arancel_general_equipos: { base: 0.14, supuesto: "Arancel típico de equipos eléctricos sin incentivo" }
+
+incentivos:
+  solar_fv:
+    descripcion: "REIDI (suspensión de PIS/COFINS) y SUDENE (reducción del 75 % del impuesto a la renta en el Nordeste); exención de ICMS (Convenio 101/97)"
+    arancel_exento: false
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.12, fuente: "Lei 11.488/2007 (REIDI) y SUDENE (aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  eolica_tierra:
+    descripcion: "REIDI (suspensión de PIS/COFINS) y SUDENE (reducción del 75 % del impuesto a la renta en el Nordeste); exención de ICMS (Convenio 101/97)"
+    arancel_exento: false
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.12, fuente: "Lei 11.488/2007 (REIDI) y SUDENE (aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  hidro_pasada:
+    descripcion: "REIDI (suspensión de PIS/COFINS) y SUDENE (reducción del 75 % del impuesto a la renta en el Nordeste); exención de ICMS (Convenio 101/97)"
+    arancel_exento: false
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.12, fuente: "Lei 11.488/2007 (REIDI) y SUDENE (aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  biomasa:
+    descripcion: "REIDI (suspensión de PIS/COFINS) y SUDENE (reducción del 75 % del impuesto a la renta en el Nordeste); exención de ICMS (Convenio 101/97)"
+    arancel_exento: false
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.12, fuente: "Lei 11.488/2007 (REIDI) y SUDENE (aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  biogas:
+    descripcion: "REIDI (suspensión de PIS/COFINS) y SUDENE (reducción del 75 % del impuesto a la renta en el Nordeste); exención de ICMS (Convenio 101/97)"
+    arancel_exento: false
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.12, fuente: "Lei 11.488/2007 (REIDI) y SUDENE (aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  eolica_marina:
+    descripcion: "REIDI (suspensión de PIS/COFINS) y SUDENE (reducción del 75 % del impuesto a la renta en el Nordeste); exención de ICMS (Convenio 101/97)"
+    arancel_exento: false
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.12, fuente: "Lei 11.488/2007 (REIDI) y SUDENE (aprox.)" }
+    credito_max_frac_impuesto: 0.5
+
+costos:
+  factor_construccion_local: { min: 0.85, base: 0.95, max: 1.14, supuesto: "Mano de obra competitiva; logística interior cara" }
+  prospeccion_usd: { base: 12000, supuesto: "Visita, catastro y reunión con propietarios" }
+  opcion_terreno_usd_ha_ano: { base: 36.0, supuesto: "≈ 10–15 % del arriendo" }
+  arriendo_terreno_usd_ha_ano: { base: 300, supuesto: "Arriendo rural para uso energético (orden de magnitud)" }
+  seguro_frac_capex_ano: { base: 0.003, supuesto: "Seguro todo riesgo operativo" }
+  fraccion_costos_locales: 0.55
+
+finanzas:
+  tasa_libre_riesgo: { base: 0.043, fuente: "Bono del Tesoro de EE. UU. a 10 años (2025): la deuda se contrata en USD" }
+  prima_mercado_acciones: { base: 0.045, fuente: "Damodaran, implied ERP ene-2025" }
+  beta_renovables: 1.0
+  prima_etapa: { identificado: 0.08, estudios: 0.06, permisos: 0.035, cierre_financiero: 0.02, construccion: 0.01, puesta_en_marcha: 0.005, operacion: 0 }
+  prima_tecnologia: { eolica_tierra: 0.01, eolica_marina: 0.02, geotermica: 0.025, hidro_embalse: 0.02, csp: 0.02, nuclear: 0.03, smr: 0.04, hidrogeno_verde: 0.03, carbon: 0.02 }
+  prima_fuente: "Supuesto alineado con IEA Cost of Capital Observatory 2024 (primas por tecnología y madurez)"
+  prestamistas:
+    - id: banco_comercial
+      nombre: "Banco comercial local"
+      tipo: comercial
+      descripcion: "Bancos locales o regionales: rápidos; aceptan proyectos sin PPA con más cobertura."
+      spread: { min: 0.027, base: 0.035, max: 0.05, supuesto: "BNDES y bancos locales en reales con swap a USD (SOFR + 3–4,5 %)" }
+      plazo_anos: 12
+      dscr_ppa: 1.30
+      dscr_merchant: 1.6
+      apalancamiento_max: 0.70
+      comision_estructuracion: 0.015
+      costo_asesores_usd: { min: 30000, base: 60000, max: 120000, supuesto: "Asesor legal, financiero e ingeniero independiente" }
+      diligencia_dias: { min: 60, base: 100, max: 180, supuesto: "Due diligence de banco local" }
+      prob_aprobacion: 0.8
+      requiere_ppa: false
+      sigma_recurso_max: 0.05
+      monto_min_usd: 2000000
+    - id: banco_desarrollo
+      nombre: "BNDES / BNB / IFC"
+      tipo: desarrollo
+      descripcion: "Banca de desarrollo con PPA de subasta (CCEAR); exige contenido local."
+      spread: { min: 0.017, base: 0.022, max: 0.032, supuesto: "Préstamos A de multilaterales o agencias de crédito a la exportación (2024)" }
+      plazo_anos: 18
+      dscr_ppa: 1.25
+      dscr_merchant: 1.50
+      apalancamiento_max: 0.75
+      comision_estructuracion: 0.01
+      costo_asesores_usd: { min: 90000, base: 150000, max: 250000, supuesto: "Asesores + Normas de Desempeño IFC" }
+      diligencia_dias: { min: 120, base: 180, max: 300, supuesto: "Comités de crédito y revisión ambiental y social" }
+      prob_aprobacion: 0.78
+      requiere_ppa: true
+      sigma_recurso_max: 0.035
+      monto_min_usd: 15000000
+  socio_equity: { participacion_max: 0.8, prima_desarrollo_frac: 0.10, supuesto: "Fondos de infraestructura compran proyectos listos para construir con prima de 5–15 %" }
+  credito_emergencia: { tasa: 0.16, frac_valor_activos: 0.5, supuesto: "Línea corporativa de último recurso garantizada con activos" }
+
+construccion:
+  meses_lluviosos: [11, 12, 1, 2, 3]
+  factor_avance_lluvia: 0.85
+  huelga_prob_mensual: 0.012
+  huelga_duracion_dias: { min: 5, base: 10, max: 30, supuesto: "Huelgas de transporte (camioneros 2018)" }
+  clima_extremo_prob_mensual: 0.02
+  clima_extremo_dias: { min: 3, base: 7, max: 15, supuesto: "Tormentas tropicales" }
+  supuesto: "Supuesto: lluvias de verano (nov–mar) en el Sudeste/Centro-Oeste"
+
+quiebra: { meses_caja_negativa: 3 }
+
+# Permisos como grafo (requiere.estudios = grupos de estudio; requiere.permisos = grupos de permiso). Ver docs/MOTOR_FASE4.md.
+permisos_fuente: "Resolución CONAMA 237/1997 (LP/LI/LO), Lei 9.427/1996 (ANEEL), Lei 9.433/1997 (outorga de água); aproximado"
+permisos:
+  - id: uso_suelo
+    nombre: "Uso de suelo y licencia municipal"
+    grupo: uso_suelo
+    autoridad: "Prefeitura (uso do solo)"
+    descripcion: "Compatibilidad del uso de suelo y licencia de construcción."
+    aplica: { excluye: [eficiencia_energetica, eolica_marina] }
+    requiere: { estudios: [prefactibilidad], permisos: [] }
+    costo_fijo_usd: { base: 5000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 90, max: 240, supuesto: "Trámite municipal o estatal" }
+    prob: { aprobado: 0.85, rechazado: 0.05, info_adicional: 0.1, supuesto: "Trámite municipal o estatal" }
+    info_adicional: { retraso_dias: { min: 20, base: 45, max: 90, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: licenca_previa
+    nombre: "Licença Prévia (LP)"
+    grupo: licencia_previa
+    autoridad: "Órgano ambiental estatal (OEMA) o IBAMA"
+    descripcion: "Primera etapa del licenciamiento: viabilidad ambiental del sitio (EIA/RIMA o RAS)."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 20000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 330, max: 720, supuesto: "Plazos largos en IBAMA y en los estados" }
+    prob: { aprobado: 0.68, rechazado: 0.1, info_adicional: 0.22, supuesto: "Plazos largos en IBAMA y en los estados" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 30000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Resolución CONAMA 237/1997"
+  - id: consulta_funai
+    nombre: "Componente indígena (FUNAI) y quilombola (INCRA)"
+    grupo: consulta_indigena
+    autoridad: "FUNAI / INCRA"
+    descripcion: "Estudios del componente indígena cuando hay tierras indígenas o quilombolas a menos de 10–40 km."
+    aplica: { excluye: [eficiencia_energetica], mw_min: 30 }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 300, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 365, max: 900, supuesto: "Muy incierto en la Amazonía y el Nordeste" }
+    prob: { aprobado: 0.6, rechazado: 0.12, info_adicional: 0.28, supuesto: "Muy incierto en la Amazonía y el Nordeste" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Portaria Interministerial 60/2015"
+  - id: licenca_instalacao
+    nombre: "Licença de Instalação (LI)"
+    grupo: licencia_ambiental
+    autoridad: "Órgano ambiental estatal (OEMA) o IBAMA"
+    descripcion: "Segunda etapa: autoriza la obra con los programas ambientales (PBA)."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_previa, consulta_indigena] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 90, base: 180, max: 360, supuesto: "Cumplir condicionantes de la LP" }
+    prob: { aprobado: 0.8, rechazado: 0.06, info_adicional: 0.14, supuesto: "Cumplir condicionantes de la LP" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Resolución CONAMA 237/1997"
+  - id: viabilidad_conexion
+    nombre: "Parecer de acesso (ONS)"
+    grupo: viabilidad_conexion
+    autoridad: "ONS"
+    descripcion: "El operador de la red revisa el estudio de conexión y asigna capacidad."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [conexion], permisos: [] }
+    costo_fijo_usd: { base: 10000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 120, base: 240, max: 450, supuesto: "Estudios del operador de red" }
+    prob: { aprobado: 0.72, rechazado: 0.1, info_adicional: 0.18, supuesto: "Estudios del operador de red" }
+    info_adicional: { retraso_dias: { min: 45, base: 90, max: 180, supuesto: "Subsanar observaciones" }, costo_usd: { base: 15000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Procedimientos de Rede del ONS"
+  - id: contrato_acceso_red
+    nombre: "Contrato de conexión"
+    grupo: contrato_acceso_red
+    autoridad: "Transmisora / ONS (CUST)"
+    descripcion: "Contrato de conexión y garantía de cumplimiento."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [], permisos: [licencia_generacion, viabilidad_conexion] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 500, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 60, max: 150, supuesto: "Formalidad tras la asignación de capacidad" }
+    prob: { aprobado: 0.93, rechazado: 0.02, info_adicional: 0.05, supuesto: "Formalidad tras la asignación de capacidad" }
+    info_adicional: { retraso_dias: { min: 15, base: 30, max: 60, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: licencia_generacion
+    nombre: "Outorga de autorização (ANEEL)"
+    grupo: licencia_generacion
+    autoridad: "ANEEL"
+    descripcion: "Habilitación para generar y vender energía."
+    aplica: { excluye: [eficiencia_energetica, linea_transmision, interconexion] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    costo_fijo_usd: { base: 20000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 90, base: 180, max: 365, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    prob: { aprobado: 0.85, rechazado: 0.04, info_adicional: 0.11, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Subsanar observaciones" }, costo_usd: { base: 8000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Lei 9.427/1996"
+  - id: concesion_agua
+    nombre: "Concesión de aguas"
+    grupo: concesion_agua
+    autoridad: "ANA / órgano estatal (outorga de água)"
+    descripcion: "Concesión de uso de agua para generación con caudal ecológico."
+    aplica: { tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo] }
+    requiere: { estudios: [medicion_recurso], permisos: [] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 360, max: 720, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    prob: { aprobado: 0.68, rechazado: 0.12, info_adicional: 0.2, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_maritima
+    nombre: "Concesión de espacio marítimo"
+    grupo: concesion_maritima
+    autoridad: "IBAMA / SPU (cesión de áreas marinas, Lei 15.097/2025)"
+    descripcion: "Uso del lecho marino y la franja costera para turbinas y cables."
+    aplica: { tecnologias: [eolica_marina] }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 80000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 300, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 240, base: 450, max: 900, supuesto: "Marco reciente para eólica marina" }
+    prob: { aprobado: 0.6, rechazado: 0.15, info_adicional: 0.25, supuesto: "Marco reciente para eólica marina" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: servidumbre_transmision
+    nombre: "Servidumbres de la línea"
+    grupo: servidumbre
+    autoridad: "ANEEL (DUP)"
+    descripcion: "Declaratoria de utilidad pública y servidumbres a lo largo del trazado."
+    aplica: { tecnologias: [linea_transmision, interconexion] }
+    requiere: { estudios: [trazado], permisos: [licencia_ambiental] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 60, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 150, base: 300, max: 600, supuesto: "Oposición de propietarios" }
+    prob: { aprobado: 0.72, rechazado: 0.1, info_adicional: 0.18, supuesto: "Oposición de propietarios" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: acuerdo_interconexion
+    nombre: "Autorización de interconexión internacional"
+    grupo: acuerdo_interconexion
+    autoridad: "MME / ANEEL"
+    descripcion: "Acuerdo binacional y registro ante el regulador del otro país."
+    aplica: { tecnologias: [interconexion] }
+    requiere: { estudios: [], permisos: [servidumbre] }
+    costo_fijo_usd: { base: 150000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 100, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 300, base: 600, max: 1200, supuesto: "Depende de la política de ambos gobiernos" }
+    prob: { aprobado: 0.55, rechazado: 0.15, info_adicional: 0.3, supuesto: "Depende de la política de ambos gobiernos" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+
+ppa:
+  canales:
+    - id: leilao_aneel
+      nombre: "Leilão de energia nova (A-4/A-6)"
+      descripcion: "Subasta regulada de ANEEL/CCEE: CCEAR en reales indexado al IPCA."
+      precio_usd_mwh: { min: 25, base: 33, max: 50, supuesto: "LEN A-4/A-6 2021–2022: solar ≈ 160–180 BRL/MWh, eólica ≈ 160 (≈ 30–35 USD/MWh)" }
+      plazo_anos: 20
+      indexacion_anual: 0.045
+      duracion_dias: { min: 240, base: 360, max: 540, supuesto: "Convocatoria, oferta y adjudicación o negociación" }
+      prob_exito: 0.35
+      costo_usd: { base: 60000, supuesto: "Preparación de oferta y garantía" }
+      mw_min: 5
+      mw_max: 600
+      requiere_permisos: [viabilidad_conexion]
+      plazo_cod_meses: 48
+      multa_usd_mw_mes: 1500
+      moneda: local
+    - id: mercado_livre
+      nombre: "PPA en el mercado libre (ACL)"
+      descripcion: "Contrato en reales con consumidor libre o comercializadora."
+      precio_usd_mwh: { min: 28, base: 40, max: 55, supuesto: "PPA ACL 2024 ≈ 150–250 BRL/MWh" }
+      plazo_anos: 10
+      indexacion_anual: 0.045
+      duracion_dias: { min: 120, base: 180, max: 360, supuesto: "Convocatoria, oferta y adjudicación o negociación" }
+      prob_exito: 0.5
+      costo_usd: { base: 30000, supuesto: "Preparación de oferta y garantía" }
+      mw_min: 1
+      mw_max: 300
+      requiere_permisos: [licencia_ambiental]
+      plazo_cod_meses: 36
+      multa_usd_mw_mes: 1200
+      moneda: local
+
+expansion:
+  constitucion_usd: { min: 15000, base: 25000, max: 50000, supuesto: "Ltda. brasileña, CNPJ y registro en CCEE" }
+  dias: { min: 45, base: 90, max: 225, supuesto: "Ltda. brasileña, CNPJ y registro en CCEE" }
+  representante_mensual_usd: { min: 2700, base: 4500, max: 9000, supuesto: "Representante legal, contador y gestor local" }
+combustibles:
+  gas_natural: { indice: gnl, factor: 0.85, supuesto: "Gas presal y GNL" }
+  carbon: { indice: carbon, factor: 1.0, supuesto: "Importado" }
+  fueloil: { indice: fueloil, factor: 1.0, supuesto: "Petrobras" }
+  biomasa: { indice: biomasa, factor: 0.8, supuesto: "Bagazo de caña abundante" }
+
+restricciones:
+  tecnologias_prohibidas: [nuclear, smr]
+  motivo: "La generación nuclear es monopolio de la Unión (Eletronuclear)"
+  supuesto: "Constitución Federal art. 21 y 177"
+notas: "Licenciamiento en tres etapas (LP, LI, LO); la LO se obtiene al terminar la obra (no modelada). Datos aproximados."

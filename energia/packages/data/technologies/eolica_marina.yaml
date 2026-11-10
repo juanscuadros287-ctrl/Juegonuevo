@@ -1,0 +1,83 @@
+# Eólica marina (fija hasta ~60 m de profundidad, flotante más allá), turbina de 15 MW.
+id: eolica_marina
+nombre: Eólica marina
+categoria: eolica
+recurso: viento_mar
+recurso_tipico: 9.0
+modelo_fc: eolica
+visual: eolica_mar
+
+capex_usd_kw: { min: 2600, base: 3500, max: 5800, fuente: "IRENA 2023 (eólica marina ≈ 3.461 USD/kW en 2023); NREL ATB 2024 fija ≈ 3.700, flotante ≈ 5.800" }
+desglose_capex: { equipos: 0.45, epc: 0.4, otros: 0.15, fuente: "NREL Offshore Wind Market Report 2024: turbina ≈ 35–45 %, fundaciones e instalación ≈ 35–40 %" }
+om_fijo_usd_kw_ano: { min: 70, base: 95, max: 130, fuente: "NREL ATB 2024 (fija ≈ 95–110 USD/kW·año)" }
+om_variable_usd_mwh: { base: 0, supuesto: "Incluido en el fijo" }
+factor_capacidad_ref: { min: 0.35, base: 0.45, max: 0.55, fuente: "IRENA 2023: FC medio de eólica marina 2023 ≈ 41 %" }
+vida_util_anos: { min: 25, base: 30, max: 30, fuente: "NREL ATB 2024" }
+degradacion_anual: { min: 0.001, base: 0.003, max: 0.006, supuesto: "Similar a tierra" }
+construccion_meses: { min: 24, base: 30, max: 48, fuente: "4C Offshore / NREL: 2–4 años de obra" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Turbina a turbina" }
+emisiones_gco2_kwh: { min: 8, base: 12, max: 35, fuente: "IPCC AR5 WGIII Anexo III" }
+uso_suelo_ha_mw: { min: 0, base: 0.01, max: 0.05, supuesto: "Sin uso de tierra (subestación en tierra)" }
+escala_mw: { min: 100, max: 1500, tipico: 500 }
+
+sigma_recurso_sitio: 0.08
+variabilidad: { diaria: 0.4, interanual: 0.06, supuesto: "Similar a tierra, algo más estable" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.015, base: 0.03, max: 0.06, supuesto: "Fallas de turbinas y cables submarinos" }
+  fraccion_afectada: { min: 0.01, base: 0.05, max: 0.4, supuesto: "Una turbina o un cable de arreglo" }
+  duracion_dias: { min: 5, base: 25, max: 120, supuesto: "Ventanas meteorológicas y buques" }
+  costo_reparacion_usd_kw: { min: 20, base: 80, max: 300, supuesto: "Buques de instalación y repuestos" }
+mantenimiento:
+  programado_perdida: 0.02
+  preventivo_om_factor: 1.1
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.9
+  supuesto: "Mantenimiento con buques CTV/SOV"
+costo_desmantelamiento_frac_capex: { min: 0.05, base: 0.08, max: 0.15, supuesto: "Retiro de fundaciones en el mar" }
+
+estudios_requeridos: [medicion_recurso, prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: fundaciones, nombre: "Fundaciones (monopilotes o flotantes)", fraccion: 0.3 }
+  - { id: cables, nombre: "Cables de exportación y arreglo", fraccion: 0.15 }
+  - { id: subestacion, nombre: "Subestación marina", fraccion: 0.15, requiere_equipos: true }
+  - { id: montaje, nombre: "Instalación de turbinas", fraccion: 0.3, requiere_equipos: true }
+  - { id: pruebas, nombre: "Pruebas", fraccion: 0.1 }
+
+riesgos:
+  - { id: clima_marino, nombre: "Clima marino", descripcion: "Las ventanas de instalación dependen del oleaje." }
+  - { id: pesca, nombre: "Pesca y navegación", descripcion: "Conflictos con pescadores y rutas marítimas." }
+  - { id: buques, nombre: "Buques de instalación", descripcion: "Pocos buques en el mundo: colas y precios altos." }
+
+sitio:
+  superficie: mar
+  recurso_min: 7.0
+  dist_costa_km_min: 8
+  dist_costa_km_max: 150
+  profundidad_max_m: 1000
+  profundidad_m_por_km: 1.5
+  flotante_desde_m: 60
+  flotante_capex_extra: 0.55
+  capex_extra_por_km: 0.002
+  km_ref: 30
+  supuesto: "Profundidad ≈ 1,5 m por km de costa (plataforma continental aproximada); fija hasta 60 m, flotante +55 % (NREL ATB 2024); cable +0,2 %/km sobre 30 km"
+
+riesgo_obra:
+  sobrecosto_prob_factor: 1.3
+  sobrecosto_magnitud_factor: 1.4
+  retraso_prob_mensual: 0.04
+  retraso_dias: { min: 10, base: 30, max: 90, supuesto: "Esperas por clima" }
+  supuesto: "Experiencia europea y de EE. UU. 2022–2024 (cancelaciones por costos)"
+
+eolica:
+  turbina_mw: 15
+  diametro_rotor_m: 236
+  altura_buje_m: 150
+  cp: 0.45
+  v_arranque: 3
+  v_corte: 30
+  weibull_k: 2.2
+  perdidas: 0.15
+  cizalle_alfa: 0.1
+  fuente: "Turbina de referencia IEA 15 MW (NREL 2020); pérdidas 15 % incl. estelas (NREL ATB 2024)"

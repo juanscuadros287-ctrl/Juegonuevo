@@ -112,7 +112,7 @@ estudios:
     nombre: Estudio de impacto ambiental categoría I
     grupo: eia
     descripcion: "EIA de impacto bajo (proyectos pequeños). Incluye participación ciudadana simplificada."
-    aplica: { tecnologias: [solar_fv], mw_max: 10 }
+    aplica: { tecnologias: [solar_fv, hidro_pasada, biogas, baterias, petroleo, hidrogeno_verde, linea_transmision], mw_max: 10 }
     requiere: [prefactibilidad]
     costo_fijo_usd: { min: 10000, base: 18000, max: 30000, supuesto: "Consultor ambiental inscrito en MiAmbiente" }
     costo_usd_mw: { base: 300, supuesto: "Línea base" }
@@ -126,7 +126,7 @@ estudios:
     nombre: Estudio de impacto ambiental categoría II
     grupo: eia
     descripcion: "EIA de impacto moderado: línea base de una estación, plan de manejo y foro de participación ciudadana."
-    aplica: { tecnologias: [solar_fv, eolica_tierra], mw_min: 10, mw_max: 50 }
+    aplica: { tecnologias: [solar_fv, eolica_tierra, csp, hidro_pasada, biomasa, biogas, baterias, gas_natural, petroleo, hidrogeno_verde, linea_transmision, interconexion], mw_min: 10, mw_max: 50 }
     requiere: [prefactibilidad]
     costo_fijo_usd: { min: 35000, base: 60000, max: 100000, supuesto: "Consultor ambiental inscrito en MiAmbiente" }
     costo_usd_mw: { base: 500, supuesto: "Línea base de fauna y flora" }
@@ -140,7 +140,7 @@ estudios:
     nombre: Estudio de impacto ambiental categoría III
     grupo: eia
     descripcion: "EIA de impacto significativo: línea base de seca y lluviosa, foros públicos y consulta."
-    aplica: { tecnologias: [solar_fv, eolica_tierra], mw_min: 50 }
+    aplica: { tecnologias: [solar_fv, eolica_tierra, csp, hidro_pasada, biomasa, biogas, baterias, gas_natural, petroleo, hidrogeno_verde, linea_transmision, interconexion], mw_min: 50 }
     requiere: [prefactibilidad]
     costo_fijo_usd: { min: 90000, base: 150000, max: 250000, supuesto: "Consultor ambiental inscrito en MiAmbiente" }
     costo_usd_mw: { base: 600, supuesto: "Línea base de dos estaciones" }
@@ -163,6 +163,161 @@ estudios:
     peor_capex_factor: { min: 1.02, base: 1.06, max: 1.15, supuesto: "Refuerzos de red a cargo del generador" }
     peor_descripcion: "Se necesitan refuerzos de red a cargo del proyecto"
     hallazgos: [sin_capacidad_red]
+
+  # ───────────────────────── Fase 4 ─────────────────────────
+  - id: eia_mayor
+    nombre: Estudio de impacto ambiental mayor (grandes obras)
+    grupo: eia
+    descripcion: "EIA completo de obras de alto impacto (embalses, nuclear, carbón, geotermia, eólica marina): dos estaciones de línea base, estudios sociales y de reasentamiento."
+    aplica: { tecnologias: [hidro_embalse, hidro_bombeo, nuclear, smr, carbon, eolica_marina, geotermica] }
+    requiere: [prefactibilidad]
+    costo_fijo_usd: { min: 250000, base: 450000, max: 900000, supuesto: "EIA de proyectos grandes (BID/IFC Normas de Desempeño)" }
+    costo_usd_mw: { base: 1500, supuesto: "Escala con el área de influencia" }
+    duracion_dias: { min: 300, base: 450, max: 720, supuesto: "Línea base de seca y lluviosa + estudios sociales" }
+    resultados: { normal: 0.62, peor: 0.25, bloqueo: 0.13, supuesto: "Obras de alto impacto: hallazgos y oposición frecuentes" }
+    peor_capex_factor: { min: 1.02, base: 1.05, max: 1.12, supuesto: "Compensaciones y medidas de mitigación" }
+    peor_descripcion: "Compensaciones ambientales y sociales mayores"
+    hallazgos: [arqueologia, especie_protegida, oposicion_comunitaria, reasentamiento, pueblos_indigenas]
+
+  - id: prospeccion_geofisica
+    nombre: Prospección geofísica y geoquímica (MT, gravimetría)
+    grupo: medicion_recurso_preliminar
+    descripcion: "Magnetotelúrica, gravimetría y geoquímica de manantiales para ubicar el reservorio antes de perforar. Requiere I+D."
+    aplica: { tecnologias: [geotermica] }
+    requiere: []
+    costo_fijo_usd: { min: 300000, base: 500000, max: 900000, supuesto: "Campaña MT + geoquímica (ESMAP Geothermal Handbook 2012: 0,5–1 MUSD)" }
+    costo_usd_mw: { base: 2000, supuesto: "Área de estudio" }
+    duracion_dias: { min: 120, base: 180, max: 300, supuesto: "Campaña de campo e interpretación" }
+    sigma_recurso: 0.12
+    resultados: { normal: 1, peor: 0, bloqueo: 0, supuesto: "Reduce la incertidumbre del flujo de calor antes de perforar" }
+
+  - id: perforacion_exploratoria
+    nombre: Perforación exploratoria (3 pozos y pruebas de producción)
+    grupo: medicion_recurso
+    descripcion: "Tres pozos exploratorios de diámetro completo con pruebas de producción. Cada pozo puede salir seco o de baja entalpía; si todos salen secos no hay reservorio comercial."
+    aplica: { tecnologias: [geotermica] }
+    requiere: [medicion_recurso_preliminar, prefactibilidad]
+    costo_fijo_usd: { min: 10000000, base: 15000000, max: 24000000, fuente: "IFC 2013 / ESMAP 2012: 3–7 MUSD por pozo; la exploración cuesta 10–25 MUSD" }
+    costo_usd_mw: { base: 0, supuesto: "Independiente del tamaño" }
+    duracion_dias: { min: 300, base: 420, max: 600, supuesto: "Perforación de 3 pozos (≈ 2–3 meses cada uno) + pruebas" }
+    sigma_recurso: 0.05
+    pozos_exploratorios: 3
+    hallazgo_pozos_secos: reservorio_no_comercial
+    resultados: { normal: 1, peor: 0, bloqueo: 0, supuesto: "El resultado sale de los pozos (ver tech/models.ts: geoWellProbabilities)" }
+
+  - id: estudio_hidrologico
+    nombre: Estudio hidrológico (aforos y series de caudal)
+    grupo: medicion_recurso
+    descripcion: "Estación de aforo durante 12+ meses correlacionada con series históricas de caudal (IDEAM, ETESA, ANA…)."
+    aplica: { tecnologias: [hidro_pasada, hidro_embalse] }
+    requiere: []
+    costo_fijo_usd: { min: 60000, base: 100000, max: 180000, supuesto: "Estación de aforo + hidrólogo" }
+    costo_usd_mw: { base: 800, supuesto: "Escala con la cuenca" }
+    duracion_dias: { min: 365, base: 450, max: 730, supuesto: "Al menos un año hidrológico" }
+    sigma_recurso: 0.05
+    resultados: { normal: 1, peor: 0, bloqueo: 0, supuesto: "Incertidumbre del caudal medio tras 1–2 años de aforo + correlación ≈ 5–8 %" }
+
+  - id: geotecnia_presa
+    nombre: Geotecnia de presa y túneles
+    grupo: geotecnia_presa
+    descripcion: "Sondeos profundos, galerías de exploración y análisis sísmico del sitio de la presa y los túneles."
+    aplica: { tecnologias: [hidro_embalse, hidro_bombeo] }
+    requiere: [prefactibilidad]
+    costo_fijo_usd: { min: 800000, base: 1500000, max: 3000000, supuesto: "Campaña geotécnica de presa (orden de magnitud)" }
+    costo_usd_mw: { base: 2000, supuesto: "Escala con la obra" }
+    duracion_dias: { min: 180, base: 270, max: 450, supuesto: "Sondeos y galerías" }
+    resultados: { normal: 0.6, peor: 0.32, bloqueo: 0.08, fuente: "Ansar et al. 2014: la geología explica buena parte de los sobrecostos de presas" }
+    peor_capex_factor: { min: 1.05, base: 1.15, max: 1.4, supuesto: "Tratamientos de roca, rediseño de túneles" }
+    peor_descripcion: "Geología peor que la esperada: más hormigón, tratamientos y túneles más largos"
+    hallazgos: [falla_geologica]
+
+  - id: medicion_dni_satelital
+    nombre: Evaluación de DNI con datos satelitales
+    grupo: medicion_recurso
+    descripcion: "Series satelitales de irradiación directa normal. Útil para descartar; los bancos piden medición en sitio."
+    aplica: { tecnologias: [csp] }
+    requiere: []
+    costo_fijo_usd: { min: 8000, base: 12000, max: 20000, supuesto: "Informe satelital de DNI" }
+    costo_usd_mw: { base: 100, supuesto: "Modelación" }
+    duracion_dias: { min: 20, base: 30, max: 60, supuesto: "Compra de datos" }
+    sigma_recurso: 0.07
+    resultados: { normal: 1, peor: 0, bloqueo: 0, fuente: "Incertidumbre satelital del DNI anual ±6–9 % (Solargis 2023)" }
+
+  - id: medicion_dni_estacion
+    nombre: Estación de DNI en sitio (12 meses)
+    grupo: medicion_recurso
+    descripcion: "Pirheliómetro con seguidor durante un año, correlacionado con la serie satelital. Bancable."
+    aplica: { tecnologias: [csp] }
+    requiere: []
+    costo_fijo_usd: { min: 50000, base: 70000, max: 110000, supuesto: "Estación con seguidor y mantenimiento" }
+    costo_usd_mw: { base: 150, supuesto: "Modelación" }
+    duracion_dias: { min: 330, base: 370, max: 420, supuesto: "12 meses" }
+    sigma_recurso: 0.03
+    resultados: { normal: 1, peor: 0, bloqueo: 0, fuente: "IEA SolarPACES: medición en sitio ±2–4 %" }
+
+  - id: estudio_metoceanico
+    nombre: Estudio metoceánico y geofísico del lecho (boya LiDAR)
+    grupo: medicion_recurso
+    descripcion: "Boya LiDAR, oleaje, corrientes y geofísica del lecho marino durante un año. Requiere I+D."
+    aplica: { tecnologias: [eolica_marina] }
+    requiere: []
+    costo_fijo_usd: { min: 1500000, base: 2500000, max: 4500000, supuesto: "Boya LiDAR + campaña geofísica (orden de magnitud europeo)" }
+    costo_usd_mw: { base: 2000, supuesto: "Área del parque" }
+    duracion_dias: { min: 365, base: 420, max: 540, supuesto: "Un año de datos" }
+    sigma_recurso: 0.04
+    resultados: { normal: 1, peor: 0, bloqueo: 0, fuente: "Carbon Trust OWA 2018: boya LiDAR validada ≈ 3–5 % de incertidumbre" }
+
+  - id: estudio_suministro_biomasa
+    nombre: Estudio de suministro de combustible (biomasa)
+    grupo: medicion_recurso
+    descripcion: "Inventario de residuos en el radio de recolección, contratos de suministro y logística."
+    aplica: { tecnologias: [biomasa, biogas] }
+    requiere: []
+    costo_fijo_usd: { min: 25000, base: 40000, max: 80000, supuesto: "Consultor agroindustrial" }
+    costo_usd_mw: { base: 500, supuesto: "Escala con el radio" }
+    duracion_dias: { min: 90, base: 150, max: 240, supuesto: "Inventario de una zafra" }
+    sigma_recurso: 0.05
+    resultados: { normal: 1, peor: 0, bloqueo: 0, supuesto: "Incertidumbre residual del costo logístico" }
+
+  - id: auditoria_energetica
+    nombre: Auditoría energética de la planta del cliente (ASHRAE nivel 3)
+    grupo: medicion_recurso
+    descripcion: "Medición de consumos y línea base (IPMVP) para estimar el ahorro y fijar el ahorro garantizado."
+    aplica: { tecnologias: [eficiencia_energetica] }
+    requiere: []
+    costo_fijo_usd: { min: 10000, base: 20000, max: 40000, supuesto: "Auditoría de grado de inversión" }
+    costo_usd_mw: { base: 3000, supuesto: "Escala con los equipos medidos" }
+    duracion_dias: { min: 30, base: 60, max: 120, supuesto: "Medición y análisis" }
+    sigma_recurso: 0.05
+    resultados: { normal: 1, peor: 0, bloqueo: 0, supuesto: "ASHRAE nivel 3: incertidumbre del ahorro ±5–10 %" }
+
+  - id: estudio_sitio_nuclear
+    nombre: Caracterización del sitio nuclear (sismicidad, hidrogeología, emergencias)
+    grupo: sitio_nuclear
+    descripcion: "Estudios de sitio exigidos por el regulador nuclear (IAEA SSR-1): sismicidad, inundaciones, plan de emergencias."
+    aplica: { tecnologias: [nuclear, smr] }
+    requiere: [prefactibilidad]
+    costo_fijo_usd: { min: 15000000, base: 25000000, max: 50000000, supuesto: "Caracterización de sitio (orden de magnitud de solicitudes ESP ante la NRC)" }
+    costo_usd_mw: { base: 0, supuesto: "—" }
+    duracion_dias: { min: 540, base: 730, max: 1100, fuente: "IAEA SSR-1 (2019): 2–3 años de estudios de sitio" }
+    resultados: { normal: 0.7, peor: 0.22, bloqueo: 0.08, supuesto: "Fallas activas o riesgos de inundación descalifican sitios" }
+    peor_capex_factor: { min: 1.02, base: 1.06, max: 1.15, supuesto: "Diseño sísmico reforzado" }
+    peor_descripcion: "Sismicidad mayor: diseño reforzado"
+    hallazgos: [sismicidad_sitio]
+
+  - id: estudio_trazado
+    nombre: Estudio de trazado y servidumbres
+    grupo: trazado
+    descripcion: "Ruta de la línea, catastro de predios afectados y negociación preliminar de servidumbres."
+    aplica: { tecnologias: [linea_transmision, interconexion] }
+    requiere: [prefactibilidad]
+    costo_fijo_usd: { min: 60000, base: 120000, max: 300000, supuesto: "Topografía LiDAR aérea y catastro" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con la línea" }
+    duracion_dias: { min: 120, base: 200, max: 360, supuesto: "Catastro y consultas" }
+    resultados: { normal: 0.7, peor: 0.24, bloqueo: 0.06, supuesto: "Trazados largos cruzan comunidades y áreas protegidas" }
+    peor_capex_factor: { min: 1.03, base: 1.08, max: 1.2, supuesto: "Desvíos y servidumbres más caras" }
+    peor_descripcion: "Trazado más largo y servidumbres más caras"
+    hallazgos: [tierra_disputa, especie_protegida, pueblos_indigenas]
 
 hallazgos:
   - id: tierra_disputa
@@ -228,3 +383,46 @@ hallazgos:
     costo_mitigacion_usd_mw: 15000
     retraso_dias: { min: 120, base: 240, max: 480, supuesto: "Diseño y servidumbre de una línea nueva" }
     prob_exito_mitigacion: 0.85
+
+  # Fase 4
+  - id: reservorio_no_comercial
+    nombre: Reservorio no comercial
+    descripcion: "Los pozos exploratorios salieron secos: no se encontró un reservorio comercial. Se puede intentar otra campaña en otra zona del campo."
+    peso: 1
+    mitigable: true
+    costo_mitigacion_fijo_usd: 12000000
+    costo_mitigacion_usd_mw: 0
+    retraso_dias: { min: 240, base: 360, max: 540, supuesto: "Nueva campaña de 2–3 pozos" }
+    prob_exito_mitigacion: 0.45
+  - id: falla_geologica
+    nombre: Falla geológica en el sitio de la presa
+    descripcion: "Una falla activa o roca muy fracturada obliga a mover el eje de la presa o rediseñar los túneles."
+    peso: 1
+    mitigable: true
+    costo_mitigacion_fijo_usd: 3000000
+    costo_mitigacion_usd_mw: 20000
+    retraso_dias: { min: 180, base: 300, max: 540, supuesto: "Rediseño y nuevos sondeos" }
+    prob_exito_mitigacion: 0.6
+  - id: reasentamiento
+    nombre: Reasentamiento de comunidades
+    descripcion: "El proyecto desplaza viviendas: se exige un plan de reasentamiento (Norma de Desempeño 5 de la IFC)."
+    peso: 2
+    mitigable: true
+    costo_mitigacion_fijo_usd: 2000000
+    costo_mitigacion_usd_mw: 10000
+    retraso_dias: { min: 270, base: 450, max: 900, supuesto: "Negociación y construcción de nuevas viviendas" }
+    prob_exito_mitigacion: 0.5
+  - id: pueblos_indigenas
+    nombre: Territorio indígena o de comunidades étnicas
+    descripcion: "El área afecta un territorio indígena: hace falta consentimiento libre, previo e informado (Convenio 169 de la OIT)."
+    peso: 2
+    mitigable: true
+    costo_mitigacion_fijo_usd: 500000
+    costo_mitigacion_usd_mw: 5000
+    retraso_dias: { min: 270, base: 540, max: 1100, supuesto: "Procesos de consulta en Colombia, Filipinas (FPIC), Brasil (Funai)" }
+    prob_exito_mitigacion: 0.45
+  - id: sismicidad_sitio
+    nombre: Falla capaz en el sitio nuclear
+    descripcion: "Una falla capaz de producir desplazamientos descalifica el sitio para un reactor (IAEA SSG-9)."
+    peso: 1
+    mitigable: false

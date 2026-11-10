@@ -1,0 +1,288 @@
+# Islandia — Fase 4. Datos macro, de mercado y de permisos aproximados (2024–2025); ver docs/MOTOR_FASE4.md.
+iso3: ISL
+nombre: Islandia
+iso_num: 352
+moneda: { codigo: ISK, nombre: "Corona islandesa", usd_por_unidad: 0.0074 }
+tipo_cambio: { deriva_anual: 0, volatilidad_anual: 0.1, reversion_anual: 0.3, shock_prob_anual: 0.03, shock_magnitud: { min: 0.1, base: 0.25, max: 0.5, supuesto: "Devaluaciones históricas" }, fuente: "Seðlabanki: la corona cayó ≈ 50 % en 2008" }
+inflacion_anual: { base: 0.04, fuente: "Statistics Iceland 2025 (≈ 4 %)" }
+prima_riesgo_pais: { base: 0.009, fuente: "Damodaran, Country Risk Premiums ene-2025 (aprox. según calificación A1/A)" }
+regulador: "Orkustofnun (Autoridad Nacional de Energía)"
+operador_sistema: "Landsnet"
+mercado:
+  demanda_anual_twh: { base: 20, fuente: "Orkustofnun 2023 (≈ 70 % para fundiciones de aluminio)" }
+  pico_mw: { base: 2600, fuente: "Orkustofnun 2023 (≈ 70 % para fundiciones de aluminio)" }
+  precio_spot_medio_usd_mwh: { min: 25, base: 40, max: 70, fuente: "Precios mayoristas y contratos industriales 2023 ≈ 30–50 USD/MWh" }
+  perfil_spot_mensual: [1.15, 1.15, 1.10, 1.00, 0.92, 0.85, 0.85, 0.88, 0.95, 1.00, 1.05, 1.10]
+  perfil_spot_fuente: "Supuesto: más demanda de calefacción en invierno"
+  matriz: { hidro: 0.7, geotermia: 0.3, fuente: "Orkustofnun 2023" }
+  factor_punta: 1.15
+  factor_valle: 0.9
+  moneda_contratos: USD
+
+perfil_recurso_mensual:
+  ghi: [0.15, 0.40, 0.90, 1.40, 1.80, 1.90, 1.80, 1.40, 1.00, 0.60, 0.25, 0.10]
+  viento_tierra: [1.30, 1.25, 1.20, 1.00, 0.85, 0.75, 0.70, 0.75, 0.95, 1.10, 1.20, 1.30]
+  hidro: [0.70, 0.65, 0.65, 0.75, 1.10, 1.40, 1.45, 1.35, 1.10, 0.95, 0.85, 0.75]
+perfil_recurso_fuente: "Supuesto: deshielo glacial en verano; sol casi nulo en invierno"
+
+impuestos:
+  renta: { base: 0.2, fuente: "Ley de impuesto a la renta (20 %) e IVA 24 %" }
+  depreciacion_anos: { base: 20, supuesto: "Vida fiscal de equipos de generación (aprox.)" }
+  itbms: { base: 0.24, fuente: "Ley de impuesto a la renta (20 %) e IVA 24 %" }
+  arancel_general_equipos: { base: 0.0, supuesto: "Arancel típico de equipos eléctricos sin incentivo" }
+
+incentivos: {}
+
+costos:
+  factor_construccion_local: { min: 1.12, base: 1.25, max: 1.5, supuesto: "Mano de obra y logística caras; clima duro" }
+  prospeccion_usd: { base: 15000, supuesto: "Visita, catastro y reunión con propietarios" }
+  opcion_terreno_usd_ha_ano: { base: 24.0, supuesto: "≈ 10–15 % del arriendo" }
+  arriendo_terreno_usd_ha_ano: { base: 200, supuesto: "Arriendo rural para uso energético (orden de magnitud)" }
+  seguro_frac_capex_ano: { base: 0.0025, supuesto: "Seguro todo riesgo operativo" }
+  fraccion_costos_locales: 0.6
+
+finanzas:
+  tasa_libre_riesgo: { base: 0.043, fuente: "Bono del Tesoro de EE. UU. a 10 años (2025): la deuda se contrata en USD" }
+  prima_mercado_acciones: { base: 0.045, fuente: "Damodaran, implied ERP ene-2025" }
+  beta_renovables: 1.0
+  prima_etapa: { identificado: 0.08, estudios: 0.06, permisos: 0.035, cierre_financiero: 0.02, construccion: 0.01, puesta_en_marcha: 0.005, operacion: 0 }
+  prima_tecnologia: { eolica_tierra: 0.01, eolica_marina: 0.02, geotermica: 0.025, hidro_embalse: 0.02, csp: 0.02, nuclear: 0.03, smr: 0.04, hidrogeno_verde: 0.03, carbon: 0.02 }
+  prima_fuente: "Supuesto alineado con IEA Cost of Capital Observatory 2024 (primas por tecnología y madurez)"
+  prestamistas:
+    - id: banco_comercial
+      nombre: "Banco comercial local"
+      tipo: comercial
+      descripcion: "Bancos locales o regionales: rápidos; aceptan proyectos sin PPA con más cobertura."
+      spread: { min: 0.012, base: 0.02, max: 0.035, supuesto: "Bancos nórdicos (SOFR + 1,5–2,5 %)" }
+      plazo_anos: 12
+      dscr_ppa: 1.30
+      dscr_merchant: 1.6
+      apalancamiento_max: 0.70
+      comision_estructuracion: 0.015
+      costo_asesores_usd: { min: 30000, base: 60000, max: 120000, supuesto: "Asesor legal, financiero e ingeniero independiente" }
+      diligencia_dias: { min: 60, base: 100, max: 180, supuesto: "Due diligence de banco local" }
+      prob_aprobacion: 0.8
+      requiere_ppa: false
+      sigma_recurso_max: 0.05
+      monto_min_usd: 2000000
+    - id: banco_desarrollo
+      nombre: "Nordic Investment Bank / EIB"
+      tipo: desarrollo
+      descripcion: "Bancos de desarrollo nórdicos y europeos con contrato industrial."
+      spread: { min: 0.01, base: 0.015, max: 0.025, supuesto: "Préstamos A de multilaterales o agencias de crédito a la exportación (2024)" }
+      plazo_anos: 18
+      dscr_ppa: 1.25
+      dscr_merchant: 1.50
+      apalancamiento_max: 0.75
+      comision_estructuracion: 0.01
+      costo_asesores_usd: { min: 90000, base: 150000, max: 250000, supuesto: "Asesores + Normas de Desempeño IFC" }
+      diligencia_dias: { min: 120, base: 180, max: 300, supuesto: "Comités de crédito y revisión ambiental y social" }
+      prob_aprobacion: 0.78
+      requiere_ppa: true
+      sigma_recurso_max: 0.035
+      monto_min_usd: 15000000
+  socio_equity: { participacion_max: 0.8, prima_desarrollo_frac: 0.10, supuesto: "Fondos de infraestructura compran proyectos listos para construir con prima de 5–15 %" }
+  credito_emergencia: { tasa: 0.1, frac_valor_activos: 0.5, supuesto: "Línea corporativa de último recurso garantizada con activos" }
+
+construccion:
+  meses_lluviosos: [11, 12, 1, 2]
+  factor_avance_lluvia: 0.75
+  huelga_prob_mensual: 0.002
+  huelga_duracion_dias: { min: 3, base: 5, max: 10, supuesto: "Huelgas raras" }
+  clima_extremo_prob_mensual: 0.05
+  clima_extremo_dias: { min: 3, base: 10, max: 25, supuesto: "Tormentas de invierno detienen obras" }
+  supuesto: "Supuesto: «meses lluviosos» = invierno (tormentas y nieve)"
+
+quiebra: { meses_caja_negativa: 3 }
+
+# Permisos como grafo (requiere.estudios = grupos de estudio; requiere.permisos = grupos de permiso). Ver docs/MOTOR_FASE4.md.
+permisos_fuente: "Ley 48/2011 (Rammaáætlun), Ley 57/1998 (recursos), Ley 111/2021 (EIA), Ley de electricidad 65/2003; aproximado"
+permisos:
+  - id: uso_suelo
+    nombre: "Uso de suelo y licencia municipal"
+    grupo: uso_suelo
+    autoridad: "Municipio (plan de desarrollo y permiso de obra)"
+    descripcion: "Compatibilidad del uso de suelo y licencia de construcción."
+    aplica: { excluye: [eficiencia_energetica, eolica_marina] }
+    requiere: { estudios: [prefactibilidad], permisos: [] }
+    costo_fijo_usd: { base: 5000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 90, max: 240, supuesto: "Trámite municipal o estatal" }
+    prob: { aprobado: 0.85, rechazado: 0.05, info_adicional: 0.1, supuesto: "Trámite municipal o estatal" }
+    info_adicional: { retraso_dias: { min: 20, base: 45, max: 90, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: rammaaaetlun
+    nombre: "Clasificación en el Plan Maestro (Rammaáætlun)"
+    grupo: plan_maestro
+    autoridad: "Althingi (Parlamento) / comité del Plan Maestro"
+    descripcion: "El proyecto debe estar en la categoría de utilización del Plan Maestro aprobado por el Parlamento. Muy lento e incierto."
+    aplica: { tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo, geotermica, eolica_tierra, eolica_marina], mw_min: 10 }
+    requiere: { estudios: [prefactibilidad], permisos: [] }
+    costo_fijo_usd: { base: 50000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 300, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 540, base: 1100, max: 2200, supuesto: "La tercera etapa del Plan Maestro tardó casi 10 años; eólica sin marco claro hasta 2024" }
+    prob: { aprobado: 0.5, rechazado: 0.2, info_adicional: 0.3, supuesto: "La tercera etapa del Plan Maestro tardó casi 10 años; eólica sin marco claro hasta 2024" }
+    info_adicional: { retraso_dias: { min: 180, base: 365, max: 720, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley 48/2011"
+  - id: licencia_ambiental
+    nombre: "Evaluación de impacto ambiental (Skipulagsstofnun)"
+    grupo: licencia_ambiental
+    autoridad: "Skipulagsstofnun (Agencia Nacional de Planificación)"
+    descripcion: "Opinión sobre el EIA y consulta pública."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [eia], permisos: [plan_maestro] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 300, max: 540, supuesto: "Procedimiento reglado" }
+    prob: { aprobado: 0.75, rechazado: 0.08, info_adicional: 0.17, supuesto: "Procedimiento reglado" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley 111/2021"
+  - id: viabilidad_conexion
+    nombre: "Conexión a la red (Landsnet)"
+    grupo: viabilidad_conexion
+    autoridad: "Landsnet"
+    descripcion: "El operador de la red revisa el estudio de conexión y asigna capacidad."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [conexion], permisos: [] }
+    costo_fijo_usd: { base: 10000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 120, base: 240, max: 450, supuesto: "Estudios del operador de red" }
+    prob: { aprobado: 0.78, rechazado: 0.07, info_adicional: 0.15, supuesto: "Estudios del operador de red" }
+    info_adicional: { retraso_dias: { min: 45, base: 90, max: 180, supuesto: "Subsanar observaciones" }, costo_usd: { base: 15000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: contrato_acceso_red
+    nombre: "Contrato de conexión"
+    grupo: contrato_acceso_red
+    autoridad: "Landsnet"
+    descripcion: "Contrato de conexión y garantía de cumplimiento."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [], permisos: [licencia_generacion, viabilidad_conexion] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 500, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 60, max: 150, supuesto: "Formalidad tras la asignación de capacidad" }
+    prob: { aprobado: 0.93, rechazado: 0.02, info_adicional: 0.05, supuesto: "Formalidad tras la asignación de capacidad" }
+    info_adicional: { retraso_dias: { min: 15, base: 30, max: 60, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: licencia_generacion
+    nombre: "Licencia de aprovechamiento (virkjunarleyfi)"
+    grupo: licencia_generacion
+    autoridad: "Orkustofnun"
+    descripcion: "Habilitación para generar y vender energía."
+    aplica: { excluye: [eficiencia_energetica, linea_transmision, interconexion] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    costo_fijo_usd: { base: 20000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 120, base: 240, max: 450, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    prob: { aprobado: 0.8, rechazado: 0.06, info_adicional: 0.14, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Subsanar observaciones" }, costo_usd: { base: 8000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley 65/2003"
+  - id: concesion_agua
+    nombre: "Concesión de aguas"
+    grupo: concesion_agua
+    autoridad: "Orkustofnun (derechos de agua)"
+    descripcion: "Concesión de uso de agua para generación con caudal ecológico."
+    aplica: { tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo] }
+    requiere: { estudios: [medicion_recurso], permisos: [] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 360, max: 720, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    prob: { aprobado: 0.68, rechazado: 0.12, info_adicional: 0.2, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_geotermica
+    nombre: "Concesión geotérmica"
+    grupo: concesion_geotermica
+    autoridad: "Orkustofnun (permiso de investigación y explotación)"
+    descripcion: "Permiso de exploración y concesión de explotación del recurso geotérmico."
+    aplica: { tecnologias: [geotermica] }
+    requiere: { estudios: [], permisos: [] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 240, base: 450, max: 900, supuesto: "Áreas geotérmicas asignadas por la autoridad" }
+    prob: { aprobado: 0.7, rechazado: 0.1, info_adicional: 0.2, supuesto: "Áreas geotérmicas asignadas por la autoridad" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 30000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_maritima
+    nombre: "Concesión de espacio marítimo"
+    grupo: concesion_maritima
+    autoridad: "Orkustofnun / Guardia Costera"
+    descripcion: "Uso del lecho marino y la franja costera para turbinas y cables."
+    aplica: { tecnologias: [eolica_marina] }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 80000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 300, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 240, base: 450, max: 900, supuesto: "Marco reciente para eólica marina" }
+    prob: { aprobado: 0.6, rechazado: 0.15, info_adicional: 0.25, supuesto: "Marco reciente para eólica marina" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: servidumbre_transmision
+    nombre: "Servidumbres de la línea"
+    grupo: servidumbre
+    autoridad: "Landsnet"
+    descripcion: "Declaratoria de utilidad pública y servidumbres a lo largo del trazado."
+    aplica: { tecnologias: [linea_transmision, interconexion] }
+    requiere: { estudios: [trazado], permisos: [licencia_ambiental] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 60, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 150, base: 300, max: 600, supuesto: "Oposición de propietarios" }
+    prob: { aprobado: 0.72, rechazado: 0.1, info_adicional: 0.18, supuesto: "Oposición de propietarios" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: acuerdo_interconexion
+    nombre: "Autorización de interconexión internacional"
+    grupo: acuerdo_interconexion
+    autoridad: "Orkustofnun"
+    descripcion: "Acuerdo binacional y registro ante el regulador del otro país."
+    aplica: { tecnologias: [interconexion] }
+    requiere: { estudios: [], permisos: [servidumbre] }
+    costo_fijo_usd: { base: 150000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 100, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 300, base: 600, max: 1200, supuesto: "Depende de la política de ambos gobiernos" }
+    prob: { aprobado: 0.55, rechazado: 0.15, info_adicional: 0.3, supuesto: "Depende de la política de ambos gobiernos" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+
+ppa:
+  canales:
+    - id: contrato_industrial
+      nombre: "Contrato industrial (aluminio, centros de datos)"
+      descripcion: "Contrato de largo plazo en USD con una fundición o un centro de datos."
+      precio_usd_mwh: { min: 32, base: 42, max: 55, supuesto: "Contratos de Landsvirkjun con industria pesada ≈ 30–50 USD/MWh (informes anuales 2023)" }
+      plazo_anos: 20
+      indexacion_anual: 0.015
+      duracion_dias: { min: 180, base: 300, max: 540, supuesto: "Convocatoria, oferta y adjudicación o negociación" }
+      prob_exito: 0.45
+      costo_usd: { base: 40000, supuesto: "Preparación de oferta y garantía" }
+      mw_min: 10
+      mw_max: 400
+      requiere_permisos: [licencia_ambiental]
+      plazo_cod_meses: 48
+      multa_usd_mw_mes: 1200
+      moneda: USD
+
+expansion:
+  constitucion_usd: { min: 12000, base: 20000, max: 40000, supuesto: "Ehf. islandesa" }
+  dias: { min: 22, base: 45, max: 112, supuesto: "Ehf. islandesa" }
+  representante_mensual_usd: { min: 3000, base: 5000, max: 10000, supuesto: "Representante legal, contador y gestor local" }
+combustibles:
+  fueloil: { indice: fueloil, factor: 1.2, supuesto: "Importado; solo respaldo" }
+
+restricciones:
+  tecnologias_prohibidas: [carbon, petroleo, gas_natural, nuclear, smr]
+  motivo: "Política de energía 100 % renovable; sin generación fósil ni nuclear"
+  supuesto: "Política energética de Islandia 2050 (aprox.)"
+notas: "Geotermia y hidro con contratos industriales en USD. Datos aproximados."

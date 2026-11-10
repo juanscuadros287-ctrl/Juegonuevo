@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   actorView, applyCommand, createNewGame, currentCapex, decideCompetitor, deserialize, opportunitiesDaily, projectEconomics, researchEffects,
   selectBidQuote, selectCompetitors, selectContracts, selectMyBids, selectOpportunities, selectResearchTree, selectSupplierCatalog,
-  serialize, stateHash, step, supplierLeadFactor, supplierPriceFactor, withActor, balanceSheet,
+  serialize, stateHash, step, SAVE_VERSION, supplierLeadFactor, supplierPriceFactor, withActor, balanceSheet,
   type Command, type GameState, type Opportunity, type SimEvent,
 } from '../src';
 import { gameData } from '@voltaje/data';
@@ -195,7 +195,7 @@ describe('Investigación (I+D)', () => {
     expect([...fx.contracts!]).toEqual(['ppa_simple']);
     const t = selectResearchTree(s, ctx);
     expect(t.nodes.filter((n) => n.status === 'completado').map((n) => n.id).sort()).toEqual(['contrato_ppa_simple', 'est_basicos', 'mercado_panama', 'tec_eolica_tierra', 'tec_solar_fv']);
-    expect(t.nodes.find((n) => n.id === 'tec_geotermica')!.modelPhase).toBe(4);
+    expect(t.nodes.find((n) => n.id === 'tec_geotermica')!.modelPhase).toBeUndefined(); // Fase 4: ya tiene modelo
   });
 
   it('respeta prerrequisitos y exige presupuesto', () => {
@@ -393,7 +393,7 @@ describe('Guardado (versión 3)', () => {
     delete v2.state.business; delete v2.state.market; delete v2.state.competitors;
     for (const k of Object.keys(v2.state.rng)) if (!['world', 'market', 'projects', 'events', 'ai'].includes(k)) delete v2.state.rng[k];
     const m = deserialize(JSON.stringify(v2));
-    expect(m.saveVersion).toBe(3);
+    expect(m.saveVersion).toBe(SAVE_VERSION);
     expect(m.competitors).toEqual([]);
     step(m, [], ctx);
     expect(m.competitors).toHaveLength(5);

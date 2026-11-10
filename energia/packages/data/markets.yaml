@@ -1,0 +1,20 @@
+# Fase 4: combustibles e inflación del USD.
+# Cada combustible es un índice mensual log-normal con reversión a 1 (flujo RNG `fuels`); precio = referencia × índice × factor del país.
+# emisiones_kgco2_mmbtu: combustión directa (la biomasa y el biogás se consideran biogénicos: 0).
+inflacion_usd: { base: 0.025, min: 0.02, max: 0.035, fuente: "FMI WEO oct-2025 / Fed: IPC de EE. UU. ≈ 2,5–3 % (meta 2 %)" }
+
+combustibles:
+  - { id: gas_natural, nombre: "Gas natural (Henry Hub)", precio_usd_mmbtu: { base: 3.5, min: 2.0, max: 9.0, fuente: "EIA STEO 2025: Henry Hub ≈ 3–4 USD/MMBtu (2025–2026)" },
+      volatilidad_anual: 0.45, reversion_anual: 0.6, min: 0.4, max: 3.5, emisiones_kgco2_mmbtu: 53.06, supuesto: "Volatilidad histórica del Henry Hub 2015–2024 ≈ 40–50 %; emisiones EPA (53,06 kg/MMBtu)" }
+  - { id: gnl, nombre: "Gas natural licuado (GNL importado)", precio_usd_mmbtu: { base: 11, min: 7, max: 30, fuente: "JKM / precios DES de GNL 2024 ≈ 10–14 USD/MMBtu (IEA Gas Market Report 2025)" },
+      volatilidad_anual: 0.5, reversion_anual: 0.5, min: 0.4, max: 3.5, emisiones_kgco2_mmbtu: 53.06, supuesto: "Crisis 2022 llevó el GNL a 40+ USD/MMBtu: volatilidad alta" }
+  - { id: carbon, nombre: "Carbón térmico", precio_usd_mmbtu: { base: 4.5, min: 2.5, max: 12, fuente: "API2/Newcastle ≈ 100–135 USD/t en 2024 (6.000 kcal/kg ≈ 23,8 MMBtu/t)" },
+      volatilidad_anual: 0.35, reversion_anual: 0.5, min: 0.4, max: 3.0, emisiones_kgco2_mmbtu: 95.5, supuesto: "Emisiones EPA carbón bituminoso/subbituminoso ≈ 93–97 kg/MMBtu" }
+  - { id: fueloil, nombre: "Fuel oil / diésel", precio_usd_mmbtu: { base: 14, min: 8, max: 25, fuente: "Brent ≈ 75 USD/bbl (2024–2025) ⇒ fuel oil ≈ 12–13 y diésel ≈ 18 USD/MMBtu (EIA)" },
+      volatilidad_anual: 0.35, reversion_anual: 0.5, min: 0.4, max: 2.5, emisiones_kgco2_mmbtu: 75.0, supuesto: "Mezcla fuel oil/diésel; emisiones EPA ≈ 74–75 kg/MMBtu" }
+  - { id: uranio, nombre: "Combustible nuclear", precio_usd_mmbtu: { base: 0.7, min: 0.5, max: 1.2, fuente: "WNA 2024: costo del combustible ≈ 0,6–0,8 USDc/kWh (uranio, conversión, enriquecimiento, fabricación)" },
+      volatilidad_anual: 0.2, reversion_anual: 0.4, min: 0.5, max: 2.5, emisiones_kgco2_mmbtu: 0, supuesto: "El uranio pesa ≈ 1/3 del costo del combustible: volatilidad moderada" }
+  - { id: biomasa, nombre: "Biomasa (residuos agroforestales)", precio_usd_mmbtu: { base: 2.5, min: 1.0, max: 5.0, fuente: "IRENA Biomass for Power Generation (2012) y IEA Bioenergy 2023: residuos 1–3 USD/GJ en el lugar" },
+      volatilidad_anual: 0.12, reversion_anual: 0.5, min: 0.6, max: 1.8, emisiones_kgco2_mmbtu: 0, supuesto: "Precio puesto en planta; la logística depende de la productividad local (ver tech/models.ts)" }
+  - { id: biogas, nombre: "Sustrato para biogás", precio_usd_mmbtu: { base: 1.0, min: 0.0, max: 3.0, supuesto: "Residuos agroindustriales y estiércol: casi gratis pero con recolección y transporte" },
+      volatilidad_anual: 0.1, reversion_anual: 0.5, min: 0.6, max: 1.8, emisiones_kgco2_mmbtu: 0, supuesto: "Biogénico; variación por estacionalidad de residuos" }

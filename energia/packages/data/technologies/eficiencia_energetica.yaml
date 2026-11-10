@@ -1,0 +1,52 @@
+# Eficiencia energética industrial llave en mano (contrato ESCO con ahorro garantizado).
+id: eficiencia_energetica
+nombre: Eficiencia energética (ESCO)
+categoria: eficiencia
+modelo_fc: eficiencia
+visual: eficiencia_industrial
+
+capex_usd_kw: { min: 500, base: 900, max: 1500, fuente: "LBNL 2018 (costo del ahorro industrial 0,02–0,04 USD/kWh) e IEA Energy Efficiency 2024: motores, variadores, recuperación de calor" }
+desglose_capex: { equipos: 0.55, epc: 0.35, otros: 0.1, supuesto: "Equipos eficientes ≈ 55 %" }
+om_fijo_usd_kw_ano: { min: 8, base: 15, max: 25, supuesto: "Medición y verificación (IPMVP) y mantenimiento" }
+om_variable_usd_mwh: { base: 0, supuesto: "—" }
+factor_capacidad_ref: { min: 0.4, base: 0.65, max: 0.85, supuesto: "Factor de carga de la demanda evitada" }
+vida_util_anos: { min: 10, base: 15, max: 20, supuesto: "Vida de motores y equipos" }
+degradacion_anual: { min: 0, base: 0.005, max: 0.01, supuesto: "Pérdida de ahorro por cambios de proceso" }
+construccion_meses: { min: 4, base: 9, max: 15, supuesto: "Instalación en planta" }
+puesta_en_marcha_dias: { min: 15, base: 30, max: 60, supuesto: "Línea base y verificación" }
+emisiones_gco2_kwh: { base: 0, supuesto: "Evita emisiones" }
+uso_suelo_ha_mw: { min: 0, base: 0.01, max: 0.02, supuesto: "Dentro de la planta del cliente" }
+escala_mw: { min: 0.5, max: 30, tipico: 5 }
+
+sigma_recurso_sitio: 0.15
+variabilidad: { diaria: 0.1, interanual: 0.05, supuesto: "Depende de la producción del cliente" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.005, base: 0.01, max: 0.03, supuesto: "Fallas de equipos" }
+  fraccion_afectada: { min: 0.05, base: 0.2, max: 0.5, supuesto: "Un equipo" }
+  duracion_dias: { min: 2, base: 7, max: 30, supuesto: "Repuestos" }
+  costo_reparacion_usd_kw: { min: 5, base: 20, max: 80, supuesto: "Repuestos" }
+mantenimiento:
+  programado_perdida: 0.01
+  preventivo_om_factor: 1.05
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.95
+  supuesto: "Mantenimiento del cliente"
+costo_desmantelamiento_frac_capex: { min: 0, base: 0.02, max: 0.05, supuesto: "Retiro" }
+
+estudios_requeridos: [medicion_recurso]
+
+hitos_construccion:
+  - { id: ingenieria, nombre: "Ingeniería de detalle", fraccion: 0.2 }
+  - { id: equipos, nombre: "Instalación de equipos", fraccion: 0.6, requiere_equipos: true }
+  - { id: mv, nombre: "Medición y verificación inicial", fraccion: 0.2 }
+
+riesgos:
+  - { id: ahorro, nombre: "Ahorro garantizado", descripcion: "Si el ahorro real queda bajo el garantizado, la ESCO paga la diferencia." }
+  - { id: cliente, nombre: "Riesgo del cliente", descripcion: "Cambios de producción o quiebra del cliente." }
+
+eficiencia:
+  precio_ahorro_usd_mwh: { min: 45, base: 65, max: 90, supuesto: "La ESCO cobra ≈ 50–60 % del ahorro valorado a la tarifa industrial (≈ 110–150 USD/MWh en la región)" }
+  ahorro_garantizado_frac: 0.85
+  factor_carga: 0.65
+  supuesto: "Contratos de ahorro garantizado típicos: 80–90 % del ahorro estimado en la auditoría (IPMVP)"

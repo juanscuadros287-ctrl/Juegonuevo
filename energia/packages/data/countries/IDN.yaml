@@ -1,0 +1,314 @@
+# Indonesia — Fase 4. Datos macro, de mercado y de permisos aproximados (2024–2025); ver docs/MOTOR_FASE4.md.
+iso3: IDN
+nombre: Indonesia
+iso_num: 360
+moneda: { codigo: IDR, nombre: "Rupia indonesia", usd_por_unidad: 6.25e-05 }
+tipo_cambio: { deriva_anual: -0.01, volatilidad_anual: 0.09, reversion_anual: 0.3, shock_prob_anual: 0.06, shock_magnitud: { min: 0.1, base: 0.2, max: 0.5, supuesto: "Devaluaciones históricas" }, fuente: "Bank Indonesia: crisis de 1998 (−80 %), 2013 y 2018" }
+inflacion_anual: { base: 0.03, fuente: "Bank Indonesia 2025 (meta 2,5 % ± 1)" }
+prima_riesgo_pais: { base: 0.021, fuente: "Damodaran, Country Risk Premiums ene-2025 (aprox. según calificación Baa2/BBB)" }
+regulador: "Ministerio ESDM (Dirjen Gatrik / EBTKE)"
+operador_sistema: "PLN (comprador único)"
+mercado:
+  demanda_anual_twh: { base: 330, fuente: "PLN Statistics 2024" }
+  pico_mw: { base: 52000, fuente: "PLN Statistics 2024" }
+  precio_spot_medio_usd_mwh: { min: 65, base: 85, max: 120, fuente: "BPP (costo de generación de PLN) 2023 ≈ 1.300–1.500 IDR/kWh (sin spot)" }
+  perfil_spot_mensual: [1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]
+  perfil_spot_fuente: "Sin mercado spot: costo de PLN sin estacionalidad"
+  matriz: { carbon: 0.6, gas: 0.17, hidro: 0.08, geotermia: 0.05, fueloil: 0.03, otros: 0.07, fuente: "ESDM 2023" }
+  factor_punta: 1.2
+  factor_valle: 0.85
+  moneda_contratos: USD
+
+perfil_recurso_mensual:
+  ghi: [0.90, 0.92, 0.98, 1.02, 1.05, 1.05, 1.08, 1.10, 1.08, 1.00, 0.92, 0.90]
+  viento_tierra: [1.15, 1.10, 0.90, 0.80, 0.90, 1.05, 1.15, 1.20, 1.10, 0.90, 0.80, 1.05]
+  hidro: [1.30, 1.30, 1.25, 1.10, 0.90, 0.75, 0.65, 0.60, 0.70, 0.95, 1.20, 1.30]
+  dni: [0.85, 0.88, 0.95, 1.02, 1.08, 1.08, 1.12, 1.15, 1.10, 1.00, 0.90, 0.85]
+perfil_recurso_fuente: "Supuesto: monzón húmedo (nov–mar) y seco (jun–sep) en Java"
+
+impuestos:
+  renta: { base: 0.22, fuente: "UU PPh (22 %) e IVA 11 % (12 % desde 2025 para bienes de lujo)" }
+  depreciacion_anos: { base: 16, supuesto: "Vida fiscal de equipos de generación (aprox.)" }
+  itbms: { base: 0.11, fuente: "UU PPh (22 %) e IVA 11 % (12 % desde 2025 para bienes de lujo)" }
+  arancel_general_equipos: { base: 0.05, supuesto: "Arancel típico de equipos eléctricos sin incentivo" }
+
+incentivos:
+  geotermica:
+    descripcion: "Tax holiday / tax allowance para energía renovable y exención de aranceles de equipos (PMK 2020; aprox.)"
+    arancel_exento: true
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.06, fuente: "PMK 130/2020 y PP 78/2019 (tax allowance 30 % de la inversión en 6 años; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  solar_fv:
+    descripcion: "Tax holiday / tax allowance para energía renovable y exención de aranceles de equipos (PMK 2020; aprox.)"
+    arancel_exento: true
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.06, fuente: "PMK 130/2020 y PP 78/2019 (tax allowance 30 % de la inversión en 6 años; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  eolica_tierra:
+    descripcion: "Tax holiday / tax allowance para energía renovable y exención de aranceles de equipos (PMK 2020; aprox.)"
+    arancel_exento: true
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.06, fuente: "PMK 130/2020 y PP 78/2019 (tax allowance 30 % de la inversión en 6 años; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  hidro_pasada:
+    descripcion: "Tax holiday / tax allowance para energía renovable y exención de aranceles de equipos (PMK 2020; aprox.)"
+    arancel_exento: true
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.06, fuente: "PMK 130/2020 y PP 78/2019 (tax allowance 30 % de la inversión en 6 años; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  biomasa:
+    descripcion: "Tax holiday / tax allowance para energía renovable y exención de aranceles de equipos (PMK 2020; aprox.)"
+    arancel_exento: true
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.06, fuente: "PMK 130/2020 y PP 78/2019 (tax allowance 30 % de la inversión en 6 años; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  biogas:
+    descripcion: "Tax holiday / tax allowance para energía renovable y exención de aranceles de equipos (PMK 2020; aprox.)"
+    arancel_exento: true
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.06, fuente: "PMK 130/2020 y PP 78/2019 (tax allowance 30 % de la inversión en 6 años; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+
+costos:
+  factor_construccion_local: { min: 0.77, base: 0.85, max: 1.02, supuesto: "Mano de obra barata; exigencia de contenido local (TKDN)" }
+  prospeccion_usd: { base: 8000, supuesto: "Visita, catastro y reunión con propietarios" }
+  opcion_terreno_usd_ha_ano: { base: 30.0, supuesto: "≈ 10–15 % del arriendo" }
+  arriendo_terreno_usd_ha_ano: { base: 250, supuesto: "Arriendo rural para uso energético (orden de magnitud)" }
+  seguro_frac_capex_ano: { base: 0.0035, supuesto: "Seguro todo riesgo operativo" }
+  fraccion_costos_locales: 0.5
+
+finanzas:
+  tasa_libre_riesgo: { base: 0.043, fuente: "Bono del Tesoro de EE. UU. a 10 años (2025): la deuda se contrata en USD" }
+  prima_mercado_acciones: { base: 0.045, fuente: "Damodaran, implied ERP ene-2025" }
+  beta_renovables: 1.0
+  prima_etapa: { identificado: 0.08, estudios: 0.06, permisos: 0.035, cierre_financiero: 0.02, construccion: 0.01, puesta_en_marcha: 0.005, operacion: 0 }
+  prima_tecnologia: { eolica_tierra: 0.01, eolica_marina: 0.02, geotermica: 0.025, hidro_embalse: 0.02, csp: 0.02, nuclear: 0.03, smr: 0.04, hidrogeno_verde: 0.03, carbon: 0.02 }
+  prima_fuente: "Supuesto alineado con IEA Cost of Capital Observatory 2024 (primas por tecnología y madurez)"
+  prestamistas:
+    - id: banco_comercial
+      nombre: "Banco comercial local"
+      tipo: comercial
+      descripcion: "Bancos locales o regionales: rápidos; aceptan proyectos sin PPA con más cobertura."
+      spread: { min: 0.022, base: 0.03, max: 0.045, supuesto: "Bancos regionales en USD (SOFR + 2,5–4 %)" }
+      plazo_anos: 12
+      dscr_ppa: 1.30
+      dscr_merchant: 1.6
+      apalancamiento_max: 0.70
+      comision_estructuracion: 0.015
+      costo_asesores_usd: { min: 30000, base: 60000, max: 120000, supuesto: "Asesor legal, financiero e ingeniero independiente" }
+      diligencia_dias: { min: 60, base: 100, max: 180, supuesto: "Due diligence de banco local" }
+      prob_aprobacion: 0.8
+      requiere_ppa: false
+      sigma_recurso_max: 0.05
+      monto_min_usd: 2000000
+    - id: banco_desarrollo
+      nombre: "ADB / JBIC / IFC"
+      tipo: desarrollo
+      descripcion: "Multilaterales y agencias japonesas con PPA de PLN."
+      spread: { min: 0.015, base: 0.02, max: 0.03, supuesto: "Préstamos A de multilaterales o agencias de crédito a la exportación (2024)" }
+      plazo_anos: 18
+      dscr_ppa: 1.25
+      dscr_merchant: 1.50
+      apalancamiento_max: 0.75
+      comision_estructuracion: 0.01
+      costo_asesores_usd: { min: 90000, base: 150000, max: 250000, supuesto: "Asesores + Normas de Desempeño IFC" }
+      diligencia_dias: { min: 120, base: 180, max: 300, supuesto: "Comités de crédito y revisión ambiental y social" }
+      prob_aprobacion: 0.78
+      requiere_ppa: true
+      sigma_recurso_max: 0.035
+      monto_min_usd: 15000000
+  socio_equity: { participacion_max: 0.8, prima_desarrollo_frac: 0.10, supuesto: "Fondos de infraestructura compran proyectos listos para construir con prima de 5–15 %" }
+  credito_emergencia: { tasa: 0.13, frac_valor_activos: 0.5, supuesto: "Línea corporativa de último recurso garantizada con activos" }
+
+construccion:
+  meses_lluviosos: [11, 12, 1, 2, 3]
+  factor_avance_lluvia: 0.8
+  huelga_prob_mensual: 0.006
+  huelga_duracion_dias: { min: 3, base: 7, max: 15, supuesto: "Protestas locales" }
+  clima_extremo_prob_mensual: 0.04
+  clima_extremo_dias: { min: 3, base: 7, max: 20, supuesto: "Monzón, inundaciones y sismos" }
+  supuesto: "Supuesto: monzón húmedo de noviembre a marzo"
+
+quiebra: { meses_caja_negativa: 3 }
+
+# Permisos como grafo (requiere.estudios = grupos de estudio; requiere.permisos = grupos de permiso). Ver docs/MOTOR_FASE4.md.
+permisos_fuente: "UU 21/2014 (panas bumi), PP 7/2017, UU 30/2009 (electricidad), PP 22/2021 (AMDAL), Perpres 112/2022; aproximado"
+permisos:
+  - id: uso_suelo
+    nombre: "Uso de suelo y licencia municipal"
+    grupo: uso_suelo
+    autoridad: "Pemerintah Daerah (KKPR, uso de espacio)"
+    descripcion: "Compatibilidad del uso de suelo y licencia de construcción."
+    aplica: { excluye: [eficiencia_energetica, eolica_marina] }
+    requiere: { estudios: [prefactibilidad], permisos: [] }
+    costo_fijo_usd: { base: 5000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 90, max: 240, supuesto: "Trámite municipal o estatal" }
+    prob: { aprobado: 0.85, rechazado: 0.05, info_adicional: 0.1, supuesto: "Trámite municipal o estatal" }
+    info_adicional: { retraso_dias: { min: 20, base: 45, max: 90, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: licencia_ambiental
+    nombre: "AMDAL / persetujuan lingkungan"
+    grupo: licencia_ambiental
+    autoridad: "KLHK (Ministerio de Ambiente y Bosques)"
+    descripcion: "Evaluación ambiental (AMDAL o UKL-UPL) y aprobación ambiental."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 120, base: 240, max: 450, supuesto: "Plazos variables por provincia" }
+    prob: { aprobado: 0.72, rechazado: 0.08, info_adicional: 0.2, supuesto: "Plazos variables por provincia" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 15000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "PP 22/2021"
+  - id: ppkh
+    nombre: "Permiso de uso de área forestal (PPKH)"
+    grupo: area_forestal
+    autoridad: "KLHK"
+    descripcion: "Uso de áreas de bosque (muchos campos geotérmicos están en bosque protegido)."
+    aplica: { tecnologias: [geotermica, hidro_pasada, hidro_embalse, linea_transmision] }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 30000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 365, max: 720, supuesto: "Áreas protegidas y comunidades adat" }
+    prob: { aprobado: 0.65, rechazado: 0.12, info_adicional: 0.23, supuesto: "Áreas protegidas y comunidades adat" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 30000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "UU 41/1999 y PP 23/2021"
+  - id: viabilidad_conexion
+    nombre: "Estudio de interconexión con PLN"
+    grupo: viabilidad_conexion
+    autoridad: "PLN"
+    descripcion: "El operador de la red revisa el estudio de conexión y asigna capacidad."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [conexion], permisos: [] }
+    costo_fijo_usd: { base: 10000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 120, base: 240, max: 450, supuesto: "Estudios del operador de red" }
+    prob: { aprobado: 0.72, rechazado: 0.1, info_adicional: 0.18, supuesto: "Estudios del operador de red" }
+    info_adicional: { retraso_dias: { min: 45, base: 90, max: 180, supuesto: "Subsanar observaciones" }, costo_usd: { base: 15000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: contrato_acceso_red
+    nombre: "Contrato de conexión"
+    grupo: contrato_acceso_red
+    autoridad: "PLN"
+    descripcion: "Contrato de conexión y garantía de cumplimiento."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [], permisos: [licencia_generacion, viabilidad_conexion] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 500, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 60, max: 150, supuesto: "Formalidad tras la asignación de capacidad" }
+    prob: { aprobado: 0.93, rechazado: 0.02, info_adicional: 0.05, supuesto: "Formalidad tras la asignación de capacidad" }
+    info_adicional: { retraso_dias: { min: 15, base: 30, max: 60, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: licencia_generacion
+    nombre: "Licencia de suministro eléctrico (IUPTL)"
+    grupo: licencia_generacion
+    autoridad: "ESDM"
+    descripcion: "Habilitación para generar y vender energía."
+    aplica: { excluye: [eficiencia_energetica, linea_transmision, interconexion] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    costo_fijo_usd: { base: 20000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 90, base: 180, max: 365, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    prob: { aprobado: 0.8, rechazado: 0.06, info_adicional: 0.14, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Subsanar observaciones" }, costo_usd: { base: 8000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "UU 30/2009"
+  - id: concesion_agua
+    nombre: "Concesión de aguas"
+    grupo: concesion_agua
+    autoridad: "PUPR (permiso de recursos hídricos)"
+    descripcion: "Concesión de uso de agua para generación con caudal ecológico."
+    aplica: { tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo] }
+    requiere: { estudios: [medicion_recurso], permisos: [] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 360, max: 720, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    prob: { aprobado: 0.68, rechazado: 0.12, info_adicional: 0.2, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_geotermica
+    nombre: "Concesión geotérmica"
+    grupo: concesion_geotermica
+    autoridad: "ESDM (área de trabajo WKP por licitación + IPB)"
+    descripcion: "Permiso de exploración y concesión de explotación del recurso geotérmico."
+    aplica: { tecnologias: [geotermica] }
+    requiere: { estudios: [], permisos: [] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 270, base: 450, max: 900, supuesto: "Áreas geotérmicas asignadas por la autoridad" }
+    prob: { aprobado: 0.6, rechazado: 0.15, info_adicional: 0.25, supuesto: "Áreas geotérmicas asignadas por la autoridad" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 30000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: servidumbre_transmision
+    nombre: "Servidumbres de la línea"
+    grupo: servidumbre
+    autoridad: "PLN"
+    descripcion: "Declaratoria de utilidad pública y servidumbres a lo largo del trazado."
+    aplica: { tecnologias: [linea_transmision, interconexion] }
+    requiere: { estudios: [trazado], permisos: [licencia_ambiental] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 60, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 150, base: 300, max: 600, supuesto: "Oposición de propietarios" }
+    prob: { aprobado: 0.72, rechazado: 0.1, info_adicional: 0.18, supuesto: "Oposición de propietarios" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: acuerdo_interconexion
+    nombre: "Autorización de interconexión internacional"
+    grupo: acuerdo_interconexion
+    autoridad: "ESDM / ASEAN Power Grid"
+    descripcion: "Acuerdo binacional y registro ante el regulador del otro país."
+    aplica: { tecnologias: [interconexion] }
+    requiere: { estudios: [], permisos: [servidumbre] }
+    costo_fijo_usd: { base: 150000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 100, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 300, base: 600, max: 1200, supuesto: "Depende de la política de ambos gobiernos" }
+    prob: { aprobado: 0.55, rechazado: 0.15, info_adicional: 0.3, supuesto: "Depende de la política de ambos gobiernos" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+
+ppa:
+  canales:
+    - id: ppa_pln
+      nombre: "PPA con PLN (Perpres 112/2022)"
+      descripcion: "Contrato en USD con el comprador único a precio tope regulado por tecnología y región."
+      precio_usd_mwh: { min: 60, base: 80, max: 110, supuesto: "Perpres 112/2022: tope geotermia ≈ 7,5–13 USc/kWh, solar ≈ 6–9 (primeros 10 años)" }
+      plazo_anos: 30
+      indexacion_anual: 0.0
+      duracion_dias: { min: 240, base: 420, max: 720, supuesto: "Convocatoria, oferta y adjudicación o negociación" }
+      prob_exito: 0.35
+      costo_usd: { base: 50000, supuesto: "Preparación de oferta y garantía" }
+      mw_min: 5
+      mw_max: 300
+      requiere_permisos: [viabilidad_conexion]
+      plazo_cod_meses: 42
+      multa_usd_mw_mes: 1500
+      moneda: USD
+
+expansion:
+  constitucion_usd: { min: 18000, base: 30000, max: 60000, supuesto: "PT PMA (sociedad de capital extranjero) con socio local" }
+  dias: { min: 45, base: 90, max: 225, supuesto: "PT PMA (sociedad de capital extranjero) con socio local" }
+  representante_mensual_usd: { min: 2100, base: 3500, max: 7000, supuesto: "Representante legal, contador y gestor local" }
+combustibles:
+  carbon: { indice: carbon, factor: 0.65, supuesto: "Carbón nacional con DMO a precio tope (70 USD/t)" }
+  gas_natural: { indice: gnl, factor: 0.8, supuesto: "Gas nacional" }
+  fueloil: { indice: fueloil, factor: 1.0, supuesto: "Pertamina" }
+carbono: { precio_usd_tco2: { base: 2, fuente: "Impuesto/ETS al carbono para carbón (≈ 2 USD/tCO2, 2023)" }, crecimiento_anual: 0.05 }
+
+restricciones:
+  tecnologias_prohibidas: [nuclear, smr]
+  motivo: "Sin licencias de potencia nuclear (BAPETEN aún no ha licenciado centrales)"
+  supuesto: "Situación 2025 (aprox.)"
+notas: "Mayor potencial geotérmico del mundo (≈ 24 GW). Datos aproximados."

@@ -1,0 +1,63 @@
+# Ciclo combinado a gas natural (gasoducto o GNL importado).
+id: gas_natural
+nombre: Gas natural (ciclo combinado)
+categoria: termica
+modelo_fc: termica
+visual: gas
+
+capex_usd_kw: { min: 750, base: 1100, max: 1600, fuente: "Lazard LCOE+ 2024 (ciclo combinado 700–1.400 USD/kW); NREL ATB 2024 ≈ 1.200; EIA AEO 2025" }
+desglose_capex: { equipos: 0.55, epc: 0.35, otros: 0.1, supuesto: "Turbinas de gas y de vapor ≈ 55 %" }
+om_fijo_usd_kw_ano: { min: 12, base: 25, max: 35, fuente: "NREL ATB 2024 / EIA AEO 2025" }
+om_variable_usd_mwh: { min: 2, base: 3, max: 5, fuente: "Lazard LCOE+ 2024" }
+factor_capacidad_ref: { min: 0.34, base: 0.85, max: 0.85, supuesto: "Disponibilidad máxima; el despacho real depende del margen sobre el costo marginal" }
+vida_util_anos: { min: 25, base: 30, max: 40, fuente: "NREL ATB 2024" }
+degradacion_anual: { min: 0.001, base: 0.002, max: 0.005, supuesto: "Pérdida de eficiencia entre mantenimientos mayores" }
+construccion_meses: { min: 24, base: 30, max: 40, supuesto: "2–3,5 años" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Pruebas de desempeño" }
+emisiones_gco2_kwh: { min: 410, base: 490, max: 650, fuente: "IPCC AR5 WGIII Anexo III" }
+uso_suelo_ha_mw: { min: 0.02, base: 0.05, max: 0.1, supuesto: "Planta compacta" }
+escala_mw: { min: 50, max: 1200, tipico: 400 }
+
+sigma_recurso_sitio: 0.03
+variabilidad: { diaria: 0.03, interanual: 0.02, supuesto: "Disponibilidad diaria estable; el despacho se calcula aparte" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.002, base: 0.004, max: 0.01, supuesto: "Paradas forzadas de unidades térmicas ≈ 3–8 % de tasa de salida forzada (NERC GADS 2023)" }
+  fraccion_afectada: { min: 0.1, base: 0.4, max: 1.0, supuesto: "Una unidad o un equipo principal" }
+  duracion_dias: { min: 2, base: 10, max: 45, supuesto: "Reparación de caldera, turbina o generador" }
+  costo_reparacion_usd_kw: { min: 5, base: 25, max: 120, supuesto: "Repuestos y mano de obra especializada" }
+mantenimiento:
+  programado_perdida: 0.06
+  preventivo_om_factor: 1.08
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.92
+  supuesto: "Paradas programadas de 3–5 semanas al año (overhaul); preventivo reduce fallas ≈ 40 %"
+costo_desmantelamiento_frac_capex: { min: 0.03, base: 0.05, max: 0.1, supuesto: "Desmantelamiento y remediación" }
+
+estudios_requeridos: [prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: obra_civil, nombre: "Obra civil y fundaciones", fraccion: 0.25, sensible_lluvia: true }
+  - { id: equipos, nombre: "Montaje de turbinas/calderas", fraccion: 0.45, requiere_equipos: true }
+  - { id: bop, nombre: "Balance de planta", fraccion: 0.2 }
+  - { id: pruebas, nombre: "Pruebas", fraccion: 0.1 }
+
+riesgos:
+  - { id: combustible, nombre: "Precio del gas", descripcion: "El GNL importado es caro y volátil; sin contrato de gas la planta despacha poco." }
+  - { id: carbono, nombre: "Carbono", descripcion: "Impuestos al carbono en algunos países." }
+
+sitio:
+  superficie: tierra
+  agua_indice_min: 10
+  agua_dist_costa_km: 150
+  supuesto: "Refrigeración: río (índice hidro ≥ 10) o costa a menos de 150 km (también para el combustible importado)"
+
+termica:
+  fc_max: 0.85
+  prima_captura: 1.03
+  despacho: media
+  supuesto: "Despacha según el margen precio/costo marginal; la captura refleja si opera en horas caras"
+
+combustible:
+  tipo: gas_natural
+  heat_rate_btu_kwh: { min: 6150, base: 6400, max: 6900, fuente: "Lazard LCOE+ 2024 (6.150–6.900 Btu/kWh)" }

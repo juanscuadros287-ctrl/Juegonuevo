@@ -1,0 +1,78 @@
+# Geotérmica (flash/binaria). El recurso es el flujo de calor; los pozos exploratorios y de producción pueden salir secos.
+id: geotermica
+nombre: Geotérmica
+categoria: geotermia
+recurso: geotermia
+recurso_tipico: 180
+modelo_fc: geotermia
+visual: geotermica
+
+capex_usd_kw: { min: 3000, base: 4500, max: 6800, fuente: "IRENA Renewable Power Generation Costs 2023 (geotermia ≈ 4.589 USD/kW en 2023); NREL ATB 2024 hidrotermal flash/binaria 4.500–7.000" }
+desglose_capex: { equipos: 0.35, epc: 0.3, otros: 0.35, fuente: "ESMAP Geothermal Handbook 2012 / IFC 2013: perforación ≈ 30–40 % (en «otros»), planta ≈ 35 %, vapor e infraestructura el resto" }
+om_fijo_usd_kw_ano: { min: 80, base: 115, max: 160, fuente: "NREL ATB 2024 geotermia hidrotermal ≈ 110–140 USD/kW·año (incluye pozos de reposición)" }
+om_variable_usd_mwh: { base: 0, supuesto: "Incluido en el fijo" }
+factor_capacidad_ref: { min: 0.7, base: 0.85, max: 0.92, fuente: "IRENA 2023: FC medio de geotermia ≈ 82–85 %" }
+vida_util_anos: { min: 25, base: 30, max: 40, fuente: "NREL ATB 2024 (30 años)" }
+degradacion_anual: { min: 0.0, base: 0.005, max: 0.015, supuesto: "Declinación del reservorio compensada en parte con pozos de reposición (en O&M)" }
+construccion_meses: { min: 24, base: 30, max: 48, fuente: "ESMAP 2012: desarrollo de campo y planta 2–4 años tras la exploración" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Pruebas de pozos y de la turbina" }
+emisiones_gco2_kwh: { min: 6, base: 38, max: 79, fuente: "IPCC AR5 WGIII Anexo III (mediana ciclo de vida 38 gCO2/kWh)" }
+uso_suelo_ha_mw: { min: 0.2, base: 0.5, max: 1.5, supuesto: "Plataformas de pozos, tuberías y planta (huella directa)" }
+escala_mw: { min: 5, max: 200, tipico: 50 }
+
+sigma_recurso_sitio: 0.2
+variabilidad: { diaria: 0.02, interanual: 0.02, supuesto: "Producción muy estable (carga base)" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.003, base: 0.006, max: 0.015, supuesto: "Paradas de turbina, incrustaciones y fallas de bombas de reinyección" }
+  fraccion_afectada: { min: 0.05, base: 0.3, max: 1.0, supuesto: "Una unidad o un grupo de pozos" }
+  duracion_dias: { min: 2, base: 10, max: 60, supuesto: "Reparación y limpieza de pozos" }
+  costo_reparacion_usd_kw: { min: 5, base: 30, max: 150, supuesto: "Reacondicionamiento de pozos" }
+mantenimiento:
+  programado_perdida: 0.04
+  preventivo_om_factor: 1.08
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.92
+  supuesto: "Mantenimiento anual de turbina y limpieza de incrustaciones"
+costo_desmantelamiento_frac_capex: { min: 0.03, base: 0.06, max: 0.1, supuesto: "Abandono y taponamiento de pozos" }
+
+estudios_requeridos: [medicion_recurso_preliminar, medicion_recurso, prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: caminos_plataformas, nombre: "Caminos y plataformas de perforación", fraccion: 0.1, sensible_lluvia: true }
+  - { id: perforacion, nombre: "Perforación de pozos productores y reinyectores", fraccion: 0.35 }
+  - { id: acarreo, nombre: "Red de acarreo de vapor y salmuera", fraccion: 0.15, sensible_lluvia: true }
+  - { id: planta, nombre: "Montaje de la planta y la turbina", fraccion: 0.3, requiere_equipos: true }
+  - { id: pruebas, nombre: "Conexión y pruebas", fraccion: 0.1 }
+
+riesgos:
+  - { id: pozos_secos, nombre: "Pozos secos", descripcion: "Entre 20 y 30 % de los pozos exploratorios salen secos aun en buenas zonas; fuera de ellas, mucho más." }
+  - { id: reservorio, nombre: "Reservorio de baja entalpía", descripcion: "Menos MW por pozo de lo estimado obliga a perforar más (sobrecosto)." }
+  - { id: gases, nombre: "Gases y comunidades", descripcion: "H2S y uso del suelo generan oposición local." }
+
+sitio:
+  superficie: tierra
+  recurso_min: 90
+  supuesto: "Fuera de zonas volcánicas o de rift (flujo de calor < 90 mW/m²) no hay recursos hidrotermales comerciales"
+
+geotermia:
+  calidad_min_mw_m2: 60
+  calidad_max_mw_m2: 200
+  prob_seco_calidad0: 0.65
+  prob_seco_calidad1: 0.22
+  prob_baja_calidad0: 0.25
+  prob_baja_calidad1: 0.1
+  factor_seco_desarrollo: 0.55
+  mw_pozo_calidad0: 2
+  mw_pozo_calidad1: 8
+  costo_pozo_usd: { min: 3500000, base: 5500000, max: 9000000, fuente: "IFC Success of Geothermal Wells (2013) y ESMAP 2012: 3–7 MUSD por pozo" }
+  reinyectores_por_productor: 0.35
+  frac_capex_perforacion: 0.35
+  fuente: "IFC 2013 (2.500 pozos): éxito de pozos exploratorios ≈ 59 %, de desarrollo ≈ 78 %; ≈ 5–7 MW por pozo productor"
+
+riesgo_obra:
+  sobrecosto_prob_factor: 1.3
+  sobrecosto_magnitud_factor: 1.3
+  retraso_prob_mensual: 0.03
+  retraso_dias: { min: 10, base: 30, max: 90, supuesto: "Pérdidas de circulación, pesca de herramientas en pozos" }
+  supuesto: "Riesgo geológico de perforación (ESMAP 2012)"

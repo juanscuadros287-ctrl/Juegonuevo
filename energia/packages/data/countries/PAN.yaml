@@ -16,11 +16,18 @@ mercado:
   perfil_spot_mensual: [1.25, 1.35, 1.45, 1.40, 1.10, 0.85, 0.80, 0.75, 0.70, 0.70, 0.80, 1.00]
   perfil_spot_fuente: "Supuesto con la forma de los costos marginales mensuales del CND 2019–2024 (máximos en mar–abr, mínimos en sep–oct)"
   matriz: { hidro: 0.62, termica: 0.25, solar: 0.07, eolica: 0.06, fuente: "SNE, generación 2023 aproximada" }
+  # Fase 4: precio de horas punta y valle respecto de la media (arbitraje de almacenamiento) y moneda de los contratos.
+  factor_punta: 1.3
+  factor_valle: 0.75
+  moneda_contratos: USD
 
 # Multiplicadores ene–dic de la ENERGÍA producida (se normalizan a media 1).
 perfil_recurso_mensual:
   ghi: [1.15, 1.20, 1.20, 1.10, 0.95, 0.88, 0.92, 0.92, 0.90, 0.88, 0.88, 1.02]
   viento_tierra: [1.55, 1.65, 1.55, 1.20, 0.70, 0.55, 0.70, 0.70, 0.50, 0.50, 0.70, 1.20]
+  dni: [1.25, 1.30, 1.25, 1.10, 0.90, 0.80, 0.85, 0.85, 0.85, 0.80, 0.85, 1.05]
+  # Fase 4: caudales de los ríos (fuerte estación seca de enero a abril; máximos en octubre–noviembre).
+  hidro: [0.50, 0.38, 0.32, 0.42, 0.85, 1.10, 1.15, 1.25, 1.40, 1.60, 1.70, 1.10]
 perfil_recurso_fuente: "Supuesto: estación seca soleada y con alisios fuertes (dic–abr); producción mensual de los parques de Penonomé y de las plantas FV de Coclé/Chiriquí publicada por el CND (orden de magnitud)"
 
 impuestos:
@@ -49,6 +56,7 @@ costos:
   opcion_terreno_usd_ha_ano: { min: 30, base: 60, max: 150, supuesto: "Opción de arrendamiento durante el desarrollo (≈10–15 % del arriendo)" }
   arriendo_terreno_usd_ha_ano: { min: 250, base: 450, max: 900, supuesto: "Arriendo rural en Coclé/Chiriquí para uso energético (2025)" }
   seguro_frac_capex_ano: { min: 0.002, base: 0.003, max: 0.005, supuesto: "Seguro todo riesgo operativo ≈0,2–0,5 % del CAPEX al año" }
+  fraccion_costos_locales: 0.5
 
 finanzas:
   tasa_libre_riesgo: { base: 0.043, fuente: "Bono del Tesoro de EE.UU. a 10 años, promedio 2025 (≈4,2–4,5 %)" }
@@ -113,7 +121,7 @@ permisos:
     grupo: uso_suelo
     autoridad: "Municipio / MIVIOT"
     descripcion: "Certificación de uso de suelo compatible con generación eléctrica."
-    aplica: {}
+    aplica: { excluye: [eficiencia_energetica, eolica_marina] }
     requiere: { estudios: [prefactibilidad], permisos: [] }
     costo_fijo_usd: { base: 3000, supuesto: "Tasas municipales y planos" }
     costo_usd_mw: { base: 150, supuesto: "Agrimensura" }
@@ -128,7 +136,7 @@ permisos:
     grupo: participacion_ciudadana
     autoridad: "MiAmbiente (foro público)"
     descripcion: "Foro público y consulta a las comunidades del área de influencia (EIA categorías II y III)."
-    aplica: { mw_min: 10 }
+    aplica: { mw_min: 10, excluye: [eficiencia_energetica] }
     requiere: { estudios: [eia], permisos: [] }
     costo_fijo_usd: { base: 15000, supuesto: "Organización de foros, traducción y logística" }
     costo_usd_mw: { base: 200, supuesto: "Escala con el área de influencia" }
@@ -144,7 +152,7 @@ permisos:
     grupo: licencia_ambiental
     autoridad: "MiAmbiente"
     descripcion: "Resolución de aprobación del EIA de impacto bajo."
-    aplica: { tecnologias: [solar_fv], mw_max: 10 }
+    aplica: { tecnologias: [solar_fv, hidro_pasada, biogas, baterias, petroleo, hidrogeno_verde, linea_transmision], mw_max: 10 }
     requiere: { estudios: [eia], permisos: [participacion_ciudadana] }
     costo_fijo_usd: { base: 2500, supuesto: "Tasa de evaluación" }
     costo_usd_mw: { base: 0, supuesto: "—" }
@@ -159,7 +167,7 @@ permisos:
     grupo: licencia_ambiental
     autoridad: "MiAmbiente"
     descripcion: "Resolución de aprobación del EIA de impacto moderado."
-    aplica: { tecnologias: [solar_fv, eolica_tierra], mw_min: 10, mw_max: 50 }
+    aplica: { tecnologias: [solar_fv, eolica_tierra, csp, hidro_pasada, biomasa, biogas, baterias, gas_natural, petroleo, hidrogeno_verde, linea_transmision, interconexion], mw_min: 10, mw_max: 50 }
     requiere: { estudios: [eia], permisos: [participacion_ciudadana] }
     costo_fijo_usd: { base: 5000, supuesto: "Tasa de evaluación" }
     costo_usd_mw: { base: 0, supuesto: "—" }
@@ -174,7 +182,7 @@ permisos:
     grupo: licencia_ambiental
     autoridad: "MiAmbiente"
     descripcion: "Resolución de aprobación del EIA de impacto significativo."
-    aplica: { tecnologias: [solar_fv, eolica_tierra], mw_min: 50 }
+    aplica: { tecnologias: [solar_fv, eolica_tierra, csp, hidro_pasada, biomasa, biogas, baterias, gas_natural, petroleo, hidrogeno_verde, linea_transmision, interconexion], mw_min: 50 }
     requiere: { estudios: [eia], permisos: [participacion_ciudadana] }
     costo_fijo_usd: { base: 10000, supuesto: "Tasa de evaluación" }
     costo_usd_mw: { base: 0, supuesto: "—" }
@@ -190,7 +198,7 @@ permisos:
     grupo: viabilidad_conexion
     autoridad: "ETESA"
     descripcion: "ETESA revisa el estudio de conexión y emite la viabilidad de acceso a la red de transmisión."
-    aplica: {}
+    aplica: { excluye: [eficiencia_energetica] }
     requiere: { estudios: [conexion], permisos: [] }
     costo_fijo_usd: { base: 5000, supuesto: "Tasa de revisión" }
     costo_usd_mw: { base: 100, supuesto: "—" }
@@ -221,8 +229,8 @@ permisos:
     grupo: licencia_generacion
     autoridad: "ASEP"
     descripcion: "Concesión para generar con recurso eólico."
-    aplica: { tecnologias: [eolica_tierra] }
-    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    aplica: { tecnologias: [eolica_tierra, eolica_marina] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo, concesion_maritima] }
     costo_fijo_usd: { base: 15000, supuesto: "Tasas ASEP, fianza y asesoría legal" }
     costo_usd_mw: { base: 150, supuesto: "—" }
     duracion_dias: { min: 90, base: 180, max: 360, supuesto: "Concesión con publicación y período de oposición" }
@@ -237,7 +245,7 @@ permisos:
     grupo: contrato_acceso_red
     autoridad: "ETESA"
     descripcion: "Contrato de conexión con ETESA y garantía de cumplimiento."
-    aplica: {}
+    aplica: { excluye: [eficiencia_energetica] }
     requiere: { estudios: [], permisos: [licencia_generacion, viabilidad_conexion] }
     costo_fijo_usd: { base: 10000, supuesto: "Garantía y abogados" }
     costo_usd_mw: { base: 500, supuesto: "Garantía por MW" }
@@ -246,6 +254,127 @@ permisos:
     info_adicional: { retraso_dias: { min: 15, base: 30, max: 60, supuesto: "Ajustes" }, costo_usd: { base: 2000, supuesto: "Abogado" } }
     reintentable: true
     max_intentos_info: 2
+
+  # ───────── Fase 4: tecnologías nuevas ─────────
+  - id: licencia_ambiental_mayor
+    nombre: Aprobación del EIA categoría III (obra mayor)
+    grupo: licencia_ambiental
+    autoridad: "MiAmbiente"
+    descripcion: "EIA categoría III de embalses, térmicas a carbón, geotermia y eólica marina, con consulta a pueblos indígenas si aplica."
+    aplica: { tecnologias: [hidro_embalse, hidro_bombeo, carbon, eolica_marina, geotermica] }
+    requiere: { estudios: [eia], permisos: [participacion_ciudadana] }
+    costo_fijo_usd: { base: 20000, supuesto: "Tasa de evaluación y foros adicionales" }
+    costo_usd_mw: { base: 50, supuesto: "—" }
+    duracion_dias: { min: 240, base: 420, max: 900, supuesto: "Obras mayores: 1–2,5 años (Barro Blanco, Chan II)" }
+    prob: { aprobado: 0.55, rechazado: 0.15, info_adicional: 0.30, supuesto: "Conflictos sociales frecuentes en hidro de Chiriquí y Ngäbe-Buglé" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Ampliación del EIA" }, costo_usd: { base: 60000, supuesto: "Consultor" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Decreto Ejecutivo 1 de 2023 (categoría III)"
+  - id: concesion_agua
+    nombre: Concesión de uso de agua
+    grupo: concesion_agua
+    autoridad: "MiAmbiente (Dirección de Seguridad Hídrica)"
+    descripcion: "Concesión permanente de uso de agua para generación hidroeléctrica."
+    aplica: { tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo] }
+    requiere: { estudios: [medicion_recurso], permisos: [] }
+    costo_fijo_usd: { base: 8000, supuesto: "Tasas y estudio de caudal ecológico" }
+    costo_usd_mw: { base: 100, supuesto: "—" }
+    duracion_dias: { min: 120, base: 240, max: 540, supuesto: "Concesiones de agua con oposición de usuarios aguas abajo" }
+    prob: { aprobado: 0.70, rechazado: 0.10, info_adicional: 0.20, supuesto: "Caudal ecológico y conflictos de uso" }
+    info_adicional: { retraso_dias: { min: 30, base: 90, max: 180, supuesto: "Estudios adicionales" }, costo_usd: { base: 10000, supuesto: "Consultor" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Decreto Ley 35 de 1966 (uso de aguas)"
+  - id: concesion_generacion_hidro
+    nombre: Concesión de generación hidroeléctrica
+    grupo: licencia_generacion
+    autoridad: "ASEP"
+    descripcion: "Concesión para generar con recurso hídrico (requiere la concesión de agua)."
+    aplica: { tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo, concesion_agua] }
+    costo_fijo_usd: { base: 20000, supuesto: "Tasas, fianza y asesoría legal" }
+    costo_usd_mw: { base: 150, supuesto: "—" }
+    duracion_dias: { min: 120, base: 240, max: 480, supuesto: "Concesión con publicación y oposición" }
+    prob: { aprobado: 0.78, rechazado: 0.07, info_adicional: 0.15, supuesto: "Más oposición que solar o eólica" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Subsanar" }, costo_usd: { base: 8000, supuesto: "Abogado" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley 6 de 1997 (concesiones hidroeléctricas)"
+  - id: concesion_geotermica
+    nombre: Concesión de generación geotérmica
+    grupo: licencia_generacion
+    autoridad: "ASEP / Secretaría de Energía"
+    descripcion: "Concesión de exploración y explotación del recurso geotérmico."
+    aplica: { tecnologias: [geotermica] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    costo_fijo_usd: { base: 25000, supuesto: "Tasas y fianza" }
+    costo_usd_mw: { base: 150, supuesto: "—" }
+    duracion_dias: { min: 150, base: 270, max: 540, supuesto: "Sin precedentes en Panamá: trámite lento" }
+    prob: { aprobado: 0.72, rechazado: 0.08, info_adicional: 0.20, supuesto: "Marco poco probado" }
+    info_adicional: { retraso_dias: { min: 30, base: 90, max: 180, supuesto: "Subsanar" }, costo_usd: { base: 10000, supuesto: "Abogado" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley 6 de 1997 (aprox.)"
+  - id: licencia_generacion_termica
+    nombre: Licencia de generación (térmica, CSP, almacenamiento, H2)
+    grupo: licencia_generacion
+    autoridad: "ASEP"
+    descripcion: "Licencia para plantas térmicas, de biomasa, CSP, baterías y electrólisis conectadas a la red."
+    aplica: { tecnologias: [csp, biomasa, biogas, gas_natural, carbon, petroleo, baterias, hidrogeno_verde] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    costo_fijo_usd: { base: 10000, supuesto: "Tasas ASEP y asesoría legal" }
+    costo_usd_mw: { base: 100, supuesto: "—" }
+    duracion_dias: { min: 60, base: 120, max: 270, supuesto: "Trámite ASEP" }
+    prob: { aprobado: 0.85, rechazado: 0.04, info_adicional: 0.11, supuesto: "Trámite reglado" }
+    info_adicional: { retraso_dias: { min: 20, base: 45, max: 90, supuesto: "Subsanar" }, costo_usd: { base: 4000, supuesto: "Abogado" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley 6 de 1997"
+  - id: concesion_maritima
+    nombre: Concesión de fondo de mar
+    grupo: concesion_maritima
+    autoridad: "Autoridad Marítima de Panamá (AMP)"
+    descripcion: "Concesión de uso del lecho marino y de la franja costera para turbinas y cables."
+    aplica: { tecnologias: [eolica_marina] }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 50000, supuesto: "Tasas y fianza" }
+    costo_usd_mw: { base: 200, supuesto: "Canon por superficie" }
+    duracion_dias: { min: 180, base: 300, max: 600, supuesto: "Sin precedentes de eólica marina en Panamá" }
+    prob: { aprobado: 0.70, rechazado: 0.10, info_adicional: 0.20, supuesto: "Conflictos con rutas del Canal y pesca" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Estudios de navegación" }, costo_usd: { base: 30000, supuesto: "Consultor" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: servidumbre_transmision
+    nombre: Servidumbres y autorización de línea
+    grupo: servidumbre
+    autoridad: "ASEP / ETESA"
+    descripcion: "Declaratoria de servidumbre eléctrica y autorización para construir la línea."
+    aplica: { tecnologias: [linea_transmision, interconexion] }
+    requiere: { estudios: [trazado], permisos: [licencia_ambiental] }
+    costo_fijo_usd: { base: 30000, supuesto: "Avalúos y abogados" }
+    costo_usd_mw: { base: 50, supuesto: "—" }
+    duracion_dias: { min: 120, base: 240, max: 540, supuesto: "Negociación con propietarios" }
+    prob: { aprobado: 0.75, rechazado: 0.08, info_adicional: 0.17, supuesto: "Oposición de propietarios" }
+    info_adicional: { retraso_dias: { min: 30, base: 90, max: 180, supuesto: "Nuevos avalúos" }, costo_usd: { base: 15000, supuesto: "Peritos" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley 6 de 1997 (servidumbres eléctricas)"
+  - id: acuerdo_interconexion
+    nombre: Autorización de interconexión internacional
+    grupo: acuerdo_interconexion
+    autoridad: "Secretaría de Energía / CRIE (Mercado Eléctrico Regional)"
+    descripcion: "Autorización binacional y registro ante el regulador regional para operar la interconexión."
+    aplica: { tecnologias: [interconexion] }
+    requiere: { estudios: [], permisos: [servidumbre] }
+    costo_fijo_usd: { base: 150000, supuesto: "Negociación binacional y asesoría" }
+    costo_usd_mw: { base: 100, supuesto: "—" }
+    duracion_dias: { min: 270, base: 540, max: 1100, supuesto: "Acuerdos entre gobiernos (Panamá–Colombia lleva más de 15 años)" }
+    prob: { aprobado: 0.55, rechazado: 0.15, info_adicional: 0.30, supuesto: "Depende de la política de ambos países" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Renegociación" }, costo_usd: { base: 50000, supuesto: "Asesores" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Tratado Marco del Mercado Eléctrico de América Central (SIEPAC)"
 
 # Contratos de venta de energía. El proyecto puede operar sin PPA vendiendo al spot (solo banco comercial).
 ppa:
@@ -278,4 +407,18 @@ ppa:
       requiere_permisos: [licencia_ambiental]
       plazo_cod_meses: 30
       multa_usd_mw_mes: 1000
-notas: "Permisos, PPA y finanzas aproximados para el juego; ver docs/MOTOR_FASE2.md."
+notas: "Permisos, PPA y finanzas aproximados para el juego; ver docs/MOTOR_FASE2.md y docs/MOTOR_FASE4.md."
+
+# ───────── Fase 4 ─────────
+expansion:
+  constitucion_usd: { min: 5000, base: 10000, max: 20000, supuesto: "Sociedad anónima y agente residente en Panamá" }
+  dias: { min: 15, base: 30, max: 60, supuesto: "Registro Público" }
+  representante_mensual_usd: { min: 1000, base: 2000, max: 4000, supuesto: "Agente residente, contador y abogado" }
+combustibles:
+  gas_natural: { indice: gnl, factor: 1.0, supuesto: "GNL importado por la terminal de Costa Norte (Colón)" }
+  carbon: { indice: carbon, factor: 1.1, supuesto: "Carbón importado más flete al Atlántico" }
+  fueloil: { indice: fueloil, factor: 1.05, supuesto: "Fuel oil importado" }
+restricciones:
+  tecnologias_prohibidas: [nuclear, smr]
+  motivo: "Panamá no tiene marco regulatorio nuclear ni regulador"
+  supuesto: "Sin ley nuclear vigente (2025)"

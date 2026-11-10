@@ -1,0 +1,70 @@
+# Reactor modular pequeño (~300 MW por unidad); primeros de su clase.
+id: smr
+nombre: Pequeño reactor modular (SMR)
+categoria: termica
+modelo_fc: termica
+visual: smr
+
+capex_usd_kw: { min: 7000, base: 11000, max: 20000, fuente: "NEA/OECD 2024 y estimaciones de proyectos (NuScale UAMPS ≈ 20.000 USD/kW en 2023, BWRX-300 ≈ 7.000–10.000)" }
+desglose_capex: { equipos: 0.5, epc: 0.35, otros: 0.15, supuesto: "Módulos fabricados en serie ≈ 50 %" }
+om_fijo_usd_kw_ano: { min: 130, base: 170, max: 220, supuesto: "Escala menor que un gran reactor" }
+om_variable_usd_mwh: { min: 2, base: 3, max: 5, supuesto: "Similar a nuclear" }
+factor_capacidad_ref: { min: 0.37, base: 0.92, max: 0.92, supuesto: "Disponibilidad máxima; el despacho real depende del margen sobre el costo marginal" }
+vida_util_anos: { min: 40, base: 60, max: 80, supuesto: "Diseño para 60 años" }
+degradacion_anual: { min: 0.001, base: 0.002, max: 0.005, supuesto: "Pérdida de eficiencia entre mantenimientos mayores" }
+construccion_meses: { min: 36, base: 48, max: 84, supuesto: "Promesa de 3–4 años; primeros de su clase tardan más" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Pruebas de desempeño" }
+emisiones_gco2_kwh: { min: 4, base: 12, max: 110, fuente: "IPCC AR5 WGIII Anexo III (nuclear)" }
+uso_suelo_ha_mw: { min: 0.1, base: 0.2, max: 0.5, supuesto: "Sitio compacto" }
+escala_mw: { min: 50, max: 900, tipico: 300 }
+
+sigma_recurso_sitio: 0.02
+variabilidad: { diaria: 0.03, interanual: 0.02, supuesto: "Disponibilidad diaria estable; el despacho se calcula aparte" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.002, base: 0.004, max: 0.01, supuesto: "Paradas forzadas de unidades térmicas ≈ 3–8 % de tasa de salida forzada (NERC GADS 2023)" }
+  fraccion_afectada: { min: 0.1, base: 0.4, max: 1.0, supuesto: "Una unidad o un equipo principal" }
+  duracion_dias: { min: 2, base: 10, max: 45, supuesto: "Reparación de caldera, turbina o generador" }
+  costo_reparacion_usd_kw: { min: 5, base: 25, max: 120, supuesto: "Repuestos y mano de obra especializada" }
+mantenimiento:
+  programado_perdida: 0.06
+  preventivo_om_factor: 1.08
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.92
+  supuesto: "Paradas programadas de 3–5 semanas al año (overhaul); preventivo reduce fallas ≈ 40 %"
+costo_desmantelamiento_frac_capex: { min: 0.03, base: 0.05, max: 0.1, supuesto: "Desmantelamiento y remediación" }
+
+estudios_requeridos: [prefactibilidad, sitio_nuclear, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: excavacion, nombre: "Excavación e isla nuclear", fraccion: 0.3, sensible_lluvia: true }
+  - { id: contencion, nombre: "Contención y estructuras", fraccion: 0.25 }
+  - { id: reactor, nombre: "Reactor y sistemas nucleares", fraccion: 0.3, requiere_equipos: true }
+  - { id: pruebas, nombre: "Carga de combustible y pruebas", fraccion: 0.15 }
+
+riesgos:
+  - { id: primero, nombre: "Primero de su clase", descripcion: "Ningún diseño occidental opera comercialmente aún: alto riesgo de costo y plazo." }
+  - { id: permisos, nombre: "Permisos", descripcion: "Licenciamiento de un diseño nuevo." }
+
+sitio:
+  superficie: tierra
+  agua_indice_min: 30
+  agua_dist_costa_km: 20
+  supuesto: "Refrigeración: río caudaloso o costa (< 20 km)"
+
+termica:
+  fc_max: 0.92
+  prima_captura: 1.0
+  despacho: base
+  supuesto: "Despacha según el margen precio/costo marginal; la captura refleja si opera en horas caras"
+
+combustible:
+  tipo: uranio
+  heat_rate_btu_kwh: { min: 10000, base: 10500, max: 11000, supuesto: "Similar a los LWR grandes" }
+
+riesgo_obra:
+  sobrecosto_prob_factor: 2.5
+  sobrecosto_magnitud_factor: 2.5
+  retraso_prob_mensual: 0.05
+  retraso_dias: { min: 20, base: 60, max: 180, supuesto: "Diseño nuevo" }
+  supuesto: "Riesgo de primer proyecto (NuScale cancelado en 2023 por costos)"

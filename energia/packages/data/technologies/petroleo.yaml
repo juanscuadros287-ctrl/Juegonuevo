@@ -1,0 +1,62 @@
+# Motores reciprocantes a fuel oil/diésel: punta y respaldo.
+id: petroleo
+nombre: Petróleo (motores de fuel oil)
+categoria: termica
+modelo_fc: termica
+visual: petroleo
+
+capex_usd_kw: { min: 900, base: 1200, max: 1600, supuesto: "Plantas de motores de media velocidad (Wärtsilä/MAN) ≈ 1.000–1.500 USD/kW (2024)" }
+desglose_capex: { equipos: 0.6, epc: 0.3, otros: 0.1, supuesto: "Motores ≈ 60 %" }
+om_fijo_usd_kw_ano: { min: 12, base: 20, max: 35, supuesto: "Motores de punta" }
+om_variable_usd_mwh: { min: 5, base: 8, max: 12, supuesto: "Mantenimiento por hora de uso" }
+factor_capacidad_ref: { min: 0.34, base: 0.85, max: 0.85, supuesto: "Disponibilidad máxima; el despacho real depende del margen sobre el costo marginal" }
+vida_util_anos: { min: 20, base: 25, max: 30, supuesto: "Motores con overhaul" }
+degradacion_anual: { min: 0.001, base: 0.002, max: 0.005, supuesto: "Pérdida de eficiencia entre mantenimientos mayores" }
+construccion_meses: { min: 12, base: 18, max: 24, supuesto: "Plantas modulares" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Pruebas de desempeño" }
+emisiones_gco2_kwh: { min: 650, base: 750, max: 900, fuente: "IPCC / IEA (≈ 650–900 gCO2/kWh)" }
+uso_suelo_ha_mw: { min: 0.05, base: 0.1, max: 0.2, supuesto: "Planta compacta" }
+escala_mw: { min: 10, max: 300, tipico: 60 }
+
+sigma_recurso_sitio: 0.03
+variabilidad: { diaria: 0.03, interanual: 0.02, supuesto: "Disponibilidad diaria estable; el despacho se calcula aparte" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.002, base: 0.004, max: 0.01, supuesto: "Paradas forzadas de unidades térmicas ≈ 3–8 % de tasa de salida forzada (NERC GADS 2023)" }
+  fraccion_afectada: { min: 0.1, base: 0.4, max: 1.0, supuesto: "Una unidad o un equipo principal" }
+  duracion_dias: { min: 2, base: 10, max: 45, supuesto: "Reparación de caldera, turbina o generador" }
+  costo_reparacion_usd_kw: { min: 5, base: 25, max: 120, supuesto: "Repuestos y mano de obra especializada" }
+mantenimiento:
+  programado_perdida: 0.06
+  preventivo_om_factor: 1.08
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.92
+  supuesto: "Paradas programadas de 3–5 semanas al año (overhaul); preventivo reduce fallas ≈ 40 %"
+costo_desmantelamiento_frac_capex: { min: 0.03, base: 0.05, max: 0.1, supuesto: "Desmantelamiento y remediación" }
+
+estudios_requeridos: [prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: obra_civil, nombre: "Obra civil y fundaciones", fraccion: 0.25, sensible_lluvia: true }
+  - { id: equipos, nombre: "Montaje de turbinas/calderas", fraccion: 0.45, requiere_equipos: true }
+  - { id: bop, nombre: "Balance de planta", fraccion: 0.2 }
+  - { id: pruebas, nombre: "Pruebas", fraccion: 0.1 }
+
+riesgos:
+  - { id: combustible, nombre: "Precio del petróleo", descripcion: "Costo marginal alto: solo despacha en horas caras." }
+
+sitio:
+  superficie: tierra
+  agua_indice_min: 10
+  agua_dist_costa_km: 150
+  supuesto: "Refrigeración: río (índice hidro ≥ 10) o costa a menos de 150 km (también para el combustible importado)"
+
+termica:
+  fc_max: 0.85
+  prima_captura: 1.2
+  despacho: punta
+  supuesto: "Despacha según el margen precio/costo marginal; la captura refleja si opera en horas caras"
+
+combustible:
+  tipo: fueloil
+  heat_rate_btu_kwh: { min: 8300, base: 8800, max: 10500, supuesto: "Motores a fuel oil ≈ 38–41 % de eficiencia" }

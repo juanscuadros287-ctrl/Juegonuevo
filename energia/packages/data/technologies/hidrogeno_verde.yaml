@@ -1,0 +1,60 @@
+# Hidrógeno verde: electrolizador conectado a la red comprando energía en horas baratas; vende H2.
+id: hidrogeno_verde
+nombre: Hidrógeno verde
+categoria: hidrogeno
+modelo_fc: hidrogeno
+visual: hidrogeno
+
+capex_usd_kw: { min: 1200, base: 2000, max: 3000, fuente: "IEA Global Hydrogen Review 2024: electrolizador instalado ≈ 2.000 USD/kW fuera de China (1.700–2.500)" }
+desglose_capex: { equipos: 0.55, epc: 0.3, otros: 0.15, supuesto: "Pilas y balance de planta ≈ 55 %" }
+om_fijo_usd_kw_ano: { min: 30, base: 50, max: 80, fuente: "IRENA Green Hydrogen Cost Reduction 2020 (≈ 2–3 % del CAPEX, incluye cambio de pilas)" }
+om_variable_usd_mwh: { min: 0, base: 1, max: 2, supuesto: "Químicos" }
+factor_capacidad_ref: { min: 0.3, base: 0.55, max: 0.8, supuesto: "Opera en las horas más baratas" }
+vida_util_anos: { min: 15, base: 20, max: 25, supuesto: "Planta; pilas cada 60–80 mil horas (en O&M)" }
+degradacion_anual: { min: 0.005, base: 0.008, max: 0.015, fuente: "IRENA 2020 (degradación de pilas ≈ 1 %/año)" }
+construccion_meses: { min: 12, base: 18, max: 30, supuesto: "Proyectos 2022–2024" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Pruebas" }
+emisiones_gco2_kwh: { base: 0, supuesto: "Depende de la electricidad usada" }
+uso_suelo_ha_mw: { min: 0.02, base: 0.05, max: 0.1, supuesto: "Planta compacta" }
+escala_mw: { min: 1, max: 500, tipico: 50 }
+
+sigma_recurso_sitio: 0.02
+variabilidad: { diaria: 0.02, interanual: 0.01, supuesto: "Sin recurso variable" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.005, base: 0.01, max: 0.03, supuesto: "Pilas y compresores" }
+  fraccion_afectada: { min: 0.05, base: 0.15, max: 0.5, supuesto: "Un módulo" }
+  duracion_dias: { min: 2, base: 10, max: 45, supuesto: "Repuestos" }
+  costo_reparacion_usd_kw: { min: 10, base: 40, max: 150, supuesto: "Pilas" }
+mantenimiento:
+  programado_perdida: 0.02
+  preventivo_om_factor: 1.05
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.95
+  supuesto: "Mantenimiento de compresores"
+costo_desmantelamiento_frac_capex: { min: 0.02, base: 0.04, max: 0.08, supuesto: "Retiro" }
+
+estudios_requeridos: [prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: obra_civil, nombre: "Obra civil", fraccion: 0.25, sensible_lluvia: true }
+  - { id: electrolizadores, nombre: "Electrolizadores y compresión", fraccion: 0.55, requiere_equipos: true }
+  - { id: pruebas, nombre: "Pruebas", fraccion: 0.2 }
+
+riesgos:
+  - { id: mercado, nombre: "Mercado del H2", descripcion: "Pocos compradores con contratos de largo plazo; precio de venta incierto." }
+  - { id: electricidad, nombre: "Electricidad", descripcion: "El costo de la energía es ≈ 60–70 % del costo del H2." }
+
+sitio:
+  superficie: tierra
+  agua_indice_min: 10
+  agua_dist_costa_km: 100
+  supuesto: "Necesita agua (río o desalinización costera)"
+
+hidrogeno:
+  kwh_por_kg: { min: 50, base: 54, max: 60, fuente: "IEA GHR 2024 (PEM/alcalino ≈ 50–55 kWh/kg incluido el balance de planta)" }
+  precio_venta_usd_kg: { min: 3.5, base: 5, max: 8, supuesto: "Contratos de H2 verde con prima (Hydrogen Council 2024: 4–7 USD/kg)" }
+  utilizacion: 0.55
+  agua_usd_kg: 0.05
+  factor_precio_electricidad: 0.6
+  supuesto: "Compra en las horas más baratas (≈ 60 % del spot medio); agua desmineralizada ≈ 0,05 USD/kg"

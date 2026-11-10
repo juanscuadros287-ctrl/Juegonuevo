@@ -1,0 +1,64 @@
+# Planta de vapor con residuos agroforestales (bagazo, cascarilla, astillas).
+id: biomasa
+nombre: Biomasa
+categoria: bioenergia
+recurso: biomasa
+recurso_tipico: 1800
+modelo_fc: termica
+visual: biomasa
+
+capex_usd_kw: { min: 1800, base: 3000, max: 4500, fuente: "IRENA 2023: bioenergía ≈ 2.730 USD/kW (800–4.500); NREL ATB 2024 ≈ 4.000" }
+desglose_capex: { equipos: 0.45, epc: 0.4, otros: 0.15, supuesto: "Caldera y turbina ≈ 45 %" }
+om_fijo_usd_kw_ano: { min: 80, base: 110, max: 150, fuente: "NREL ATB 2024 / IRENA (≈ 3–4 % del CAPEX)" }
+om_variable_usd_mwh: { min: 3, base: 5, max: 8, supuesto: "Cenizas, agua y químicos" }
+factor_capacidad_ref: { min: 0.32, base: 0.8, max: 0.8, supuesto: "Disponibilidad máxima; el despacho real depende del margen sobre el costo marginal" }
+vida_util_anos: { min: 20, base: 25, max: 30, fuente: "NREL ATB 2024" }
+degradacion_anual: { min: 0.001, base: 0.002, max: 0.005, supuesto: "Pérdida de eficiencia entre mantenimientos mayores" }
+construccion_meses: { min: 18, base: 24, max: 36, supuesto: "Similar a una térmica de vapor pequeña" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Pruebas de desempeño" }
+emisiones_gco2_kwh: { min: 18, base: 45, max: 230, fuente: "IPCC AR5 (residuos ≈ 18–50; cultivos dedicados hasta 230)" }
+uso_suelo_ha_mw: { min: 0.5, base: 1.0, max: 2, supuesto: "Planta y patio de biomasa" }
+escala_mw: { min: 5, max: 100, tipico: 25 }
+
+sigma_recurso_sitio: 0.15
+variabilidad: { diaria: 0.03, interanual: 0.02, supuesto: "Disponibilidad diaria estable; el despacho se calcula aparte" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.002, base: 0.004, max: 0.01, supuesto: "Paradas forzadas de unidades térmicas ≈ 3–8 % de tasa de salida forzada (NERC GADS 2023)" }
+  fraccion_afectada: { min: 0.1, base: 0.4, max: 1.0, supuesto: "Una unidad o un equipo principal" }
+  duracion_dias: { min: 2, base: 10, max: 45, supuesto: "Reparación de caldera, turbina o generador" }
+  costo_reparacion_usd_kw: { min: 5, base: 25, max: 120, supuesto: "Repuestos y mano de obra especializada" }
+mantenimiento:
+  programado_perdida: 0.06
+  preventivo_om_factor: 1.08
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.92
+  supuesto: "Paradas programadas de 3–5 semanas al año (overhaul); preventivo reduce fallas ≈ 40 %"
+costo_desmantelamiento_frac_capex: { min: 0.03, base: 0.05, max: 0.1, supuesto: "Desmantelamiento y remediación" }
+
+estudios_requeridos: [medicion_recurso, prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: obra_civil, nombre: "Obra civil y fundaciones", fraccion: 0.25, sensible_lluvia: true }
+  - { id: equipos, nombre: "Montaje de turbinas/calderas", fraccion: 0.45, requiere_equipos: true }
+  - { id: bop, nombre: "Balance de planta", fraccion: 0.2 }
+  - { id: pruebas, nombre: "Pruebas", fraccion: 0.1 }
+
+riesgos:
+  - { id: suministro, nombre: "Suministro de combustible", descripcion: "El radio de recolección define el costo; sequías y competencia por residuos lo encarecen." }
+  - { id: estacional, nombre: "Zafra", descripcion: "El bagazo solo existe en la zafra." }
+
+sitio:
+  superficie: tierra
+  recurso_min: 500
+  supuesto: "Con NPP < 500 g/m²/año no hay residuos suficientes a distancia razonable"
+
+termica:
+  fc_max: 0.8
+  prima_captura: 1.0
+  despacho: base
+  supuesto: "Despacha según el margen precio/costo marginal; la captura refleja si opera en horas caras"
+
+combustible:
+  tipo: biomasa
+  heat_rate_btu_kwh: { min: 12000, base: 13500, max: 15000, fuente: "EIA Electric Power Annual: heat rate de biomasa ≈ 13.500 Btu/kWh" }

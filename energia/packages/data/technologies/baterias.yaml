@@ -1,0 +1,57 @@
+# Baterías de ion-litio (LFP) de 4 horas: arbitraje punta/valle y potencia firme.
+id: baterias
+nombre: Baterías (BESS)
+categoria: almacenamiento
+modelo_fc: almacenamiento
+visual: baterias
+
+capex_usd_kw: { min: 800, base: 1200, max: 1800, fuente: "NREL ATB 2024 (4 h ≈ 1.200–1.400 USD/kW ≈ 300–350 USD/kWh); Lazard LCOS 2024 (≈ 250–350 USD/kWh)" }
+desglose_capex: { equipos: 0.65, epc: 0.25, otros: 0.1, fuente: "NREL 2024 Cost Benchmark: celdas y contenedores ≈ 60–65 %" }
+om_fijo_usd_kw_ano: { min: 20, base: 30, max: 45, fuente: "NREL ATB 2024 (≈ 2,5 % del CAPEX, incluye aumentos de capacidad)" }
+om_variable_usd_mwh: { min: 0, base: 0.5, max: 2, supuesto: "Auxiliares" }
+factor_capacidad_ref: { min: 0.08, base: 0.15, max: 0.2, supuesto: "330 ciclos × 4 h / 8.760 h" }
+vida_util_anos: { min: 10, base: 15, max: 20, fuente: "NREL ATB 2024 (15 años)" }
+degradacion_anual: { min: 0.005, base: 0.01, max: 0.02, supuesto: "Degradación calendario de LFP" }
+construccion_meses: { min: 6, base: 9, max: 15, fuente: "Proyectos 2022–2024: 6–12 meses" }
+puesta_en_marcha_dias: { min: 15, base: 30, max: 60, supuesto: "Pruebas del sistema de control" }
+emisiones_gco2_kwh: { base: 0, supuesto: "Emisiones de la energía cargada (no propias)" }
+uso_suelo_ha_mw: { min: 0.02, base: 0.05, max: 0.1, supuesto: "Contenedores" }
+escala_mw: { min: 1, max: 1000, tipico: 50 }
+
+sigma_recurso_sitio: 0.02
+variabilidad: { diaria: 0.02, interanual: 0.01, supuesto: "Sin recurso variable" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.005, base: 0.01, max: 0.03, supuesto: "Fallas de inversores y módulos (EPRI BESS Failure Database 2024)" }
+  fraccion_afectada: { min: 0.02, base: 0.1, max: 0.5, supuesto: "Un bloque" }
+  duracion_dias: { min: 2, base: 7, max: 60, supuesto: "Reemplazo de módulos" }
+  costo_reparacion_usd_kw: { min: 10, base: 40, max: 200, supuesto: "Módulos; un incendio destruye el bloque" }
+mantenimiento:
+  programado_perdida: 0.01
+  preventivo_om_factor: 1.05
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.95
+  supuesto: "Mantenimiento del sistema térmico y de control"
+costo_desmantelamiento_frac_capex: { min: 0.02, base: 0.04, max: 0.08, supuesto: "Reciclaje de celdas" }
+
+estudios_requeridos: [prefactibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: obra_civil, nombre: "Plataformas y canalizaciones", fraccion: 0.25, sensible_lluvia: true }
+  - { id: contenedores, nombre: "Contenedores de baterías e inversores", fraccion: 0.55, requiere_equipos: true }
+  - { id: pruebas, nombre: "Integración y pruebas", fraccion: 0.2 }
+
+riesgos:
+  - { id: incendio, nombre: "Incendio térmico", descripcion: "Fallas raras pero destructivas (NFPA 855)." }
+  - { id: arbitraje, nombre: "Diferencial", descripcion: "Sin pago por potencia el arbitraje rara vez paga la inversión." }
+
+sitio:
+  superficie: tierra
+  supuesto: "Cerca de una subestación"
+
+almacenamiento:
+  eficiencia_ida_vuelta: { min: 0.82, base: 0.86, max: 0.9, fuente: "NREL ATB 2024 (85–87 %)" }
+  horas: { min: 2, base: 4, max: 8, fuente: "NREL ATB 2024" }
+  ciclos_vida: { min: 4000, base: 6000, max: 8000, fuente: "Fabricantes LFP (80 % de capacidad a 6.000 ciclos)" }
+  ciclos_ano_max: 330
+  degradacion_por_ciclo: 3.3e-05

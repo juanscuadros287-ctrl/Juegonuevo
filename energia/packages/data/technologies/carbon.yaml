@@ -1,0 +1,70 @@
+# Central de vapor supercrítica a carbón importado.
+id: carbon
+nombre: Carbón
+categoria: termica
+modelo_fc: termica
+visual: carbon
+
+capex_usd_kw: { min: 2500, base: 3500, max: 6700, fuente: "Lazard LCOE+ 2024 (carbón 3.200–6.775 USD/kW); EIA AEO 2025" }
+desglose_capex: { equipos: 0.45, epc: 0.4, otros: 0.15, supuesto: "Caldera y turbina ≈ 45 %" }
+om_fijo_usd_kw_ano: { min: 35, base: 45, max: 80, fuente: "NREL ATB 2024 / EIA AEO" }
+om_variable_usd_mwh: { min: 3, base: 5, max: 8, fuente: "Lazard LCOE+ 2024" }
+factor_capacidad_ref: { min: 0.32, base: 0.8, max: 0.8, supuesto: "Disponibilidad máxima; el despacho real depende del margen sobre el costo marginal" }
+vida_util_anos: { min: 30, base: 40, max: 50, fuente: "EIA" }
+degradacion_anual: { min: 0.001, base: 0.002, max: 0.005, supuesto: "Pérdida de eficiencia entre mantenimientos mayores" }
+construccion_meses: { min: 36, base: 48, max: 72, supuesto: "3–6 años" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Pruebas de desempeño" }
+emisiones_gco2_kwh: { min: 740, base: 820, max: 910, fuente: "IPCC AR5 WGIII Anexo III" }
+uso_suelo_ha_mw: { min: 0.1, base: 0.3, max: 0.6, supuesto: "Planta, patio de carbón y cenizas" }
+escala_mw: { min: 100, max: 1500, tipico: 500 }
+
+sigma_recurso_sitio: 0.03
+variabilidad: { diaria: 0.03, interanual: 0.02, supuesto: "Disponibilidad diaria estable; el despacho se calcula aparte" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.002, base: 0.004, max: 0.01, supuesto: "Paradas forzadas de unidades térmicas ≈ 3–8 % de tasa de salida forzada (NERC GADS 2023)" }
+  fraccion_afectada: { min: 0.1, base: 0.4, max: 1.0, supuesto: "Una unidad o un equipo principal" }
+  duracion_dias: { min: 2, base: 10, max: 45, supuesto: "Reparación de caldera, turbina o generador" }
+  costo_reparacion_usd_kw: { min: 5, base: 25, max: 120, supuesto: "Repuestos y mano de obra especializada" }
+mantenimiento:
+  programado_perdida: 0.06
+  preventivo_om_factor: 1.08
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.92
+  supuesto: "Paradas programadas de 3–5 semanas al año (overhaul); preventivo reduce fallas ≈ 40 %"
+costo_desmantelamiento_frac_capex: { min: 0.03, base: 0.05, max: 0.1, supuesto: "Desmantelamiento y remediación" }
+
+estudios_requeridos: [prefactibilidad, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: obra_civil, nombre: "Obra civil y fundaciones", fraccion: 0.25, sensible_lluvia: true }
+  - { id: equipos, nombre: "Montaje de turbinas/calderas", fraccion: 0.45, requiere_equipos: true }
+  - { id: bop, nombre: "Balance de planta", fraccion: 0.2 }
+  - { id: pruebas, nombre: "Pruebas", fraccion: 0.1 }
+
+riesgos:
+  - { id: financiamiento, nombre: "Financiamiento", descripcion: "Muchos bancos ya no financian carbón." }
+  - { id: carbono, nombre: "Carbono", descripcion: "Impuestos al carbono crecientes." }
+
+sitio:
+  superficie: tierra
+  agua_indice_min: 10
+  agua_dist_costa_km: 150
+  supuesto: "Refrigeración: río (índice hidro ≥ 10) o costa a menos de 150 km (también para el combustible importado)"
+
+termica:
+  fc_max: 0.8
+  prima_captura: 1.0
+  despacho: base
+  supuesto: "Despacha según el margen precio/costo marginal; la captura refleja si opera en horas caras"
+
+combustible:
+  tipo: carbon
+  heat_rate_btu_kwh: { min: 8750, base: 9000, max: 12000, fuente: "Lazard LCOE+ 2024 (8.750–12.000 Btu/kWh)" }
+
+riesgo_obra:
+  sobrecosto_prob_factor: 1.2
+  sobrecosto_magnitud_factor: 1.2
+  retraso_prob_mensual: 0.02
+  retraso_dias: { min: 10, base: 30, max: 90, supuesto: "Obra grande" }
+  supuesto: "Obras térmicas grandes"

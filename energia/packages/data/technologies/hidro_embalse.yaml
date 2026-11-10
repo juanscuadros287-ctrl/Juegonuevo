@@ -1,0 +1,72 @@
+# Central con embalse: regula el caudal estacional y aporta potencia firme; riesgos geológicos y sociales altos.
+id: hidro_embalse
+nombre: Hidro con embalse
+categoria: hidro
+recurso: hidro
+recurso_tipico: 60
+modelo_fc: hidro
+visual: hidro_embalse
+
+capex_usd_kw: { min: 1800, base: 3200, max: 6000, fuente: "IRENA 2023 (grandes centrales 1.000–5.000 USD/kW; Latinoamérica ≈ 2.500–4.000)" }
+desglose_capex: { equipos: 0.3, epc: 0.55, otros: 0.15, fuente: "IRENA 2023: obra civil ≈ 50–60 % del CAPEX hidro; electromecánico ≈ 25–35 %" }
+om_fijo_usd_kw_ano: { min: 25, base: 50, max: 90, fuente: "IRENA 2023: O&M hidro ≈ 1–2,5 % del CAPEX por año; NREL ATB 2024 ≈ 40–60 USD/kW·año" }
+om_variable_usd_mwh: { min: 0, base: 1, max: 3, supuesto: "Tasa por uso del agua y consumibles" }
+factor_capacidad_ref: { min: 0.3, base: 0.43, max: 0.55, fuente: "IRENA 2023: FC medio de hidro ≈ 40–55 %" }
+vida_util_anos: { min: 30, base: 40, max: 60, fuente: "NREL ATB 2024 / IRENA (obras civiles > 50 años; vida económica 40)" }
+degradacion_anual: { min: 0, base: 0.001, max: 0.003, supuesto: "Sedimentación y desgaste de turbinas" }
+construccion_meses: { min: 42, base: 60, max: 96, fuente: "Ansar et al. 2014: plazo medio 8,6 años con 44 % de atraso; obra 4–6 años" }
+puesta_en_marcha_dias: { min: 30, base: 60, max: 120, supuesto: "Llenado, pruebas de unidades" }
+emisiones_gco2_kwh: { min: 1, base: 24, max: 2200, fuente: "IPCC AR5 WGIII Anexo III (mediana 24; embalses tropicales mucho más)" }
+uso_suelo_ha_mw: { min: 2, base: 8, max: 40, supuesto: "Área inundada del embalse" }
+escala_mw: { min: 50, max: 1500, tipico: 300 }
+
+sigma_recurso_sitio: 0.15
+variabilidad: { diaria: 0.15, interanual: 0.13, supuesto: "Caudales: años secos/húmedos (El Niño/La Niña) ±10–20 %" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.002, base: 0.004, max: 0.01, supuesto: "Fallas de unidades y compuertas" }
+  fraccion_afectada: { min: 0.1, base: 0.3, max: 1.0, supuesto: "Una unidad" }
+  duracion_dias: { min: 3, base: 15, max: 90, supuesto: "Reparación de turbinas o generadores" }
+  costo_reparacion_usd_kw: { min: 5, base: 30, max: 150, supuesto: "Rebobinado, rodetes" }
+mantenimiento:
+  programado_perdida: 0.03
+  preventivo_om_factor: 1.06
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.94
+  supuesto: "Mantenimiento en estación seca"
+costo_desmantelamiento_frac_capex: { min: 0.02, base: 0.05, max: 0.15, supuesto: "Las presas rara vez se desmantelan; costo de cierre y seguridad" }
+
+estudios_requeridos: [medicion_recurso, prefactibilidad, geotecnia_presa, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: desvio, nombre: "Desvío del río y accesos", fraccion: 0.15, sensible_lluvia: true }
+  - { id: obra_civil, nombre: "Presa/toma, túneles y casa de máquinas", fraccion: 0.45, sensible_lluvia: true }
+  - { id: electromecanico, nombre: "Turbinas y generadores", fraccion: 0.25, requiere_equipos: true }
+  - { id: linea, nombre: "Subestación y línea", fraccion: 0.1, sensible_lluvia: true }
+  - { id: pruebas, nombre: "Llenado y pruebas", fraccion: 0.05 }
+
+riesgos:
+  - { id: geologico, nombre: "Riesgo geológico", descripcion: "Fallas, rocas fracturadas y túneles: los sobrecostos de presas promedian ≈ 90 % (Ansar et al. 2014)." }
+  - { id: social, nombre: "Oposición social", descripcion: "Desplazamiento de comunidades y pueblos indígenas; la consulta puede durar años." }
+  - { id: hidrologia, nombre: "Hidrología", descripcion: "Años secos (El Niño) bajan la producción; estacionalidad fuerte." }
+  - { id: reasentamiento, nombre: "Reasentamiento", descripcion: "El embalse puede inundar viviendas y tierras de cultivo." }
+
+sitio:
+  superficie: tierra
+  recurso_min: 20
+  supuesto: "Con índice hidro < 20 no hay caudal ni caída suficientes"
+
+hidro:
+  fc_min: 0.3
+  fc_max: 0.55
+  exponente: 0.8
+  regulacion: 0.6
+  lluvia_ref_mm: 1500
+  supuesto: "FC según el índice hidro de la celda (escorrentía × pendiente × ríos) y la lluvia anual; el embalse traslada energía a los meses caros"
+
+riesgo_obra:
+  sobrecosto_prob_factor: 2.0
+  sobrecosto_magnitud_factor: 2.2
+  retraso_prob_mensual: 0.05
+  retraso_dias: { min: 20, base: 60, max: 240, supuesto: "Geología, reasentamientos, conflictos" }
+  supuesto: "Ansar et al. 2014: sobrecosto medio de grandes presas ≈ 96 %"

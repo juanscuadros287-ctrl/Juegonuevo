@@ -1,0 +1,62 @@
+# Línea entre dos países: peaje y parte del diferencial de precios (tipo SIEPAC).
+id: interconexion
+nombre: Interconexión internacional
+categoria: red
+modelo_fc: transmision
+visual: linea_transmision
+
+capex_usd_kw: { min: 60, base: 100, max: 180, supuesto: "Subestaciones de los dos extremos (por kW de capacidad)" }
+desglose_capex: { equipos: 0.4, epc: 0.5, otros: 0.1, supuesto: "Conductores, torres y transformadores ≈ 40 %" }
+om_fijo_usd_kw_ano: { min: 3, base: 6, max: 12, fuente: "MISO Transmission Cost Estimation Guide 2024 / Brattle (O&M ≈ 1–2 % del CAPEX)" }
+om_variable_usd_mwh: { base: 0, supuesto: "—" }
+factor_capacidad_ref: { min: 0.3, base: 0.6, max: 0.8, supuesto: "Utilización media" }
+vida_util_anos: { min: 30, base: 40, max: 50, fuente: "Vida económica típica de líneas (FERC)" }
+degradacion_anual: { base: 0, supuesto: "—" }
+construccion_meses: { min: 18, base: 30, max: 48, supuesto: "Servidumbres y obra" }
+puesta_en_marcha_dias: { min: 15, base: 30, max: 60, supuesto: "Energización" }
+emisiones_gco2_kwh: { base: 0, supuesto: "—" }
+uso_suelo_ha_mw: { min: 0.5, base: 1.5, max: 4, supuesto: "Franja de servidumbre (≈ 40 m) para un trazado típico" }
+escala_mw: { min: 50, max: 3000, tipico: 400 }
+
+sigma_recurso_sitio: 0.05
+variabilidad: { diaria: 0.1, interanual: 0.05, supuesto: "Flujo variable" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.0002, base: 0.0005, max: 0.002, supuesto: "Salidas por tormentas e incendios" }
+  fraccion_afectada: { min: 0.1, base: 0.5, max: 1.0, supuesto: "Un circuito" }
+  duracion_dias: { min: 1, base: 3, max: 20, supuesto: "Reparación de torres" }
+  costo_reparacion_usd_kw: { min: 2, base: 10, max: 60, supuesto: "Torres caídas" }
+mantenimiento:
+  programado_perdida: 0.01
+  preventivo_om_factor: 1.05
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.95
+  supuesto: "Poda de servidumbre e inspección"
+costo_desmantelamiento_frac_capex: { min: 0.01, base: 0.03, max: 0.05, supuesto: "Retiro de torres" }
+
+estudios_requeridos: [prefactibilidad, trazado, eia]
+
+hitos_construccion:
+  - { id: servidumbres, nombre: "Servidumbres y accesos", fraccion: 0.2, sensible_lluvia: true }
+  - { id: torres, nombre: "Fundaciones y torres", fraccion: 0.4, sensible_lluvia: true }
+  - { id: tendido, nombre: "Tendido de conductores", fraccion: 0.25, requiere_equipos: true }
+  - { id: subestaciones, nombre: "Subestaciones y energización", fraccion: 0.15, requiere_equipos: true }
+
+riesgos:
+  - { id: servidumbres, nombre: "Servidumbres", descripcion: "Propietarios que no venden la franja retrasan la obra." }
+  - { id: regulacion, nombre: "Dos reguladores", descripcion: "La interconexión requiere acuerdos entre países." }
+
+sitio:
+  superficie: tierra
+  supuesto: "Ambos extremos en tierra"
+
+transmision:
+  costo_usd_mw_km: { min: 1400, base: 2200, max: 4500, fuente: "SIEPAC (1.800 km, ≈ 500 MUSD, 300 MW) y estudios Panamá–Colombia (≈ 400–600 MUSD)" }
+  perdidas_frac_100km: 0.01
+  peaje_usd_mwh: { min: 3, base: 6, max: 12, supuesto: "Cargo por uso de la red regional (CRIE)" }
+  utilizacion: 0.6
+  interconexion: true
+  longitud_min_km: 50
+  longitud_max_km: 1500
+  captura_diferencial: 0.4
+  supuesto: "Pérdidas AC ≈ 1 %/100 km a carga media; peaje regulado; en interconexiones se capta parte del diferencial de precios"

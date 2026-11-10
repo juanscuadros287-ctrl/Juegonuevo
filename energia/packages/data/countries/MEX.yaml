@@ -1,0 +1,355 @@
+# México — Fase 4. Datos macro, de mercado y de permisos aproximados (2024–2025); ver docs/MOTOR_FASE4.md.
+iso3: MEX
+nombre: México
+iso_num: 484
+moneda: { codigo: MXN, nombre: "Peso mexicano", usd_por_unidad: 0.0526 }
+tipo_cambio: { deriva_anual: 0, volatilidad_anual: 0.14, reversion_anual: 0.3, shock_prob_anual: 0.06, shock_magnitud: { min: 0.1, base: 0.18, max: 0.3, supuesto: "Devaluaciones históricas" }, fuente: "Banxico: MXN muy líquido y volátil (2020 −25 %, 2024 −15 %)" }
+inflacion_anual: { base: 0.04, fuente: "Banxico 2025 (meta 3 % ± 1)" }
+prima_riesgo_pais: { base: 0.021, fuente: "Damodaran, Country Risk Premiums ene-2025 (aprox. según calificación Baa2/BBB)" }
+regulador: "CNE (Comisión Nacional de Energía, desde 2025) / SENER"
+operador_sistema: "CENACE"
+mercado:
+  demanda_anual_twh: { base: 345, fuente: "CENACE / SENER PRODESEN 2024" }
+  pico_mw: { base: 53000, fuente: "CENACE / SENER PRODESEN 2024" }
+  precio_spot_medio_usd_mwh: { min: 40, base: 65, max: 140, fuente: "CENACE: precio marginal local medio 2023–2024 ≈ 55–90 USD/MWh" }
+  perfil_spot_mensual: [0.85, 0.85, 0.92, 1.00, 1.15, 1.20, 1.15, 1.10, 1.00, 0.95, 0.90, 0.85]
+  perfil_spot_fuente: "Supuesto: pico de verano (may–ago)"
+  matriz: { gas: 0.6, hidro: 0.08, eolica: 0.06, solar: 0.06, carbon: 0.05, nuclear: 0.04, otros: 0.11, fuente: "SENER 2023" }
+  factor_punta: 1.4
+  factor_valle: 0.7
+  moneda_contratos: USD
+
+perfil_recurso_mensual:
+  ghi: [0.85, 0.95, 1.08, 1.15, 1.15, 1.08, 1.02, 1.02, 0.98, 0.95, 0.88, 0.82]
+  dni: [0.95, 1.00, 1.10, 1.15, 1.12, 0.98, 0.90, 0.92, 0.95, 1.00, 0.98, 0.95]
+  viento_tierra: [1.25, 1.20, 1.10, 0.95, 0.85, 0.80, 0.90, 0.80, 0.85, 1.00, 1.15, 1.20]
+  hidro: [0.60, 0.50, 0.45, 0.45, 0.55, 0.90, 1.30, 1.50, 1.70, 1.50, 0.95, 0.75]
+  viento_mar: [1.25, 1.20, 1.10, 0.95, 0.85, 0.80, 0.90, 0.80, 0.85, 1.00, 1.15, 1.20]
+perfil_recurso_fuente: "Supuesto: Istmo de Tehuantepec con nortes fuertes (oct–mar); lluvias de verano"
+
+impuestos:
+  renta: { base: 0.3, fuente: "LISR (30 %) e IVA 16 %" }
+  depreciacion_anos: { base: 10, supuesto: "Vida fiscal de equipos de generación (aprox.)" }
+  itbms: { base: 0.16, fuente: "LISR (30 %) e IVA 16 %" }
+  arancel_general_equipos: { base: 0.05, supuesto: "Arancel típico de equipos eléctricos sin incentivo" }
+
+incentivos:
+  solar_fv:
+    descripcion: "Depreciación acelerada del 100 % de maquinaria para fuentes renovables (art. 34 fracc. XIII LISR)"
+    arancel_exento: false
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "LISR art. 34 (depreciación inmediata ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  eolica_tierra:
+    descripcion: "Depreciación acelerada del 100 % de maquinaria para fuentes renovables (art. 34 fracc. XIII LISR)"
+    arancel_exento: false
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "LISR art. 34 (depreciación inmediata ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  geotermica:
+    descripcion: "Depreciación acelerada del 100 % de maquinaria para fuentes renovables (art. 34 fracc. XIII LISR)"
+    arancel_exento: false
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "LISR art. 34 (depreciación inmediata ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  hidro_pasada:
+    descripcion: "Depreciación acelerada del 100 % de maquinaria para fuentes renovables (art. 34 fracc. XIII LISR)"
+    arancel_exento: false
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "LISR art. 34 (depreciación inmediata ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  biomasa:
+    descripcion: "Depreciación acelerada del 100 % de maquinaria para fuentes renovables (art. 34 fracc. XIII LISR)"
+    arancel_exento: false
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "LISR art. 34 (depreciación inmediata ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  biogas:
+    descripcion: "Depreciación acelerada del 100 % de maquinaria para fuentes renovables (art. 34 fracc. XIII LISR)"
+    arancel_exento: false
+    itbms_exento: false
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "LISR art. 34 (depreciación inmediata ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+
+costos:
+  factor_construccion_local: { min: 0.85, base: 0.95, max: 1.14, supuesto: "Mano de obra competitiva" }
+  prospeccion_usd: { base: 10000, supuesto: "Visita, catastro y reunión con propietarios" }
+  opcion_terreno_usd_ha_ano: { base: 30.0, supuesto: "≈ 10–15 % del arriendo" }
+  arriendo_terreno_usd_ha_ano: { base: 250, supuesto: "Arriendo rural para uso energético (orden de magnitud)" }
+  seguro_frac_capex_ano: { base: 0.003, supuesto: "Seguro todo riesgo operativo" }
+  fraccion_costos_locales: 0.45
+
+finanzas:
+  tasa_libre_riesgo: { base: 0.043, fuente: "Bono del Tesoro de EE. UU. a 10 años (2025): la deuda se contrata en USD" }
+  prima_mercado_acciones: { base: 0.045, fuente: "Damodaran, implied ERP ene-2025" }
+  beta_renovables: 1.0
+  prima_etapa: { identificado: 0.08, estudios: 0.06, permisos: 0.035, cierre_financiero: 0.02, construccion: 0.01, puesta_en_marcha: 0.005, operacion: 0 }
+  prima_tecnologia: { eolica_tierra: 0.01, eolica_marina: 0.02, geotermica: 0.025, hidro_embalse: 0.02, csp: 0.02, nuclear: 0.03, smr: 0.04, hidrogeno_verde: 0.03, carbon: 0.02 }
+  prima_fuente: "Supuesto alineado con IEA Cost of Capital Observatory 2024 (primas por tecnología y madurez)"
+  prestamistas:
+    - id: banco_comercial
+      nombre: "Banco comercial local"
+      tipo: comercial
+      descripcion: "Bancos locales o regionales: rápidos; aceptan proyectos sin PPA con más cobertura."
+      spread: { min: 0.02, base: 0.028, max: 0.043, supuesto: "Banca mexicana e internacional (SOFR + 2–3,5 %)" }
+      plazo_anos: 12
+      dscr_ppa: 1.30
+      dscr_merchant: 1.6
+      apalancamiento_max: 0.70
+      comision_estructuracion: 0.015
+      costo_asesores_usd: { min: 30000, base: 60000, max: 120000, supuesto: "Asesor legal, financiero e ingeniero independiente" }
+      diligencia_dias: { min: 60, base: 100, max: 180, supuesto: "Due diligence de banco local" }
+      prob_aprobacion: 0.8
+      requiere_ppa: false
+      sigma_recurso_max: 0.05
+      monto_min_usd: 2000000
+    - id: banco_desarrollo
+      nombre: "NAFIN / BANOBRAS / IFC"
+      tipo: desarrollo
+      descripcion: "Banca de desarrollo con PPA en USD."
+      spread: { min: 0.015, base: 0.02, max: 0.03, supuesto: "Préstamos A de multilaterales o agencias de crédito a la exportación (2024)" }
+      plazo_anos: 18
+      dscr_ppa: 1.25
+      dscr_merchant: 1.50
+      apalancamiento_max: 0.75
+      comision_estructuracion: 0.01
+      costo_asesores_usd: { min: 90000, base: 150000, max: 250000, supuesto: "Asesores + Normas de Desempeño IFC" }
+      diligencia_dias: { min: 120, base: 180, max: 300, supuesto: "Comités de crédito y revisión ambiental y social" }
+      prob_aprobacion: 0.78
+      requiere_ppa: true
+      sigma_recurso_max: 0.035
+      monto_min_usd: 15000000
+  socio_equity: { participacion_max: 0.8, prima_desarrollo_frac: 0.10, supuesto: "Fondos de infraestructura compran proyectos listos para construir con prima de 5–15 %" }
+  credito_emergencia: { tasa: 0.13, frac_valor_activos: 0.5, supuesto: "Línea corporativa de último recurso garantizada con activos" }
+
+construccion:
+  meses_lluviosos: [6, 7, 8, 9, 10]
+  factor_avance_lluvia: 0.85
+  huelga_prob_mensual: 0.008
+  huelga_duracion_dias: { min: 3, base: 10, max: 30, supuesto: "Bloqueos sindicales y de comunidades" }
+  clima_extremo_prob_mensual: 0.03
+  clima_extremo_dias: { min: 3, base: 7, max: 20, supuesto: "Huracanes en las costas" }
+  supuesto: "Supuesto: lluvias de junio a octubre"
+
+quiebra: { meses_caja_negativa: 3 }
+
+# Permisos como grafo (requiere.estudios = grupos de estudio; requiere.permisos = grupos de permiso). Ver docs/MOTOR_FASE4.md.
+permisos_fuente: "Ley del Sector Eléctrico (2025), LGEEPA (MIA), Ley de Energía Geotérmica, Ley de Aguas Nacionales; aproximado"
+permisos:
+  - id: uso_suelo
+    nombre: "Uso de suelo y licencia municipal"
+    grupo: uso_suelo
+    autoridad: "Municipio / Estado (licencia de uso de suelo y construcción)"
+    descripcion: "Compatibilidad del uso de suelo y licencia de construcción."
+    aplica: { excluye: [eficiencia_energetica, eolica_marina] }
+    requiere: { estudios: [prefactibilidad], permisos: [] }
+    costo_fijo_usd: { base: 5000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 60, base: 120, max: 270, supuesto: "Trámite municipal o estatal" }
+    prob: { aprobado: 0.82, rechazado: 0.06, info_adicional: 0.12, supuesto: "Trámite municipal o estatal" }
+    info_adicional: { retraso_dias: { min: 20, base: 45, max: 90, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: evis
+    nombre: "Evaluación de Impacto Social (EVIS) y consulta indígena"
+    grupo: evaluacion_social
+    autoridad: "SENER"
+    descripcion: "Evaluación de impacto social y, si hay pueblos indígenas, consulta previa."
+    aplica: { excluye: [eficiencia_energetica], mw_min: 10 }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 400, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 120, base: 270, max: 600, supuesto: "Consulta indígena en el Istmo de Tehuantepec con conflictos" }
+    prob: { aprobado: 0.68, rechazado: 0.12, info_adicional: 0.2, supuesto: "Consulta indígena en el Istmo de Tehuantepec con conflictos" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley del Sector Eléctrico"
+  - id: mia
+    nombre: "Manifestación de Impacto Ambiental (MIA)"
+    grupo: licencia_ambiental
+    autoridad: "SEMARNAT"
+    descripcion: "Autorización federal en materia de impacto ambiental."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [eia], permisos: [evaluacion_social] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 120, base: 240, max: 540, supuesto: "Plazo legal 60 días hábiles; en la práctica 6–12 meses" }
+    prob: { aprobado: 0.7, rechazado: 0.1, info_adicional: 0.2, supuesto: "Plazo legal 60 días hábiles; en la práctica 6–12 meses" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "LGEEPA art. 28"
+  - id: viabilidad_conexion
+    nombre: "Estudios de interconexión (CENACE)"
+    grupo: viabilidad_conexion
+    autoridad: "CENACE"
+    descripcion: "El operador de la red revisa el estudio de conexión y asigna capacidad."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [conexion], permisos: [] }
+    costo_fijo_usd: { base: 10000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 240, base: 420, max: 800, supuesto: "Cola de estudios larga y planeación vinculante desde 2025" }
+    prob: { aprobado: 0.65, rechazado: 0.12, info_adicional: 0.23, supuesto: "Cola de estudios larga y planeación vinculante desde 2025" }
+    info_adicional: { retraso_dias: { min: 45, base: 90, max: 180, supuesto: "Subsanar observaciones" }, costo_usd: { base: 15000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Manual de interconexión de centrales eléctricas"
+  - id: contrato_acceso_red
+    nombre: "Contrato de conexión"
+    grupo: contrato_acceso_red
+    autoridad: "CENACE / CFE Transmisión"
+    descripcion: "Contrato de conexión y garantía de cumplimiento."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [], permisos: [licencia_generacion, viabilidad_conexion] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 500, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 60, max: 150, supuesto: "Formalidad tras la asignación de capacidad" }
+    prob: { aprobado: 0.93, rechazado: 0.02, info_adicional: 0.05, supuesto: "Formalidad tras la asignación de capacidad" }
+    info_adicional: { retraso_dias: { min: 15, base: 30, max: 60, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: licencia_generacion
+    nombre: "Permiso de generación"
+    grupo: licencia_generacion
+    autoridad: "CNE"
+    descripcion: "Habilitación para generar y vender energía."
+    aplica: { excluye: [eficiencia_energetica, linea_transmision, interconexion] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    costo_fijo_usd: { base: 20000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 120, base: 240, max: 540, supuesto: "Desde la reforma de 2025 los permisos privados deben ajustarse a la planeación del Estado" }
+    prob: { aprobado: 0.65, rechazado: 0.15, info_adicional: 0.2, supuesto: "Desde la reforma de 2025 los permisos privados deben ajustarse a la planeación del Estado" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Subsanar observaciones" }, costo_usd: { base: 8000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Ley del Sector Eléctrico (2025)"
+  - id: concesion_agua
+    nombre: "Concesión de aguas"
+    grupo: concesion_agua
+    autoridad: "CONAGUA"
+    descripcion: "Concesión de uso de agua para generación con caudal ecológico."
+    aplica: { tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo] }
+    requiere: { estudios: [medicion_recurso], permisos: [] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 360, max: 720, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    prob: { aprobado: 0.68, rechazado: 0.12, info_adicional: 0.2, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_geotermica
+    nombre: "Concesión geotérmica"
+    grupo: concesion_geotermica
+    autoridad: "SENER (Ley de Energía Geotérmica)"
+    descripcion: "Permiso de exploración y concesión de explotación del recurso geotérmico."
+    aplica: { tecnologias: [geotermica] }
+    requiere: { estudios: [], permisos: [] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 240, base: 450, max: 900, supuesto: "Áreas geotérmicas asignadas por la autoridad" }
+    prob: { aprobado: 0.7, rechazado: 0.1, info_adicional: 0.2, supuesto: "Áreas geotérmicas asignadas por la autoridad" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 30000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_maritima
+    nombre: "Concesión de espacio marítimo"
+    grupo: concesion_maritima
+    autoridad: "SEMAR / SCT (zona federal marítima)"
+    descripcion: "Uso del lecho marino y la franja costera para turbinas y cables."
+    aplica: { tecnologias: [eolica_marina] }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 80000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 300, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 240, base: 450, max: 900, supuesto: "Marco reciente para eólica marina" }
+    prob: { aprobado: 0.6, rechazado: 0.15, info_adicional: 0.25, supuesto: "Marco reciente para eólica marina" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: servidumbre_transmision
+    nombre: "Servidumbres de la línea"
+    grupo: servidumbre
+    autoridad: "CFE / SENER"
+    descripcion: "Declaratoria de utilidad pública y servidumbres a lo largo del trazado."
+    aplica: { tecnologias: [linea_transmision, interconexion] }
+    requiere: { estudios: [trazado], permisos: [licencia_ambiental] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 60, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 150, base: 300, max: 600, supuesto: "Oposición de propietarios" }
+    prob: { aprobado: 0.72, rechazado: 0.1, info_adicional: 0.18, supuesto: "Oposición de propietarios" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: acuerdo_interconexion
+    nombre: "Autorización de interconexión internacional"
+    grupo: acuerdo_interconexion
+    autoridad: "SENER / CNE"
+    descripcion: "Acuerdo binacional y registro ante el regulador del otro país."
+    aplica: { tecnologias: [interconexion] }
+    requiere: { estudios: [], permisos: [servidumbre] }
+    costo_fijo_usd: { base: 150000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 100, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 300, base: 600, max: 1200, supuesto: "Depende de la política de ambos gobiernos" }
+    prob: { aprobado: 0.55, rechazado: 0.15, info_adicional: 0.3, supuesto: "Depende de la política de ambos gobiernos" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: licencia_nuclear
+    nombre: "Licencia de construcción y operación nuclear"
+    grupo: licencia_nuclear
+    autoridad: "CNSNS"
+    descripcion: "Revisión de seguridad del diseño y del sitio por el regulador nuclear."
+    aplica: { tecnologias: [nuclear, smr] }
+    requiere: { estudios: [sitio_nuclear], permisos: [licencia_ambiental] }
+    costo_fijo_usd: { base: 5000000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 2000, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 1100, base: 1600, max: 2500, supuesto: "Licenciamiento nuclear de 3–7 años (NRC Parte 52, IAEA)" }
+    prob: { aprobado: 0.5, rechazado: 0.15, info_adicional: 0.35, supuesto: "Licenciamiento nuclear de 3–7 años (NRC Parte 52, IAEA)" }
+    info_adicional: { retraso_dias: { min: 180, base: 365, max: 720, supuesto: "Subsanar observaciones" }, costo_usd: { base: 2000000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+
+ppa:
+  canales:
+    - id: contrato_cfe
+      nombre: "Contrato con CFE (esquema mixto 2025)"
+      descripcion: "Contrato de largo plazo con CFE (la reforma de 2025 prioriza a la empresa estatal)."
+      precio_usd_mwh: { min: 35, base: 48, max: 65, supuesto: "Subastas de largo plazo 2017 ≈ 20–35 USD/MWh; contratos 2025 con CFE ≈ 40–60 (aprox.)" }
+      plazo_anos: 20
+      indexacion_anual: 0.02
+      duracion_dias: { min: 240, base: 360, max: 600, supuesto: "Convocatoria, oferta y adjudicación o negociación" }
+      prob_exito: 0.3
+      costo_usd: { base: 50000, supuesto: "Preparación de oferta y garantía" }
+      mw_min: 10
+      mw_max: 500
+      requiere_permisos: [viabilidad_conexion]
+      plazo_cod_meses: 36
+      multa_usd_mw_mes: 1500
+      moneda: USD
+    - id: autoconsumo_industrial
+      nombre: "PPA industrial (autoconsumo remoto)"
+      descripcion: "Contrato con industria bajo el esquema de autoconsumo."
+      precio_usd_mwh: { min: 48, base: 60, max: 75, supuesto: "PPA privados 2024 ≈ 50–70 USD/MWh" }
+      plazo_anos: 15
+      indexacion_anual: 0.02
+      duracion_dias: { min: 120, base: 200, max: 360, supuesto: "Convocatoria, oferta y adjudicación o negociación" }
+      prob_exito: 0.5
+      costo_usd: { base: 30000, supuesto: "Preparación de oferta y garantía" }
+      mw_min: 1
+      mw_max: 150
+      requiere_permisos: [licencia_ambiental]
+      plazo_cod_meses: 30
+      multa_usd_mw_mes: 1200
+      moneda: USD
+
+expansion:
+  constitucion_usd: { min: 12000, base: 20000, max: 40000, supuesto: "SA de CV y registro ante SAT" }
+  dias: { min: 30, base: 60, max: 150, supuesto: "SA de CV y registro ante SAT" }
+  representante_mensual_usd: { min: 2400, base: 4000, max: 8000, supuesto: "Representante legal, contador y gestor local" }
+combustibles:
+  gas_natural: { indice: gas_natural, factor: 1.25, supuesto: "Gas de Texas por gasoducto (Waha/Henry Hub + transporte)" }
+  carbon: { indice: carbon, factor: 0.9, supuesto: "Carbón de Coahuila" }
+  fueloil: { indice: fueloil, factor: 0.95, supuesto: "Combustóleo de Pemex" }
+carbono: { precio_usd_tco2: { base: 3.5, fuente: "Impuesto al carbono federal (IEPS) ≈ 3–4 USD/tCO2" }, crecimiento_anual: 0.05 }
+
+notas: "Reforma de 2025: la CNE reemplaza a la CRE y la planeación es vinculante. Datos aproximados."

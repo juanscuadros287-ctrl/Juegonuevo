@@ -4,6 +4,7 @@ import type { Project } from './types';
 
 export function applies(a: Applicability, techId: string, mw: number): boolean {
   if (a.tecnologias && !a.tecnologias.includes(techId)) return false;
+  if (a.excluye && a.excluye.includes(techId)) return false;
   if (a.mw_min !== undefined && mw < a.mw_min) return false;
   if (a.mw_max !== undefined && mw >= a.mw_max) return false;
   return true;

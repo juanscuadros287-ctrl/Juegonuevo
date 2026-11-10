@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import type { SimConfig, SimData, CountrySimDef, TechnologyDef, StudyDef, SupplierDef, FindingDef, SupplyDef, ResearchDef, ClientsDef, CompetitorsDef } from '@voltaje/sim';
+import type { SimConfig, SimData, CountrySimDef, TechnologyDef, StudyDef, SupplierDef, FindingDef, SupplyDef, ResearchDef, ClientsDef, CompetitorsDef, MarketsDef } from '@voltaje/sim';
 import {
-  countrySchema, gameSchema, layerSchema, studiesFileSchema, suppliersFileSchema, technologySchema, researchFileSchema, clientsFileSchema, competitorsFileSchema,
+  countrySchema, gameSchema, layerSchema, studiesFileSchema, suppliersFileSchema, technologySchema, researchFileSchema, clientsFileSchema, competitorsFileSchema, marketsFileSchema,
   type CountryDef, type GameYaml, type LayerDef,
 } from './schemas';
 
@@ -36,6 +36,8 @@ export interface RawGameData {
   research?: unknown;
   clients?: unknown;
   competitors?: unknown;
+  /** Fase 4 */
+  markets?: unknown;
 }
 
 function byId<T extends { id: string }>(items: T[], file: string): Record<string, T> {
@@ -85,10 +87,16 @@ export function buildGameData(raw: RawGameData): GameData {
   const clients: ClientsDef | undefined = raw.clients !== undefined ? check(clientsFileSchema, raw.clients, 'clients.yaml') : undefined;
   const competitors: CompetitorsDef | undefined = raw.competitors !== undefined ? check(competitorsFileSchema, raw.competitors, 'competitors.yaml') : undefined;
 
-  const simCountries: Record<string, CountrySimDef> = {};
-  for (const c of Object.values(countries)) simCountries[c.iso3] = c;
+  const markets: MarketsDef | undefined = raw.markets !== undefined ? check(marketsFileSchema, raw.markets, 'markets.yaml') : undefined;
 
-  const simData: SimData = { technologies, studies, findings, suppliers, countries: simCountries, supply, research, clients, competitors };
+  const simCountries: Record<string, CountrySimDef> = {};
+  for (const c of Object.values(countries)) {
+    // Inflación de los precios en USD: la local si la moneda está fija al USD; si no, la del USD (paridad de poder de compra).
+    const pegged = c.tipo_cambio.volatilidad_anual === 0 && c.tipo_cambio.deriva_anual === 0 && !c.tipo_cambio.shock_prob_anual;
+    simCountries[c.iso3] = { ...c, inflacion_usd_anual: pegged ? c.inflacion_anual.base : markets?.inflacion_usd.base ?? 0.025 };
+  }
+
+  const simData: SimData = { technologies, studies, findings, suppliers, countries: simCountries, supply, research, clients, competitors, markets };
   checkReferences(simData);
 
   return {
@@ -130,6 +138,30 @@ export function checkReferences(d: SimData) {
     for (const ch of c.ppa.canales) for (const g of ch.requiere_permisos) if (!permitGroups.has(g)) fail(`countries/${c.iso3}: PPA ${ch.id} requiere permiso inexistente "${g}"`);
   }
   checkPhase3References(d);
+  checkPhase4References(d);
+}
+
+/** Tipos de modelo 3D (PlantKind de apps/game/src/models/types.ts). */
+export const PLANT_KINDS_VISUAL = ['solar_fv', 'csp', 'eolica_tierra', 'eolica_mar', 'geotermica', 'hidro_pasada', 'hidro_embalse', 'hidro_bombeo',
+  'biomasa', 'biogas', 'nuclear', 'smr', 'gas', 'carbon', 'petroleo', 'baterias', 'hidrogeno', 'subestacion', 'linea_transmision', 'eficiencia_industrial'];
+
+/** Referencias de la Fase 4: combustibles, modelos 3D, países de expansión, permisos por tecnología, hallazgos de pozos. */
+export function checkPhase4References(d: SimData) {
+  const fail = (msg: string) => { throw new DataError(msg); };
+  const fuels = new Set((d.markets?.combustibles ?? []).map((f) => f.id));
+  for (const t of Object.values(d.technologies)) {
+    if (t.visual && !PLANT_KINDS_VISUAL.includes(t.visual)) fail(`technologies/${t.id}: modelo 3D desconocido "${t.visual}"`);
+    if (t.combustible && d.markets && !fuels.has(t.combustible.tipo)) fail(`technologies/${t.id}: combustible "${t.combustible.tipo}" sin índice en markets.yaml`);
+  }
+  for (const c of Object.values(d.countries)) {
+    for (const [tipo, m] of Object.entries(c.combustibles ?? {})) if (d.markets && !fuels.has(m.indice)) fail(`countries/${c.iso3}: combustible ${tipo} usa índice inexistente "${m.indice}"`);
+    for (const t of c.restricciones?.tecnologias_prohibidas ?? []) if (!d.technologies[t]) fail(`countries/${c.iso3}: tecnología prohibida inexistente "${t}"`);
+    for (const p of c.permisos) for (const t of p.aplica.tecnologias ?? []) if (Object.keys(d.technologies).length && !d.technologies[t]) fail(`countries/${c.iso3}: permiso ${p.id} aplica a tecnología inexistente "${t}"`);
+    if (!c.finanzas.prestamistas.some((l) => l.tipo === 'comercial')) fail(`countries/${c.iso3}: falta un prestamista comercial`);
+  }
+  for (const s of Object.values(d.studies)) if (s.hallazgo_pozos_secos && !d.findings[s.hallazgo_pozos_secos]) fail(`studies.yaml/${s.id}: hallazgo inexistente "${s.hallazgo_pozos_secos}"`);
+  for (const c of d.competitors?.empresas ?? []) for (const iso of c.expansion?.paises ?? []) if (!d.countries[iso]) fail(`competitors.yaml/${c.id}: país de expansión sin datos "${iso}"`);
+  for (const s of d.competitors?.sitios_candidatos ?? []) if (Object.keys(d.countries).length > 1 && !d.countries[s.pais]) fail(`competitors.yaml: sitio ${s.nombre} en país sin datos "${s.pais}"`);
 }
 
 /** Referencias de la Fase 3: árbol de I+D (sin ciclos), clientes, competidores y curvas de precios. */

@@ -1,0 +1,392 @@
+# Colombia — Fase 4. Datos macro, de mercado y de permisos aproximados (2024–2025); ver docs/MOTOR_FASE4.md.
+iso3: COL
+nombre: Colombia
+iso_num: 170
+moneda: { codigo: COP, nombre: "Peso colombiano", usd_por_unidad: 0.000244 }
+tipo_cambio: { deriva_anual: 0, volatilidad_anual: 0.15, reversion_anual: 0.25, shock_prob_anual: 0.08, shock_magnitud: { min: 0.1, base: 0.2, max: 0.35, supuesto: "Devaluaciones históricas" }, fuente: "Banco de la República: COP muy volátil (2014–2016 −40 %, 2022 −20 %)" }
+inflacion_anual: { base: 0.05, fuente: "DANE / BanRep 2025 (≈ 5 %)" }
+prima_riesgo_pais: { base: 0.031, fuente: "Damodaran, Country Risk Premiums ene-2025 (aprox. según calificación Baa3/BB+)" }
+regulador: "CREG / MinEnergía / UPME"
+operador_sistema: "XM (Administrador del mercado)"
+mercado:
+  demanda_anual_twh: { base: 82, fuente: "XM 2024" }
+  pico_mw: { base: 11800, fuente: "XM 2024" }
+  precio_spot_medio_usd_mwh: { min: 45, base: 100, max: 250, fuente: "XM: precio de bolsa 2022–2024 ≈ 200–1.000 COP/kWh (El Niño 2024 > 900)" }
+  perfil_spot_mensual: [1.25, 1.30, 1.30, 1.15, 0.95, 0.85, 0.85, 0.90, 0.95, 0.90, 0.85, 1.05]
+  perfil_spot_fuente: "Supuesto: hidrología bimodal; bolsa cara en la sequía de dic–mar"
+  matriz: { hidro: 0.65, termica: 0.3, solar: 0.03, eolica: 0.01, otros: 0.01, fuente: "XM 2023" }
+  factor_punta: 1.3
+  factor_valle: 0.75
+  moneda_contratos: local
+
+perfil_recurso_mensual:
+  ghi: [1.08, 1.08, 1.02, 0.95, 0.95, 0.98, 1.05, 1.05, 1.00, 0.92, 0.92, 1.00]
+  dni: [1.15, 1.12, 1.00, 0.90, 0.90, 0.95, 1.05, 1.05, 1.00, 0.88, 0.88, 1.05]
+  viento_tierra: [1.30, 1.35, 1.30, 1.00, 0.95, 1.10, 1.20, 1.00, 0.75, 0.65, 0.70, 1.00]
+  hidro: [0.60, 0.55, 0.70, 1.10, 1.30, 1.15, 0.95, 0.90, 1.00, 1.25, 1.35, 0.95]
+  viento_mar: [1.30, 1.35, 1.30, 1.05, 0.90, 1.10, 1.20, 1.00, 0.75, 0.65, 0.70, 1.00]
+perfil_recurso_fuente: "Supuesto: alisios en La Guajira (dic–abr y jul); régimen hidrológico bimodal andino (IDEAM)"
+
+impuestos:
+  renta: { base: 0.35, fuente: "Estatuto Tributario (35 %) e IVA 19 %" }
+  depreciacion_anos: { base: 20, supuesto: "Vida fiscal de equipos de generación (aprox.)" }
+  itbms: { base: 0.19, fuente: "Estatuto Tributario (35 %) e IVA 19 %" }
+  arancel_general_equipos: { base: 0.05, supuesto: "Arancel típico de equipos eléctricos sin incentivo" }
+
+incentivos:
+  solar_fv:
+    descripcion: "Ley 1715 de 2014 y Ley 2099 de 2021: exclusión de IVA y aranceles y deducción del 50 % de la inversión en renta"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.1, fuente: "Ley 1715/2014 art. 11 (deducción del 50 % de la inversión ≈ 10–15 % de crédito; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  eolica_tierra:
+    descripcion: "Ley 1715 de 2014 y Ley 2099 de 2021: exclusión de IVA y aranceles y deducción del 50 % de la inversión en renta"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.1, fuente: "Ley 1715/2014 art. 11 (deducción del 50 % de la inversión ≈ 10–15 % de crédito; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  eolica_marina:
+    descripcion: "Ley 1715 de 2014 y Ley 2099 de 2021: exclusión de IVA y aranceles y deducción del 50 % de la inversión en renta"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.1, fuente: "Ley 1715/2014 art. 11 (deducción del 50 % de la inversión ≈ 10–15 % de crédito; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  hidro_pasada:
+    descripcion: "Ley 1715 de 2014 y Ley 2099 de 2021: exclusión de IVA y aranceles y deducción del 50 % de la inversión en renta"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.1, fuente: "Ley 1715/2014 art. 11 (deducción del 50 % de la inversión ≈ 10–15 % de crédito; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  geotermica:
+    descripcion: "Ley 1715 de 2014 y Ley 2099 de 2021: exclusión de IVA y aranceles y deducción del 50 % de la inversión en renta"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.1, fuente: "Ley 1715/2014 art. 11 (deducción del 50 % de la inversión ≈ 10–15 % de crédito; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  biomasa:
+    descripcion: "Ley 1715 de 2014 y Ley 2099 de 2021: exclusión de IVA y aranceles y deducción del 50 % de la inversión en renta"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.1, fuente: "Ley 1715/2014 art. 11 (deducción del 50 % de la inversión ≈ 10–15 % de crédito; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  biogas:
+    descripcion: "Ley 1715 de 2014 y Ley 2099 de 2021: exclusión de IVA y aranceles y deducción del 50 % de la inversión en renta"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.1, fuente: "Ley 1715/2014 art. 11 (deducción del 50 % de la inversión ≈ 10–15 % de crédito; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  baterias:
+    descripcion: "Ley 1715 de 2014 y Ley 2099 de 2021: exclusión de IVA y aranceles y deducción del 50 % de la inversión en renta"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.1, fuente: "Ley 1715/2014 art. 11 (deducción del 50 % de la inversión ≈ 10–15 % de crédito; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  hidrogeno_verde:
+    descripcion: "Ley 1715 de 2014 y Ley 2099 de 2021: exclusión de IVA y aranceles y deducción del 50 % de la inversión en renta"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.1, fuente: "Ley 1715/2014 art. 11 (deducción del 50 % de la inversión ≈ 10–15 % de crédito; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+
+costos:
+  factor_construccion_local: { min: 0.9, base: 1.0, max: 1.2, supuesto: "Mano de obra competitiva; seguridad en zonas rurales" }
+  prospeccion_usd: { base: 15000, supuesto: "Visita, catastro y reunión con propietarios" }
+  opcion_terreno_usd_ha_ano: { base: 60.0, supuesto: "≈ 10–15 % del arriendo" }
+  arriendo_terreno_usd_ha_ano: { base: 500, supuesto: "Arriendo rural para uso energético (orden de magnitud)" }
+  seguro_frac_capex_ano: { base: 0.0035, supuesto: "Seguro todo riesgo operativo" }
+  fraccion_costos_locales: 0.55
+
+finanzas:
+  tasa_libre_riesgo: { base: 0.043, fuente: "Bono del Tesoro de EE. UU. a 10 años (2025): la deuda se contrata en USD" }
+  prima_mercado_acciones: { base: 0.045, fuente: "Damodaran, implied ERP ene-2025" }
+  beta_renovables: 1.0
+  prima_etapa: { identificado: 0.08, estudios: 0.06, permisos: 0.035, cierre_financiero: 0.02, construccion: 0.01, puesta_en_marcha: 0.005, operacion: 0 }
+  prima_tecnologia: { eolica_tierra: 0.01, eolica_marina: 0.02, geotermica: 0.025, hidro_embalse: 0.02, csp: 0.02, nuclear: 0.03, smr: 0.04, hidrogeno_verde: 0.03, carbon: 0.02 }
+  prima_fuente: "Supuesto alineado con IEA Cost of Capital Observatory 2024 (primas por tecnología y madurez)"
+  prestamistas:
+    - id: banco_comercial
+      nombre: "Banco comercial local"
+      tipo: comercial
+      descripcion: "Bancos locales o regionales: rápidos; aceptan proyectos sin PPA con más cobertura."
+      spread: { min: 0.028, base: 0.036, max: 0.051, supuesto: "Banca colombiana en USD (SOFR + 3–5 %)" }
+      plazo_anos: 12
+      dscr_ppa: 1.30
+      dscr_merchant: 1.6
+      apalancamiento_max: 0.70
+      comision_estructuracion: 0.015
+      costo_asesores_usd: { min: 30000, base: 60000, max: 120000, supuesto: "Asesor legal, financiero e ingeniero independiente" }
+      diligencia_dias: { min: 60, base: 100, max: 180, supuesto: "Due diligence de banco local" }
+      prob_aprobacion: 0.8
+      requiere_ppa: false
+      sigma_recurso_max: 0.05
+      monto_min_usd: 2000000
+    - id: banco_desarrollo
+      nombre: "Findeter / IFC / BID Invest"
+      tipo: desarrollo
+      descripcion: "Banca de desarrollo con líneas verdes; exige PPA y consulta previa en regla."
+      spread: { min: 0.019, base: 0.024, max: 0.034, supuesto: "Préstamos A de multilaterales o agencias de crédito a la exportación (2024)" }
+      plazo_anos: 18
+      dscr_ppa: 1.25
+      dscr_merchant: 1.50
+      apalancamiento_max: 0.75
+      comision_estructuracion: 0.01
+      costo_asesores_usd: { min: 90000, base: 150000, max: 250000, supuesto: "Asesores + Normas de Desempeño IFC" }
+      diligencia_dias: { min: 120, base: 180, max: 300, supuesto: "Comités de crédito y revisión ambiental y social" }
+      prob_aprobacion: 0.78
+      requiere_ppa: true
+      sigma_recurso_max: 0.035
+      monto_min_usd: 15000000
+  socio_equity: { participacion_max: 0.8, prima_desarrollo_frac: 0.10, supuesto: "Fondos de infraestructura compran proyectos listos para construir con prima de 5–15 %" }
+  credito_emergencia: { tasa: 0.16, frac_valor_activos: 0.5, supuesto: "Línea corporativa de último recurso garantizada con activos" }
+
+construccion:
+  meses_lluviosos: [4, 5, 10, 11]
+  factor_avance_lluvia: 0.8
+  huelga_prob_mensual: 0.02
+  huelga_duracion_dias: { min: 5, base: 15, max: 45, supuesto: "Paros y bloqueos de comunidades (La Guajira 2022–2024)" }
+  clima_extremo_prob_mensual: 0.03
+  clima_extremo_dias: { min: 3, base: 7, max: 20, supuesto: "Lluvias intensas y deslizamientos" }
+  supuesto: "Supuesto: régimen bimodal (abr–may y oct–nov); bloqueos frecuentes en La Guajira"
+
+quiebra: { meses_caja_negativa: 3 }
+
+# Permisos como grafo (requiere.estudios = grupos de estudio; requiere.permisos = grupos de permiso). Ver docs/MOTOR_FASE4.md.
+permisos_fuente: "Decreto 1076 de 2015 (ANLA/CAR), Ley 21 de 1991 y Directiva Presidencial 08 de 2020 (consulta previa), Res. CREG 075 de 2021 (conexión); aproximado"
+permisos:
+  - id: uso_suelo
+    nombre: "Uso de suelo y licencia municipal"
+    grupo: uso_suelo
+    autoridad: "Municipio (POT)"
+    descripcion: "Compatibilidad del uso de suelo y licencia de construcción."
+    aplica: { excluye: [eficiencia_energetica, eolica_marina] }
+    requiere: { estudios: [prefactibilidad], permisos: [] }
+    costo_fijo_usd: { base: 5000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 60, base: 120, max: 300, supuesto: "Trámite municipal o estatal" }
+    prob: { aprobado: 0.8, rechazado: 0.07, info_adicional: 0.13, supuesto: "Trámite municipal o estatal" }
+    info_adicional: { retraso_dias: { min: 20, base: 45, max: 90, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: consulta_previa
+    nombre: "Consulta previa con comunidades étnicas"
+    grupo: consulta_previa
+    autoridad: "Dirección de la Autoridad Nacional de Consulta Previa (Mininterior)"
+    descripcion: "Certificación de presencia de comunidades y, si las hay, consulta previa libre e informada (Convenio 169 OIT). Alta incertidumbre: puede durar años."
+    aplica: { excluye: [eficiencia_energetica], mw_min: 10 }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 80000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 1500, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 450, max: 1100, supuesto: "La Guajira: decenas de comunidades wayuu por parque; consultas de 1–4 años" }
+    prob: { aprobado: 0.55, rechazado: 0.12, info_adicional: 0.33, supuesto: "La Guajira: decenas de comunidades wayuu por parque; consultas de 1–4 años" }
+    info_adicional: { retraso_dias: { min: 120, base: 240, max: 540, supuesto: "Subsanar observaciones" }, costo_usd: { base: 120000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 3
+    fuente: "Ley 21 de 1991; Decreto 1320 de 1998"
+  - id: licencia_ambiental_car
+    nombre: "Licencia ambiental regional (CAR)"
+    grupo: licencia_ambiental
+    autoridad: "Corporación Autónoma Regional"
+    descripcion: "Licencia ambiental de proyectos de 10 a 100 MW."
+    aplica: { excluye: [eficiencia_energetica, hidro_embalse, hidro_bombeo, carbon, eolica_marina, geotermica, nuclear, smr, gas_natural], mw_max: 100 }
+    requiere: { estudios: [eia], permisos: [consulta_previa] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 150, base: 270, max: 540, supuesto: "CAR con capacidad técnica desigual" }
+    prob: { aprobado: 0.7, rechazado: 0.08, info_adicional: 0.22, supuesto: "CAR con capacidad técnica desigual" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Decreto 1076 de 2015"
+  - id: licencia_ambiental_anla
+    nombre: "Licencia ambiental nacional (ANLA)"
+    grupo: licencia_ambiental
+    autoridad: "ANLA"
+    descripcion: "Licencia de proyectos ≥ 100 MW y de obras mayores (embalses, térmicas, eólica marina)."
+    aplica: { excluye: [eficiencia_energetica], mw_min: 100 }
+    requiere: { estudios: [eia], permisos: [consulta_previa] }
+    costo_fijo_usd: { base: 50000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 300, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 270, base: 450, max: 900, supuesto: "ANLA con alta carga de expedientes" }
+    prob: { aprobado: 0.62, rechazado: 0.12, info_adicional: 0.26, supuesto: "ANLA con alta carga de expedientes" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 40000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Decreto 1076 de 2015"
+  - id: licencia_ambiental_anla_mayor
+    nombre: "Licencia ambiental nacional de obra mayor (ANLA)"
+    grupo: licencia_ambiental
+    autoridad: "ANLA"
+    descripcion: "Embalses, térmicas, geotermia, eólica marina de cualquier tamaño < 100 MW."
+    aplica: { tecnologias: [hidro_embalse, hidro_bombeo, carbon, eolica_marina, geotermica, nuclear, smr, gas_natural], mw_max: 100 }
+    requiere: { estudios: [eia], permisos: [consulta_previa] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 300, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 270, base: 450, max: 900, supuesto: "Obras de alto impacto" }
+    prob: { aprobado: 0.62, rechazado: 0.12, info_adicional: 0.26, supuesto: "Obras de alto impacto" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 40000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Decreto 1076 de 2015"
+  - id: viabilidad_conexion
+    nombre: "Concepto de conexión (asignación de capacidad)"
+    grupo: viabilidad_conexion
+    autoridad: "UPME"
+    descripcion: "El operador de la red revisa el estudio de conexión y asigna capacidad."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [conexion], permisos: [] }
+    costo_fijo_usd: { base: 10000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 120, base: 300, max: 720, supuesto: "Red saturada: la UPME asigna capacidad por ventanas; muchas solicitudes se niegan" }
+    prob: { aprobado: 0.6, rechazado: 0.15, info_adicional: 0.25, supuesto: "Red saturada: la UPME asigna capacidad por ventanas; muchas solicitudes se niegan" }
+    info_adicional: { retraso_dias: { min: 45, base: 90, max: 180, supuesto: "Subsanar observaciones" }, costo_usd: { base: 15000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "Res. CREG 075 de 2021"
+  - id: contrato_acceso_red
+    nombre: "Contrato de conexión"
+    grupo: contrato_acceso_red
+    autoridad: "Operador de red / XM"
+    descripcion: "Contrato de conexión y garantía de cumplimiento."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [], permisos: [licencia_generacion, viabilidad_conexion] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 500, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 60, max: 150, supuesto: "Formalidad tras la asignación de capacidad" }
+    prob: { aprobado: 0.93, rechazado: 0.02, info_adicional: 0.05, supuesto: "Formalidad tras la asignación de capacidad" }
+    info_adicional: { retraso_dias: { min: 15, base: 30, max: 60, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: licencia_generacion
+    nombre: "Registro como generador y frontera comercial"
+    grupo: licencia_generacion
+    autoridad: "XM / CREG"
+    descripcion: "Habilitación para generar y vender energía."
+    aplica: { excluye: [eficiencia_energetica, linea_transmision, interconexion] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    costo_fijo_usd: { base: 20000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 60, base: 120, max: 240, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    prob: { aprobado: 0.85, rechazado: 0.04, info_adicional: 0.11, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Subsanar observaciones" }, costo_usd: { base: 8000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_agua
+    nombre: "Concesión de aguas"
+    grupo: concesion_agua
+    autoridad: "Corporación Autónoma Regional"
+    descripcion: "Concesión de uso de agua para generación con caudal ecológico."
+    aplica: { tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo] }
+    requiere: { estudios: [medicion_recurso], permisos: [] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 360, max: 720, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    prob: { aprobado: 0.68, rechazado: 0.12, info_adicional: 0.2, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_geotermica
+    nombre: "Concesión geotérmica"
+    grupo: concesion_geotermica
+    autoridad: "MinEnergía (Res. 40302 de 2022)"
+    descripcion: "Permiso de exploración y concesión de explotación del recurso geotérmico."
+    aplica: { tecnologias: [geotermica] }
+    requiere: { estudios: [], permisos: [] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 240, base: 450, max: 900, supuesto: "Áreas geotérmicas asignadas por la autoridad" }
+    prob: { aprobado: 0.7, rechazado: 0.1, info_adicional: 0.2, supuesto: "Áreas geotérmicas asignadas por la autoridad" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 30000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_maritima
+    nombre: "Concesión de espacio marítimo"
+    grupo: concesion_maritima
+    autoridad: "DIMAR / ANH"
+    descripcion: "Uso del lecho marino y la franja costera para turbinas y cables."
+    aplica: { tecnologias: [eolica_marina] }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 80000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 300, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 240, base: 450, max: 900, supuesto: "Marco reciente para eólica marina" }
+    prob: { aprobado: 0.6, rechazado: 0.15, info_adicional: 0.25, supuesto: "Marco reciente para eólica marina" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: servidumbre_transmision
+    nombre: "Servidumbres de la línea"
+    grupo: servidumbre
+    autoridad: "MinEnergía (utilidad pública)"
+    descripcion: "Declaratoria de utilidad pública y servidumbres a lo largo del trazado."
+    aplica: { tecnologias: [linea_transmision, interconexion] }
+    requiere: { estudios: [trazado], permisos: [licencia_ambiental] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 60, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 150, base: 300, max: 600, supuesto: "Oposición de propietarios" }
+    prob: { aprobado: 0.72, rechazado: 0.1, info_adicional: 0.18, supuesto: "Oposición de propietarios" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: acuerdo_interconexion
+    nombre: "Autorización de interconexión internacional"
+    grupo: acuerdo_interconexion
+    autoridad: "MinEnergía / CREG"
+    descripcion: "Acuerdo binacional y registro ante el regulador del otro país."
+    aplica: { tecnologias: [interconexion] }
+    requiere: { estudios: [], permisos: [servidumbre] }
+    costo_fijo_usd: { base: 150000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 100, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 300, base: 600, max: 1200, supuesto: "Depende de la política de ambos gobiernos" }
+    prob: { aprobado: 0.55, rechazado: 0.15, info_adicional: 0.3, supuesto: "Depende de la política de ambos gobiernos" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+
+ppa:
+  canales:
+    - id: subasta_largo_plazo
+      nombre: "Subasta de contratos de largo plazo (MinEnergía/UPME)"
+      descripcion: "Subasta pública de energía para comercializadores, en pesos indexados al IPP."
+      precio_usd_mwh: { min: 38, base: 48, max: 65, supuesto: "Subasta CLPE 2021: ≈ 155 COP/kWh (≈ 40–45 USD/MWh)" }
+      plazo_anos: 15
+      indexacion_anual: 0.03
+      duracion_dias: { min: 240, base: 360, max: 540, supuesto: "Convocatoria, oferta y adjudicación o negociación" }
+      prob_exito: 0.35
+      costo_usd: { base: 60000, supuesto: "Preparación de oferta y garantía" }
+      mw_min: 5
+      mw_max: 500
+      requiere_permisos: [viabilidad_conexion]
+      plazo_cod_meses: 36
+      multa_usd_mw_mes: 1500
+      moneda: local
+    - id: contrato_bilateral
+      nombre: "Contrato bilateral con comercializador"
+      descripcion: "PPA en pesos con un comercializador o gran consumidor no regulado."
+      precio_usd_mwh: { min: 50, base: 62, max: 80, supuesto: "Contratos bilaterales 2024 ≈ 250–330 COP/kWh" }
+      plazo_anos: 10
+      indexacion_anual: 0.04
+      duracion_dias: { min: 90, base: 150, max: 270, supuesto: "Convocatoria, oferta y adjudicación o negociación" }
+      prob_exito: 0.5
+      costo_usd: { base: 25000, supuesto: "Preparación de oferta y garantía" }
+      mw_min: 1
+      mw_max: 100
+      requiere_permisos: [licencia_ambiental]
+      plazo_cod_meses: 30
+      multa_usd_mw_mes: 1000
+      moneda: local
+
+expansion:
+  constitucion_usd: { min: 15000, base: 25000, max: 50000, supuesto: "SAS colombiana, RUT y registro como agente ante XM" }
+  dias: { min: 38, base: 75, max: 188, supuesto: "SAS colombiana, RUT y registro como agente ante XM" }
+  representante_mensual_usd: { min: 2400, base: 4000, max: 8000, supuesto: "Representante legal, contador y gestor local" }
+combustibles:
+  gas_natural: { indice: gas_natural, factor: 2.2, supuesto: "Gas doméstico escaso + importaciones por la regasificadora de Cartagena" }
+  carbon: { indice: carbon, factor: 0.6, supuesto: "Carbón nacional barato (Cesar, Guajira)" }
+  fueloil: { indice: fueloil, factor: 1.0, supuesto: "Ecopetrol" }
+carbono: { precio_usd_tco2: { base: 6, fuente: "Impuesto al carbono de Colombia (Ley 1819 de 2016) ≈ 25.000 COP/tCO2 (2025)" }, crecimiento_anual: 0.03 }
+
+restricciones:
+  tecnologias_prohibidas: [nuclear, smr]
+  motivo: "Colombia no tiene marco para generación nuclear"
+  supuesto: "Sin ley nuclear de potencia (2025)"
+notas: "Consulta previa con alta incertidumbre; la red de La Guajira está saturada. Datos aproximados."

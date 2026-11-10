@@ -1,0 +1,363 @@
+# Filipinas — Fase 4. Datos macro, de mercado y de permisos aproximados (2024–2025); ver docs/MOTOR_FASE4.md.
+iso3: PHL
+nombre: Filipinas
+iso_num: 608
+moneda: { codigo: PHP, nombre: "Peso filipino", usd_por_unidad: 0.0175 }
+tipo_cambio: { deriva_anual: -0.005, volatilidad_anual: 0.06, reversion_anual: 0.3, shock_prob_anual: 0.03, shock_magnitud: { min: 0.08, base: 0.15, max: 0.3, supuesto: "Devaluaciones históricas" }, fuente: "BSP: depreciación gradual; crisis asiática de 1997 (−40 %)" }
+inflacion_anual: { base: 0.03, fuente: "BSP 2025 (meta 2–4 %)" }
+prima_riesgo_pais: { base: 0.021, fuente: "Damodaran, Country Risk Premiums ene-2025 (aprox. según calificación Baa2/BBB+)" }
+regulador: "ERC / DOE"
+operador_sistema: "NGCP / IEMOP (WESM)"
+mercado:
+  demanda_anual_twh: { base: 120, fuente: "DOE Power Statistics 2024" }
+  pico_mw: { base: 17000, fuente: "DOE Power Statistics 2024" }
+  precio_spot_medio_usd_mwh: { min: 60, base: 95, max: 180, fuente: "IEMOP: precio WESM 2023–2024 ≈ 5–7 PHP/kWh" }
+  perfil_spot_mensual: [0.90, 0.95, 1.05, 1.25, 1.30, 1.10, 0.95, 0.90, 0.90, 0.90, 0.90, 0.90]
+  perfil_spot_fuente: "Supuesto: pico de demanda en el verano seco (abr–may)"
+  matriz: { carbon: 0.6, gas: 0.15, geotermia: 0.09, hidro: 0.08, solar: 0.03, otros: 0.05, fuente: "DOE 2023" }
+  factor_punta: 1.4
+  factor_valle: 0.7
+  moneda_contratos: local
+
+perfil_recurso_mensual:
+  ghi: [0.95, 1.05, 1.15, 1.20, 1.12, 0.95, 0.88, 0.85, 0.92, 0.95, 0.95, 0.92]
+  viento_tierra: [1.40, 1.30, 1.10, 0.80, 0.60, 0.70, 0.90, 0.95, 0.75, 0.90, 1.20, 1.40]
+  hidro: [0.80, 0.60, 0.50, 0.45, 0.60, 1.00, 1.35, 1.50, 1.45, 1.30, 1.20, 1.10]
+  dni: [0.95, 1.05, 1.15, 1.20, 1.12, 0.95, 0.88, 0.85, 0.92, 0.95, 0.95, 0.92]
+perfil_recurso_fuente: "Supuesto: monzón del noreste (amihan) con viento fuerte en invierno; lluvias del suroeste (jun–oct)"
+
+impuestos:
+  renta: { base: 0.25, fuente: "Ley CREATE (25 %) e IVA 12 %" }
+  depreciacion_anos: { base: 15, supuesto: "Vida fiscal de equipos de generación (aprox.)" }
+  itbms: { base: 0.12, fuente: "Ley CREATE (25 %) e IVA 12 %" }
+  arancel_general_equipos: { base: 0.03, supuesto: "Arancel típico de equipos eléctricos sin incentivo" }
+
+incentivos:
+  solar_fv:
+    descripcion: "RE Act 2008 (RA 9513): exención del impuesto a la renta 7 años, IVA cero e importación libre de equipos"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "RA 9513 (ITH de 7 años ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  eolica_tierra:
+    descripcion: "RE Act 2008 (RA 9513): exención del impuesto a la renta 7 años, IVA cero e importación libre de equipos"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "RA 9513 (ITH de 7 años ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  geotermica:
+    descripcion: "RE Act 2008 (RA 9513): exención del impuesto a la renta 7 años, IVA cero e importación libre de equipos"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "RA 9513 (ITH de 7 años ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  hidro_pasada:
+    descripcion: "RE Act 2008 (RA 9513): exención del impuesto a la renta 7 años, IVA cero e importación libre de equipos"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "RA 9513 (ITH de 7 años ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  biomasa:
+    descripcion: "RE Act 2008 (RA 9513): exención del impuesto a la renta 7 años, IVA cero e importación libre de equipos"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "RA 9513 (ITH de 7 años ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  biogas:
+    descripcion: "RE Act 2008 (RA 9513): exención del impuesto a la renta 7 años, IVA cero e importación libre de equipos"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "RA 9513 (ITH de 7 años ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+  eolica_marina:
+    descripcion: "RE Act 2008 (RA 9513): exención del impuesto a la renta 7 años, IVA cero e importación libre de equipos"
+    arancel_exento: true
+    itbms_exento: true
+    credito_fiscal_frac_inversion: { base: 0.08, fuente: "RA 9513 (ITH de 7 años ≈ 8 % de la inversión en valor presente; aprox.)" }
+    credito_max_frac_impuesto: 0.5
+
+costos:
+  factor_construccion_local: { min: 0.85, base: 0.95, max: 1.14, supuesto: "Mano de obra barata; tifones encarecen el seguro" }
+  prospeccion_usd: { base: 8000, supuesto: "Visita, catastro y reunión con propietarios" }
+  opcion_terreno_usd_ha_ano: { base: 36.0, supuesto: "≈ 10–15 % del arriendo" }
+  arriendo_terreno_usd_ha_ano: { base: 300, supuesto: "Arriendo rural para uso energético (orden de magnitud)" }
+  seguro_frac_capex_ano: { base: 0.0045, supuesto: "Seguro todo riesgo operativo" }
+  fraccion_costos_locales: 0.5
+
+finanzas:
+  tasa_libre_riesgo: { base: 0.043, fuente: "Bono del Tesoro de EE. UU. a 10 años (2025): la deuda se contrata en USD" }
+  prima_mercado_acciones: { base: 0.045, fuente: "Damodaran, implied ERP ene-2025" }
+  beta_renovables: 1.0
+  prima_etapa: { identificado: 0.08, estudios: 0.06, permisos: 0.035, cierre_financiero: 0.02, construccion: 0.01, puesta_en_marcha: 0.005, operacion: 0 }
+  prima_tecnologia: { eolica_tierra: 0.01, eolica_marina: 0.02, geotermica: 0.025, hidro_embalse: 0.02, csp: 0.02, nuclear: 0.03, smr: 0.04, hidrogeno_verde: 0.03, carbon: 0.02 }
+  prima_fuente: "Supuesto alineado con IEA Cost of Capital Observatory 2024 (primas por tecnología y madurez)"
+  prestamistas:
+    - id: banco_comercial
+      nombre: "Banco comercial local"
+      tipo: comercial
+      descripcion: "Bancos locales o regionales: rápidos; aceptan proyectos sin PPA con más cobertura."
+      spread: { min: 0.022, base: 0.03, max: 0.045, supuesto: "Bancos filipinos en USD (SOFR + 2,5–4 %)" }
+      plazo_anos: 12
+      dscr_ppa: 1.30
+      dscr_merchant: 1.6
+      apalancamiento_max: 0.70
+      comision_estructuracion: 0.015
+      costo_asesores_usd: { min: 30000, base: 60000, max: 120000, supuesto: "Asesor legal, financiero e ingeniero independiente" }
+      diligencia_dias: { min: 60, base: 100, max: 180, supuesto: "Due diligence de banco local" }
+      prob_aprobacion: 0.8
+      requiere_ppa: false
+      sigma_recurso_max: 0.05
+      monto_min_usd: 2000000
+    - id: banco_desarrollo
+      nombre: "ADB / IFC"
+      tipo: desarrollo
+      descripcion: "Banco Asiático de Desarrollo con contrato GEA o PPA bilateral."
+      spread: { min: 0.015, base: 0.02, max: 0.03, supuesto: "Préstamos A de multilaterales o agencias de crédito a la exportación (2024)" }
+      plazo_anos: 18
+      dscr_ppa: 1.25
+      dscr_merchant: 1.50
+      apalancamiento_max: 0.75
+      comision_estructuracion: 0.01
+      costo_asesores_usd: { min: 90000, base: 150000, max: 250000, supuesto: "Asesores + Normas de Desempeño IFC" }
+      diligencia_dias: { min: 120, base: 180, max: 300, supuesto: "Comités de crédito y revisión ambiental y social" }
+      prob_aprobacion: 0.78
+      requiere_ppa: true
+      sigma_recurso_max: 0.035
+      monto_min_usd: 15000000
+  socio_equity: { participacion_max: 0.8, prima_desarrollo_frac: 0.10, supuesto: "Fondos de infraestructura compran proyectos listos para construir con prima de 5–15 %" }
+  credito_emergencia: { tasa: 0.13, frac_valor_activos: 0.5, supuesto: "Línea corporativa de último recurso garantizada con activos" }
+
+construccion:
+  meses_lluviosos: [6, 7, 8, 9, 10]
+  factor_avance_lluvia: 0.8
+  huelga_prob_mensual: 0.005
+  huelga_duracion_dias: { min: 3, base: 7, max: 15, supuesto: "Protestas puntuales" }
+  clima_extremo_prob_mensual: 0.07
+  clima_extremo_dias: { min: 3, base: 10, max: 30, supuesto: "Tifones (≈ 20 por año)" }
+  supuesto: "Supuesto: monzón del suroeste y tifones de junio a octubre"
+
+quiebra: { meses_caja_negativa: 3 }
+
+# Permisos como grafo (requiere.estudios = grupos de estudio; requiere.permisos = grupos de permiso). Ver docs/MOTOR_FASE4.md.
+permisos_fuente: "RA 9513 (RE Act), PD 1586 (ECC), RA 8371 (IPRA, FPIC), EPIRA (RA 9136); aproximado"
+permisos:
+  - id: uso_suelo
+    nombre: "Uso de suelo y licencia municipal"
+    grupo: uso_suelo
+    autoridad: "LGU (endoso municipal y provincial)"
+    descripcion: "Compatibilidad del uso de suelo y licencia de construcción."
+    aplica: { excluye: [eficiencia_energetica, eolica_marina] }
+    requiere: { estudios: [prefactibilidad], permisos: [] }
+    costo_fijo_usd: { base: 5000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 90, max: 240, supuesto: "Trámite municipal o estatal" }
+    prob: { aprobado: 0.85, rechazado: 0.05, info_adicional: 0.1, supuesto: "Trámite municipal o estatal" }
+    info_adicional: { retraso_dias: { min: 20, base: 45, max: 90, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: contrato_servicio_doe
+    nombre: "Contrato de servicio de energía renovable (RESC)"
+    grupo: contrato_servicio
+    autoridad: "DOE"
+    descripcion: "Contrato de servicio con el DOE: etapa de predesarrollo y declaración de comercialidad."
+    aplica: { excluye: [eficiencia_energetica, linea_transmision, interconexion, gas_natural, carbon, petroleo, baterias, hidrogeno_verde, nuclear, smr] }
+    requiere: { estudios: [prefactibilidad], permisos: [] }
+    costo_fijo_usd: { base: 20000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 100, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 90, base: 180, max: 365, supuesto: "El DOE otorga áreas de contrato" }
+    prob: { aprobado: 0.82, rechazado: 0.05, info_adicional: 0.13, supuesto: "El DOE otorga áreas de contrato" }
+    info_adicional: { retraso_dias: { min: 60, base: 90, max: 180, supuesto: "Subsanar observaciones" }, costo_usd: { base: 10000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "RA 9513"
+  - id: fpic
+    nombre: "Consentimiento libre, previo e informado (FPIC)"
+    grupo: consulta_indigena
+    autoridad: "NCIP (Comisión Nacional de Pueblos Indígenas)"
+    descripcion: "Certificación de no superposición o FPIC con los pueblos indígenas del dominio ancestral. Muy incierto."
+    aplica: { excluye: [eficiencia_energetica], mw_min: 10 }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 60000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 800, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 450, max: 1100, supuesto: "El FPIC dura 1–4 años y a veces se niega" }
+    prob: { aprobado: 0.55, rechazado: 0.15, info_adicional: 0.3, supuesto: "El FPIC dura 1–4 años y a veces se niega" }
+    info_adicional: { retraso_dias: { min: 120, base: 240, max: 540, supuesto: "Subsanar observaciones" }, costo_usd: { base: 80000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 3
+    fuente: "RA 8371 (IPRA) y NCIP AO 3-2012"
+  - id: licencia_ambiental
+    nombre: "Certificado de cumplimiento ambiental (ECC)"
+    grupo: licencia_ambiental
+    autoridad: "DENR-EMB"
+    descripcion: "Certificado de cumplimiento ambiental del sistema EIS."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [eia], permisos: [consulta_indigena] }
+    costo_fijo_usd: { base: 10000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 90, base: 180, max: 365, supuesto: "Proceso conocido" }
+    prob: { aprobado: 0.75, rechazado: 0.07, info_adicional: 0.18, supuesto: "Proceso conocido" }
+    info_adicional: { retraso_dias: { min: 60, base: 90, max: 180, supuesto: "Subsanar observaciones" }, costo_usd: { base: 12000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "PD 1586"
+  - id: viabilidad_conexion
+    nombre: "Estudio de impacto en el sistema (SIS)"
+    grupo: viabilidad_conexion
+    autoridad: "NGCP"
+    descripcion: "El operador de la red revisa el estudio de conexión y asigna capacidad."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [conexion], permisos: [] }
+    costo_fijo_usd: { base: 10000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 120, base: 240, max: 450, supuesto: "Estudios del operador de red" }
+    prob: { aprobado: 0.72, rechazado: 0.1, info_adicional: 0.18, supuesto: "Estudios del operador de red" }
+    info_adicional: { retraso_dias: { min: 45, base: 90, max: 180, supuesto: "Subsanar observaciones" }, costo_usd: { base: 15000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: contrato_acceso_red
+    nombre: "Contrato de conexión"
+    grupo: contrato_acceso_red
+    autoridad: "NGCP"
+    descripcion: "Contrato de conexión y garantía de cumplimiento."
+    aplica: { excluye: [eficiencia_energetica] }
+    requiere: { estudios: [], permisos: [licencia_generacion, viabilidad_conexion] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 500, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 30, base: 60, max: 150, supuesto: "Formalidad tras la asignación de capacidad" }
+    prob: { aprobado: 0.93, rechazado: 0.02, info_adicional: 0.05, supuesto: "Formalidad tras la asignación de capacidad" }
+    info_adicional: { retraso_dias: { min: 15, base: 30, max: 60, supuesto: "Subsanar observaciones" }, costo_usd: { base: 3000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: licencia_generacion
+    nombre: "Certificado de cumplimiento (COC) de la ERC"
+    grupo: licencia_generacion
+    autoridad: "ERC"
+    descripcion: "Habilitación para generar y vender energía."
+    aplica: { excluye: [eficiencia_energetica, linea_transmision, interconexion] }
+    requiere: { estudios: [factibilidad], permisos: [licencia_ambiental, viabilidad_conexion, uso_suelo] }
+    costo_fijo_usd: { base: 20000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 90, base: 180, max: 365, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    prob: { aprobado: 0.8, rechazado: 0.06, info_adicional: 0.14, supuesto: "Trámite reglado si los demás permisos están en orden" }
+    info_adicional: { retraso_dias: { min: 30, base: 60, max: 120, supuesto: "Subsanar observaciones" }, costo_usd: { base: 8000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+    fuente: "EPIRA (RA 9136)"
+  - id: concesion_agua
+    nombre: "Concesión de aguas"
+    grupo: concesion_agua
+    autoridad: "NWRB (permiso de agua)"
+    descripcion: "Concesión de uso de agua para generación con caudal ecológico."
+    aplica: { tecnologias: [hidro_pasada, hidro_embalse, hidro_bombeo] }
+    requiere: { estudios: [medicion_recurso], permisos: [] }
+    costo_fijo_usd: { base: 15000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 150, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 180, base: 360, max: 720, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    prob: { aprobado: 0.68, rechazado: 0.12, info_adicional: 0.2, supuesto: "Conflictos de uso del agua y caudal ecológico" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_geotermica
+    nombre: "Concesión geotérmica"
+    grupo: concesion_geotermica
+    autoridad: "DOE (contrato de servicio geotérmico)"
+    descripcion: "Permiso de exploración y concesión de explotación del recurso geotérmico."
+    aplica: { tecnologias: [geotermica] }
+    requiere: { estudios: [], permisos: [] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 200, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 240, base: 450, max: 900, supuesto: "Áreas geotérmicas asignadas por la autoridad" }
+    prob: { aprobado: 0.7, rechazado: 0.1, info_adicional: 0.2, supuesto: "Áreas geotérmicas asignadas por la autoridad" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 30000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: concesion_maritima
+    nombre: "Concesión de espacio marítimo"
+    grupo: concesion_maritima
+    autoridad: "DOE / PPA (Philippine Ports Authority) / DENR"
+    descripcion: "Uso del lecho marino y la franja costera para turbinas y cables."
+    aplica: { tecnologias: [eolica_marina] }
+    requiere: { estudios: [eia], permisos: [] }
+    costo_fijo_usd: { base: 80000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 300, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 240, base: 450, max: 900, supuesto: "Marco reciente para eólica marina" }
+    prob: { aprobado: 0.6, rechazado: 0.15, info_adicional: 0.25, supuesto: "Marco reciente para eólica marina" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: servidumbre_transmision
+    nombre: "Servidumbres de la línea"
+    grupo: servidumbre
+    autoridad: "NGCP / TransCo"
+    descripcion: "Declaratoria de utilidad pública y servidumbres a lo largo del trazado."
+    aplica: { tecnologias: [linea_transmision, interconexion] }
+    requiere: { estudios: [trazado], permisos: [licencia_ambiental] }
+    costo_fijo_usd: { base: 40000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 60, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 150, base: 300, max: 600, supuesto: "Oposición de propietarios" }
+    prob: { aprobado: 0.72, rechazado: 0.1, info_adicional: 0.18, supuesto: "Oposición de propietarios" }
+    info_adicional: { retraso_dias: { min: 60, base: 120, max: 240, supuesto: "Subsanar observaciones" }, costo_usd: { base: 20000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+  - id: acuerdo_interconexion
+    nombre: "Autorización de interconexión internacional"
+    grupo: acuerdo_interconexion
+    autoridad: "DOE / ERC"
+    descripcion: "Acuerdo binacional y registro ante el regulador del otro país."
+    aplica: { tecnologias: [interconexion] }
+    requiere: { estudios: [], permisos: [servidumbre] }
+    costo_fijo_usd: { base: 150000, supuesto: "Tasas, asesores y garantías" }
+    costo_usd_mw: { base: 100, supuesto: "Escala con el tamaño" }
+    duracion_dias: { min: 300, base: 600, max: 1200, supuesto: "Depende de la política de ambos gobiernos" }
+    prob: { aprobado: 0.55, rechazado: 0.15, info_adicional: 0.3, supuesto: "Depende de la política de ambos gobiernos" }
+    info_adicional: { retraso_dias: { min: 90, base: 180, max: 360, supuesto: "Subsanar observaciones" }, costo_usd: { base: 50000, supuesto: "Consultores y abogados" } }
+    reintentable: true
+    max_intentos_info: 2
+
+ppa:
+  canales:
+    - id: gea_doe
+      nombre: "Subasta de energía verde (GEA, DOE)"
+      descripcion: "Subasta del DOE con tarifa en pesos por 20 años."
+      precio_usd_mwh: { min: 60, base: 78, max: 100, supuesto: "GEA-1 (2022): solar ≈ 4,4 PHP/kWh; GEA-2 (2023) ≈ 4,5–6 PHP/kWh" }
+      plazo_anos: 20
+      indexacion_anual: 0.0
+      duracion_dias: { min: 180, base: 300, max: 540, supuesto: "Convocatoria, oferta y adjudicación o negociación" }
+      prob_exito: 0.4
+      costo_usd: { base: 40000, supuesto: "Preparación de oferta y garantía" }
+      mw_min: 5
+      mw_max: 400
+      requiere_permisos: [viabilidad_conexion]
+      plazo_cod_meses: 36
+      multa_usd_mw_mes: 1500
+      moneda: local
+    - id: contrato_distribuidora
+      nombre: "Contrato bilateral con distribuidora (Meralco, cooperativas)"
+      descripcion: "PSA en pesos aprobado por la ERC."
+      precio_usd_mwh: { min: 70, base: 88, max: 110, supuesto: "PSA 2023–2024 ≈ 5–6,5 PHP/kWh" }
+      plazo_anos: 15
+      indexacion_anual: 0.02
+      duracion_dias: { min: 180, base: 300, max: 540, supuesto: "Convocatoria, oferta y adjudicación o negociación" }
+      prob_exito: 0.45
+      costo_usd: { base: 30000, supuesto: "Preparación de oferta y garantía" }
+      mw_min: 1
+      mw_max: 300
+      requiere_permisos: [licencia_ambiental]
+      plazo_cod_meses: 36
+      multa_usd_mw_mes: 1200
+      moneda: local
+
+expansion:
+  constitucion_usd: { min: 9000, base: 15000, max: 30000, supuesto: "Corporación filipina (60/40 para recursos naturales salvo renovables desde 2022)" }
+  dias: { min: 38, base: 75, max: 188, supuesto: "Corporación filipina (60/40 para recursos naturales salvo renovables desde 2022)" }
+  representante_mensual_usd: { min: 1800, base: 3000, max: 6000, supuesto: "Representante legal, contador y gestor local" }
+combustibles:
+  carbon: { indice: carbon, factor: 1.0, supuesto: "Carbón indonesio" }
+  gas_natural: { indice: gnl, factor: 1.0, supuesto: "GNL tras el agotamiento de Malampaya" }
+  fueloil: { indice: fueloil, factor: 1.05, supuesto: "Importado" }
+
+restricciones:
+  tecnologias_prohibidas: [nuclear, smr]
+  motivo: "Ley nuclear (PhilATOM) en implementación: aún no hay licencias de potencia"
+  supuesto: "Situación 2025 (aprox.)"
+notas: "Segundo productor geotérmico del mundo en Asia. Tifones frecuentes. Datos aproximados."

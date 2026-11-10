@@ -1,0 +1,66 @@
+# Almacenamiento por bombeo entre dos embalses (turbinas reversibles).
+id: hidro_bombeo
+nombre: Hidro de bombeo
+categoria: almacenamiento
+modelo_fc: almacenamiento
+visual: hidro_bombeo
+
+capex_usd_kw: { min: 1800, base: 2500, max: 4500, fuente: "NREL ATB 2024 (bombeo 8–10 h ≈ 2.500–3.500 USD/kW); IRENA 2020" }
+desglose_capex: { equipos: 0.3, epc: 0.55, otros: 0.15, fuente: "NREL 2023 PSH cost model: obra civil dominante" }
+om_fijo_usd_kw_ano: { min: 15, base: 30, max: 50, fuente: "NREL ATB 2024" }
+om_variable_usd_mwh: { min: 0, base: 0.5, max: 2, supuesto: "Consumibles" }
+factor_capacidad_ref: { min: 0.15, base: 0.23, max: 0.35, supuesto: "250 ciclos × 8 h / 8.760 h" }
+vida_util_anos: { min: 40, base: 50, max: 80, fuente: "NREL ATB 2024" }
+degradacion_anual: { min: 0, base: 0.0005, max: 0.002, supuesto: "Desgaste de unidades" }
+construccion_meses: { min: 42, base: 54, max: 84, fuente: "IHA 2023: 4–7 años" }
+puesta_en_marcha_dias: { min: 45, base: 90, max: 150, supuesto: "Llenado y pruebas en modo bomba y turbina" }
+emisiones_gco2_kwh: { min: 5, base: 20, max: 40, supuesto: "Obras civiles; sin contar la energía de bombeo" }
+uso_suelo_ha_mw: { min: 1, base: 2, max: 6, supuesto: "Dos embalses" }
+escala_mw: { min: 50, max: 2000, tipico: 400 }
+
+sigma_recurso_sitio: 0.02
+variabilidad: { diaria: 0.02, interanual: 0.01, supuesto: "Sin recurso variable" }
+
+fallas:
+  eventos_ano_por_mw: { min: 0.001, base: 0.003, max: 0.008, supuesto: "Unidades reversibles" }
+  fraccion_afectada: { min: 0.1, base: 0.3, max: 1.0, supuesto: "Una unidad" }
+  duracion_dias: { min: 3, base: 15, max: 90, supuesto: "Reparación" }
+  costo_reparacion_usd_kw: { min: 5, base: 25, max: 120, supuesto: "Repuestos" }
+mantenimiento:
+  programado_perdida: 0.03
+  preventivo_om_factor: 1.05
+  preventivo_fallas_factor: 0.6
+  correctivo_om_factor: 0.95
+  supuesto: "Mantenimiento anual"
+costo_desmantelamiento_frac_capex: { min: 0.02, base: 0.05, max: 0.1, supuesto: "Cierre" }
+
+estudios_requeridos: [prefactibilidad, geotecnia_presa, factibilidad, eia, conexion]
+
+hitos_construccion:
+  - { id: embalses, nombre: "Embalses superior e inferior", fraccion: 0.4, sensible_lluvia: true }
+  - { id: conducciones, nombre: "Túneles y tubería forzada", fraccion: 0.25, sensible_lluvia: true }
+  - { id: electromecanico, nombre: "Turbinas-bomba", fraccion: 0.25, requiere_equipos: true }
+  - { id: pruebas, nombre: "Llenado y pruebas", fraccion: 0.1 }
+
+riesgos:
+  - { id: geologico, nombre: "Riesgo geológico", descripcion: "Túneles y presas en terreno montañoso." }
+  - { id: arbitraje, nombre: "Diferencial de precios", descripcion: "Sin diferencial punta/valle el bombeo no se paga." }
+
+sitio:
+  superficie: tierra
+  relieve_min: 0.4
+  agua_indice_min: 12
+  supuesto: "Necesita desnivel (relieve) y agua para llenar los embalses"
+
+almacenamiento:
+  eficiencia_ida_vuelta: { min: 0.7, base: 0.78, max: 0.82, fuente: "IHA / NREL ATB 2024 (75–82 %)" }
+  horas: { min: 6, base: 8, max: 12, fuente: "NREL ATB 2024" }
+  ciclos_ano_max: 250
+  degradacion_por_ciclo: 0
+
+riesgo_obra:
+  sobrecosto_prob_factor: 1.6
+  sobrecosto_magnitud_factor: 1.6
+  retraso_prob_mensual: 0.04
+  retraso_dias: { min: 15, base: 45, max: 150, supuesto: "Geología" }
+  supuesto: "Similar a hidro con embalse"

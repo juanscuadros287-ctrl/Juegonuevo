@@ -142,7 +142,8 @@ export interface GeothermalDef {
 
 export type StudyOutcome = 'normal' | 'peor' | 'bloqueo';
 
-export interface Applicability { tecnologias?: string[]; mw_min?: number; mw_max?: number }
+/** Fase 4: `excluye` = tecnologías a las que NO aplica (p. ej. un permiso de red que no aplica a la eficiencia energética). */
+export interface Applicability { tecnologias?: string[]; mw_min?: number; mw_max?: number; excluye?: string[] }
 
 export interface FindingDef {
   id: string;
