@@ -11,7 +11,7 @@ operador_sistema: "XM (Administrador del mercado)"
 mercado:
   demanda_anual_twh: { base: 82, fuente: "XM 2024" }
   pico_mw: { base: 11800, fuente: "XM 2024" }
-  precio_spot_medio_usd_mwh: { min: 45, base: 100, max: 250, fuente: "XM: precio de bolsa 2022–2024 ≈ 200–1.000 COP/kWh (El Niño 2024 > 900)" }
+  precio_spot_medio_usd_mwh: { min: 35, base: 65, max: 250, fuente: "XM: precio de bolsa de largo plazo ≈ 200–300 COP/kWh (≈ 50–75 USD/MWh); picos de 900+ con El Niño (2024)" }
   perfil_spot_mensual: [1.25, 1.30, 1.30, 1.15, 0.95, 0.85, 0.85, 0.90, 0.95, 0.90, 0.85, 1.05]
   perfil_spot_fuente: "Supuesto: hidrología bimodal; bolsa cara en la sequía de dic–mar"
   matriz: { hidro: 0.65, termica: 0.3, solar: 0.03, eolica: 0.01, otros: 0.01, fuente: "XM 2023" }

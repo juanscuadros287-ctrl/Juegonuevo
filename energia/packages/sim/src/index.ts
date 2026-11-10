@@ -42,3 +42,4 @@ export * from './tech/siting';
 export * from './market/macro';
 export * from './business/presence';
 export * from './selectorsWorld';
+export { projectDaily, projectMonthly } from './project/tick';

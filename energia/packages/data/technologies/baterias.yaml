@@ -34,7 +34,7 @@ mantenimiento:
   supuesto: "Mantenimiento del sistema térmico y de control"
 costo_desmantelamiento_frac_capex: { min: 0.02, base: 0.04, max: 0.08, supuesto: "Reciclaje de celdas" }
 
-estudios_requeridos: [prefactibilidad, eia, conexion]
+estudios_requeridos: [prefactibilidad, factibilidad, eia, conexion]
 
 hitos_construccion:
   - { id: obra_civil, nombre: "Plataformas y canalizaciones", fraccion: 0.25, sensible_lluvia: true }

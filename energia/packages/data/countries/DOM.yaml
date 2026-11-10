@@ -11,7 +11,7 @@ operador_sistema: "Organismo Coordinador (OC) / ETED"
 mercado:
   demanda_anual_twh: { base: 21, fuente: "OC-SENI 2024" }
   pico_mw: { base: 4100, fuente: "OC-SENI 2024" }
-  precio_spot_medio_usd_mwh: { min: 90, base: 125, max: 180, fuente: "OC-SENI: costo marginal 2023–2024 ≈ 110–150 USD/MWh (mucha generación con fuel oil y GNL)" }
+  precio_spot_medio_usd_mwh: { min: 80, base: 110, max: 180, fuente: "OC-SENI: costo marginal 2023–2024 ≈ 110–150 USD/MWh (mucha generación con fuel oil y GNL)" }
   perfil_spot_mensual: [0.95, 0.95, 0.98, 1.00, 1.05, 1.08, 1.08, 1.08, 1.05, 1.00, 0.92, 0.88]
   perfil_spot_fuente: "Supuesto: más demanda (aire acondicionado) en verano"
   matriz: { gas: 0.38, carbon: 0.27, fueloil: 0.12, hidro: 0.08, eolica: 0.07, solar: 0.08, fuente: "OC-SENI 2023" }
