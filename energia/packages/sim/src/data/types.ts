@@ -542,6 +542,55 @@ export interface SimData {
   power?: PowerDef;
   /** Fase 5 (opcional): eventos del mundo, gobiernos y seguros. */
   world?: WorldDef;
+  /** Fase 6 (opcional): equipo, mercado laboral, reputación por eje y oficinas. Sin él: efectos neutros (consultores externos). */
+  team?: TeamDef;
+}
+
+// ───────────────────────── Fase 6: equipo, reputación y oficinas ─────────────────────────
+
+export type TeamArea = 'permisos' | 'social' | 'recurso' | 'obra' | 'finanzas' | 'ofertas' | 'mercado' | 'operacion';
+export const TEAM_AREAS: TeamArea[] = ['permisos', 'social', 'recurso', 'obra', 'finanzas', 'ofertas', 'mercado', 'operacion'];
+export type OfficeLevelId = 'representante' | 'oficina' | 'sede';
+export interface TeamRoleDef { id: string; nombre: string; areas: Partial<Record<TeamArea, number>>; capacidad: number; factor_salario: number }
+export interface TeamMemberSeed { rol: string; habilidad: number; experiencia: number }
+export interface LaborCountryDef {
+  salario_usd: number; cargas: number; indemnizacion_meses_ano: number; indemnizacion_min_meses: number; indemnizacion_max_meses: number;
+  idioma: string; ingles: number; oficina_indice: number;
+}
+export interface OfficeLevelDef {
+  id: OfficeLevelId; nombre: string; capacidad_personal: number; costo_inicial_usd: number; costo_mensual_usd: number; dias: number;
+  costo_desarrollo_frac: number; reputacion_gobierno_mes: number; invitaciones_privadas: boolean; costo_desarrollo_vecinos_frac?: number;
+}
+export interface RepDeltaDef { gobierno?: number; comunidad?: number; clientes?: number }
+export interface TeamDef {
+  puntaje_externo: Dist;
+  pesos_equipo: number[];
+  experiencia_anos_plena: number;
+  roles: TeamRoleDef[];
+  efectos: Record<string, Dist>;
+  permisos_sociales: string[];
+  factor_fuera_pais: Dist; factor_fuera_pais_region: Dist; roles_locales: string[]; factor_sin_idioma: Dist; factor_sin_idioma_local: Dist;
+  mercado_laboral: {
+    candidatos_por_pais: Dist; vigencia_dias: Dist; habilidad: Dist; experiencia_anos: Dist; reclutamiento_frac_anual: Dist; oferta_minima_frac: Dist;
+    rotacion_base_mensual: Dist; rotacion_moral_baja: Dist; moral_inercia: Dist; moral_salario: Dist; moral_sobrecarga: Dist;
+    capacitacion_costo_usd: Dist; capacitacion_dias: Dist; capacitacion_ganancia: Dist; aumento_anual_experiencia: Dist;
+  };
+  paises: Record<string, LaborCountryDef>;
+  otras_lenguas?: Record<string, Record<string, number>>;
+  nombres: Record<string, { nombres: string[]; apellidos: string[] }>;
+  oficinas: { niveles: OfficeLevelDef[]; requisitos_sede: { personal_min: number }; regiones: Record<string, string[]> };
+  reputacion: {
+    inicial_pais_nuevo: Dist; reversion_mensual: Dist; neutro: Dist;
+    causas: Record<string, RepDeltaDef>;
+    efectos: { social_aprobacion: Dist; conflicto: Dist; banca_desarrollo_spread: Dist; invitacion_prob_mes: Dist };
+    inversion_social: { usd_por_punto: Dist; tope_anual_puntos: Dist };
+  };
+  riesgos_obra: { conflicto_mensual: Dist; conflicto_dias: Dist; conflicto_costo_frac: Dist; accidente_mensual: Dist; accidente_dias: Dist; accidente_costo_frac: Dist };
+  equipo_inicial_jugador: TeamMemberSeed[];
+  ia: {
+    equipo_inicial: Partial<Record<CompetitorStrategy, TeamMemberSeed[]>>;
+    objetivos: Partial<Record<CompetitorStrategy, { roles: string[]; por_proyectos: number; max: number }>>;
+  };
 }
 
 // ───────────────────────── Fase 5: mercado eléctrico ─────────────────────────

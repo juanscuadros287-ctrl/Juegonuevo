@@ -106,6 +106,8 @@ export interface Opportunity {
   status: OpportunityStatus;
   /** Fase 4: moneda del contrato ('local' = el precio en USD sigue al tipo de cambio desde la firma). Ausente = USD. */
   currency?: 'USD' | 'local';
+  /** Fase 6: solicitud privada directa (solo el invitado puede ofertar; casi sin ofertantes externos). */
+  invitedActorId?: string;
   /** Ofertas selladas (la UI solo ve la propia hasta la adjudicación). */
   bids: Bid[];
   result?: { ranking: RankingEntry[]; winnerId?: string; winnerName?: string; winnerPrice?: number; tick: number; reason?: string };
@@ -187,11 +189,18 @@ export interface BusinessState {
    * está abierto. `level: 'oficina'` queda reservado para la Fase 6 (oficinas completas).
    */
   presence?: Record<string, Presence>;
+  /** Fase 6: equipo propio (personas, cargas, capacitación). */
+  team?: import('../team/types').TeamState;
+  /** Fase 6: reputación con gobiernos y comunidades por país (la de clientes es `reputation`, que se mantiene como alias). */
+  rep?: import('../team/types').ReputationState;
+  /** Fase 6: oficinas por país (el de origen arranca con oficina local; sin entrada = nivel de la presencia). */
+  offices?: Record<string, import('../team/types').OfficeState>;
 }
 
 export interface Presence {
   status: 'en_tramite' | 'activa' | 'cerrada';
-  level: 'representante' | 'oficina';
+  /** Fase 6: 'sede' (sede regional). Alias del nivel de `business.offices[iso]`. */
+  level: 'representante' | 'oficina' | 'sede';
   requestedTick: number;
   readyTick: number;
   setupCostUsd: number;
@@ -244,6 +253,8 @@ export interface MarketState {
   world?: import('../world/events').WorldState;
   /** Fase 3 (pedido de la UI): cuota de mercado mensual por actor (MW en operación). */
   shareHistory?: { year: number; month: number; mw: Record<string, number> }[];
+  /** Fase 6: mercado laboral compartido (candidatos por país). */
+  labor?: import('../team/types').LaborMarket;
 }
 
 export function newResearchState(): ResearchState {

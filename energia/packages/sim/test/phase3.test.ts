@@ -78,6 +78,7 @@ describe('Licitaciones: adjudicación por puntaje', () => {
     // Con reputación máxima y experiencia, el jugador pasa a ganar
     const s = world(1);
     s.business.reputation = 100; s.business.experienceMwBase = 500;
+    if (s.business.rep) s.business.rep.gobierno.PAN = 100; // Fase 6: la reputación con el gobierno también cuenta en licitaciones públicas
     const o = inject(s);
     applyCommand(s, bid(o.id, 65, { effort: 'reforzada' }), ctx);
     withActor(s, 'C3', (v) => applyCommand(v, bid(o.id, 65), ctx));

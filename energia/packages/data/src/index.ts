@@ -9,6 +9,7 @@ import competitors from '../competitors.yaml';
 import markets from '../markets.yaml';
 import power from '../power.yaml';
 import events from '../events.yaml';
+import team from '../team.yaml';
 import { buildGameData } from './load';
 
 const countryFiles = import.meta.glob('../countries/*.yaml', { eager: true, import: 'default' });
@@ -18,7 +19,7 @@ export * from './schemas';
 export * from './load';
 
 /** Datos crudos (YAML parseados, sin validar): para pruebas que modifican datos. Usar `structuredClone` antes de mutar. */
-export const rawGameData = { game, layers, countries: countryFiles, technologies: technologyFiles, studies, suppliers, research, clients, competitors, markets, power, events };
+export const rawGameData = { game, layers, countries: countryFiles, technologies: technologyFiles, studies, suppliers, research, clients, competitors, markets, power, events, team };
 
 /** Datos del juego validados (se cargan una vez al importar). */
 export const gameData = buildGameData(rawGameData);

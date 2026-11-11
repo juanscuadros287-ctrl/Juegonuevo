@@ -13,6 +13,8 @@ import { openCountries } from '../business/presence';
 import { ensurePower, powerMonthly } from '../market/power';
 import { ensureWorldEvents, worldMonthly } from '../world/events';
 import { recordMarketShare } from '../business/share';
+import { ensureTeam } from '../team/team';
+import { flushTeamNotices, teamWorldMonthly } from '../team/tick';
 
 export type { SimEvent } from './events';
 
@@ -29,7 +31,7 @@ export type { SimEvent } from './events';
 export function step(state: GameState, commands: readonly Command[] = [], ctx?: SimContext): SimEvent[] {
   if (state.finance.bankrupt) return [];
   const events = applyCommands(state, commands, ctx);
-  if (ctx) competitorsDecide(state, ctx);
+  if (ctx) { competitorsDecide(state, ctx); flushTeamNotices(state, events); }
 
   const prev = fromEpochDay(state.startEpochDay + state.tick);
   state.tick += 1;
@@ -51,6 +53,7 @@ export function step(state: GameState, commands: readonly Command[] = [], ctx?: 
       powerMonthly(state, ctx, events);
       recordMarketShare(state, prev.year, prev.month);
       generateOpportunities(state, ctx, events);
+      teamWorldMonthly(state, ctx, openCountries(state), events);
     }
     events.push({ type: 'newMonth', year: now.year, month: now.month });
     if (now.year !== prev.year) events.push({ type: 'newYear', year: now.year });
@@ -65,7 +68,7 @@ export function step(state: GameState, commands: readonly Command[] = [], ctx?: 
  */
 export function applyCommands(state: GameState, commands: readonly Command[], ctx?: SimContext): SimEvent[] {
   const events: SimEvent[] = [];
-  if (ctx) { ensureWorld(state, ctx, events); ensureMacro(state, ctx); ensureWorldEvents(state, ctx); ensurePower(state, ctx); }
+  if (ctx) { ensureWorld(state, ctx, events); ensureMacro(state, ctx); ensureWorldEvents(state, ctx); ensurePower(state, ctx); ensureTeam(state, ctx); }
   for (const cmd of commands) {
     const r = applyCommand(state, cmd, ctx, events);
     if (!r.ok) events.push({ type: 'commandRejected', command: cmd, error: r.error });

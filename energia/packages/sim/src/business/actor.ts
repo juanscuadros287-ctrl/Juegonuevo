@@ -15,6 +15,7 @@ export function actorView(state: GameState, comp: CompetitorState): GameState {
   return {
     ...state,
     actorId: comp.id,
+    root: state.root ?? state,
     company: comp.company,
     finance: comp.finance,
     projects: comp.projects,

@@ -56,31 +56,37 @@ export function generateOpportunities(state: GameState, ctx: SimContext, events:
   for (const ct of def.tipos) {
     if (!ctx.data.countries[ct.pais] || !open.has(ct.pais)) continue;
     const n = poisson(rng, ct.frecuencia_anual / 12);
-    for (let i = 0; i < n; i++) {
-      const mw = Math.max(1, Math.round(drawDist(rng, ct.mw)));
-      const ref = drawDist(rng, ct.precio_referencia) * marketPriceIndex(state, ctx, ct);
-      const reserve = ref * drawDist(rng, ct.precio_reserva_factor);
-      const deadline = state.tick + drawDays(rng, ct.plazo_oferta_dias);
-      const o: Opportunity = {
-        id: `L${m.nextOpportunityId++}`, clientTypeId: ct.id, clientName: rng.pick(ct.nombres_cliente), countryCode: ct.pais, kind: ct.tipo,
-        contract: ct.contrato, contractType: ct.tipo_contrato, mw, years: Math.round(drawDist(rng, ct.plazo_anos)), techs: [...ct.tecnologias],
-        ceilingPrice: ct.publica_precio_tope ? reserve : undefined, reservePrice: reserve, referencePrice: ref,
-        openedTick: state.tick, deadlineTick: deadline, awardTick: deadline + drawDays(rng, ct.evaluacion_dias),
-        codMonths: Math.round(drawDist(rng, ct.plazo_cod_meses)), bidBondUsd: ct.garantia_seriedad_usd_mw * mw, performanceBondUsd: ct.garantia_cumplimiento_usd_mw * mw,
-        weights: { ...ct.pesos }, minExperienceMw: ct.experiencia_mw_min, minEquityUsd: ct.capital_min_usd, penaltyUsdMwMonth: ct.multa_usd_mw_mes,
-        maxDelayMonths: ct.meses_max_atraso, prepCostUsd: drawDist(rng, ct.costo_preparacion_usd), indexation: ct.indexacion_anual, status: 'abierta', bids: [],
-        ...(contractCurrency(ctx.data.countries[ct.pais], ct.moneda) === 'local' ? { currency: 'local' as const } : {}),
-      };
-      m.opportunities.push(o);
-      const unit = PRICE_UNITS[o.contract];
-      events.push({
-        type: 'opportunityOpened', opportunityId: o.id, severity: 'info',
-        text: `${o.kind === 'licitacion_publica' ? 'Licitación' : 'Solicitud'}: ${o.clientName} busca ${o.mw} MW (${ct.nombre}). Ofertas hasta dentro de ${deadline - state.tick} días${o.ceilingPrice ? `, tope ${o.ceilingPrice.toFixed(o.contract === 'epc' ? 0 : 1)} ${unit}` : ''}.`,
-      });
-    }
+    for (let i = 0; i < n; i++) openOpportunity(state, ctx, ct, rng, events);
   }
   // Limpieza: se guardan las cerradas de los últimos 2 años
   m.opportunities = m.opportunities.filter((o) => o.status === 'abierta' || o.status === 'evaluacion' || state.tick - (o.result?.tick ?? o.awardTick) < KEEP_CLOSED_DAYS);
+}
+
+/** Crea y publica una oportunidad de un tipo de cliente (misma secuencia de sorteos que en la Fase 3). */
+export function openOpportunity(state: GameState, ctx: SimContext, ct: ClientTypeDef, rng: Rng, events: SimEvent[], invitedActorId?: string): Opportunity {
+  const m = state.market;
+  const mw = Math.max(1, Math.round(drawDist(rng, ct.mw)));
+  const ref = drawDist(rng, ct.precio_referencia) * marketPriceIndex(state, ctx, ct);
+  const reserve = ref * drawDist(rng, ct.precio_reserva_factor);
+  const deadline = state.tick + drawDays(rng, ct.plazo_oferta_dias);
+  const o: Opportunity = {
+    id: `L${m.nextOpportunityId++}`, clientTypeId: ct.id, clientName: rng.pick(ct.nombres_cliente), countryCode: ct.pais, kind: ct.tipo,
+    contract: ct.contrato, contractType: ct.tipo_contrato, mw, years: Math.round(drawDist(rng, ct.plazo_anos)), techs: [...ct.tecnologias],
+    ceilingPrice: ct.publica_precio_tope ? reserve : undefined, reservePrice: reserve, referencePrice: ref,
+    openedTick: state.tick, deadlineTick: deadline, awardTick: deadline + drawDays(rng, ct.evaluacion_dias),
+    codMonths: Math.round(drawDist(rng, ct.plazo_cod_meses)), bidBondUsd: ct.garantia_seriedad_usd_mw * mw, performanceBondUsd: ct.garantia_cumplimiento_usd_mw * mw,
+    weights: { ...ct.pesos }, minExperienceMw: ct.experiencia_mw_min, minEquityUsd: ct.capital_min_usd, penaltyUsdMwMonth: ct.multa_usd_mw_mes,
+    maxDelayMonths: ct.meses_max_atraso, prepCostUsd: drawDist(rng, ct.costo_preparacion_usd), indexation: ct.indexacion_anual, status: 'abierta', bids: [],
+    ...(contractCurrency(ctx.data.countries[ct.pais], ct.moneda) === 'local' ? { currency: 'local' as const } : {}),
+    ...(invitedActorId ? { invitedActorId } : {}),
+  };
+  m.opportunities.push(o);
+  const unit = PRICE_UNITS[o.contract];
+  if (!invitedActorId || invitedActorId === PLAYER_ID) events.push({
+    type: 'opportunityOpened', opportunityId: o.id, severity: 'info',
+    text: `${invitedActorId ? 'Invitación directa' : o.kind === 'licitacion_publica' ? 'Licitación' : 'Solicitud'}: ${o.clientName} busca ${o.mw} MW (${ct.nombre}). Ofertas hasta dentro de ${deadline - state.tick} días${o.ceilingPrice ? `, tope ${o.ceilingPrice.toFixed(o.contract === 'epc' ? 0 : 1)} ${unit}` : ''}.`,
+  });
+  return o;
 }
 
 /** Avance diario: cierre de recepción de ofertas y adjudicación. */
@@ -106,7 +112,7 @@ function award(state: GameState, ctx: SimContext, o: Opportunity, events: SimEve
       if (v.finance.bankrupt || comp?.status === 'quebrada') disq = 'empresa en quiebra';
       const p = b.projectId ? v.projects.find((x) => x.id === b.projectId) : undefined;
       if (b.projectId && (!p || isTerminal(p) || p.contractId || p.ppa?.status === 'firmado')) disq = 'el proyecto ofertado ya no está disponible';
-      return { disq, technical: technicalScore(v, ctx, o, b), experience: experienceScore(v, o) };
+      return { disq, technical: technicalScore(v, ctx, o, b), experience: experienceScore(v, o, ctx) };
     });
     if (!res) continue;
     let disq = res.disq;
@@ -115,7 +121,7 @@ function award(state: GameState, ctx: SimContext, o: Opportunity, events: SimEve
   }
   // Ofertantes externos (empresas internacionales no simuladas en detalle): mantienen la competencia real.
   if (ct) {
-    const n = poisson(rng, ct.ofertantes_externos.media);
+    const n = poisson(rng, ct.ofertantes_externos.media * (o.invitedActorId ? 0.25 : 1));
     for (let i = 0; i < n; i++) {
       const price = o.referencePrice * drawDist(rng, ct.ofertantes_externos.precio_factor);
       entries.push({

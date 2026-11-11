@@ -34,6 +34,14 @@ const MIGRATIONS: Record<number, (s: any) => any> = {
     market: { ...s.market, power: undefined, world: undefined },
     rng: { ...s.rng, market: s.rng.market ?? seedStream(s.seed, 'market'), events: s.rng.events ?? seedStream(s.seed, 'events') },
   }),
+  // v5 (Fase 5) → v6 (Fase 6): flujos `labor` y `team`. El equipo explícito (descontado de los gastos fijos), el mercado
+  // laboral y la reputación por eje (gobierno y comunidad del país de origen = reputación previa) se crean en el próximo
+  // step/applyCommands con datos (`ensureTeam`). Las presencias quedan como «representante».
+  5: (s) => ({
+    ...s, saveVersion: 6,
+    market: { ...s.market, labor: undefined },
+    rng: { ...s.rng, labor: s.rng.labor ?? seedStream(s.seed, 'labor'), team: s.rng.team ?? seedStream(s.seed, 'team') },
+  }),
 };
 
 export function serialize(state: GameState): string {
