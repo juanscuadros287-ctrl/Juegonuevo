@@ -394,7 +394,7 @@ if (!ONLY || ONLY === '4') {
   await page.evaluate((t) => window.__voltaje.loadText(t), JSON.stringify(file));
   await page.waitForTimeout(2500);
   // unos meses para que haya historial de tipo de cambio y combustibles
-  await speed(page, '×8', 4500);
+  await speed(page, '×8', 3500);
 
   await key(page, 'x', 'countries-panel');
   await page.locator('[data-country=CRI]').waitFor();
@@ -467,16 +467,16 @@ if (!ONLY || ONLY === '4') {
   await page.waitForTimeout(800);
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.__voltaje.flyTo(8.75, -80.0, 1.16, 0.1));
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1100);
   await shot(page, '50-linea-globo.png');
   await page.evaluate(() => window.__voltaje.flyTo(8.6, -80.9, 1.28, 0.1));
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1100);
   await shot(page, '51-modelos-globo.png');
   await page.evaluate(() => window.__voltaje.flyTo(8.8, -82.4, 1.09, 0.1));
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1100);
   await shot(page, '53-modelos-cerca.png');
   await page.evaluate(() => window.__voltaje.flyTo(5, -82, 2.4, 0.1));
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1100);
   await shot(page, '52-paises-globo.png');
   const n = await page.evaluate(() => document.querySelector('[data-nav=projects]')?.textContent);
   console.log('Fase 4:', n);
