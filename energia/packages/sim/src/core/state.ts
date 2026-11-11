@@ -9,9 +9,10 @@ import { newBusinessState, newMarketState, type BusinessState, type CompetitorSt
  * v2 (Fase 2): proyectos y finanzas de la empresa.
  * v3 (Fase 3): licitaciones, contratos, I+D, cadena de suministro y competidores IA.
  * v4 (Fase 4): presencia por país, tipos de cambio, combustibles y datos extra de sitio.
+ * v5 (Fase 5): mercado eléctrico (clima, precios horarios), eventos del mundo, despacho, seguros y modalidades de PPA.
  * Las partidas anteriores se migran (ver save.ts).
  */
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 /** Movimiento contable de caja de la empresa. */
 export interface LedgerEntry { day: number; concept: string; amountUsd: number }

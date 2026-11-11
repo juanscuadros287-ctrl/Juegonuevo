@@ -21,6 +21,11 @@ import { p90 } from '../world/site';
 import { researchEffects } from '../business/research';
 import { recordLateDelivery } from '../supply/supply';
 import type { Project } from './types';
+import { projectPlan, policyKey, type MonthPlan } from '../market/dispatch';
+import { yearMonthIndex } from '../market/power';
+import { h2KgPerMwh } from '../tech/models';
+import { insuranceMonthly, worldCreditFactor } from '../world/events';
+import { operatingPermitBlockers } from './requirements';
 
 /** Avance diario de un proyecto (`day` = día que acaba de transcurrir). */
 export function projectDaily(state: GameState, ctx: SimContext, p: Project, rng: Rng, day: GameDate, events: SimEvent[]) {
@@ -212,7 +217,14 @@ function constructionDaily(state: GameState, ctx: SimContext, p: Project, rng: R
 
   // Puesta en marcha
   if (k.commissioningStartTick !== undefined) {
-    if (t >= k.commissioningStartTick + (k.commissioningDays ?? 0)) startOperation(state, ctx, p, rng, events);
+    if (t >= k.commissioningStartTick + (k.commissioningDays ?? 0)) {
+      // Fase 5: sin licencia de generación y contrato de conexión no se puede operar (la planta espera).
+      const missing = operatingPermitBlockers(ctx, p);
+      if (missing.length) {
+        if (!p.codBlocked) events.push(note(state, p, 'operationBlocked', `Puesta en marcha terminada, pero no se puede operar sin: ${missing.join(', ')}.`, 'malo', { missing }));
+        p.codBlocked = true;
+      } else { p.codBlocked = undefined; startOperation(state, ctx, p, rng, events); }
+    }
     return;
   }
 
@@ -295,7 +307,7 @@ function startOperation(state: GameState, ctx: SimContext, p: Project, rng: Rng,
     p.debt.monthsPaid = 0;
   }
   const inc = c.incentivos[p.techId];
-  if (inc) state.finance.taxCreditUsd += inc.credito_fiscal_frac_inversion.base * (k.spentUsd);
+  if (inc) state.finance.taxCreditUsd += inc.credito_fiscal_frac_inversion.base * worldCreditFactor(state, p.countryCode) * (k.spentUsd);
   const months = Math.round((state.tick - k.startTick) / DAYS_PER_MONTH);
   events.push(note(state, p, 'projectOperational', `¡Operación comercial! Obra en ${months} meses (${k.delayDays} días de retraso), costo ${fmtUsd(k.spentUsd)} (${k.overrunUsd > 0 ? `+${fmtUsd(k.overrunUsd)} de sobrecostos` : 'sin sobrecostos'}).`, 'bueno'));
 }
@@ -335,7 +347,19 @@ function operationDaily(state: GameState, ctx: SimContext, p: Project, rng: Rng,
   if (terms && terms.mode === 'termica' && p.ppa?.status === 'firmado' && age < p.ppa.years) {
     terms.dispatch = thermalDispatch(tech, terms.fuel.varUsdMwh + tech.om_variable_usd_mwh.base, p.ppa.priceUsdMwh * ppaFxFactor(state, ctx, p.countryCode, p.ppa));
   }
-  const energy = p.mw * 24 * op.fcReal * prof[day.month - 1] * noise * op.yearFactor * deg * avail * (terms?.dispatch ?? 1);
+  // Fase 5: despacho horario contra los precios del mes (vertimiento, térmicas por hora, arbitraje, H2, servicios).
+  const plan = currentPlan(state, ctx, p, day.year, day.month);
+  if (plan && terms) {
+    terms.dispatch = plan.genFrac;
+    if (terms.mode === 'almacenamiento') terms.fuel = { ...terms.fuel, varUsdMwh: plan.chargeUsdMwh, fuelUsdMwh: plan.chargeUsdMwh };
+    if (terms.mode === 'hidrogeno') { const v = plan.chargeUsdMwh + (tech.hidrogeno?.agua_usd_kg ?? 0) * h2KgPerMwh(tech); terms.fuel = { ...terms.fuel, varUsdMwh: v, fuelUsdMwh: v }; }
+  }
+  const availableMwh = p.mw * 24 * op.fcReal * prof[day.month - 1] * noise * op.yearFactor * deg * avail;
+  const energy = availableMwh * (plan && !terms ? plan.genFrac : terms?.dispatch ?? 1);
+  if (plan) {
+    if (plan.curtailedFrac > 0) op.monthCurtailedMwh = (op.monthCurtailedMwh ?? 0) + availableMwh * plan.curtailedFrac;
+    if (plan.servicesFrac > 0) op.monthServiceMwH = (op.monthServiceMwH ?? 0) + p.mw * 24 * plan.servicesFrac * avail;
+  }
   if (terms && terms.fuel.varUsdMwh > 0) {
     op.monthFuelUsd = (op.monthFuelUsd ?? 0) + energy * (terms.fuel.varUsdMwh - terms.fuel.carbonUsdMwh);
     op.monthCo2T = (op.monthCo2T ?? 0) + energy * terms.fuel.co2TPerMwh;
@@ -424,6 +448,7 @@ export function projectMonthly(state: GameState, ctx: SimContext, p: Project, rn
   }
 
   if (p.operation) operationMonthly(state, ctx, p, year, month, events);
+  insuranceMonthly(state, ctx, p);
 }
 
 function operationMonthly(state: GameState, ctx: SimContext, p: Project, year: number, month: number, events?: SimEvent[]) {
@@ -434,9 +459,51 @@ function operationMonthly(state: GameState, ctx: SimContext, p: Project, year: n
   const yearsOp = (state.tick - op.codTick) / 365.25;
   let price: number;
   const terms = techMode(tech) === 'generacion' ? null : monthTerms(state, ctx, p, year, month);
-  if (sellsEnergy(tech) && p.ppa?.status === 'firmado' && yearsOp < p.ppa.years) price = p.ppa.priceUsdMwh * Math.pow(1 + p.ppa.indexation, Math.floor(yearsOp)) * ppaFxFactor(state, ctx, p.countryCode, p.ppa);
-  else price = terms ? terms.priceUsdMwh : spotPrice(c, startYear(state), year, month) * fxReal(state, c.iso3);
-  const revenue = energy * price;
+  const plan = currentPlan(state, ctx, p, year, month);
+  const mode = techMode(tech);
+  // Precio de mercado de lo producido: el capturado hora a hora (Fase 5) o el de la Fase 4 sin datos de mercado.
+  const marketPrice = plan && (mode === 'generacion' || mode === 'termica' || mode === 'almacenamiento') ? plan.captureUsdMwh
+    : terms ? terms.priceUsdMwh : spotPrice(c, startYear(state), year, month) * fxReal(state, c.iso3);
+  const ppaActive = sellsEnergy(tech) && p.ppa?.status === 'firmado' && yearsOp < p.ppa.years;
+  let ppaUsd = 0, spotUsd = 0, purchasesUsd = 0;
+  if (ppaActive) {
+    const ppaPrice = p.ppa!.priceUsdMwh * Math.pow(1 + p.ppa!.indexation, Math.floor(yearsOp)) * ppaFxFactor(state, ctx, p.countryCode, p.ppa!);
+    price = ppaPrice;
+    const s = p.ppa!.settlement ?? 'produccion';
+    const committed = (p.ppa!.committedMwhYear ?? 0) * op.month.days / 365.25;
+    const avgSpot = plan?.avgSpotUsdMwh ?? marketPrice;
+    if (s === 'bloque') {
+      ppaUsd = committed * ppaPrice;
+      spotUsd = Math.max(0, energy - committed) * marketPrice;
+      purchasesUsd = Math.max(0, committed - energy) * avgSpot;
+    } else if (s === 'financiero') {
+      spotUsd = energy * marketPrice;
+      ppaUsd = committed * (ppaPrice - avgSpot);
+    } else ppaUsd = energy * ppaPrice;
+  } else {
+    price = marketPrice;
+    spotUsd = energy * marketPrice;
+  }
+  const revenue = ppaUsd + spotUsd;
+  if (purchasesUsd > 0) postCash(state, 'compras_energia', -purchasesUsd, `${p.name}: compra al spot para cumplir el PPA`);
+  // Fase 5: mercado de capacidad y servicios complementarios.
+  let capacityUsd = 0, servicesUsd = 0;
+  const pc = ctx.data.power?.paises[p.countryCode];
+  const availability0 = op.month.days ? op.month.availSum / op.month.days : 0;
+  const potencia = state.business?.contracts?.some((k) => k.projectId === p.id && k.kind === 'potencia' && k.status !== 'incumplido');
+  if (pc?.capacidad && !potencia && (mode === 'generacion' || mode === 'termica' || mode === 'almacenamiento')) {
+    const credit = ctx.data.power!.credito_firme_tecnologia[p.techId] ?? 0;
+    const infl0 = Math.pow(1 + usdInflation(c), Math.max(0, year - startYear(state))) * fxReal(state, c.iso3);
+    capacityUsd = pc.capacidad.precio_usd_kw_mes.base * infl0 * credit * p.mw * 1000 * availability0 * (op.month.days / 30.44);
+    postCash(state, 'ingresos_capacidad', capacityUsd, `${p.name}: pago por capacidad`);
+  }
+  if (plan && (op.monthServiceMwH ?? 0) > 0) {
+    servicesUsd = (op.monthServiceMwH ?? 0) * plan.servicesUsdMwH;
+    postCash(state, 'ingresos_servicios', servicesUsd, `${p.name}: servicios complementarios`);
+  }
+  const curtailedMwh = op.monthCurtailedMwh ?? 0;
+  op.monthCurtailedMwh = 0;
+  op.monthServiceMwH = 0;
   // Costos en USD: inflación del USD (o la local si la moneda está fija) y la parte local expuesta al tipo de cambio.
   const infl = Math.pow(1 + usdInflation(c), Math.max(0, year - startYear(state))) * localCostFxFactor(state, c);
   const omF = op.maintenance === 'preventivo' ? tech.mantenimiento.preventivo_om_factor : tech.mantenimiento.correctivo_om_factor;
@@ -480,17 +547,18 @@ function operationMonthly(state: GameState, ctx: SimContext, p: Project, year: n
   const depYears = c.impuestos.depreciacion_anos.base;
   const dep = Math.min(op.grossAssetUsd / (depYears * 12), op.grossAssetUsd - op.accumulatedDepreciationUsd);
   if (dep > 0) { op.accumulatedDepreciationUsd += dep; accrue(state, 'depreciacion', -dep); }
-  const opex = om + ins + land + repairs + fuel + carbon + shortfallPen;
+  const opex = om + ins + land + repairs + fuel + carbon + shortfallPen + purchasesUsd;
   if (p.partnerShare > 0) {
-    const projTax = Math.max(0, revenue - opex - dep - interest) * c.impuestos.renta.base;
-    const distributable = revenue - opex - interest - principal - projTax;
+    const projTax = Math.max(0, revenue + capacityUsd + servicesUsd - opex - dep - interest) * c.impuestos.renta.base;
+    const distributable = revenue + capacityUsd + servicesUsd - opex - interest - principal - projTax;
     if (distributable > 0) postCash(state, 'socio_distribucion', -distributable * p.partnerShare, `${p.name}: dividendos del socio`);
   }
   const availability = op.month.days ? op.month.availSum / op.month.days : 0;
-  op.history.push({ year, month, energyMwh: energy, revenueUsd: revenue, opexUsd: opex, availability });
+  op.history.push({ year, month, energyMwh: energy, revenueUsd: revenue + capacityUsd + servicesUsd - purchasesUsd, opexUsd: opex, availability,
+    ppaUsd, spotUsd, capacityUsd, servicesUsd, purchasesUsd, curtailedMwh, captureUsdMwh: marketPrice });
   if (op.history.length > 120) op.history.splice(0, op.history.length - 120);
   op.totalEnergyMwh += energy;
-  op.totalRevenueUsd += revenue;
+  op.totalRevenueUsd += revenue + capacityUsd + servicesUsd - purchasesUsd;
   op.month = { energyMwh: 0, availSum: 0, days: 0, repairUsd: 0 };
 }
 
@@ -572,4 +640,34 @@ function drillProductionWells(state: GameState, ctx: SimContext, p: Project, rng
   events.push(note(state, p, 'wellsDrilled',
     `Perforación terminada: ${producers} productores (${dry} pozo(s) seco(s)) y ${injectors} reinyectores; planificados ${w.plannedProducers} + ${w.plannedInjectors}.${cost > 0 ? ` Sobrecosto ${fmtUsd(cost)} (lo paga el capital).` : ''}`,
     cost > 0 || dry > 0 ? 'malo' : 'bueno', { producers, injectors, dry, extraCostUsd: cost }));
+}
+
+/**
+ * Fase 5: plan de despacho del mes de una planta en operación (cacheado en `operation.plan`; se recalcula si cambian los
+ * precios del mes o la política). Sin datos del mercado eléctrico devuelve undefined (comportamiento de la Fase 4).
+ */
+export function currentPlan(state: GameState, ctx: SimContext, p: Project, year: number, month: number): MonthPlan | undefined {
+  const op = p.operation;
+  if (!op || !ctx.data.power?.paises[p.countryCode]) return undefined;
+  const tech = ctx.data.technologies[p.techId];
+  const ps = state.market?.power;
+  const key = `${ps?.version ?? 0}|${policyKey(p)}`;
+  const target = yearMonthIndex(year, month);
+  if (op.plan && op.plan.ym === target && op.plan.key === key) return op.plan;
+  const mode = techMode(tech);
+  const terms = mode === 'termica' || mode === 'hidrogeno' ? monthTerms(state, ctx, p, year, month) : undefined;
+  const yearsOp = (state.tick - op.codTick) / 365.25;
+  const ppaPrice = sellsEnergy(tech) && p.ppa?.status === 'firmado' && yearsOp < p.ppa.years && (p.ppa.settlement ?? 'produccion') === 'produccion'
+    ? p.ppa.priceUsdMwh * Math.pow(1 + p.ppa.indexation, Math.floor(yearsOp)) * ppaFxFactor(state, ctx, p.countryCode, p.ppa) : undefined;
+  const h2Value = tech.hidrogeno && terms ? terms.priceUsdMwh - tech.hidrogeno.agua_usd_kg * h2KgPerMwh(tech) - tech.om_variable_usd_mwh.base : undefined;
+  const d = projectPlan(state, ctx, p, year, month, {
+    thermalMcUsdMwh: terms && mode === 'termica' ? terms.fuel.varUsdMwh + tech.om_variable_usd_mwh.base : undefined,
+    ppaPriceUsdMwh: ppaPrice, h2ValueUsdMwh: h2Value, fcRef: op.fcReal,
+  });
+  if (!d) return undefined;
+  const { gen: _g, charge: _c, price: _p, ...plan } = d;
+  void _g; void _c; void _p;
+  plan.key = key;
+  op.plan = plan;
+  return plan;
 }

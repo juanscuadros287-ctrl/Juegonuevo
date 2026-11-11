@@ -98,3 +98,17 @@ export function financingBlockers(ctx: SimContext, p: Project): string[] {
   if (openFindings(p).length) out.push('Hay hallazgos sin resolver.');
   return [...new Set(out)];
 }
+
+/** Fase 5: grupos de permisos que hacen falta para OPERAR (generar y conectarse a la red). */
+export const OPERATING_PERMIT_GROUPS = ['licencia_generacion', 'viabilidad_conexion', 'contrato_acceso_red'] as const;
+
+/** Permisos de generación y conexión que faltan para pasar a operación comercial (solo los que aplican al proyecto). */
+export function operatingPermitBlockers(ctx: SimContext, p: Project): string[] {
+  const out: string[] = [];
+  for (const g of OPERATING_PERMIT_GROUPS) {
+    if (!permitGroupApplicable(ctx, p, g) || permitGroupApproved(ctx, p, g)) continue;
+    const d = applicablePermits(ctx, p).find((x) => x.grupo === g);
+    out.push(d?.nombre ?? g);
+  }
+  return out;
+}

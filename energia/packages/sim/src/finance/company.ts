@@ -50,6 +50,11 @@ export const CATEGORIES = {
   combustible: { pnl: true, cash: 'operating', label: 'Combustibles y energía comprada' },
   carbono: { pnl: true, cash: 'operating', label: 'Impuesto al carbono' },
   presencia: { pnl: true, cash: 'operating', label: 'Presencia en otros países (constitución y representantes)' },
+  // Fase 5
+  ingresos_capacidad: { pnl: true, cash: 'operating', label: 'Pagos por capacidad (mercado de potencia)' },
+  ingresos_servicios: { pnl: true, cash: 'operating', label: 'Servicios complementarios' },
+  compras_energia: { pnl: true, cash: 'operating', label: 'Compras de energía al spot (contratos)' },
+  indemnizaciones: { pnl: true, cash: 'operating', label: 'Indemnizaciones de seguros' },
 } as const;
 export type Category = keyof typeof CATEGORIES;
 
@@ -180,7 +185,7 @@ export function closeMonth(state: GameState, ctx: SimContext, year: number, mont
     if (c.pnl) {
       net += v;
       if (!EBITDA_EXCLUDE.includes(k as Category)) ebitda += v;
-      if (k === 'ingresos') revenue += v;
+      if (k === 'ingresos' || k === 'ingresos_capacidad' || k === 'ingresos_servicios') revenue += v;
     }
     if (c.cash) { cf[c.cash] += v; cf.net += v; }
   }

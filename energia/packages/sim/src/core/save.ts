@@ -26,6 +26,14 @@ const MIGRATIONS: Record<number, (s: any) => any> = {
     competitors: (s.competitors ?? []).map((c: any) => ({ ...c, business: { ...c.business, presence: c.business?.presence ?? {} } })),
     rng: { ...s.rng, fx: s.rng.fx ?? seedStream(s.seed, 'fx'), fuels: s.rng.fuels ?? seedStream(s.seed, 'fuels') },
   }),
+  // v4 (Fase 4) → v5 (Fase 5): el mercado eléctrico y los eventos del mundo se inicializan en el próximo step/applyCommands
+  // con datos (clima del año con el flujo `market`, eventos con `events`); las plantas sin política usan el despacho
+  // automático y los PPA existentes quedan «según producción» (campos opcionales).
+  4: (s) => ({
+    ...s, saveVersion: 5,
+    market: { ...s.market, power: undefined, world: undefined },
+    rng: { ...s.rng, market: s.rng.market ?? seedStream(s.seed, 'market'), events: s.rng.events ?? seedStream(s.seed, 'events') },
+  }),
 };
 
 export function serialize(state: GameState): string {

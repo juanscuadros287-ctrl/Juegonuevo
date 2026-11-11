@@ -7,11 +7,16 @@ import { annualFixedCosts, currentCapex, capexBreakdown, expectedAvailability, e
 import { researchEffects } from '../business/research';
 import { captureFactor, spotPrice } from '../market/spot';
 import { annualSpotUsd, productTerms, sellsEnergy, siteCapexFactor, techCaptureFactor, techMode, thermalDispatch, type ProductTerms, type TechMode } from '../tech/models';
-import { fxNominal, usdIndexation, usdInflation } from '../market/macro';
+import { fxNominal, fxReal as fxRealOf, usdIndexation, usdInflation } from '../market/macro';
 import { costOfEquity, npv, wacc } from '../finance/math';
 import { runProjectModel, sizeDebt, type ProjectModelInput, type ProjectModelResult } from '../finance/projectModel';
 import { p90 } from '../world/site';
 import type { Project, ProjectStage } from './types';
+import { spotYearUsd } from '../market/power';
+import { planOnPrices, type DispatchPolicy } from '../market/dispatch';
+import { monthPrices } from '../market/power';
+import { h2KgPerMwh, productionProfile } from '../tech/models';
+import { worldCreditFactor } from '../world/events';
 
 export function currentYear(state: GameState): number {
   return fromEpochDay(state.startEpochDay + state.tick).year;
@@ -60,6 +65,10 @@ export interface EconomicsOptions {
   debtFraction?: number;
   /** Etapa para la prima de riesgo de la tasa (por defecto la actual). El Monte Carlo usa 'operacion': el riesgo ya lo simula. */
   stage?: ProjectStage;
+  /** Fase 5: usar el mercado de referencia de la Fase 4 (spot medio y factores punta/valle), p. ej. LCOE de catálogo. */
+  staticMarket?: boolean;
+  /** Fase 5: recorte del precio spot (valoración de un comprador de proyectos merchant). */
+  spotHaircut?: number;
 }
 
 export interface Economics {
@@ -113,16 +122,67 @@ export function fcFromResource(ctx: SimContext, p: Pick<Project, 'techId' | 'sit
   return capacityFactor(ctx.data.technologies[p.techId], resource, p.site.temperatureC, p.site.extras);
 }
 
-/** Fase 4: términos del producto del proyecto para el año dado (precio sin PPA, despacho, combustible). */
-export function projectTerms(state: GameState, ctx: SimContext, p: Pick<Project, 'techId' | 'countryCode' | 'site'>, year: number, resource?: number): ProductTerms {
+/**
+ * Términos del producto del proyecto para el año dado (precio sin PPA, despacho, combustible).
+ * Fase 5: con mercado eléctrico, el precio capturado, el despacho (vertimiento, horas en que la térmica cubre su costo,
+ * arbitraje, horas baratas del electrolizador) y el costo de la carga salen de la previsión horaria del año.
+ */
+export function projectTerms(state: GameState, ctx: SimContext, p: Pick<Project, 'techId' | 'countryCode' | 'site'> & { dispatch?: DispatchPolicy }, year: number, resource?: number, fcRef?: number, staticMarket = false, longRun = false): ProductTerms {
   const tech = ctx.data.technologies[p.techId];
   const c = ctx.data.countries[p.countryCode];
   const y0 = startYear(state);
   const other = p.site.extras?.to && p.site.extras.to.countryCode !== p.countryCode ? ctx.data.countries[p.site.extras.to.countryCode] : undefined;
-  return productTerms(state, ctx, tech, c, {
-    spotUsdMwh: annualSpotUsd(state, c, y0, year), capture: techCaptureFactor(c, tech, p.site.layer), yearsFromStart: year - y0,
-    resourceValue: resource ?? p.site.cellValue, extras: p.site.extras, otherSpotUsdMwh: other ? annualSpotUsd(state, other, y0, year) : undefined,
+  const power = !staticMarket && !!ctx.data.power?.paises[p.countryCode];
+  const spot = power ? spotYearUsd(state, ctx, c.iso3, year, longRun) : annualSpotUsd(state, c, y0, year);
+  const otherSpot = other ? (ctx.data.power?.paises[other.iso3] ? spotYearUsd(state, ctx, other.iso3, year) : annualSpotUsd(state, other, y0, year)) : undefined;
+  const terms = productTerms(state, ctx, tech, c, {
+    spotUsdMwh: spot, capture: techCaptureFactor(c, tech, p.site.layer), yearsFromStart: year - y0,
+    resourceValue: resource ?? p.site.cellValue, extras: p.site.extras, otherSpotUsdMwh: otherSpot,
   });
+  if (!power) return terms;
+  const mode = terms.mode;
+  if (mode === 'transmision' || mode === 'eficiencia') return terms;
+  const prof = productionProfile(c, tech, p.site.layer);
+  const ref = fcRef ?? (mode === 'generacion' ? capacityFactor(tech, resource ?? p.site.cellValue, p.site.temperatureC, p.site.extras) : capacityFactor(tech, resource ?? p.site.cellValue, p.site.temperatureC, p.site.extras));
+  const h2Value = tech.hidrogeno ? terms.priceUsdMwh - tech.hidrogeno.agua_usd_kg * h2KgPerMwh(tech) - tech.om_variable_usd_mwh.base : undefined;
+  let wGen = 0, wRev = 0, wCharge = 0, wSum = 0;
+  for (let m = 1; m <= 12; m++) {
+    const mp = monthPrices(state, ctx, c.iso3, year, m, longRun);
+    if (!mp) return terms;
+    const plan = planOnPrices(state, ctx, mp, { tech, countryCode: c.iso3, policy: p.dispatch ?? {}, fcRef: ref,
+      thermalMcUsdMwh: mode === 'termica' ? terms.fuel.varUsdMwh + tech.om_variable_usd_mwh.base : undefined, h2ValueUsdMwh: h2Value });
+    const w = prof[m - 1];
+    wSum += w;
+    wGen += w * plan.genFrac;
+    wRev += w * plan.genFrac * plan.captureUsdMwh;
+    wCharge += w * plan.genFrac * plan.chargeUsdMwh;
+  }
+  const dispatch = wSum > 0 ? wGen / wSum : 0;
+  const capture = wGen > 0 ? wRev / wGen : spot;
+  const charge = wGen > 0 ? wCharge / wGen : 0;
+  if (mode === 'generacion' || mode === 'termica') return { ...terms, priceUsdMwh: capture, dispatch };
+  if (mode === 'almacenamiento') return { ...terms, priceUsdMwh: capture, dispatch, fuel: { ...terms.fuel, varUsdMwh: charge, fuelUsdMwh: charge } };
+  // hidrógeno: el costo de la electricidad es el de las horas en que compra.
+  const elec = charge + (tech.hidrogeno?.agua_usd_kg ?? 0) * h2KgPerMwh(tech);
+  return { ...terms, dispatch, fuel: { ...terms.fuel, varUsdMwh: elec, fuelUsdMwh: elec } };
+}
+
+/** Fase 5: ingresos anuales esperados por capacidad y servicios complementarios (año 1, USD). */
+export function capacityAndServicesUsdYear(state: GameState, ctx: SimContext, p: Pick<Project, 'techId' | 'countryCode' | 'mw' | 'dispatch'>, availability: number): { capacityUsd: number; servicesUsd: number } {
+  const pc = ctx.data.power?.paises[p.countryCode];
+  const tech = ctx.data.technologies[p.techId];
+  if (!pc || !tech) return { capacityUsd: 0, servicesUsd: 0 };
+  const mode = techMode(tech);
+  const fx = fxRealOf(state, p.countryCode);
+  let capacityUsd = 0, servicesUsd = 0;
+  if (pc.capacidad && (mode === 'generacion' || mode === 'termica' || mode === 'almacenamiento')) {
+    capacityUsd = pc.capacidad.precio_usd_kw_mes.base * 12 * (ctx.data.power!.credito_firme_tecnologia[p.techId] ?? 0) * p.mw * 1000 * availability * fx;
+  }
+  const d = p.dispatch;
+  if (pc.servicios && d?.servicios && (mode === 'almacenamiento' || mode === 'termica' || tech.hidro?.regulacion)) {
+    servicesUsd = pc.servicios.precio_usd_mw_h.base * 8760 * p.mw * Math.min(0.8, d.fraccionServicios ?? 0.3) * availability * fx;
+  }
+  return { capacityUsd, servicesUsd };
 }
 
 /** Precio en USD de un PPA hoy: indexación y, si es en moneda local, tipo de cambio desde la firma. */
@@ -147,7 +207,9 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
   const fcP90 = fcFromResource(ctx, p, resP90) * fcBonus;
   const policy = p.operation?.maintenance ?? 'preventivo';
   const avail = expectedAvailability(tech, p.mw, policy, p.operation?.failureMultiplier ?? 1);
-  const terms = projectTerms(state, ctx, p, currentYear(state), resP50);
+  // Fase 5: la economía de largo plazo usa la previsión «normal» (sin el clima ni los eventos del año en curso), como lo
+  // haría un banco o un comprador: un año seco o una crisis petrolera no se extrapolan a toda la vida de la planta.
+  const terms = projectTerms(state, ctx, p, currentYear(state), resP50, undefined, opts.staticMarket, true);
   let disp = terms.dispatch;
   let energyP50 = p.mw * 8760 * fcP50 * avail * disp;
   let energyP90 = p.mw * 8760 * fcP90 * avail * disp;
@@ -157,7 +219,8 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
   const y0 = startYear(state);
   void y0;
   // Precio sin PPA: spot capturado (generación y térmicas) o el precio propio del producto (Fase 4).
-  const spot = terms.priceUsdMwh;
+  const spot = terms.priceUsdMwh * (1 - (opts.spotHaircut ?? 0));
+  const extra = opts.staticMarket ? { capacityUsd: 0, servicesUsd: 0 } : capacityAndServicesUsdYear(state, ctx, p, avail);
 
   let ppa: ProjectModelInput['ppa'];
   if (!opts.merchant && sellsEnergy(tech)) {
@@ -190,7 +253,7 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
     degradation: terms.degradation,
     lifeYears: tech.vida_util_anos.base,
     capexUsd: capex,
-    fixedCostUsdYear: fixed.totalUsd + repairs,
+    fixedCostUsdYear: fixed.totalUsd + repairs - extra.capacityUsd - extra.servicesUsd,
     varCostUsdMwh: tech.om_variable_usd_mwh.base,
     inflation: usdInflation(c),
     ppa,
@@ -199,7 +262,7 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
     fuelEscalation: usdInflation(c),
     taxRate: c.impuestos.renta.base,
     depreciationYears: c.impuestos.depreciacion_anos.base,
-    taxCreditUsd: (inc?.credito_fiscal_frac_inversion.base ?? 0) * capex,
+    taxCreditUsd: (inc?.credito_fiscal_frac_inversion.base ?? 0) * worldCreditFactor(state, p.countryCode) * capex,
     taxCreditMaxFrac: inc?.credito_max_frac_impuesto ?? 0,
     decommissionUsd: tech.costo_desmantelamiento_frac_capex.base * capex,
   };

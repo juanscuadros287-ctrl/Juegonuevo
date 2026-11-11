@@ -50,6 +50,13 @@ export type SimEventBase =
   // Fase 4
   | P<'wellsDrilled', { producers: number; injectors: number; dry: number; extraCostUsd: number }>
   | P<'savingsShortfall', { shortfallMwh: number; penaltyUsd: number }>
+  // Fase 5
+  | P<'plantDamaged', { eventId: string; costUsd: number; insuredUsd: number; days: number }>
+  | P<'insuranceChanged', { coverage: string | null; premiumUsdYear: number }>
+  | P<'dispatchPolicyChanged'>
+  | P<'ppaTerminated', { penaltyUsd: number }>
+  | P<'operationBlocked', { missing: string[] }>
+  | P<'curtailment', { curtailedMwh: number; reason: 'precio' | 'red' }>
   | BusinessEvent;
 
 /** Eventos de negocio (Fase 3): texto en español y severidad. */
@@ -84,6 +91,10 @@ export type BusinessEvent =
   | B<'presenceClosed', { countryCode: string }>
   | B<'competitorExpanded', { competitorId: string; countryCode: string }>
   | B<'currencyShock', { countryCode: string; changePct: number }>
-  | B<'fuelPriceChange', { fuelId: string; changePct: number }>;
+  | B<'fuelPriceChange', { fuelId: string; changePct: number }>
+  // Fase 5
+  | B<'climateOutlook', { enso: 'nino' | 'nina' | 'neutral' }>
+  | B<'worldEvent', { eventId: string; uid: number; countryCode?: string }>
+  | B<'worldEventEnded', { eventId: string; uid: number; countryCode?: string }>;
 
 export type ProjectEvent = Extract<SimEvent, { projectId: string }>;

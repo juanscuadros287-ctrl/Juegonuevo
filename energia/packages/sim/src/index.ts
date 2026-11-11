@@ -42,4 +42,10 @@ export * from './tech/siting';
 export * from './market/macro';
 export * from './business/presence';
 export * from './selectorsWorld';
-export { projectDaily, projectMonthly } from './project/tick';
+export { projectDaily, projectMonthly, currentPlan } from './project/tick';
+// Fase 5
+export * from './market/power';
+export * from './market/dispatch';
+export * from './world/events';
+export * from './business/share';
+export * from './selectorsPower';

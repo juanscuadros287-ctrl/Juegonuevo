@@ -108,6 +108,14 @@ export interface PpaContract {
   currency?: 'USD' | 'local';
   /** Tipo de cambio nominal (USD por unidad local) a la firma. */
   fxAtSigning?: number;
+  /**
+   * Fase 5: modalidad. 'produccion' (por defecto) = se paga lo producido; 'bloque' = PPA físico con volumen comprometido
+   * (si la planta produce menos, compra la diferencia al spot); 'financiero' = contrato por diferencias sobre el volumen
+   * comprometido contra el spot medio (la energía se vende al spot).
+   */
+  settlement?: 'produccion' | 'bloque' | 'financiero';
+  /** Volumen comprometido (MWh/año) en 'bloque' y 'financiero'. */
+  committedMwhYear?: number;
 }
 
 export interface Financing {
@@ -181,12 +189,25 @@ export interface Operation {
   /** Fase 4: costo de combustible/carga del mes en curso (USD) y emisiones (tCO2). */
   monthFuelUsd?: number;
   monthCo2T?: number;
-  /** Historial mensual (últimos 120 meses). */
-  history: { year: number; month: number; energyMwh: number; revenueUsd: number; opexUsd: number; availability: number }[];
+  /** Historial mensual (últimos 120 meses). Fase 5: ingresos por fuente (opcionales). */
+  history: OperationMonth[];
+  /** Fase 5: plan de despacho del mes en curso (se recalcula si cambian los precios o la política). */
+  plan?: import('../market/dispatch').MonthPlan;
+  /** Fase 5: acumulados del mes (energía vertida). */
+  monthCurtailedMwh?: number;
+  /** Fase 5: energía en servicios complementarios (MW-h ofrecidos) del mes. */
+  monthServiceMwH?: number;
   totalEnergyMwh: number;
   totalRevenueUsd: number;
   grossAssetUsd: number;
   accumulatedDepreciationUsd: number;
+}
+
+export interface OperationMonth {
+  year: number; month: number; energyMwh: number; revenueUsd: number; opexUsd: number; availability: number;
+  /** Fase 5: ingresos por fuente y compras al spot (USD), vertimiento (MWh) y precio spot medio capturado. */
+  ppaUsd?: number; spotUsd?: number; capacityUsd?: number; servicesUsd?: number; purchasesUsd?: number;
+  curtailedMwh?: number; captureUsdMwh?: number;
 }
 
 export interface Debt {
@@ -230,5 +251,11 @@ export interface Project {
   sale?: { status: 'en_proceso' | 'vendido' | 'fallido'; startTick: number; endTick: number; priceUsd: number };
   partnerShare: number;
   timeline: TimelineEntry[];
+  /** Fase 5: reglas automáticas de despacho (setDispatchPolicy). */
+  dispatch?: import('../market/dispatch').DispatchPolicy;
+  /** Fase 5: seguro de catástrofe (daños y opcionalmente lucro cesante). */
+  insurance?: import('../world/events').Insurance;
+  /** Fase 5: la puesta en marcha terminó pero faltan permisos de generación/conexión para operar. */
+  codBlocked?: boolean;
   endTick?: number;
 }

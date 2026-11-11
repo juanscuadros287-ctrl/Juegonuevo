@@ -4,6 +4,7 @@ import { npv } from '../finance/math';
 import { findingCostUsd, permitApprovalProbability, permitCostUsd, studyCostUsd } from './outcomes';
 import { applicablePermits, applicableStudies, permitGroupApproved, requiredStudyGroups, studyGroupDone } from './requirements';
 import { projectEconomics } from './economics';
+import { sellsEnergy } from '../tech/models';
 import type { Project } from './types';
 
 /** Valor contable del proyecto (activos, sin restar deuda). */
@@ -88,17 +89,30 @@ export function successProbability(ctx: SimContext, p: Project): number {
  * − deuda, descontado a la tasa de la etapa; piso = 30 % del costo de desarrollo; recorte del comprador 8 %.
  */
 export function saleValueUsd(state: GameState, ctx: SimContext, p: Project): number {
-  const eco = projectEconomics(state, ctx, p);
+  return saleValuation(state, ctx, p).valueUsd;
+}
+
+/**
+ * Fase 5: valoración de venta como la haría un comprador real. Si el proyecto vende al spot (sin PPA firmado), el
+ * comprador recorta la curva de precios (`comprador.recorte_precio_merchant`) y exige una prima de retorno
+ * (`comprador.prima_merchant`) por el riesgo de precio y de canibalización.
+ */
+export function saleValuation(state: GameState, ctx: SimContext, p: Project): { valueUsd: number; merchant: boolean; discountRate: number; pvOpsUsd: number } {
+  const tech0 = ctx.data.technologies[p.techId];
+  const buyer = ctx.data.power?.comprador;
+  const merchant = !!buyer && sellsEnergy(tech0) && p.ppa?.status !== 'firmado' && !p.contractId;
+  const eco = projectEconomics(state, ctx, p, merchant ? { spotHaircut: buyer!.recorte_precio_merchant } : {});
   const tech = ctx.data.technologies[p.techId];
   const life = Math.round(tech.vida_util_anos.base);
   let age = 0;
   if (p.operation) age = Math.floor((state.tick - p.operation.codTick) / 365);
   const opsFlows = [0, ...eco.model.projectFlows.slice(1 + age, 1 + life)];
-  const pvOps = npv(eco.wacc, opsFlows);
+  const rate = eco.wacc + (merchant ? buyer!.prima_merchant : 0);
+  const pvOps = npv(rate, opsFlows);
   const remainingCapex = p.operation ? 0 : p.construction ? Math.max(0, p.construction.budgetUsd + p.construction.overrunUsd - p.construction.spentUsd) : eco.investmentUsd;
   const remainingDev = remainingDevCostUsd(ctx, p).totalUsd;
   const debt = p.debt?.outstandingUsd ?? 0;
   const value = successProbability(ctx, p) * (pvOps - remainingCapex - remainingDev) - debt;
   const floor = p.operation || p.construction ? 0 : 0.3 * p.devCostUsd;
-  return Math.max(floor, value) * 0.92;
+  return { valueUsd: Math.max(floor, value) * 0.92, merchant, discountRate: rate, pvOpsUsd: pvOps };
 }

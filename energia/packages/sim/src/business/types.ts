@@ -238,6 +238,12 @@ export interface MarketState {
   fuels?: Record<string, number>;
   /** Fase 4: historial mensual (últimos 120 meses) de tipos de cambio nominales (USD por unidad) e índices de combustibles. */
   macroHistory?: { year: number; month: number; fxUsdPerUnit: Record<string, number>; fuels: Record<string, number> }[];
+  /** Fase 5: mercado eléctrico (clima, parque de los actores, precios horarios del mes, historial). */
+  power?: import('../market/power').PowerState;
+  /** Fase 5: eventos del mundo, regulación vigente por país y elecciones. */
+  world?: import('../world/events').WorldState;
+  /** Fase 3 (pedido de la UI): cuota de mercado mensual por actor (MW en operación). */
+  shareHistory?: { year: number; month: number; mw: Record<string, number> }[];
 }
 
 export function newResearchState(): ResearchState {

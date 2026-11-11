@@ -45,7 +45,7 @@ clima:
   persistencia: 0.35
   supuesto: "NOAA ONI 1950–2024: ≈ 25 % de años con El Niño y ≈ 22 % con La Niña; persistencia de un año a otro ≈ 1/3"
 
-valor_agua: { base: 0.5, exponente: 0.8, min: 0.15, max: 0.97, supuesto: "Precio de la hidro marginal ≈ 50 % del térmico más barato en un mes normal; sube en la estación seca (CND y XM: costo de oportunidad del agua)" }
+valor_agua: { base: 0.55, exponente: 0.8, min: 0.25, max: 0.97, supuesto: "Precio de la hidro marginal ≈ 50 % del térmico más barato en un mes normal; sube en la estación seca (CND y XM: costo de oportunidad del agua)" }
 escasez: { umbral: 0.95, supuesto: "Sobre 95 % de uso de la térmica disponible el precio sube hacia el techo (curva de demanda de reserva, ERCOT ORDC)" }
 
 comprador: { prima_merchant: 0.03, recorte_precio_merchant: 0.12, supuesto: "Los compradores de proyectos sin PPA exigen 2–4 pp más de retorno y descuentan 10–15 % la curva de precios (Lazard, IEA Cost of Capital Observatory 2024; prácticas de M&A de renovables merchant)" }
@@ -182,9 +182,10 @@ paises:
     crecimiento_demanda: 0.02
     precio_techo_usd_mwh: 200
     precio_piso_usd_mwh: 0
-    hidro_embalse_frac: 0.8
+    hidro_embalse_frac: 0.95
     sigma_hidrologia: 0.1
     margen_reserva: 1.1
+    parque_mw: { hidro: 3700, geotermia: 760 }
     elecciones: { cada_anos: 4, proxima: 2028, mes: 9 }
     riesgos: { sismo: 0.06, inundacion: 0.03 }
     supuesto: "Islandia: 70 % hidro con embalses glaciares y 30 % geotermia; demanda plana (aluminio)"

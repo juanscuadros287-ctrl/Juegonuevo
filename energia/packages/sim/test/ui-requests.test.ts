@@ -68,7 +68,8 @@ describe('Pedidos de la UI al motor', () => {
     ev.push(...step(s, [{ type: 'arrangeFinancing', projectId: id, lenderId: 'banco_comercial', debtFraction: 0.7, partnerShare: 0.5 }], ctx));
     for (let i = 0; i < 200 && s.projects[0].financing?.status === 'en_proceso'; i++) ev.push(...step(s, [], ctx));
     const f = s.projects[0].financing!;
-    if (f.status === 'cerrado') expect(f.debtUsd / pv.debtUsd).toBeGreaterThan(0.9);
+    // Fase 5: entre la vista previa y el cierre cambia la previsión de precios del mes (mercado endógeno).
+    if (f.status === 'cerrado') expect(f.debtUsd / pv.debtUsd).toBeGreaterThan(0.85);
   }, 20_000);
 
   it('BUG viabilidad: el VAN esperado del Monte Carlo es coherente con el determinista en la misma base', () => {
@@ -86,7 +87,7 @@ describe('Pedidos de la UI al motor', () => {
     // Antes: VAN esperado −1,5 M con 95 % de éxito y TIR 15 %. Ahora: mismo signo y orden de magnitud que el determinista.
     expect(Math.sign(v.npvExpectedUsd)).toBe(Math.sign(v.npvDeterministicUsd));
     expect(v.npvExpectedUsd).toBeGreaterThan(v.npvDeterministicUsd * v.probCod - 0.3 * Math.abs(v.npvDeterministicUsd));
-    expect(v.npvExpectedUsd).toBeLessThan(v.npvDeterministicUsd * 1.2 + 1);
+    expect(v.npvExpectedUsd).toBeLessThan(v.npvDeterministicUsd + 0.2 * Math.abs(v.npvDeterministicUsd) + 1);
     // Con un canal de PPA explícito se simula ese canal
     const w = checkViability(s, ctx, id, { runs: 300, seed: 1, ppaChannelId: 'licitacion_etesa' });
     expect(w.ppaChannelId).toBe('licitacion_etesa');

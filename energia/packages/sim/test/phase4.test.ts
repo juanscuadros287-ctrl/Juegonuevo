@@ -173,8 +173,10 @@ describe('Hidro, almacenamiento y CSP', () => {
   });
 
   it('una batería en operación cobra en punta y paga la carga en valle (contabilidad)', () => {
-    const s = world(3, 1e9);
-    step(s, [{ type: 'createProject', techId: 'baterias', mw: 20, lat: 8.2, lon: -80.7 }], ctx);
+    // Fase 5: el arbitraje sigue los precios horarios: en Chile (solar barata al mediodía, punta cara de noche) sí cicla.
+    const s = world(3, 1e9, ['CHL']);
+    step(s, [{ type: 'createProject', techId: 'baterias', mw: 20, lat: -23.6, lon: -70.0 }], ctx);
+    expect(s.projects.length).toBe(1);
     run(s, 365 * 5, null, 0); // sin contrato de potencia ningún banco presta a un arbitraje puro: capital propio
     const p = s.projects[0];
     expect(p.stage).toBe('operacion');
@@ -447,7 +449,7 @@ describe('IA en varios países, determinismo, guardado y rendimiento', () => {
     delete v3.state.rng.fx; delete v3.state.rng.fuels;
     for (const c of v3.state.competitors) delete c.business.presence;
     const m = deserialize(JSON.stringify(v3));
-    expect(m.saveVersion).toBe(4);
+    expect(m.saveVersion).toBe(SAVE_VERSION);
     expect(m.business.presence).toEqual({});
     step(m, [], ctx);
     expect(m.market.fx!.COL).toBe(1);

@@ -83,7 +83,7 @@ export function typicalEconomics(state: GameState, ctx: SimContext, techId: stri
   const sf = siteCapexFactor(t, extras, resource);
   const capex = currentCapex(state, ctx, { techId, mw, countryCode: iso3, ...(sf !== 1 ? { siteFactor: sf } : {}) }).totalUsd;
   let eco: Economics;
-  try { eco = projectEconomics(state, ctx, p, { capexUsd: capex, stage: 'operacion' }); } catch { return null; }
+  try { eco = projectEconomics(state, ctx, p, { capexUsd: capex, stage: 'operacion', staticMarket: true }); } catch { return null; }
   return {
     countryCode: iso3, resource, fc: capacityFactor(t, resource, 22, extras), capexUsdKw: capex / (mw * 1000), lcoeUsdMwh: eco.lcoeUsdMwh, lcohUsdKg: eco.lcohUsdKg,
     irrEquity: eco.model.irrEquity, fuelCostUsdMwh: eco.fuelCostUsdMwh, dispatch: eco.dispatch, priceUsdMwh: eco.priceUsdMwh,
