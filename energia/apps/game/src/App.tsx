@@ -119,6 +119,7 @@ function useKeyboard() {
       if (e.key === 'Escape') {
         if (s.dialog) ui.set({ dialog: null });
         else if (s.bidFor) ui.set({ bidFor: null });
+        else if (s.pickingRoute) ui.set({ pickingRoute: false });
         else if (s.developAt) ui.set({ developAt: null });
         else if (s.window) ui.openWindow(null);
         else ui.set({ selected: null });
@@ -172,7 +173,7 @@ export function App() {
           {!win && <Inspector world={world} />}
           <ZoomButtons />
           <Windows />
-          <DevelopDialog />
+          <DevelopDialog world={world} />
           <BidDialog />
           <GameOver />
         </>
