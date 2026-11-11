@@ -19,6 +19,8 @@ import { publicOpportunity } from '../business/opportunities';
 import type { Opportunity } from '../business/types';
 import type { Project } from '../project/types';
 import { insurancePremium } from '../world/events';
+import { actorIdOf } from '../business/actor';
+import { decideTeam } from './team';
 
 /**
  * Toma de decisiones de un competidor IA. Recibe SU vista de actor y devuelve comandos normales
@@ -183,7 +185,7 @@ function pickSite(view: GameState, ctx: SimContext, ai: AiContext, techId: strin
 /** Comandos del competidor para este turno de decisión. */
 export function decideCompetitor(view: GameState, ctx: SimContext, ai: AiContext): Command[] {
   const def = ai.def;
-  const me = view.actorId!;
+  const me = actorIdOf(view);
   const cmds: Command[] = [];
   // Sorteos de decisión deterministas por (partida, competidor, día): decidir no consume flujos del estado.
   const rng = new Rng(seedStream((view.seed ^ hashString(`${me}@${view.tick}`)) >>> 0, 'ai'));
@@ -199,6 +201,9 @@ export function decideCompetitor(view: GameState, ctx: SimContext, ai: AiContext
     const next = def.investigacion.prioridades.find((n) => nodes[n] && researchBlockers(view, ctx, n).length === 0);
     if (next) cmds.push({ type: 'startResearch', nodeId: next });
   }
+
+  // Fase 6: equipo y oficinas (mismos comandos que el jugador).
+  cmds.push(...decideTeam(view, ctx, def, rng, budget, crisis));
 
   // Proyectos
   const active = view.projects.filter((p) => !isTerminal(p));

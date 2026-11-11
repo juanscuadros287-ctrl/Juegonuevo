@@ -128,7 +128,7 @@ oficinas:
       costo_mensual_usd: 9000
       dias: 60
       costo_desarrollo_frac: -0.05
-      reputacion_gobierno_mes: 0.25
+      reputacion_gobierno_mes: 0.1
       invitaciones_privadas: true
       supuesto: "Arriendo 150–250 m², recepción, contador y TI (× índice del país); estudios y permisos −5 % por proveedores locales"
     - id: sede
@@ -138,7 +138,7 @@ oficinas:
       costo_mensual_usd: 32000
       dias: 120
       costo_desarrollo_frac: -0.08
-      reputacion_gobierno_mes: 0.4
+      reputacion_gobierno_mes: 0.2
       invitaciones_privadas: true
       costo_desarrollo_vecinos_frac: -0.03
       supuesto: "Oficina de 600–1.000 m² con dirección regional, legal, finanzas y compras compartidas; −3 % en los países vecinos de la región"

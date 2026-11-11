@@ -49,3 +49,10 @@ export * from './market/dispatch';
 export * from './world/events';
 export * from './business/share';
 export * from './selectorsPower';
+// Fase 6
+export * from './team/types';
+export * from './team/team';
+export * from './team/commands';
+export * from './team/tick';
+export * from './ai/team';
+export * from './selectorsTeam';
