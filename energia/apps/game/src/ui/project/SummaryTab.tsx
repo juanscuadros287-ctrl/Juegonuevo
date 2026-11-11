@@ -1,3 +1,4 @@
+import { MODE_LABEL, MODE_PRODUCT, countryName, fuelName } from '../tech';
 import { gameData } from '@voltaje/data';
 import type { GameState, Project, ProjectDetail } from '@voltaje/sim';
 import { useUi } from '../store';
@@ -125,7 +126,9 @@ export function SummaryTab({ d }: { d: ProjectDetail }) {
       <div className="stats-row">
         <Stat label="VAN del capital" value={fmtMoney(e?.npvEquityUsd)} tone={e && e.npvEquityUsd < 0 ? 'bad' : 'good'} hint={e ? `ke ${fmtPct(e.costOfEquity)}` : undefined} />
         <Stat label="TIR del capital" value={fmtPct(e?.model.irrEquity)} hint={`TIR proyecto ${fmtPct(e?.model.irrProject)}`} />
-        <Stat label="LCOE" value={e ? `${fmtNum(e.lcoeUsdMwh, 1)}` : '—'} hint="US$/MWh (7 % real)" />
+        {e?.mode === 'hidrogeno'
+          ? <Stat label="LCOH" value={e.lcohUsdKg ? fmtNum(e.lcohUsdKg, 2) : '—'} hint="US$/kg de H₂" />
+          : <Stat label={e ? MODE_PRODUCT[e.mode].lcoe : 'LCOE'} value={e ? `${fmtNum(e.lcoeUsdMwh, 1)}` : '—'} hint="US$/MWh (7 % real)" />}
         <Stat label="DSCR mínimo" value={e?.model.minDscr ? fmtNum(e.model.minDscr, 2) : '—'} hint={e?.model.avgDscr ? `medio ${fmtNum(e.model.avgDscr, 2)}` : 'sin deuda'} />
         <Stat label="Precio supuesto" value={e ? fmtNum(e.priceUsdMwh, 0) : '—'} hint={e ? (e.priceAssumption === 'ppa' ? 'US$/MWh · PPA' : 'US$/MWh · spot') : undefined} />
         <Stat label="Prob. de éxito" value={fmtPct(d.successProbability, 0)} tone={d.successProbability < 0.4 ? 'warn' : undefined} />
@@ -151,7 +154,7 @@ export function SummaryTab({ d }: { d: ProjectDetail }) {
             <tr><td>Construcción</td><td>{fmtMoney(c.upcomingUsd.construction)}</td></tr>
           </tbody></table>
         </Section>
-        <Section title="Recurso y producción">
+        {e && e.mode !== 'generacion' ? <ProductSection d={d} /> : <Section title="Recurso y producción">
           <table className="kv"><tbody>
             <tr><td>Recurso P50</td><td>{fmtNum(d.resource.p50, 2)} <span className="dim">{layer?.unidad}</span></td></tr>
             <tr><td>Recurso P90</td><td>{fmtNum(d.resource.p90, 2)} <span className="dim">{layer?.unidad}</span></td></tr>
@@ -162,7 +165,7 @@ export function SummaryTab({ d }: { d: ProjectDetail }) {
             <tr><td>Energía P90</td><td>{fmtNum(d.resource.energyP90MwhYear / 1000, 1)} <span className="dim">GWh/año</span></td></tr>
             <tr><td>Temperatura media</td><td>{fmtNum(d.site.temperatureC, 1)} °C</td></tr>
           </tbody></table>
-        </Section>
+        </Section>}
         <Section title="Inversión estimada">
           <table className="kv"><tbody>
             <tr><td>CAPEX de obra</td><td>{fmtMoney(c.capex.totalUsd)}</td></tr>
@@ -194,5 +197,32 @@ export function SummaryTab({ d }: { d: ProjectDetail }) {
         </Section>
       </div>
     </>
+  );
+}
+
+/** Fase 4: producto, combustible y despacho de las tecnologías que no son de generación renovable. */
+function ProductSection({ d }: { d: ProjectDetail }) {
+  const e = d.economics!;
+  const g = useUi((s) => s.game);
+  const p = g?.projects.find((x) => x.id === d.summary.id);
+  const tech = gameData.simData.technologies[p?.techId ?? ''];
+  const to = p?.site.extras?.to;
+  const usd = (v: number | undefined) => (v === undefined || !Number.isFinite(v) ? '—' : <>{fmtNum(v, 1)} <span className="dim">US$/MWh</span></>);
+  return (
+    <Section title={MODE_LABEL[e.mode]}>
+      <table className="kv"><tbody>
+        <tr><td>{MODE_PRODUCT[e.mode].energy}</td><td>{fmtNum(d.resource.energyP50MwhYear / 1000, 1)} <span className="dim">GWh/año</span></td></tr>
+        {e.mode === 'termica' && <tr><td>Combustible</td><td style={{ fontFamily: 'inherit' }}>{fuelName(tech?.combustible?.tipo)}</td></tr>}
+        {(e.mode === 'termica' || e.mode === 'almacenamiento') && <tr><td>Despacho / uso</td><td>{fmtPct(e.dispatch, 0)}</td></tr>}
+        <tr><td>{e.mode === 'almacenamiento' ? 'Costo de la carga' : e.mode === 'transmision' ? 'Costo de las pérdidas' : e.mode === 'hidrogeno' ? 'Electricidad' : 'Combustible'}</td><td>{usd(e.fuelCostUsdMwh)}</td></tr>
+        {e.carbonCostUsdMwh > 0 && <tr><td>Carbono</td><td>{usd(e.carbonCostUsdMwh)}</td></tr>}
+        {e.co2TPerMwh > 0 && <tr><td>Emisiones</td><td>{fmtNum(e.co2TPerMwh * 1000, 0)} <span className="dim">kgCO₂/MWh</span></td></tr>}
+        {e.mode === 'hidrogeno' && <tr><td>LCOH</td><td>{e.lcohUsdKg ? fmtNum(e.lcohUsdKg, 2) : '—'} <span className="dim">US$/kg</span></td></tr>}
+        {tech?.almacenamiento && <tr><td>Duración</td><td>{fmtNum(tech.almacenamiento.horas.base, 1)} h · {fmtPct(tech.almacenamiento.eficiencia_ida_vuelta.base, 0)} ida y vuelta</td></tr>}
+        {to && <tr><td>Destino</td><td style={{ fontFamily: 'inherit' }}>{countryName(to.countryCode)} · {fmtNum(to.km, 0)} km</td></tr>}
+        <tr><td>Precio del producto</td><td>{usd(e.priceUsdMwh)}</td></tr>
+        <tr><td>Estimación</td><td style={{ fontFamily: 'inherit', whiteSpace: 'normal' }}>{d.resource.source === 'celda' ? 'Valor de la celda' : d.studies.find((s) => s.id === d.resource.source)?.nombre ?? d.resource.source} (± {fmtPct(d.resource.sigma)})</td></tr>
+      </tbody></table>
+    </Section>
   );
 }

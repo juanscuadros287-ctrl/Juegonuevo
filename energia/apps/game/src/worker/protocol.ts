@@ -1,10 +1,13 @@
 import type {
-  BidQuoteView, BusinessSummary, Command, CompanyFinancials, CompetitorsOverview, ContractView, FinancingPreview, GameState, MyBidView, OpportunityView,
-  ProjectDetail, ProjectSummary, ResearchTreeView, SimEvent, SitePreview, SupplierCatalog, SupplierCatalogItem, ViabilityResult,
+  BidQuoteView, BusinessSummary, Command, CompanyFinancials, CompetitorsOverview, ContractView, CountrySheet, CountrySummary, FinancingPreview, GameState,
+  MyBidView, OpportunityView, ProjectDetail, ProjectSummary, ResearchTreeView, SimEvent, SitePreview, SupplierCatalog, SupplierCatalogItem, TechCatalogEntry,
+  ViabilityResult, selectFuelMarkets,
 } from '@voltaje/sim';
 
-/** Paneles de la Fase 3 cuyas vistas (más pesadas) solo se calculan mientras están abiertos. */
-export type BusinessPanel = 'market' | 'contracts' | 'research' | 'competitors' | 'suppliers';
+/** Paneles de las Fases 3 y 4 cuyas vistas (más pesadas) solo se calculan mientras están abiertos. */
+export type BusinessPanel = 'market' | 'contracts' | 'research' | 'competitors' | 'suppliers' | 'countries' | 'catalog';
+
+export type FuelMarket = ReturnType<typeof selectFuelMarkets>[number];
 
 /** Vistas de negocio (Fase 3). `summary` y `competitors` siempre (barra superior y globo); el resto según el panel abierto. */
 export interface BusinessViews {
@@ -17,6 +20,15 @@ export interface BusinessViews {
   contracts?: ContractView[];
   research?: ResearchTreeView;
   suppliers?: SupplierCatalog;
+  // ───────── Fase 4 ─────────
+  /** Lista de países (siempre: el globo resalta presencia y desbloqueo). */
+  countries: CountrySummary[];
+  /** Ficha del país elegido (solo con la ventana Países abierta y un país elegido). */
+  countrySheet?: CountrySheet | null;
+  /** Mercados de combustibles (ventana Países). */
+  fuels?: FuelMarket[];
+  /** Catálogo de tecnologías con LCOE típico por país (ventana Tecnologías; se recalcula una vez por mes). */
+  catalog?: TechCatalogEntry[];
 }
 
 /** Opciones de una cotización (las mismas del comando `submitBid`). */
@@ -55,7 +67,8 @@ export type ToWorker =
   | { t: 'cmd'; cmd: Command }
   | { t: 'save'; reqId: number }
   | { t: 'focus'; projectId: string | null }
-  | { t: 'preview'; reqId: number; techId: string; mw: number; lat: number; lon: number }
+  | { t: 'preview'; reqId: number; techId: string; mw: number; lat: number; lon: number; to?: { lat: number; lon: number } }
+  | { t: 'country'; iso3: string | null }
   | { t: 'viability'; reqId: number; projectId: string; runs: number }
   | { t: 'finPreview'; reqId: number; projectId: string; lenderId: string; debtFraction: number; partnerShare: number }
   | { t: 'panel'; panel: BusinessPanel | null }

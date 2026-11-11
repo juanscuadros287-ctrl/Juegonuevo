@@ -7,7 +7,7 @@
 import {
   applyCommands, checkViability, createNewGame, deserialize, previewFinancing, previewSite, ResourceGrid, selectBidQuote, selectBusinessSummary,
   selectCompanyFinancials, selectCompetitors, selectContracts, selectMyBids, selectOpportunities, selectProjectDetail, selectProjects, selectResearchTree,
-  selectSupplierCatalog, serialize, step, PLAYER_ID, type Command, type GameState, type GridMeta, type SimContext, type SimEvent,
+  selectSupplierCatalog, serialize, step, PLAYER_ID, selectCountries, selectCountrySheet, selectFuelMarkets, selectTechCatalog, type TechCatalogEntry, type Command, type GameState, type GridMeta, type SimContext, type SimEvent,
 } from '@voltaje/sim';
 import { gameData } from '@voltaje/data';
 import type { BusinessPanel, BusinessViews, FromWorker, QuoteReply, QuoteRequest, SiteEstimate, ToWorker, Views } from './protocol';
@@ -23,6 +23,14 @@ let carry = 0;
 let last = performance.now();
 let focus: string | null = null;
 let panel: BusinessPanel | null = null;
+let country: string | null = null;
+/** El catálogo (LCOE típico de 20 tecnologías × 13 países) cuesta: se recalcula al cambiar de mes o de I+D. */
+let catalogCache: { key: string; entries: TechCatalogEntry[] } | null = null;
+function catalog(s: GameState): TechCatalogEntry[] {
+  const key = `${s.seed}|${Math.floor(s.tick / 30)}|${s.business?.research.completed.length ?? 0}`;
+  if (catalogCache?.key !== key) catalogCache = { key, entries: selectTechCatalog(s, ctx) };
+  return catalogCache.entries;
+}
 const MAX_DAYS_PER_TICK = 60;
 /** Intervalo mínimo entre instantáneas mientras corre el tiempo (las vistas cuestan algo de CPU). */
 const SNAPSHOT_MS = 100;
@@ -51,12 +59,15 @@ function businessViews(s: GameState): BusinessViews | null {
     summary: selectBusinessSummary(s, ctx),
     competitors: selectCompetitors(s, ctx),
     biddableCount: open.length,
+    countries: selectCountries(s, ctx),
   };
   try {
     if (panel === 'market') { b.opportunities = selectOpportunities(s, ctx, { includeClosed: true }); b.myBids = selectMyBids(s, ctx); }
     if (panel === 'contracts') { b.contracts = selectContracts(s, ctx); b.myBids = selectMyBids(s, ctx); }
     if (panel === 'research') b.research = selectResearchTree(s, ctx);
     if (panel === 'suppliers') b.suppliers = selectSupplierCatalog(s, ctx);
+    if (panel === 'countries') { b.fuels = selectFuelMarkets(s, ctx); if (country) b.countrySheet = selectCountrySheet(s, ctx, country); }
+    if (panel === 'catalog') b.catalog = catalog(s);
   } catch (e) { console.error('Vista de negocio:', e); }
   return b;
 }
@@ -114,16 +125,20 @@ setInterval(() => {
 }, 50);
 
 /** Simula la creación del proyecto en una copia del estado para estimar su economía (no toca la partida). */
-function estimateSite(techId: string, mw: number, lat: number, lon: number): SiteEstimate {
+function estimateSite(techId: string, mw: number, lat: number, lon: number, to?: { lat: number; lon: number }): SiteEstimate {
   const empty = { irrEquity: null, npvEquityUsd: null, lcoeUsdMwh: null, devCostUpcomingUsd: null, successProbability: null, priceUsdMwh: null };
-  if (!state) return { preview: previewSite(createNewGame(gameData.sim, { seed: 1, companyName: 'x' }), ctx, techId, mw, lat, lon), ...empty };
-  const preview = previewSite(state, ctx, techId, mw, lat, lon);
-  if (!preview.ok) return { preview, ...empty };
+  if (!state) return { preview: previewSite(createNewGame(gameData.sim, { seed: 1, companyName: 'x' }), ctx, techId, mw, lat, lon, to), ...empty };
+  const preview = previewSite(state, ctx, techId, mw, lat, lon, to);
+  // con el sitio bien pero el país cerrado (I+D, presencia) o la tecnología sin investigar, se estima igual sobre la copia:
+  // así se ve si vale la pena abrir el mercado o investigar
+  const siteOk = !!preview.countryCode && (preview.errors ?? []).every((e) => (preview.accessBlockers ?? []).includes(e) || /requiere investigación/.test(e));
+  if (!preview.ok && !siteOk) return { preview, ...empty };
   const copy = structuredClone(state);
   copy.company.cashUsd = Math.max(copy.company.cashUsd, 1e9);
   copy.finance.bankrupt = false;
+  if (!preview.ok) unlockForEstimate(copy, techId, preview.countryCode!, preview.site?.to?.countryCode);
   const id = `P${copy.nextProjectId}`;
-  applyCommands(copy, [{ type: 'createProject', techId, mw, lat, lon }], ctx);
+  applyCommands(copy, [{ type: 'createProject', techId, mw, lat, lon, ...(to ? { toLat: to.lat, toLon: to.lon } : {}) }], ctx);
   const d = selectProjectDetail(copy, ctx, id);
   if (!d) return { preview, ...empty };
   return {
@@ -135,6 +150,25 @@ function estimateSite(techId: string, mw: number, lat: number, lon: number): Sit
     successProbability: d.successProbability,
     priceUsdMwh: d.economics?.priceUsdMwh ?? null,
   };
+}
+
+/** Solo en la copia de la vista previa: I+D y presencia necesarias para poder crear el proyecto y estimarlo. */
+function unlockForEstimate(copy: GameState, techId: string, ...countries: (string | undefined)[]) {
+  const r = copy.business.research;
+  const add = (id: string | undefined) => { if (id && !r.completed.includes(id)) r.completed.push(id); };
+  const nodes = ctx.data.research?.nodos ?? [];
+  const need = (pred: (n: (typeof nodes)[number]) => boolean) => {
+    // el nodo y todos sus prerrequisitos
+    const stack = nodes.filter(pred).map((n) => n.id);
+    while (stack.length) { const id = stack.pop()!; if (r.completed.includes(id)) continue; add(id); stack.push(...(nodes.find((n) => n.id === id)?.requiere ?? [])); }
+  };
+  need((n) => !!n.efectos.tecnologias?.includes(techId));
+  for (const c of countries) {
+    if (!c || c === copy.company.homeCountry) continue;
+    need((n) => !!n.efectos.paises?.includes(c));
+    copy.business.presence ??= {};
+    copy.business.presence[c] = { status: 'activa', level: 'representante', requestedTick: copy.tick, readyTick: copy.tick, setupCostUsd: 0, monthlyCostUsd: 0 };
+  }
 }
 
 /** Cotización de una oferta + proveedores de esa tecnología (para elegir equipos y EPC en el diálogo). */
@@ -187,7 +221,7 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
       snapshot();
       break;
     case 'preview':
-      post({ t: 'preview', reqId: m.reqId, estimate: estimateSite(m.techId, m.mw, m.lat, m.lon) });
+      post({ t: 'preview', reqId: m.reqId, estimate: estimateSite(m.techId, m.mw, m.lat, m.lon, m.to) });
       break;
     case 'viability': {
       const t0 = performance.now();
@@ -213,6 +247,10 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
     case 'panel':
       panel = m.panel;
       snapshot();
+      break;
+    case 'country':
+      country = m.iso3;
+      if (panel === 'countries') snapshot();
       break;
     case 'save':
       if (state) post({ t: 'saved', reqId: m.reqId, text: serialize(state) });

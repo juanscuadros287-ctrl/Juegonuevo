@@ -6,7 +6,9 @@ import type { BusinessPanel, Views } from '../worker/protocol';
 
 export type ToastKind = 'info' | 'good' | 'warn' | 'bad';
 export type WindowId = 'projects' | 'finance' | 'events' | 'project' | BusinessPanel;
-const BUSINESS_PANELS = new Set<string>(['market', 'contracts', 'research', 'competitors', 'suppliers']);
+const BUSINESS_PANELS = new Set<string>(['market', 'contracts', 'research', 'competitors', 'suppliers', 'countries', 'catalog']);
+/** Elegido especial de la ventana Países: la pestaña de combustibles. */
+export const FUELS_PICK = '@combustibles';
 
 /** Enlace de una entrada del registro o aviso (proyecto u otra ventana con un elemento elegido). */
 export type UiLink = { projectId: string } | { window: BusinessPanel; id?: string };
@@ -28,8 +30,10 @@ export interface UiState {
   window: WindowId | null;
   projectId: string | null;
   projectTab: string;
-  /** Diálogo «Desarrollar proyecto aquí». */
-  developAt: { lat: number; lon: number } | null;
+  /** Diálogo «Desarrollar proyecto aquí» (`to`: extremo final de una línea o interconexión). */
+  developAt: { lat: number; lon: number; to?: { lat: number; lon: number } } | null;
+  /** Eligiendo en el globo el extremo final de una línea (el diálogo se oculta mientras tanto). */
+  pickingRoute: boolean;
   /** Elemento elegido en cada ventana de negocio (oportunidad, contrato, nodo de I+D, competidor). */
   pick: Partial<Record<BusinessPanel, string>>;
   /** Diálogo «Armar oferta» para esta oportunidad. */
@@ -52,6 +56,7 @@ let state: UiState = {
   projectId: null,
   projectTab: 'resumen',
   developAt: null,
+  pickingRoute: false,
   pick: {},
   bidFor: null,
   log: [],
@@ -95,8 +100,11 @@ export const ui = {
   openPanel(w: BusinessPanel, id?: string) {
     sim.focus(null);
     sim.panel(w);
+    if (w === 'countries' && id && id !== FUELS_PICK) sim.country(id);
     ui.set((s) => ({ window: w, bidFor: null, pick: id ? { ...s.pick, [w]: id } : s.pick }));
   },
+  /** Ficha de un país (ventana Países). */
+  openCountry(iso3: string) { ui.openPanel('countries', iso3); },
   follow(link: UiLink) {
     if ('projectId' in link) ui.openProject(link.projectId);
     else ui.openPanel(link.window, link.id);

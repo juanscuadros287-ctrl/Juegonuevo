@@ -8,6 +8,7 @@ Juego independiente de Dinastía (el juego Godot de la raíz del repo). Vive en 
 - **Fase 3 (motor) lista**: licitaciones y clientes, ofertas por puntaje, contratos con garantías y penalidades, EPC para terceros, cadena de suministro dinámica, 5 competidores IA con los mismos comandos, árbol de I+D. Detalle en `docs/MOTOR_FASE3.md`.
 - **Fase 4 (motor) lista**: 18 tecnologías nuevas (geotermia con pozos secos, hidro pasada/embalse/bombeo, CSP, eólica marina, biomasa, biogás, gas, carbón, petróleo, nuclear, SMR, baterías, H2 verde, líneas, interconexiones, ESCO), 12 países con permisos propios, presencia por país, tipo de cambio y combustibles, catálogo y fichas de país. Detalle en `docs/MOTOR_FASE4.md`. Siguiente: UI de la Fase 4.
 - **Fase 5 (motor) lista**: mercado eléctrico horario por país (merit order con días tipo, clima/El Niño, capacidad y servicios), despacho de plantas con reglas configurables, PPA en bloque/financiero, permisos para operar, eventos del mundo (crisis, guerras, pandemias, desastres, elecciones, regulación, avances), seguros, valoración merchant del comprador (balance de la IA otra vez < 6×). Detalle en `docs/MOTOR_FASE5.md`. Siguiente: UI de la Fase 5.
+- **Fase 4 (UI) lista**: desarrollar cualquiera de las 20 tecnologías (disponibilidad por I+D/país/sitio, vista previa por modo económico, punto final de líneas en el globo con la ruta dibujada), `visualKind` en el globo (propias y de la IA), trazados de líneas, países resaltados por presencia/desbloqueo, ventana Tecnologías (catálogo y LCOE por país), ventana Países (lista, ficha con moneda, mercado, grafo de permisos con ruta crítica, abrir/cerrar presencia, combustibles), eventos y finanzas nuevas. Detalle en `docs/UI.md`. Siguiente: Fase 5.
 - **Fase 3 (UI) lista**: Mercado (oportunidades, armar oferta con cotización y puntaje, mis ofertas y resultados con ranking), Contratos (obligaciones, asignar proyecto), I+D (árbol con prerrequisitos, presupuesto, cola), Competidores (tabla, fichas, gráfica, plantas en el globo), Proveedores (catálogo, índices), inversores/logística en Construcción, `previewFinancing`, perfil estacional, `stageProgress`. Detalle en `docs/UI.md`.
 - **Fase 2 (UI) lista**: desarrollar en un sitio, panel y detalle de proyectos (Gantt, estudios, permisos, PPA, financiación, construcción, operación, viabilidad), finanzas de la empresa, registro de eventos, quiebra, sitios 3D en el globo. Detalle en `docs/UI.md`.
 
@@ -47,7 +48,9 @@ packages/data   YAML editables + esquemas Zod (game, layers, countries/*, techno
 apps/game       Vite + React + Three.js
   worker/       el GameState vive solo en un Web Worker (carga la grilla y calcula las vistas de los selectores); la UI recibe instantáneas + vistas y envía comandos
   globe/        Globe.ts (shader propio: mapa base, capa, máscara de costa, cuadrícula, selección, facetas); sites.ts + siteVisual.ts (adaptador único a models/)
-  ui/           paneles React; store.ts = estado de UI (no de juego); project/ = pestañas del detalle de proyecto; business/ = mercado, oferta, contratos, I+D, competidores, proveedores
+  ui/           paneles React; store.ts = estado de UI (no de juego); project/ = pestañas del detalle de proyecto; business/ = mercado, oferta, contratos, I+D, competidores, proveedores;
+                world/ = Fase 4: países (ficha, grafo de permisos, combustibles) y catálogo de tecnologías; tech.ts = íconos/modos
+  globe/        (Fase 4) routes.ts = trazados de líneas (createTransmissionLine radial); countries.ts = contornos por presencia/desbloqueo
   storage/      partidas en IndexedDB + exportar/importar .json
   theme/        theme.ts (colores del globo) y theme.css (UI): el estilo se cambia aquí
   src-tauri/    envoltorio nativo de Mac
@@ -113,6 +116,10 @@ Reglas:
 | 2026-11-11 | Fase 5: economía, bancos y compradores usan la previsión «de largo plazo» (sin el clima ni los eventos del año); el comprador de un proyecto merchant recorta 12 % el precio y pide +3 pp. La prueba de balance de la IA vuelve a < 6×. |
 | 2026-11-11 | Fase 5: SAVE_VERSION 5 con migración desde v4 (mercado y eventos se inicializan en el próximo paso). |
 | 2026-11-11 | Fase 5: el LCOE de catálogo (`typicalEconomics`) sigue con el mercado de referencia de la Fase 4 (`staticMarket`) para comparar con Lazard/NREL. |
+| 2026-11-11 | UI Fase 4: Países (X) y Tecnologías (T) en «Más ▾» junto con Combustibles; catálogo calculado en el worker solo con la ventana abierta y con caché mensual; ficha de país solo del país elegido. |
+| 2026-11-11 | UI Fase 4: la disponibilidad de cada tecnología en el sitio se calcula en la UI con `evaluateSite` sobre la grilla de la UI (sin ida y vuelta al worker); la vista previa estima aunque falte I+D o presencia (copia del estado con esos accesos) para decidir si conviene abrir el mercado. |
+| 2026-11-11 | UI Fase 4: líneas = subestación en el origen + trazado de gran círculo con torres según el avance; punto final con un segundo clic (`ui.pickingRoute`). Doble clic en un país con datos → su ficha. |
+| 2026-11-11 | Prueba de humo Fase 4 con atajo de prueba (I+D y caja editados en el JSON de la partida vía `__voltaje.saveText/loadText`), como en las pruebas del motor; total ≈ 3 min. |
 
 ## Pendientes conocidos
 - Motor: cuando la IA gana una licitación, `signContract` publica `contractSigned` (ids `C1-K1`) en los eventos del jugador; la UI los descarta por el prefijo. Debería ir al `sink` de la IA.
@@ -130,6 +137,9 @@ Reglas:
 - Fase 4: sin despacho horario (Fase 5): baterías y bombeo usan factores punta/valle; las térmicas despachan por margen mensual. (Resuelto en la Fase 5 salvo en el catálogo.)
 - Fase 5: la UI debe usar `selectPowerMarket`, `selectPowerMarkets`, `selectPlantDispatch`, `selectRevenueBySource`, `selectWorldEvents`, `selectMarketShareHistory`; comandos `setDispatchPolicy`, `buyInsurance`, `cancelInsurance`, `terminatePpa`, `seekPpa.settlement`. Eventos `worldEvent`, `climateOutlook`, `plantDamaged`, `operationBlocked`.
 - Fase 5: datos de mercado por país aproximados (`supuesto`); sin interconexiones en el despacho; sin picos de una hora (días representativos).
+- Motor (para la UI, Fase 4): `visualKind` y país en `CompetitorView.visibleProjects` (hoy la UI usa `visualKindOf`); `excluye` de los permisos en `PermitGraphNode` (la UI solo filtra por tecnologías y MW); ruta crítica como lista de ids en `permitPaths` (la UI la recalcula con la duración base); extremo de las líneas en `ProjectSummary` (hoy se lee de `site.extras.to` del estado).
+- UI Fase 4: los modelos del globo en la prueba de humo están en prospección (sin años de juego no hay obras ni plantas en operación propias); las etapas avanzadas se ven en `models.html`.
+- Fase 4: el LCOE típico del gas en Chile (~540 US$/MWh con despacho bajo) parece alto; revisar el despacho del catálogo con GNL caro.
 
 ## Preferencias del usuario
 - Respuestas cortas y al punto.
