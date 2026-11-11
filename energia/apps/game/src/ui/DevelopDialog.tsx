@@ -226,12 +226,12 @@ function Preview({ est, mode, tech, mw, busy }: { est: SiteEstimate; mode: TechM
   if (mode === 'generacion') {
     left = [
       ['Recurso P50 / P90', <>{fmtNum(p.cellValue, 2)} / {fmtNum(p.resourceP90, 2)} <span className="dim">{layer?.unidad}</span></>],
-      ['Incertidumbre (σ)', `± ${fmtPct(p.sigma)}`],
-      ['Factor de capacidad P50 / P90', `${fmtPct(p.fcP50)} / ${fmtPct(p.fcP90)}`],
+      ['Incertidumbre σ', `± ${fmtPct(p.sigma)}`],
+      ['FC P50 / P90', `${fmtPct(p.fcP50)} / ${fmtPct(p.fcP90)}`],
       [prod.energy, gwh(p.energyP50MwhYear)],
       ['Terreno', <>{fmtNum(p.landHa, 0)} <span className="dim">ha</span></>],
     ];
-    if (tech.id === 'geotermica') left.push(['Flujo de calor', <>{fmtNum(p.cellValue, 0)} <span className="dim">mW/m²</span></>], ['Pozos exploratorios', <span className="dim">pueden salir secos (estudio de perforación)</span>]);
+    if (tech.id === 'geotermica') left.push(['Flujo de calor', <>{fmtNum(p.cellValue, 0)} <span className="dim">mW/m²</span></>], ['Pozos', <span className="dim" style={{ fontFamily: 'inherit' }}>pueden salir secos (perforación exploratoria)</span>]);
     if (site?.offshore) left.push(['Distancia a la costa', `${fmtNum(site.distCoastKm, 0)} km`], ['Profundidad aprox.', `${fmtNum(site.depthM, 0)} m`]);
     if (tech.recurso === 'hidro') left.push(['Lluvia anual', `${fmtNum(site?.rainMm ?? 0, 0)} mm`], ['Relieve', fmtNum(site?.relief ?? 0, 2)]);
   } else if (mode === 'termica') {

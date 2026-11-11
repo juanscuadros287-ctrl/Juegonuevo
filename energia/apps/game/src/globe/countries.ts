@@ -1,6 +1,6 @@
 /**
  * Fase 4: contorno de color de los países con datos según la expansión (origen/presencia, en trámite, desbloqueado,
- * cerrado). Líneas dobles un poco sobre la superficie para que se distingan de las fronteras normales.
+ * cerrado), un poco sobre la superficie y con colores vivos para que se distingan de las fronteras normales.
  */
 import * as THREE from 'three';
 import type { CountryShape } from '../world/loadWorld';
@@ -9,9 +9,9 @@ import { lonLatToVec3 } from './geo';
 export type CountryMark = 'presencia' | 'tramite' | 'desbloqueado' | 'cerrado';
 
 export const COUNTRY_MARK_COLORS: Record<CountryMark, string> = {
-  presencia: '#4ade80', tramite: '#fbbf24', desbloqueado: '#60a5fa', cerrado: '#64748b',
+  presencia: '#4ade80', tramite: '#fbbf24', desbloqueado: '#7cc4ff', cerrado: '#94a3b8',
 };
-const OPACITY: Record<CountryMark, number> = { presencia: 0.95, tramite: 0.9, desbloqueado: 0.85, cerrado: 0.35 };
+const OPACITY: Record<CountryMark, number> = { presencia: 1, tramite: 1, desbloqueado: 1, cerrado: 0.45 };
 
 export class CountryHighlight {
   readonly group = new THREE.Group();
@@ -32,7 +32,7 @@ export class CountryHighlight {
       if (!m) continue;
       const pts = byMark.get(m) ?? [];
       byMark.set(m, pts);
-      for (const r of m === 'cerrado' ? [1.0012] : [1.0012, 1.0022]) {
+      for (const r of [1.0012]) {
         for (const poly of s.polys) for (const ring of poly) {
           for (let i = 0; i < ring.length; i += 2) {
             const j = (i + 2) % ring.length;

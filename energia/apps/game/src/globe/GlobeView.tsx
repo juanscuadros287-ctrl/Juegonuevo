@@ -4,6 +4,7 @@ import type { World } from '../world/loadWorld';
 import { Globe } from './Globe';
 import { ui } from '../ui/store';
 import { SiteLayer } from './sites';
+import { lonLatToVec3 } from './geo';
 import { CountryHighlight, type CountryMark } from './countries';
 
 let globeRef: Globe | null = null;
@@ -29,11 +30,13 @@ export function GlobeView({ world }: { world: World }) {
     sites.onPick = (id) => { if (ui.get().screen === 'game') ui.openProject(id); };
     sites.onPickRival = (id) => { if (ui.get().screen === 'game') ui.openPanel('competitors', id); };
     // gancho para la prueba de humo (tools/screenshots.mjs): mover la cámara y ubicar sitios
-    (window as unknown as { __voltaje?: object }).__voltaje = {
+    const w = window as unknown as { __voltaje?: object };
+    w.__voltaje = Object.assign(w.__voltaje ?? {}, {
       flyTo: (lat: number, lon: number, d: number, s = 0.1) => g.flyTo(lat, lon, d, s),
       siteScreenPos: (id: string) => sites.screenPos(id),
       rivalSites: () => sites.rivalIds(),
-    };
+      geoScreenPos: (lat: number, lon: number) => g.toScreen(lonLatToVec3(lon, lat, 1)),
+    });
     const highlight = new CountryHighlight(g.scene, world.shapes);
     const home = world.grid.countriesByCode.get(gameData.game.pais_inicial);
     g.jumpTo(home?.lat ?? 0, (home?.lon ?? 0) + 40, 3.4);

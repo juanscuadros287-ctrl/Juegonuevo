@@ -25,7 +25,7 @@ import { CatalogPanel } from './ui/world/CatalogPanel';
 import { CountriesPanel } from './ui/world/CountriesPanel';
 import { FUELS_PICK, ui, useUi, type LogEntry, type ToastKind, type UiLink } from './ui/store';
 import { sim } from './worker/client';
-import { saveGame } from './ui/session';
+import { loadGame, saveGame } from './ui/session';
 import { fmtMoney } from './ui/format';
 
 const KIND: Record<string, ToastKind> = { info: 'info', bueno: 'good', malo: 'bad' };
@@ -164,6 +164,12 @@ export function App() {
   const win = useUi((s) => s.window);
   useGameEvents();
   useKeyboard();
+  // gancho para la prueba de humo: leer y cargar la partida como texto (atajos de prueba sobre el JSON)
+  useEffect(() => {
+    const w = window as unknown as { __voltaje?: object };
+    w.__voltaje = Object.assign(w.__voltaje ?? {}, { saveText: () => sim.save(), loadText: (t: string) => loadGame(t), command: (c: Parameters<typeof sim.command>[0]) => sim.command(c),
+      select: (lat: number, lon: number) => { ui.openWindow(null); ui.set({ selected: { lat, lon } }); } });
+  }, []);
 
   useEffect(() => {
     loadWorld().then(setWorld).catch((e) => setError(String(e)));

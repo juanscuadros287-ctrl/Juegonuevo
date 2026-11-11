@@ -17,16 +17,36 @@ export interface RouteView {
   dashed: boolean;
 }
 
-interface Entry { key: string; group: THREE.Group; line: TransmissionLineObject | null; guide: THREE.Line; mid: THREE.Vector3; detail: number }
+interface Entry { key: string; group: THREE.Group; line: TransmissionLineObject | null; guide: THREE.Mesh; mid: THREE.Vector3; detail: number }
+
+/** Cinta sobre la esfera a lo largo de `pts` (ancho en unidades del globo); `dashed` deja huecos alternos. */
+function ribbon(pts: THREE.Vector3[], width: number, dashed: boolean): THREE.BufferGeometry {
+  const pos: number[] = [];
+  const half = width / 2;
+  const side = (i: number) => {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
+    return new THREE.Vector3().crossVectors(b.clone().sub(a), pts[i]).normalize().multiplyScalar(half);
+  };
+  // largo de cada trazo de la línea discontinua ≈ 2 segmentos
+  for (let i = 0; i + 1 < pts.length; i++) {
+    if (dashed && Math.floor(i / 2) % 2 === 1) continue;
+    const s0 = side(i), s1 = side(i + 1);
+    const a0 = pts[i].clone().add(s0), a1 = pts[i].clone().sub(s0), b0 = pts[i + 1].clone().add(s1), b1 = pts[i + 1].clone().sub(s1);
+    pos.push(a0.x, a0.y, a0.z, a1.x, a1.y, a1.z, b0.x, b0.y, b0.z, a1.x, a1.y, a1.z, b1.x, b1.y, b1.z, b0.x, b0.y, b0.z);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  return g;
+}
 
 /** Escala de los modelos del globo (la misma que siteVisual): la altura de torre ≈ 0,27 × escala. */
 const SCALE = 0.008;
 
 /** Puntos del gran círculo entre dos coordenadas (cada ~0,2°), a radio `r`. */
-export function greatCircle(a: { lat: number; lon: number }, b: { lat: number; lon: number }, r = 1): THREE.Vector3[] {
+export function greatCircle(a: { lat: number; lon: number }, b: { lat: number; lon: number }, r = 1, stepDeg = 0.2): THREE.Vector3[] {
   const va = lonLatToVec3(a.lon, a.lat, 1), vb = lonLatToVec3(b.lon, b.lat, 1);
   const ang = va.angleTo(vb);
-  const n = Math.max(2, Math.ceil((ang * 180) / Math.PI / 0.2));
+  const n = Math.max(2, Math.ceil((ang * 180) / Math.PI / stepDeg));
   const out: THREE.Vector3[] = [];
   for (let i = 0; i <= n; i++) {
     const t = i / n;
@@ -58,15 +78,16 @@ export class RouteLayer {
 
   private build(key: string, r: RouteView): Entry {
     const group = new THREE.Group();
-    const pts = greatCircle(r.from, r.to, 1.0006);
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    const mat = r.dashed
-      ? new THREE.LineDashedMaterial({ color: r.color, dashSize: 0.004, gapSize: 0.003, transparent: true, opacity: 0.95, depthWrite: false })
-      : new THREE.LineBasicMaterial({ color: r.color, transparent: true, opacity: 0.85, depthWrite: false });
-    const guide = new THREE.Line(geo, mat);
-    if (r.dashed) guide.computeLineDistances();
+    const pts = greatCircle(r.from, r.to, 1.0008, 0.05);
+    const guide = new THREE.Mesh(ribbon(pts, 0.0007, r.dashed), new THREE.MeshBasicMaterial({ color: r.color, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide }));
     guide.renderOrder = 3;
     group.add(guide);
+    // extremo final: disco del mismo color
+    const end = new THREE.Mesh(new THREE.CircleGeometry(0.0009, 20), guide.material);
+    end.position.copy(pts[pts.length - 1]);
+    end.lookAt(pts[pts.length - 1].clone().multiplyScalar(2));
+    end.renderOrder = 3;
+    group.add(end);
     let line: TransmissionLineObject | null = null;
     if (r.progress > 0) {
       line = createTransmissionLine(greatCircle(r.from, r.to, 1.0002), r.progress, { up: 'radial', towerHeight: 0.27 * SCALE * 1.6, spacing: 0.27 * SCALE * 1.6 * 2.2 });
@@ -80,7 +101,8 @@ export class RouteLayer {
     const e = this.entries.get(id);
     if (!e) return;
     e.line?.dispose();
-    e.guide.geometry.dispose();
+    // solo los hijos directos (guía y extremo): las piezas de la línea usan geometrías compartidas del caché de modelos
+    for (const o of e.group.children) if (o instanceof THREE.Mesh) o.geometry.dispose();
     (e.guide.material as THREE.Material).dispose();
     e.group.removeFromParent();
     this.entries.delete(id);

@@ -92,7 +92,7 @@ export class SiteLayer {
       if (isLine && to) {
         // la línea se dibuja a lo largo de su trazado; en el origen queda una subestación (con el anillo de etapa)
         const building = p.stage === 'construccion' || p.stage === 'puesta_en_marcha' || p.stage === 'operacion';
-        routes.set(p.id, { from: { lat: p.lat, lon: p.lon }, to, progress: p.stage === 'operacion' ? 1 : building ? p.buildProgress : 0, color: STAGE_COLORS[p.stage], dashed: !building });
+        routes.set(p.id, { from: { lat: p.lat, lon: p.lon }, to, progress: p.stage === 'operacion' ? 1 : building ? p.buildProgress : 0, color: building ? STAGE_COLORS[p.stage] : '#e6eef7', dashed: !building });
       }
       put(p.id, { kind: isLine && to ? 'subestacion' : p.visualKind ?? p.techId, capacityMw: p.mw, stage: p.stage, progress: p.buildProgress, seed: seedOf(p.id), failing: !!raw?.operation?.outages.length, stageProgress: p.stageProgress }, p.lat, p.lon);
     }

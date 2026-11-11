@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { PermitGraph, PermitGraphNode } from '@voltaje/sim';
 import { fmtNum, fmtPct } from '../format';
 
-const W = 214, H = 92, GX = 40, GY = 10;
+const W = 214, H = 78, GX = 40, GY = 8;
 
 /** ¿El permiso aplica a la tecnología y tamaño? (mismo criterio que `applies` del motor). */
 export function permitApplies(n: PermitGraphNode, techId: string | null, mw: number): boolean {
@@ -87,6 +87,7 @@ export function PermitGraphView({ graph, techId, mw }: { graph: PermitGraph; tec
               <div className="pnode-auth ellipsis">{n.autoridad}</div>
               <div className="pnode-meta">
                 <span className="mono">{n.durationDays.min === n.durationDays.max ? `${n.durationDays.base} d` : `${n.durationDays.min}–${n.durationDays.max} d`}</span>
+                {(n.techs || n.mwMin !== undefined || n.mwMax !== undefined) && <span className="pnode-tag">{n.techs ? `${n.techs.length} tec.` : ''}{n.mwMin !== undefined ? ` ≥${fmtNum(n.mwMin, 0)} MW` : ''}{n.mwMax !== undefined ? ` <${fmtNum(n.mwMax, 0)} MW` : ''}</span>}
                 <span className="spacer" />
                 <span className="mono" style={{ color: pr < 0.6 ? 'var(--bad)' : pr < 0.85 ? 'var(--warn)' : 'var(--good)' }}>{fmtPct(pr, 0)}</span>
               </div>
@@ -95,7 +96,6 @@ export function PermitGraphView({ graph, techId, mw }: { graph: PermitGraph; tec
                 <div style={{ width: `${n.probs.info_adicional * 100}%`, background: 'var(--warn)' }} />
                 <div style={{ width: `${n.probs.rechazado * 100}%`, background: 'var(--bad)' }} />
               </div>
-              {(n.techs || n.mwMin !== undefined || n.mwMax !== undefined) && <div className="pnode-tag">{n.techs ? `${n.techs.length} tec.` : ''}{n.mwMin !== undefined ? ` ≥${fmtNum(n.mwMin, 0)} MW` : ''}{n.mwMax !== undefined ? ` <${fmtNum(n.mwMax, 0)} MW` : ''}</div>}
             </div>
           );
         })}
