@@ -10,7 +10,7 @@ import type { Globe } from './Globe';
 import { createSiteVisual, STAGE_COLORS, type SiteVisual } from './siteVisual';
 import { RouteLayer, type RouteView } from './routes';
 import { lonLatToVec3 } from './geo';
-import { rivalColor, stageFromLabel } from '../ui/business/labels';
+import { rivalColor } from '../ui/business/labels';
 
 interface Entry { visual: SiteVisual; pos: THREE.Vector3 }
 
@@ -80,7 +80,7 @@ export class SiteLayer {
       for (const p of c.visibleProjects) {
         const key = `rival:${p.id}`;
         this.rivalOwner.set(key, c.id);
-        const stage = stageFromLabel(p.stage);
+        const stage = p.stageId;
         put(key, { kind: visualKindOf(gameData.simData.technologies[p.techId]), capacityMw: p.mw, stage, progress: p.buildProgress, seed: seedOf(p.id), rivalColor: rivalColor(i) }, p.lat, p.lon);
       }
     });

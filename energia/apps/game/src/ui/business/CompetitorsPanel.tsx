@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
-import type { CompetitorView } from '@voltaje/sim';
+import { PLAYER_ID, type CompetitorView } from '@voltaje/sim';
 import { getGlobe } from '../../globe/GlobeView';
 import { STAGE_COLORS } from '../../globe/siteVisual';
 import { ui, useUi } from '../store';
 import { Bar, Empty, Pill, Section, Stat, StageBadge, Window } from '../common';
 import { Chart, CHART, baseOption } from '../Chart';
 import { fmtNum, fmtPct } from '../format';
-import { PLAYER_COLOR, rivalColor, stageFromLabel, techShort } from './labels';
+import { PLAYER_COLOR, rivalColor, techShort } from './labels';
+import { monthLabel } from '../format';
 
 export function CompetitorsPanel() {
   const ov = useUi((s) => s.views?.business?.competitors);
@@ -18,7 +19,7 @@ export function CompetitorsPanel() {
   const chartOpt = useMemo(() => {
     if (!ov) return null;
     const rows = [{ name: ov.player.name, op: ov.player.operatingMw, dev: 0, exp: ov.player.experienceMw, color: PLAYER_COLOR },
-      ...list.map((c, i) => ({ name: c.name, op: c.operatingMw, dev: c.visibleProjects.filter((p) => stageFromLabel(p.stage) !== 'operacion').reduce((a, p) => a + p.mw, 0), exp: c.experienceMw, color: rivalColor(i) }))];
+      ...list.map((c, i) => ({ name: c.name, op: c.operatingMw, dev: c.visibleProjects.filter((p) => p.stageId !== 'operacion').reduce((a, p) => a + p.mw, 0), exp: c.experienceMw, color: rivalColor(i) }))];
     const o = baseOption(rows.map((r) => r.name), { unit: ' MW' }) as Record<string, unknown>;
     return {
       ...o,
@@ -34,6 +35,26 @@ export function CompetitorsPanel() {
     };
   }, [key]);
 
+  const hist = useUi((s) => s.views?.power?.shareHistory);
+  const histKey = hist ? `${hist.length}-${hist[hist.length - 1]?.totalMw ?? 0}` : '';
+  const shareOpt = useMemo(() => {
+    if (!hist?.length || !ov) return null;
+    const ids = [PLAYER_ID, ...list.map((c) => c.id)];
+    const color = (id: string) => (id === PLAYER_ID ? PLAYER_COLOR : rivalColor(list.findIndex((c) => c.id === id)));
+    const name = (id: string) => (id === PLAYER_ID ? ov.player.name : list.find((c) => c.id === id)?.name ?? id);
+    const o = baseOption(hist.map((h) => monthLabel(h.year, h.month)), { percent: true }) as Record<string, unknown>;
+    return {
+      ...o,
+      grid: { left: 56, right: 64, top: 34, bottom: 28 },
+      yAxis: [{ ...(o.yAxis as object), max: 1 }, { type: 'value', splitLine: { show: false }, axisLabel: { color: CHART.text, formatter: (v: number) => `${v} MW` } }],
+      tooltip: { ...(o.tooltip as object), valueFormatter: (v: unknown) => (typeof v === 'number' ? (v <= 1 ? `${(v * 100).toFixed(1)} %` : `${fmtNum(v, 0)} MW`) : String(v)) },
+      series: [
+        ...ids.map((id) => ({ name: name(id), type: 'line', stack: 'share', areaStyle: { opacity: id === PLAYER_ID ? 0.75 : 0.45 }, symbol: 'none', lineStyle: { width: 1, color: color(id) }, itemStyle: { color: color(id) },
+          data: hist.map((h) => h.actors.find((a) => a.id === id)?.share ?? 0) })),
+        { name: 'MW en operación', type: 'line', yAxisIndex: 1, data: hist.map((h) => Math.round(h.totalMw)), symbol: 'none', lineStyle: { color: '#e6eef7', type: 'dashed' }, itemStyle: { color: '#e6eef7' } },
+      ],
+    };
+  }, [histKey, key]);
   if (!ov) return <Window title="Competidores" onClose={() => ui.openWindow(null)} testId="competitors-panel"><Empty>El mercado aún no está activo.</Empty></Window>;
   const leader = [...list].sort((a, b) => b.marketShare - a.marketShare)[0];
 
@@ -70,6 +91,9 @@ export function CompetitorsPanel() {
               </tbody>
             </table>
             <Section title="Capacidad por empresa" right={<span className="dim" style={{ fontSize: 11 }}>barra llena: en operación · clara: en desarrollo visible · ◆ experiencia acreditada</span>}>{chartOpt && <Chart option={chartOpt} height={250} />}</Section>
+            <Section title="Cuota de mercado histórica" right={<span className="dim" style={{ fontSize: 11 }}>MW en operación de las empresas del juego, mensual</span>}>
+              {shareOpt && hist!.some((h) => h.totalMw > 0) ? <Chart option={shareOpt} height={240} /> : <div className="dim" style={{ fontSize: 12 }}>Aún ninguna empresa del juego tiene plantas en operación{hist?.length ? ` (${hist.length} meses registrados)` : ''}.</div>}
+            </Section>
           </div>
           {sel && <CompetitorCard c={sel} index={list.indexOf(sel)} />}
         </div>
@@ -97,7 +121,7 @@ function CompetitorCard({ c, index }: { c: CompetitorView; index: number }) {
       {c.visibleProjects.length === 0 ? <div className="dim" style={{ fontSize: 12 }}>Ningún proyecto con permisos en trámite todavía (los registros públicos empiezan con los permisos).</div> : (
         <div className="scroll" style={{ maxHeight: 260 }}>
           {c.visibleProjects.map((p) => {
-            const st = stageFromLabel(p.stage);
+            const st = p.stageId;
             return (
               <button key={p.id} className="choice rival-project" onClick={() => getGlobe()?.flyTo(p.lat, p.lon, 1.2)} title="Ver en el globo">
                 <div style={{ flex: 1, minWidth: 0 }}>

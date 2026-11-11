@@ -3,7 +3,7 @@ import { gameData } from '@voltaje/data';
 import { nameplateMw, type ContractView } from '@voltaje/sim';
 import { sim } from '../../worker/client';
 import { ui, useUi } from '../store';
-import { Bar, ConfirmButton, Empty, Pill, Section, Stat, Window } from '../common';
+import { Bar, ConfirmButton, Empty, Pill, Section, Stat, StageBadge, Window } from '../common';
 import { fmtDate, fmtMoney, fmtNum, fmtPct } from '../format';
 import { fmtDaysLeft, fmtPrice, techShort } from './labels';
 
@@ -76,7 +76,7 @@ function ContractCard({ k }: { k: ContractView }) {
   return (
     <div className="side-card scroll" data-testid="contract-card">
       <div style={{ fontSize: 15, fontWeight: 700 }}>{k.clientName}</div>
-      <div className="dim" style={{ fontSize: 11.5 }}>{k.id} · {k.kindLabel} · firmado el {fmtDate(k.signedDate)}</div>
+      <div className="dim" style={{ fontSize: 11.5 }}>{k.id} · {k.kindLabel} · {gameData.simData.countries[k.countryCode]?.nombre ?? k.countryCode} · firmado el {fmtDate(k.signedDate)}</div>
       <div style={{ margin: '8px 0' }}><Pill tone={k.late ? 'bad' : STATUS_TONE[k.status]}>{k.late ? 'Atrasado' : k.statusLabel}</Pill></div>
       <table className="kv"><tbody>
         <tr><td>Precio</td><td>{fmtPrice(k.price, k.unit)}</td></tr>
@@ -99,7 +99,7 @@ function ContractCard({ k }: { k: ContractView }) {
       {k.project && (
         <Section title="Proyecto vinculado">
           <button className="choice" style={{ width: '100%', display: 'block', textAlign: 'left' }} onClick={() => ui.openProject(k.project!.id)}>
-            <div className="row"><b>{k.project.name}</b><span className="spacer" /><span className="dim">{k.project.stage}</span></div>
+            <div className="row"><b>{k.project.name}</b><span className="spacer" /><StageBadge stage={k.project.stageId} label={k.project.stage} /></div>
             <div style={{ marginTop: 6 }}><Bar value={k.project.buildProgress} color="var(--warn)" /></div>
             <div className="dim" style={{ fontSize: 11, marginTop: 3 }}>Obra {fmtPct(k.project.buildProgress, 0)} · abrir proyecto →</div>
           </button>
@@ -129,24 +129,20 @@ function EpcBlock({ k }: { k: ContractView }) {
   );
 }
 
-/** Asignar un proyecto propio a un contrato «con proyecto nuevo». */
+/** Asignar un proyecto propio a un contrato «con proyecto nuevo» (`ContractView.eligibleProjects` del motor). */
 function AssignProject({ k }: { k: ContractView }) {
-  const projects = useUi((s) => s.views?.projects ?? EMPTY);
-  const raw = useUi((s) => s.game?.projects ?? EMPTY);
   const need = k.kind === 'potencia' ? nameplateMw({ data: gameData.simData }, { contract: 'potencia', mw: k.mw }, k.techId) : k.mw;
-  const ok = projects.filter((p) => {
-    const r = raw.find((x) => x.id === p.id);
-    return p.active && p.techId === k.techId && p.mw >= 0.9 * need && p.mw <= 1.5 * need && !r?.contractId && r?.ppa?.status !== 'firmado' && r?.ppa?.status !== 'en_proceso';
-  });
+  const ok = k.eligibleProjects;
+  const country = gameData.simData.countries[k.countryCode]?.nombre ?? k.countryCode;
   const [pid, setPid] = useState(ok[0]?.id ?? '');
   return (
     <Section title="Asignar proyecto">
       {ok.length === 0 ? (
-        <div className="notice warn">Ningún proyecto propio cumple: {techShort(k.techId)}, entre {fmtNum(0.9 * need, 0)} y {fmtNum(1.5 * need, 0)} MW, sin otro contrato ni PPA. Crea uno en el globo («Desarrollar proyecto aquí»).</div>
+        <div className="notice warn">Ningún proyecto propio cumple: {techShort(k.techId)} en {country}, entre {fmtNum(0.9 * need, 0)} y {fmtNum(1.5 * need, 0)} MW, sin otro contrato ni PPA y antes de la obra. Crea uno en el globo («Desarrollar proyecto aquí»).</div>
       ) : (
         <div className="row" style={{ gap: 6 }}>
           <select value={pid} onChange={(e) => setPid(e.target.value)} style={{ flex: 1 }} data-testid="assign-project">
-            {ok.map((p) => <option key={p.id} value={p.id}>{p.name} · {fmtNum(p.mw, 0)} MW · {p.stageLabel}</option>)}
+            {ok.map((p) => <option key={p.id} value={p.id}>{p.name} · {fmtNum(p.mw, 0)} MW · {p.stage}</option>)}
           </select>
           <ConfirmButton className="primary" disabled={!pid} confirm="El proyecto recibe el PPA del contrato." onConfirm={() => sim.command({ type: 'assignContractProject', contractId: k.id, projectId: pid })}>Asignar</ConfirmButton>
         </div>

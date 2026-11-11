@@ -6,6 +6,7 @@ import { ConfirmButton, Empty, Pill, Section, Stat, Tabs, Window } from '../comm
 import { fmtDate, fmtMoney, fmtNum, fmtPct } from '../format';
 import { fmtDaysLeft, fmtPrice, techShort } from './labels';
 import { sim } from '../../worker/client';
+import { getGlobe } from '../../globe/GlobeView';
 
 type Tab = 'abiertas' | 'mias' | 'resultados';
 
@@ -133,6 +134,8 @@ function OpportunityCard({ o }: { o: OpportunityView }) {
           <div style={{ fontSize: 15, fontWeight: 700 }}>{o.clientName}</div>
           <div className="dim" style={{ fontSize: 11.5 }}>{o.kindLabel} · {o.clientTypeName}</div>
         </div>
+        <span className="spacer" />
+        {o.location && <button className="link" title="Ubicación aproximada del sitio candidato" onClick={() => { ui.openWindow(null); getGlobe()?.flyTo(o.location!.lat, o.location!.lon, 1.3); }}>⌖ globo</button>}
       </div>
       {closed ? <ResultBlock o={o} /> : o.myBid ? (
         <div className="notice good" style={{ marginTop: 10 }}>

@@ -73,6 +73,21 @@ export function FinancePanel() {
       ],
     };
   }, [key]);
+  const rev = useUi((s) => s.views?.power?.revenue);
+  const revKey = rev ? rev.byMonth.map((m) => `${m.energyUsd.toFixed(0)}`).join('|') : '';
+  const revOpt = useMemo(() => {
+    if (!rev) return null;
+    const o = baseOption(rev.byMonth.map((m) => monthLabel(m.year, m.month)), { money: true });
+    return {
+      ...o,
+      series: [
+        { name: 'Energía (PPA y spot)', type: 'bar', stack: 'r', data: rev.byMonth.map((m) => m.energyUsd), itemStyle: { color: CHART.info } },
+        { name: 'Capacidad', type: 'bar', stack: 'r', data: rev.byMonth.map((m) => m.capacityUsd), itemStyle: { color: CHART.violet } },
+        { name: 'Servicios', type: 'bar', stack: 'r', data: rev.byMonth.map((m) => m.servicesUsd), itemStyle: { color: '#22d3ee' } },
+        { name: 'Compras al spot', type: 'bar', stack: 'r', data: rev.byMonth.map((m) => -Math.abs(m.purchasesUsd)), itemStyle: { color: CHART.bad } },
+      ],
+    };
+  }, [revKey]);
   if (!f || !game) return null;
   const b = f.balance;
   const risk = riskLevel(f);
@@ -98,6 +113,22 @@ export function FinancePanel() {
               <div className="grid2">
                 <Section title="Caja y deuda"><Chart option={cashOpt} height={250} /></Section>
                 <Section title="Flujo de caja mensual y resultado"><Chart option={flowOpt} height={250} /></Section>
+              </div>
+            )}
+            {rev && (
+              <div className="grid2">
+                <Section title="Ingresos por fuente (12 meses)">
+                  <table className="kv" data-testid="revenue-sources"><tbody>
+                    <tr><td>Energía (PPA y spot)</td><td>{fmtMoney(rev.energyUsd)}</td></tr>
+                    <tr><td>Pagos por capacidad</td><td>{fmtMoney(rev.capacityUsd)}</td></tr>
+                    <tr><td>Servicios complementarios</td><td>{fmtMoney(rev.servicesUsd)}</td></tr>
+                    <tr><td>Compras de energía al spot</td><td style={{ color: rev.purchasesUsd ? 'var(--bad)' : undefined }}>{fmtMoney(-Math.abs(rev.purchasesUsd))}</td></tr>
+                    <tr><td>Indemnizaciones de seguros</td><td style={{ color: rev.insuranceUsd ? 'var(--good)' : undefined }}>{fmtMoney(rev.insuranceUsd)}</td></tr>
+                    <tr className="kv-head"><td>Neto de energía y servicios</td><td>{fmtMoney(rev.energyUsd + rev.capacityUsd + rev.servicesUsd - Math.abs(rev.purchasesUsd))}</td></tr>
+                  </tbody></table>
+                  <div className="dim" style={{ fontSize: 11.5, marginTop: 6 }}>El desglose por planta (PPA, spot, capacidad, servicios) está en la pestaña «Despacho y venta» de cada proyecto en operación.</div>
+                </Section>
+                <Section title="Ingresos por fuente, mensual">{rev.byMonth.length && revOpt ? <Chart option={revOpt} height={220} /> : <Empty>Sin meses cerrados.</Empty>}</Section>
               </div>
             )}
           </>
