@@ -9,14 +9,14 @@ const SEV: Record<Severity, { color: string; label: string }> = {
   malo: { color: 'var(--bad)', label: 'Problemas' },
 };
 
-const LINK_LABELS: Record<string, string> = { market: 'Mercado', contracts: 'Contratos', research: 'I+D', competitors: 'Competidores', suppliers: 'Proveedores' };
+const LINK_LABELS: Record<string, string> = { market: 'Mercado', contracts: 'Contratos', research: 'I+D', competitors: 'Competidores', suppliers: 'Proveedores', countries: 'Países', catalog: 'Tecnologías' };
 
 export function EventLog() {
   const log = useUi((s) => s.log);
   const projects = useUi((s) => s.views?.projects ?? []);
   const [sev, setSev] = useState<Severity | 'todos'>('todos');
   const [pid, setPid] = useState<string>('');
-  const list = log.filter((e) => (sev === 'todos' || e.severity === sev) && (!pid || (pid === '__biz' ? !e.projectId : e.projectId === pid))).slice().reverse();
+  const list = log.filter((e) => (sev === 'todos' || e.severity === sev) && (!pid || (pid === '__biz' ? !e.projectId && !(e.link && 'window' in e.link && e.link.window === 'countries') : pid === '__world' ? !!e.link && 'window' in e.link && e.link.window === 'countries' : e.projectId === pid))).slice().reverse();
   const name = (id?: string) => projects.find((p) => p.id === id)?.name;
 
   return (
@@ -30,6 +30,7 @@ export function EventLog() {
         <select value={pid} onChange={(e) => setPid(e.target.value)}>
           <option value="">Todo</option>
           <option value="__biz">Mercado, contratos, I+D y competencia</option>
+          <option value="__world">Países, monedas y combustibles</option>
           {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
       </div>
@@ -40,7 +41,7 @@ export function EventLog() {
             <span className="mono dim log-date">{e.date}</span>
             <span style={{ flex: 1 }}>{e.text}</span>
             {e.projectId && <span className="dim log-project ellipsis">{name(e.projectId) ?? e.projectId}</span>}
-            {!e.projectId && e.link && 'window' in e.link && <span className="dim log-project ellipsis">{LINK_LABELS[e.link.window]}</span>}
+            {!e.projectId && e.link && 'window' in e.link && <span className="dim log-project ellipsis">{e.link.window === 'countries' && e.link.id && !e.link.id.startsWith('@') ? `Países · ${e.link.id}` : e.link.window === 'countries' && e.link.id ? 'Combustibles' : LINK_LABELS[e.link.window]}</span>}
           </div>
         ))}
       </div>

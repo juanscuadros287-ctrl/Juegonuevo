@@ -21,14 +21,17 @@ import { ResearchPanel } from './ui/business/ResearchPanel';
 import { CompetitorsPanel } from './ui/business/CompetitorsPanel';
 import { SuppliersPanel } from './ui/business/SuppliersPanel';
 import { BidDialog } from './ui/business/BidDialog';
-import { ui, useUi, type LogEntry, type ToastKind, type UiLink } from './ui/store';
+import { CatalogPanel } from './ui/world/CatalogPanel';
+import { CountriesPanel } from './ui/world/CountriesPanel';
+import { FUELS_PICK, ui, useUi, type LogEntry, type ToastKind, type UiLink } from './ui/store';
 import { sim } from './worker/client';
 import { saveGame } from './ui/session';
 import { fmtMoney } from './ui/format';
 
 const KIND: Record<string, ToastKind> = { info: 'info', bueno: 'good', malo: 'bad' };
 /** Eventos informativos que también merecen notificación (el resto va solo al registro). */
-const TOAST_INFO = new Set(['projectCreated', 'studyCompleted', 'permitDecided', 'commissioningStarted', 'saleStarted', 'bidSubmitted', 'contractSigned', 'researchStarted', 'contractProjectAssigned']);
+const TOAST_INFO = new Set(['projectCreated', 'studyCompleted', 'permitDecided', 'commissioningStarted', 'saleStarted', 'bidSubmitted', 'contractSigned', 'researchStarted', 'contractProjectAssigned',
+  'presenceRequested', 'presenceOpened', 'presenceClosed', 'wellsDrilled']);
 
 /** A qué ventana lleva un evento de negocio (Fase 3). */
 function businessLink(e: SimEvent): UiLink | undefined {
@@ -37,6 +40,9 @@ function businessLink(e: SimEvent): UiLink | undefined {
   if ('nodeId' in e) return { window: 'research', id: e.nodeId };
   if ('competitorId' in e) return { window: 'competitors', id: e.competitorId };
   if (e.type === 'supplyPriceChange') return { window: 'suppliers' };
+  // Fase 4: presencia y tipo de cambio → ficha del país; combustibles → su pestaña
+  if (e.type === 'fuelPriceChange') return { window: 'countries', id: FUELS_PICK };
+  if ('countryCode' in e && typeof e.countryCode === 'string') return { window: 'countries', id: e.countryCode };
   return undefined;
 }
 
@@ -116,6 +122,8 @@ function useKeyboard() {
       if (k === 'i') ui.openWindow('research');
       if (k === 'r') ui.openWindow('competitors');
       if (k === 'v') ui.openWindow('suppliers');
+      if (k === 'x') ui.openWindow('countries');
+      if (k === 't') ui.openWindow('catalog');
       if (e.key === 'Escape') {
         if (s.dialog) ui.set({ dialog: null });
         else if (s.bidFor) ui.set({ bidFor: null });
@@ -143,6 +151,8 @@ function Windows() {
   if (w === 'research') return <ResearchPanel />;
   if (w === 'competitors') return <CompetitorsPanel />;
   if (w === 'suppliers') return <SuppliersPanel />;
+  if (w === 'countries') return <CountriesPanel />;
+  if (w === 'catalog') return <CatalogPanel />;
   return null;
 }
 

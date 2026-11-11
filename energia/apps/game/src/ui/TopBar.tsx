@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { gameData } from '@voltaje/data';
 import { currentDate, formatDate } from '@voltaje/sim';
-import { ui, useUi, type WindowId } from './store';
+import { FUELS_PICK, ui, useUi, type WindowId } from './store';
 import { fmtMoney, fmtNum } from './format';
 import { riskLevel } from './FinancePanel';
 
@@ -20,7 +20,7 @@ function MoreMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const win = useUi((s) => s.window);
-  const active = win === 'competitors' || win === 'suppliers';
+  const active = win === 'competitors' || win === 'suppliers' || win === 'countries' || win === 'catalog';
   useEffect(() => {
     if (!open) return;
     const off = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
@@ -34,11 +34,17 @@ function MoreMenu() {
   );
   return (
     <div className="menu-wrap" ref={ref}>
-      <button className={active ? 'active' : ''} data-nav="more" onClick={() => setOpen(!open)} title="Competidores y proveedores">
+      <button className={active ? 'active' : ''} data-nav="more" onClick={() => setOpen(!open)} title="Países, tecnologías, competidores y proveedores">
         Más ▾
       </button>
       {open && (
         <div className="panel menu">
+          {item('countries', 'Países y expansión', 'X', 'presencia, moneda, permisos, mercados')}
+          {item('catalog', 'Tecnologías', 'T', 'catálogo comparativo y LCOE por país')}
+          <button className="menu-item" data-nav="fuels" onClick={() => { setOpen(false); ui.openPanel('countries', FUELS_PICK); }}>
+            <span>Combustibles<span className="dim menu-hint">precios e historial</span></span><span className="spacer" />
+          </button>
+          <div className="menu-sep" />
           {item('competitors', 'Competidores', 'R', 'empresas rivales, cuota y plantas')}
           {item('suppliers', 'Proveedores', 'V', 'precios, materiales y plazos')}
         </div>

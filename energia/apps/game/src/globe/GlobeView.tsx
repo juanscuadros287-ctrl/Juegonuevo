@@ -10,12 +10,19 @@ let globeRef: Globe | null = null;
 let sitesRef: SiteLayer | null = null;
 export const getGlobe = () => globeRef;
 export const getSites = () => sitesRef;
+let worldRef: World | null = null;
+/** Centro aproximado de un país de la grilla (para volar la cámara). */
+export const countryCenter = (code: string): { lat: number; lon: number } | null => {
+  const c = worldRef?.grid.countriesByCode.get(code);
+  return c ? { lat: c.lat, lon: c.lon } : null;
+};
 
 export function GlobeView({ world }: { world: World }) {
   const canvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const g = new Globe(canvas.current!, world);
+    worldRef = world;
     globeRef = g;
     const sites = new SiteLayer(g);
     sitesRef = sites;
