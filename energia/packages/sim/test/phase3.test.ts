@@ -366,9 +366,8 @@ describe('Competidores IA', () => {
         total++;
         if (c.status === 'quebrada') { bankrupt++; continue; }
         const eq = balanceSheet(actorView(s, c)).equityUsd;
-        // Fase 4: con expansión y otras trayectorias de licitaciones, la desarrolladora que vende cartera puede crecer mucho en
-        // una semilla (ventas de proyectos merchant en Panamá); se exige que ninguna pase de 12× y que la mediana quede bajo 4×.
-        expect(eq).toBeLessThan(def.caja_inicial_usd * 12);
+        // Fase 5: con el spot endógeno y la valoración merchant del comprador se vuelve al límite original (< 6×).
+        expect(eq).toBeLessThan(def.caja_inicial_usd * 6);
         ratios.push(eq / def.caja_inicial_usd);
         plants += c.projects.filter((p) => p.stage === 'operacion').length;
       }

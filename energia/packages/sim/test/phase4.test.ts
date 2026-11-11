@@ -411,7 +411,7 @@ describe('IA en varios países, determinismo, guardado y rendimiento', () => {
         abroad += c.projects.filter((p) => p.countryCode !== 'PAN').length;
         expect(Number.isFinite(c.company.cashUsd)).toBe(true);
         const def = data.competitors!.empresas.find((d) => d.id === c.defId)!;
-        if (c.status === 'activa') expect(balanceSheet(actorView(s, c)).equityUsd).toBeLessThan(def.caja_inicial_usd * 12); // mismo límite que la prueba de la Fase 3
+        if (c.status === 'activa') expect(balanceSheet(actorView(s, c)).equityUsd).toBeLessThan(def.caja_inicial_usd * 6); // Fase 5: límite original
       }
       expect(s.market.opportunities.some((o) => o.countryCode !== 'PAN')).toBe(true);
     }
