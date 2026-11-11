@@ -1,0 +1,247 @@
+# Fase 5: mercado eléctrico por país (parque existente agregado, demanda horaria, clima, capacidad y servicios).
+# El precio spot horario = costo marginal de la unidad marginal (merit order) en días representativos:
+# 12 meses × {laborable, fin de semana} × 24 h. Ver docs/MOTOR_FASE5.md.
+# El parque existente se deriva de `mercado.matriz` (participación en la generación) y de `mercado.demanda_anual_twh`
+# de cada país, salvo que `parque_mw` lo fije. Los costos marginales térmicos se calibran (un factor por país) para que el
+# spot medio del año base sin plantas de los actores sea el `precio_spot_medio_usd_mwh` histórico del país.
+
+formas_demanda:
+  # Perfiles horarios (0–23 h) relativos; se normalizan a media 1 (5 laborables + 2 de fin de semana).
+  tropical:
+    laborable: [0.80, 0.77, 0.75, 0.74, 0.75, 0.80, 0.88, 0.97, 1.05, 1.10, 1.13, 1.15, 1.15, 1.16, 1.15, 1.13, 1.10, 1.08, 1.12, 1.16, 1.13, 1.05, 0.95, 0.86]
+    finde:     [0.78, 0.75, 0.73, 0.72, 0.72, 0.74, 0.78, 0.84, 0.90, 0.95, 0.98, 1.00, 1.01, 1.01, 1.00, 0.98, 0.97, 0.98, 1.04, 1.08, 1.05, 0.98, 0.90, 0.83]
+    supuesto: "Forma típica de sistemas tropicales con aire acondicionado (CND Panamá, XM Colombia, CENCE Costa Rica): meseta de 10 a 16 h y pico nocturno de iluminación"
+  templado:
+    laborable: [0.82, 0.77, 0.74, 0.73, 0.74, 0.79, 0.90, 1.03, 1.10, 1.12, 1.12, 1.12, 1.11, 1.08, 1.05, 1.03, 1.03, 1.06, 1.12, 1.18, 1.18, 1.12, 1.02, 0.91]
+    finde:     [0.82, 0.77, 0.74, 0.72, 0.72, 0.73, 0.77, 0.84, 0.90, 0.96, 0.99, 1.00, 1.00, 0.97, 0.94, 0.92, 0.92, 0.96, 1.04, 1.10, 1.10, 1.05, 0.97, 0.88]
+    supuesto: "Curva de demanda de REE (España) y del Coordinador (Chile): dos picos, mañana y tarde-noche"
+  verano_ac:
+    laborable: [0.80, 0.76, 0.73, 0.72, 0.73, 0.77, 0.84, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.19, 1.22, 1.24, 1.25, 1.24, 1.20, 1.14, 1.08, 1.00, 0.92, 0.85]
+    finde:     [0.80, 0.76, 0.73, 0.71, 0.71, 0.72, 0.76, 0.81, 0.87, 0.93, 0.99, 1.04, 1.08, 1.12, 1.14, 1.15, 1.15, 1.14, 1.11, 1.06, 1.01, 0.95, 0.88, 0.83]
+    supuesto: "ERCOT y norte de México: pico de aire acondicionado a las 16–18 h (ERCOT Hourly Load Data 2023)"
+
+formas_recurso:
+  # Producción horaria típica (0–23 h), relativa.
+  solar: [0, 0, 0, 0, 0, 0, 0.05, 0.25, 0.50, 0.75, 0.92, 1.0, 1.0, 0.95, 0.82, 0.62, 0.38, 0.14, 0.02, 0, 0, 0, 0, 0]
+  eolica: [1.15, 1.17, 1.18, 1.18, 1.17, 1.14, 1.08, 1.0, 0.92, 0.86, 0.82, 0.80, 0.80, 0.82, 0.85, 0.89, 0.94, 1.0, 1.05, 1.09, 1.12, 1.13, 1.14, 1.15]
+  supuesto: "Campana solar de un seguidor de un eje en el trópico; viento con más producción nocturna (perfiles típicos de NREL SAM)"
+
+clases:
+  hidro: { nombre: "Hidroeléctrica", tipo: hidro, fc: 0.5, disponibilidad: 0.92, credito_firme: 0.6, om_variable_usd_mwh: 2, tecnologias: [hidro_pasada, hidro_embalse] }
+  solar: { nombre: "Solar", tipo: variable_solar, fc: 0.21, disponibilidad: 0.98, credito_firme: 0.05, om_variable_usd_mwh: 0, tecnologias: [solar_fv, csp] }
+  eolica: { nombre: "Eólica", tipo: variable_eolica, fc: 0.33, disponibilidad: 0.97, credito_firme: 0.15, om_variable_usd_mwh: 0, tecnologias: [eolica_tierra, eolica_marina] }
+  geotermia: { nombre: "Geotermia", tipo: base, fc: 0.85, disponibilidad: 0.92, credito_firme: 0.9, om_variable_usd_mwh: 3, tecnologias: [geotermica] }
+  nuclear: { nombre: "Nuclear", tipo: base, fc: 0.9, disponibilidad: 0.92, credito_firme: 0.9, combustible: uranio, heat_rate_btu_kwh: 10400, om_variable_usd_mwh: 2.5, tecnologias: [nuclear, smr] }
+  biomasa: { nombre: "Biomasa", tipo: termica, fc: 0.55, disponibilidad: 0.88, credito_firme: 0.85, combustible: biomasa, heat_rate_btu_kwh: 13500, om_variable_usd_mwh: 5, tecnologias: [biomasa, biogas] }
+  carbon: { nombre: "Carbón", tipo: termica, fc: 0.6, disponibilidad: 0.88, credito_firme: 0.88, combustible: carbon, heat_rate_btu_kwh: 10000, om_variable_usd_mwh: 4.5, tecnologias: [carbon] }
+  gas: { nombre: "Gas (ciclo combinado)", tipo: termica, fc: 0.5, disponibilidad: 0.9, credito_firme: 0.9, combustible: gas_natural, heat_rate_btu_kwh: 7000, om_variable_usd_mwh: 3, tecnologias: [gas_natural] }
+  fueloil: { nombre: "Motores y turbinas a fuel oil", tipo: termica, fc: 0.3, disponibilidad: 0.88, credito_firme: 0.88, combustible: fueloil, heat_rate_btu_kwh: 9500, om_variable_usd_mwh: 8, tecnologias: [petroleo] }
+  punta: { nombre: "Turbinas de punta (diésel/gas)", tipo: termica, fc: 0.03, disponibilidad: 0.9, credito_firme: 0.9, combustible: fueloil, heat_rate_btu_kwh: 11500, om_variable_usd_mwh: 10, tecnologias: [] }
+  supuesto: "Heat rates y O&M variable típicos por tecnología (EIA Electric Power Annual 2023; Lazard LCOE+ 2024); FC medios de IRENA 2023. Potencia firme según prácticas de los mercados de capacidad (PJM/ERCOT ELCC: solar ≈ 5–40 %, eólica ≈ 10–20 %)"
+
+clima:
+  prob_nino: 0.25
+  prob_nina: 0.22
+  persistencia: 0.35
+  supuesto: "NOAA ONI 1950–2024: ≈ 25 % de años con El Niño y ≈ 22 % con La Niña; persistencia de un año a otro ≈ 1/3"
+
+valor_agua: { base: 0.5, exponente: 0.8, min: 0.15, max: 0.97, supuesto: "Precio de la hidro marginal ≈ 50 % del térmico más barato en un mes normal; sube en la estación seca (CND y XM: costo de oportunidad del agua)" }
+escasez: { umbral: 0.95, supuesto: "Sobre 95 % de uso de la térmica disponible el precio sube hacia el techo (curva de demanda de reserva, ERCOT ORDC)" }
+
+comprador: { prima_merchant: 0.03, recorte_precio_merchant: 0.12, supuesto: "Los compradores de proyectos sin PPA exigen 2–4 pp más de retorno y descuentan 10–15 % la curva de precios (Lazard, IEA Cost of Capital Observatory 2024; prácticas de M&A de renovables merchant)" }
+
+ppa_modalidades:
+  bloque: { prima: 0.04, cobertura: 0.9, supuesto: "PPA físico en bloque: se compromete ≈ 90 % de la producción P50; el comprador paga ≈ 3–5 % más por la firmeza" }
+  financiero: { prima: 0.0, cobertura: 0.9, supuesto: "PPA financiero (contrato por diferencias) sobre ≈ 90 % de la producción P50 contra el precio medio del mercado" }
+terminacion_ppa_meses: 12
+
+credito_firme_tecnologia: { solar_fv: 0.05, csp: 0.6, eolica_tierra: 0.15, eolica_marina: 0.2, geotermica: 0.9, hidro_pasada: 0.4, hidro_embalse: 0.8, hidro_bombeo: 0.9, biomasa: 0.85, biogas: 0.85, gas_natural: 0.9, carbon: 0.88, petroleo: 0.88, nuclear: 0.9, smr: 0.9, baterias: 0.85 }
+
+paises:
+  PAN:
+    forma_demanda: tropical
+    perfil_demanda_mensual: [0.97, 0.99, 1.04, 1.06, 1.04, 1.01, 0.99, 0.99, 0.98, 0.97, 0.97, 0.99]
+    crecimiento_demanda: 0.035
+    precio_techo_usd_mwh: 400
+    precio_piso_usd_mwh: 0
+    hidro_embalse_frac: 0.55
+    sigma_hidrologia: 0.15
+    enso: { nino_hidro: 0.8, nina_hidro: 1.1, nino_demanda: 1.01 }
+    margen_reserva: 1.15
+    mezcla_termica: { fueloil: 0.5, gas: 0.5 }
+    red: { limite_vre_frac: 0.45 }
+    capacidad: { nombre: "Mercado de potencia firme (CND)", precio_usd_kw_mes: { base: 6, min: 3, max: 12, supuesto: "Precio de la potencia en el mercado ocasional de Panamá ≈ 4–9 USD/kW-mes (CND, orden de magnitud)" } }
+    servicios: { nombre: "Reserva rodante y regulación", requerimiento_frac_demanda: 0.04, precio_usd_mw_h: { base: 8, min: 3, max: 20, supuesto: "Servicios auxiliares del CND, orden de magnitud" } }
+    elecciones: { cada_anos: 5, proxima: 2029, mes: 5 }
+    riesgos: { huracan: 0.01, sismo: 0.03, inundacion: 0.08, sequia: 0.10 }
+    supuesto: "Panamá: embalses de Fortuna, Bayano y Changuinola ≈ 55 % de la hidro; El Niño reduce los caudales ≈ 20 % (sequías de 2015–2016 y 2023 del Canal); crecimiento de la demanda ≈ 3–4 %/año (SNE)"
+  CRI:
+    forma_demanda: tropical
+    crecimiento_demanda: 0.03
+    precio_techo_usd_mwh: 300
+    precio_piso_usd_mwh: 0
+    hidro_embalse_frac: 0.5
+    sigma_hidrologia: 0.15
+    enso: { nino_hidro: 0.75, nina_hidro: 1.1 }
+    margen_reserva: 1.15
+    mezcla_termica: { fueloil: 1.0 }
+    elecciones: { cada_anos: 4, proxima: 2030, mes: 2 }
+    riesgos: { huracan: 0.03, sismo: 0.06, inundacion: 0.1, sequia: 0.1 }
+    supuesto: "Costa Rica: el ICE despacha; El Niño de 2023–2024 obligó a racionar (caudales −25 %)"
+  COL:
+    forma_demanda: tropical
+    crecimiento_demanda: 0.03
+    precio_techo_usd_mwh: 300
+    precio_piso_usd_mwh: 0
+    hidro_embalse_frac: 0.75
+    sigma_hidrologia: 0.2
+    enso: { nino_hidro: 0.65, nina_hidro: 1.15, nino_demanda: 1.01 }
+    margen_reserva: 1.2
+    mezcla_termica: { gas: 0.5, carbon: 0.4, fueloil: 0.1 }
+    red: { limite_vre_frac: 0.3 }
+    capacidad: { nombre: "Cargo por Confiabilidad", precio_usd_kw_mes: { base: 12, min: 8, max: 16, fuente: "CREG: cargo por confiabilidad ≈ 15–17 USD/MWh de energía firme (≈ 10–13 USD/kW-mes)" } }
+    servicios: { nombre: "Regulación secundaria (AGC)", requerimiento_frac_demanda: 0.04, precio_usd_mw_h: { base: 10, min: 4, max: 25, supuesto: "Remuneración del AGC en XM, orden de magnitud" } }
+    elecciones: { cada_anos: 4, proxima: 2030, mes: 5 }
+    riesgos: { sismo: 0.04, inundacion: 0.1, sequia: 0.12 }
+    supuesto: "Colombia: El Niño 2015–2016 y 2023–2024 bajó los aportes ≈ 35 % y llevó la bolsa al precio de escasez (XM)"
+  DOM:
+    forma_demanda: tropical
+    crecimiento_demanda: 0.04
+    precio_techo_usd_mwh: 400
+    precio_piso_usd_mwh: 0
+    hidro_embalse_frac: 0.5
+    sigma_hidrologia: 0.15
+    enso: { nino_hidro: 0.9, nina_hidro: 1.05 }
+    margen_reserva: 1.15
+    capacidad: { nombre: "Potencia firme (OC-SENI)", precio_usd_kw_mes: { base: 8, min: 5, max: 10, supuesto: "Precio de la potencia de punta en el SENI ≈ 8 USD/kW-mes" } }
+    servicios: { nombre: "Regulación de frecuencia", requerimiento_frac_demanda: 0.04, precio_usd_mw_h: { base: 8, min: 3, max: 20, supuesto: "Orden de magnitud regional" } }
+    elecciones: { cada_anos: 4, proxima: 2028, mes: 5 }
+    riesgos: { huracan: 0.12, sismo: 0.03, inundacion: 0.08, sequia: 0.06 }
+    supuesto: "República Dominicana: sistema térmico (gas, carbón, fuel oil); huracanes frecuentes (Georges 1998, María 2017, Fiona 2022)"
+  CHL:
+    forma_demanda: templado
+    perfil_demanda_mensual: [0.98, 0.96, 0.99, 0.98, 1.01, 1.03, 1.04, 1.03, 0.99, 0.99, 0.99, 1.01]
+    crecimiento_demanda: 0.025
+    precio_techo_usd_mwh: 350
+    precio_piso_usd_mwh: 0
+    hidro_embalse_frac: 0.5
+    sigma_hidrologia: 0.25
+    enso: { nino_hidro: 1.15, nina_hidro: 0.8 }
+    margen_reserva: 1.15
+    red: { limite_vre_frac: 0.5 }
+    capacidad: { nombre: "Potencia de suficiencia", precio_usd_kw_mes: { base: 8, min: 6, max: 10, fuente: "CNE: precio de nudo de la potencia ≈ 8–9 USD/kW-mes" } }
+    servicios: { nombre: "Servicios complementarios (control de frecuencia)", requerimiento_frac_demanda: 0.03, precio_usd_mw_h: { base: 10, min: 3, max: 30, supuesto: "Subastas de SSCC del Coordinador 2020–2024, orden de magnitud" } }
+    elecciones: { cada_anos: 4, proxima: 2029, mes: 11 }
+    riesgos: { sismo: 0.08, inundacion: 0.03, sequia: 0.12 }
+    supuesto: "Chile: El Niño trae lluvias al centro-sur (más hidro); vertimiento solar del norte por congestión (Coordinador 2024)"
+  MEX:
+    forma_demanda: verano_ac
+    perfil_demanda_mensual: [0.88, 0.88, 0.94, 1.00, 1.08, 1.10, 1.08, 1.08, 1.04, 0.98, 0.92, 0.90]
+    crecimiento_demanda: 0.03
+    precio_techo_usd_mwh: 600
+    precio_piso_usd_mwh: 0
+    hidro_embalse_frac: 0.7
+    sigma_hidrologia: 0.15
+    enso: { nino_hidro: 0.85, nina_hidro: 1.05 }
+    margen_reserva: 1.12
+    red: { limite_vre_frac: 0.25 }
+    capacidad: { nombre: "Mercado de balance de potencia", precio_usd_kw_mes: { base: 5, min: 2, max: 12, supuesto: "CENACE: balance de potencia, orden de magnitud" } }
+    servicios: { nombre: "Servicios conexos", requerimiento_frac_demanda: 0.03, precio_usd_mw_h: { base: 6, min: 2, max: 20, supuesto: "Servicios conexos del MEM, orden de magnitud" } }
+    elecciones: { cada_anos: 6, proxima: 2030, mes: 6 }
+    riesgos: { huracan: 0.08, sismo: 0.06, inundacion: 0.06, sequia: 0.08 }
+    supuesto: "México: pico de verano por aire acondicionado; red congestionada (CENACE)"
+  BRA:
+    forma_demanda: tropical
+    crecimiento_demanda: 0.03
+    precio_techo_usd_mwh: 150
+    precio_piso_usd_mwh: 12
+    hidro_embalse_frac: 0.8
+    sigma_hidrologia: 0.2
+    enso: { nino_hidro: 0.9, nina_hidro: 1.0 }
+    margen_reserva: 1.12
+    mezcla_otros: { biomasa: 0.5, fueloil: 0.5 }
+    elecciones: { cada_anos: 4, proxima: 2026, mes: 10 }
+    riesgos: { inundacion: 0.06, sequia: 0.12 }
+    supuesto: "Brasil: PLD con techo ≈ 716 BRL/MWh y piso ≈ 61 BRL/MWh (ANEEL 2024); crisis hídricas de 2001, 2014 y 2021"
+  KEN:
+    forma_demanda: tropical
+    crecimiento_demanda: 0.05
+    precio_techo_usd_mwh: 300
+    precio_piso_usd_mwh: 0
+    hidro_embalse_frac: 0.6
+    sigma_hidrologia: 0.2
+    enso: { nino_hidro: 1.15, nina_hidro: 0.8 }
+    margen_reserva: 1.15
+    mezcla_termica: { fueloil: 1.0 }
+    elecciones: { cada_anos: 5, proxima: 2027, mes: 8 }
+    riesgos: { sismo: 0.01, inundacion: 0.08, sequia: 0.15 }
+    supuesto: "Kenia: El Niño trae lluvias a África oriental; La Niña sequías (2020–2023)"
+  ISL:
+    forma_demanda: templado
+    perfil_demanda_mensual: [1.06, 1.05, 1.03, 1.0, 0.97, 0.95, 0.95, 0.96, 0.98, 1.0, 1.02, 1.03]
+    crecimiento_demanda: 0.02
+    precio_techo_usd_mwh: 200
+    precio_piso_usd_mwh: 0
+    hidro_embalse_frac: 0.8
+    sigma_hidrologia: 0.1
+    margen_reserva: 1.1
+    elecciones: { cada_anos: 4, proxima: 2028, mes: 9 }
+    riesgos: { sismo: 0.06, inundacion: 0.03 }
+    supuesto: "Islandia: 70 % hidro con embalses glaciares y 30 % geotermia; demanda plana (aluminio)"
+  ESP:
+    forma_demanda: templado
+    perfil_demanda_mensual: [1.10, 1.07, 1.0, 0.93, 0.92, 0.98, 1.06, 1.02, 0.97, 0.94, 0.98, 1.05]
+    crecimiento_demanda: 0.015
+    precio_techo_usd_mwh: 1000
+    precio_piso_usd_mwh: -5
+    hidro_embalse_frac: 0.7
+    sigma_hidrologia: 0.25
+    margen_reserva: 1.15
+    mezcla_otros: { biomasa: 0.5, carbon: 0.5 }
+    red: { limite_vre_frac: 0.6 }
+    servicios: { nombre: "Banda de regulación secundaria", requerimiento_frac_demanda: 0.03, precio_usd_mw_h: { base: 15, min: 5, max: 40, fuente: "REE/ESIOS: banda secundaria ≈ 10–25 EUR/MW-h (2023–2024)" } }
+    elecciones: { cada_anos: 4, proxima: 2027, mes: 7 }
+    riesgos: { sismo: 0.01, inundacion: 0.05, sequia: 0.10 }
+    supuesto: "España: precios horarios de OMIE con ceros y negativos al mediodía en primavera (2024)"
+  IDN:
+    forma_demanda: tropical
+    crecimiento_demanda: 0.045
+    precio_techo_usd_mwh: 300
+    precio_piso_usd_mwh: 0
+    hidro_embalse_frac: 0.5
+    sigma_hidrologia: 0.12
+    enso: { nino_hidro: 0.85, nina_hidro: 1.08 }
+    margen_reserva: 1.2
+    mezcla_otros: { biomasa: 0.5, fueloil: 0.5 }
+    elecciones: { cada_anos: 5, proxima: 2029, mes: 2 }
+    riesgos: { sismo: 0.1, inundacion: 0.1, sequia: 0.06 }
+    supuesto: "Indonesia: comprador único (PLN), sobrecapacidad en Java-Bali; el precio sombra sigue al carbón"
+  PHL:
+    forma_demanda: tropical
+    perfil_demanda_mensual: [0.92, 0.94, 1.0, 1.06, 1.08, 1.04, 1.0, 1.0, 1.0, 0.99, 0.99, 0.98]
+    crecimiento_demanda: 0.05
+    precio_techo_usd_mwh: 550
+    precio_piso_usd_mwh: 0
+    hidro_embalse_frac: 0.5
+    sigma_hidrologia: 0.15
+    enso: { nino_hidro: 0.8, nina_hidro: 1.1 }
+    margen_reserva: 1.12
+    servicios: { nombre: "Mercado de reservas (WESM)", requerimiento_frac_demanda: 0.04, precio_usd_mw_h: { base: 12, min: 4, max: 40, supuesto: "Mercado de reservas del IEMOP (2024), orden de magnitud" } }
+    elecciones: { cada_anos: 6, proxima: 2028, mes: 5 }
+    riesgos: { huracan: 0.2, sismo: 0.08, inundacion: 0.12, sequia: 0.05 }
+    supuesto: "Filipinas: tope secundario del WESM ≈ 32.000 PHP/MWh; tifones frecuentes (Haiyan 2013, Rai 2021)"
+  USA:
+    forma_demanda: verano_ac
+    perfil_demanda_mensual: [0.92, 0.88, 0.88, 0.90, 0.98, 1.10, 1.20, 1.22, 1.08, 0.95, 0.90, 0.95]
+    crecimiento_demanda: 0.04
+    precio_techo_usd_mwh: 5000
+    precio_piso_usd_mwh: -20
+    hidro_embalse_frac: 0.5
+    sigma_hidrologia: 0.1
+    margen_reserva: 1.15
+    mezcla_otros: { biomasa: 0.5, gas: 0.5 }
+    red: { limite_vre_frac: 0.55 }
+    servicios: { nombre: "Servicios auxiliares de ERCOT (regulación, RRS, ECRS)", requerimiento_frac_demanda: 0.05, precio_usd_mw_h: { base: 12, min: 3, max: 60, fuente: "ERCOT Ancillary Services 2023–2024: ≈ 5–30 USD/MW-h con picos en verano" } }
+    elecciones: { cada_anos: 4, proxima: 2028, mes: 11 }
+    riesgos: { huracan: 0.1, inundacion: 0.05, sequia: 0.08 }
+    supuesto: "ERCOT: mercado solo de energía con tope de 5.000 USD/MWh (HCAP) y precios negativos por eólica con PTC; huracanes en la costa del Golfo (Harvey 2017, Beryl 2024)"

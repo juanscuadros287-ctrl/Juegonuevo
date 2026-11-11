@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import type { SimConfig, SimData, CountrySimDef, TechnologyDef, StudyDef, SupplierDef, FindingDef, SupplyDef, ResearchDef, ClientsDef, CompetitorsDef, MarketsDef } from '@voltaje/sim';
+import type { SimConfig, SimData, CountrySimDef, TechnologyDef, StudyDef, SupplierDef, FindingDef, SupplyDef, ResearchDef, ClientsDef, CompetitorsDef, MarketsDef, PowerDef, WorldDef } from '@voltaje/sim';
 import {
-  countrySchema, gameSchema, layerSchema, studiesFileSchema, suppliersFileSchema, technologySchema, researchFileSchema, clientsFileSchema, competitorsFileSchema, marketsFileSchema,
+  countrySchema, gameSchema, layerSchema, studiesFileSchema, suppliersFileSchema, technologySchema, researchFileSchema, clientsFileSchema, competitorsFileSchema, marketsFileSchema, powerFileSchema, eventsFileSchema,
   type CountryDef, type GameYaml, type LayerDef,
 } from './schemas';
 
@@ -38,6 +38,9 @@ export interface RawGameData {
   competitors?: unknown;
   /** Fase 4 */
   markets?: unknown;
+  /** Fase 5 */
+  power?: unknown;
+  events?: unknown;
 }
 
 function byId<T extends { id: string }>(items: T[], file: string): Record<string, T> {
@@ -89,6 +92,9 @@ export function buildGameData(raw: RawGameData): GameData {
 
   const markets: MarketsDef | undefined = raw.markets !== undefined ? check(marketsFileSchema, raw.markets, 'markets.yaml') : undefined;
 
+  const power: PowerDef | undefined = raw.power !== undefined ? check(powerFileSchema, raw.power, 'power.yaml') as unknown as PowerDef : undefined;
+  const world: WorldDef | undefined = raw.events !== undefined ? check(eventsFileSchema, raw.events, 'events.yaml') as unknown as WorldDef : undefined;
+
   const simCountries: Record<string, CountrySimDef> = {};
   for (const c of Object.values(countries)) {
     // Inflación de los precios en USD: la local si la moneda está fija al USD; si no, la del USD (paridad de poder de compra).
@@ -96,7 +102,7 @@ export function buildGameData(raw: RawGameData): GameData {
     simCountries[c.iso3] = { ...c, inflacion_usd_anual: pegged ? c.inflacion_anual.base : markets?.inflacion_usd.base ?? 0.025 };
   }
 
-  const simData: SimData = { technologies, studies, findings, suppliers, countries: simCountries, supply, research, clients, competitors, markets };
+  const simData: SimData = { technologies, studies, findings, suppliers, countries: simCountries, supply, research, clients, competitors, markets, power, world };
   checkReferences(simData);
 
   return {
@@ -139,6 +145,7 @@ export function checkReferences(d: SimData) {
   }
   checkPhase3References(d);
   checkPhase4References(d);
+  checkPhase5References(d);
 }
 
 /** Tipos de modelo 3D (PlantKind de apps/game/src/models/types.ts). */
@@ -209,4 +216,35 @@ export function checkPhase3References(d: SimData) {
     if (c.mw.min > c.mw.max) fail(`competitors.yaml/${c.id}: mw.min > mw.max`);
   }
   for (const s of d.competitors?.sitios_candidatos ?? []) if (!techIds.has(s.tecnologia)) fail(`competitors.yaml: sitio ${s.nombre} con tecnología inexistente "${s.tecnologia}"`);
+}
+
+/** Referencias de la Fase 5: cada país tiene mercado eléctrico, formas de demanda y clases existentes; eventos con países y amenazas válidos. */
+export function checkPhase5References(d: SimData) {
+  const fail = (msg: string) => { throw new DataError(msg); };
+  const p = d.power;
+  if (p) {
+    for (const iso of Object.keys(d.countries)) if (!p.paises[iso]) fail(`power.yaml: falta el mercado eléctrico de ${iso}`);
+    for (const [iso, c] of Object.entries(p.paises)) {
+      if (!d.countries[iso]) fail(`power.yaml: país inexistente "${iso}"`);
+      if (!p.formas_demanda[c.forma_demanda]) fail(`power.yaml/${iso}: forma de demanda inexistente "${c.forma_demanda}"`);
+      for (const k of [...Object.keys(c.mezcla_termica ?? {}), ...Object.keys(c.mezcla_otros ?? {}), ...Object.keys(c.parque_mw ?? {})]) if (!p.clases[k]) fail(`power.yaml/${iso}: clase inexistente "${k}"`);
+    }
+    for (const [id, k] of Object.entries(p.clases)) for (const t of k.tecnologias) if (Object.keys(d.technologies).length && !d.technologies[t]) fail(`power.yaml/clases.${id}: tecnología inexistente "${t}"`);
+    for (const t of Object.keys(p.credito_firme_tecnologia)) if (Object.keys(d.technologies).length && !d.technologies[t]) fail(`power.yaml/credito_firme_tecnologia: tecnología inexistente "${t}"`);
+  }
+  const w = d.world;
+  if (w) {
+    const fuels = new Set((d.markets?.combustibles ?? []).map((f) => f.id));
+    const ids = new Set<string>();
+    for (const e of w.eventos) {
+      if (ids.has(e.id)) fail(`events.yaml: id duplicado "${e.id}"`);
+      ids.add(e.id);
+      for (const iso of e.paises ?? []) if (!d.countries[iso]) fail(`events.yaml/${e.id}: país inexistente "${iso}"`);
+      for (const f of Object.keys(e.efectos.combustibles ?? {})) if (fuels.size && !fuels.has(f)) fail(`events.yaml/${e.id}: combustible inexistente "${f}"`);
+      for (const t of [...Object.keys(e.efectos.capex ?? {}), ...Object.keys(e.efectos.costo_tecnologia ?? {})]) if (t !== 'todas' && Object.keys(d.technologies).length && !d.technologies[t]) fail(`events.yaml/${e.id}: tecnología inexistente "${t}"`);
+      if (e.amenaza && p && !Object.values(p.paises).some((c) => c.riesgos?.[e.amenaza!] !== undefined)) fail(`events.yaml/${e.id}: ningún país tiene la amenaza "${e.amenaza}"`);
+    }
+    const sum = w.gobiernos.reduce((a, g) => a + g.prob, 0);
+    if (Math.abs(sum - 1) > 1e-6) fail('events.yaml: las probabilidades de los gobiernos deben sumar 1');
+  }
 }

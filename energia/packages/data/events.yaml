@@ -1,0 +1,245 @@
+# Fase 5: eventos del mundo. Afectan por igual a todos los actores (jugador e IA) del país o del mundo.
+# Probabilidad mensual = prob_anual / 12 (por país si alcance = pais). Con `amenaza`, la probabilidad anual sale de
+# `riesgos.<amenaza>` del país en power.yaml. Efectos temporales mientras dure el evento; `regulacion` y
+# `costo_tecnologia` son permanentes. Ver docs/MOTOR_FASE5.md.
+
+eventos:
+  - id: crisis_petrolera
+    nombre: Crisis petrolera
+    tipo: economico
+    alcance: global
+    prob_anual: 0.05
+    duracion_meses: { min: 4, base: 9, max: 20, supuesto: "Crisis de 1973, 1979, 1990, 2008 y 2022: de meses a dos años" }
+    efectos:
+      combustibles: { fueloil: 1.8, gnl: 1.6, gas_natural: 1.3, carbon: 1.3 }
+      demanda: 0.98
+    texto: "Crisis petrolera: el petróleo y el gas se disparan; las térmicas y el spot suben."
+    fuente: "IEA: Brent ×2–3 en 1973/1979; GNL asiático ×4 en 2022"
+  - id: guerra_regional
+    nombre: Conflicto armado regional
+    tipo: conflicto
+    alcance: global
+    prob_anual: 0.04
+    duracion_meses: { min: 6, base: 14, max: 36, supuesto: "Conflictos que afectan rutas comerciales (Mar Rojo 2024, Ucrania 2022)" }
+    efectos:
+      combustibles: { gnl: 1.4, gas_natural: 1.15, fueloil: 1.3, carbon: 1.2 }
+      capex: { todas: 1.06 }
+      plazo_entrega: 1.35
+      arancel: 0.05
+    texto: "Conflicto regional: fletes y seguros marítimos suben, la cadena de suministro se retrasa y aparecen aranceles."
+    supuesto: "Crisis del Mar Rojo 2024: fletes ×2–3 y +10–14 días de tránsito; aranceles de represalia"
+  - id: pandemia
+    nombre: Pandemia
+    tipo: salud
+    alcance: global
+    prob_anual: 0.015
+    duracion_meses: { min: 8, base: 15, max: 30, supuesto: "COVID-19 (2020–2021)" }
+    efectos:
+      demanda: 0.93
+      plazo_entrega: 1.4
+      plazo_permisos: 1.3
+      obras_paradas_dias: { min: 20, base: 45, max: 90, supuesto: "Cuarentenas de 2020: obras paradas 1–3 meses" }
+      combustibles: { fueloil: 0.7, gnl: 0.8, gas_natural: 0.85 }
+    texto: "Pandemia: la demanda cae, las obras se detienen y los permisos y equipos se retrasan."
+    fuente: "IEA Global Energy Review 2020: demanda eléctrica −5 a −10 % en el confinamiento"
+  - id: avance_solar
+    nombre: Avance tecnológico en módulos solares
+    tipo: tecnologia
+    alcance: global
+    prob_anual: 0.12
+    duracion_meses: { base: 1, supuesto: "Permanente" }
+    efectos:
+      costo_tecnologia: { solar_fv: 0.92 }
+    texto: "Avance tecnológico: una nueva generación de celdas solares baja el costo de los módulos."
+    supuesto: "TOPCon/HJT/tándem: saltos de eficiencia que bajan el costo por W 5–10 % (ITRPV 2024)"
+  - id: avance_baterias
+    nombre: Avance en baterías
+    tipo: tecnologia
+    alcance: global
+    prob_anual: 0.1
+    duracion_meses: { base: 1, supuesto: "Permanente" }
+    efectos:
+      costo_tecnologia: { baterias: 0.9 }
+    texto: "Avance tecnológico: las celdas LFP de nueva generación abaratan el almacenamiento."
+    fuente: "BNEF Battery Price Survey 2024: −20 % en un año"
+  - id: avance_eolica
+    nombre: Turbinas eólicas más grandes
+    tipo: tecnologia
+    alcance: global
+    prob_anual: 0.06
+    duracion_meses: { base: 1, supuesto: "Permanente" }
+    efectos:
+      costo_tecnologia: { eolica_tierra: 0.95, eolica_marina: 0.93 }
+    texto: "Avance tecnológico: turbinas de mayor rotor bajan el costo de la eólica."
+    supuesto: "Curvas de aprendizaje de la eólica (IRENA 2023)"
+  - id: sobreoferta_equipos
+    nombre: Sobreoferta de equipos
+    tipo: economico
+    alcance: global
+    prob_anual: 0.08
+    duracion_meses: { min: 6, base: 12, max: 24, supuesto: "Ciclos de sobrecapacidad de fabricantes chinos (2012, 2019, 2023–2024)" }
+    efectos:
+      capex: { solar_fv: 0.88, baterias: 0.9 }
+    texto: "Sobreoferta de fabricantes: los precios de módulos y baterías caen mientras dure el exceso de inventario."
+    fuente: "PV InfoLink 2024: módulos de 0,22 a 0,10 USD/W en 18 meses"
+  - id: huracan
+    nombre: Huracán
+    tipo: desastre
+    alcance: pais
+    amenaza: huracan
+    prob_anual: 0
+    duracion_meses: { base: 1, supuesto: "Daño inmediato" }
+    efectos:
+      danos:
+        vulnerabilidad: { eolica_tierra: 0.5, eolica_marina: 0.6, solar_fv: 0.4, csp: 0.4, linea_transmision: 0.5, interconexion: 0.4, hidro_pasada: 0.2, hidro_embalse: 0.1, otras: 0.15 }
+        fraccion: { min: 0.05, base: 0.25, max: 0.8, supuesto: "Huracán María en Puerto Rico (2017): parques solares y eólicos con 20–80 % de daños" }
+        dias: { min: 20, base: 90, max: 270, supuesto: "Reparación con equipos importados" }
+        costo_frac_capex: { min: 0.3, base: 0.6, max: 0.9, supuesto: "Costo de reposición de la parte dañada" }
+      demanda: 0.97
+      obras_paradas_dias: { min: 7, base: 20, max: 45, supuesto: "Limpieza y daños en obra" }
+    texto: "Huracán: daños en plantas y obras de la zona."
+    fuente: "NOAA / NHC; frecuencia por país en power.yaml (riesgos.huracan)"
+  - id: terremoto
+    nombre: Terremoto
+    tipo: desastre
+    alcance: pais
+    amenaza: sismo
+    prob_anual: 0
+    duracion_meses: { base: 1, supuesto: "Daño inmediato" }
+    efectos:
+      danos:
+        vulnerabilidad: { geotermica: 0.4, hidro_embalse: 0.3, hidro_pasada: 0.3, hidro_bombeo: 0.3, nuclear: 0.1, smr: 0.1, gas_natural: 0.25, carbon: 0.25, petroleo: 0.25, solar_fv: 0.1, eolica_tierra: 0.15, otras: 0.2 }
+        fraccion: { min: 0.05, base: 0.2, max: 0.6, supuesto: "Sismos de Chile 2010 y México 2017: daños en subestaciones y obras civiles" }
+        dias: { min: 15, base: 60, max: 240, supuesto: "Inspección y reparación" }
+        costo_frac_capex: { min: 0.2, base: 0.5, max: 0.8, supuesto: "Obras civiles y equipos" }
+      obras_paradas_dias: { min: 7, base: 30, max: 60, supuesto: "Inspecciones estructurales" }
+    texto: "Terremoto: daños estructurales en plantas y obras."
+    fuente: "USGS; frecuencia por país en power.yaml (riesgos.sismo)"
+  - id: inundacion
+    nombre: Inundaciones
+    tipo: desastre
+    alcance: pais
+    amenaza: inundacion
+    prob_anual: 0
+    duracion_meses: { base: 1, supuesto: "Daño inmediato" }
+    efectos:
+      danos:
+        vulnerabilidad: { hidro_pasada: 0.35, hidro_embalse: 0.2, solar_fv: 0.15, biomasa: 0.2, biogas: 0.2, otras: 0.1 }
+        fraccion: { min: 0.05, base: 0.15, max: 0.5, supuesto: "Crecidas que arrastran tomas de agua y anegan inversores" }
+        dias: { min: 10, base: 45, max: 150, supuesto: "Limpieza y reparación" }
+        costo_frac_capex: { min: 0.2, base: 0.4, max: 0.7, supuesto: "Reposición" }
+      obras_paradas_dias: { min: 7, base: 20, max: 45, supuesto: "Accesos cortados" }
+    texto: "Inundaciones: daños en plantas cercanas a ríos y obras paradas."
+    supuesto: "Frecuencia por país en power.yaml (riesgos.inundacion)"
+  - id: sequia
+    nombre: Sequía severa
+    tipo: desastre
+    alcance: pais
+    amenaza: sequia
+    prob_anual: 0
+    duracion_meses: { min: 4, base: 8, max: 14, supuesto: "Sequías hidrológicas de una estación a un año" }
+    efectos:
+      hidrologia: 0.7
+    texto: "Sequía severa: caen los caudales y la hidro; el spot sube en los países con mucha hidro."
+    fuente: "Panamá 2023, Colombia 2024, Brasil 2021: caudales −25 a −40 %"
+  - id: huelga_nacional
+    nombre: Huelga nacional
+    tipo: social
+    alcance: pais
+    prob_anual: 0.04
+    duracion_meses: { base: 1, supuesto: "Semanas" }
+    efectos:
+      obras_paradas_dias: { min: 7, base: 20, max: 60, supuesto: "Huelga de la construcción y cierres de vías (Panamá 2023: ≈ 6 semanas)" }
+      demanda: 0.98
+      plazo_permisos: 1.1
+    texto: "Huelga nacional: las obras se paran y los trámites se demoran."
+    supuesto: "Frecuencia de grandes paros en la región ≈ uno cada 20–30 años por país"
+  - id: devaluacion
+    nombre: Crisis cambiaria
+    tipo: economico
+    alcance: pais
+    paises: [COL, BRA, MEX, CHL, KEN, IDN, PHL, DOM, CRI, ISL]
+    prob_anual: 0.03
+    duracion_meses: { min: 3, base: 6, max: 12, supuesto: "Crisis cambiaria" }
+    efectos:
+      tipo_cambio: 0.25
+      demanda: 0.98
+    texto: "Crisis cambiaria: la moneda local se devalúa de golpe."
+    supuesto: "Devaluaciones de 20–40 % (Brasil 2015 y 2020, Colombia 2015, Kenia 2023); se suman a los shocks del tipo de cambio de la Fase 4"
+  - id: impuesto_carbono
+    nombre: Nuevo impuesto al carbono
+    tipo: regulatorio
+    alcance: pais
+    prob_anual: 0.03
+    duracion_meses: { base: 1, supuesto: "Permanente" }
+    efectos:
+      regulacion: { carbono_usd_t: 10 }
+    texto: "Nuevo impuesto al carbono (+10 USD/tCO2): las térmicas fósiles pagan más."
+    supuesto: "Reformas tributarias verdes en América Latina (Chile 2014, Colombia 2016, México 2014)"
+  - id: reforma_permisos
+    nombre: Reforma de permisos (ventanilla única)
+    tipo: regulatorio
+    alcance: pais
+    prob_anual: 0.03
+    duracion_meses: { base: 1, supuesto: "Permanente" }
+    efectos:
+      regulacion: { plazo_permisos: 0.85 }
+    texto: "Reforma regulatoria: ventanilla única y plazos legales más cortos para los permisos."
+    supuesto: "Reformas de agilización (Chile 2024, España RD-ley 2020)"
+  - id: endurecimiento_ambiental
+    nombre: Endurecimiento ambiental
+    tipo: regulatorio
+    alcance: pais
+    prob_anual: 0.03
+    duracion_meses: { base: 1, supuesto: "Permanente" }
+    efectos:
+      regulacion: { plazo_permisos: 1.2 }
+    texto: "Nueva normativa ambiental: más requisitos y plazos más largos para los permisos."
+    supuesto: "Moratorias y reglamentos más exigentes (México 2020, Panamá 2023)"
+  - id: nuevos_incentivos
+    nombre: Nuevos incentivos a las renovables
+    tipo: regulatorio
+    alcance: pais
+    prob_anual: 0.03
+    duracion_meses: { base: 1, supuesto: "Permanente" }
+    efectos:
+      regulacion: { credito_fiscal: 1.5 }
+    texto: "Nuevos incentivos fiscales: el crédito fiscal a la inversión renovable aumenta 50 %."
+    supuesto: "Leyes de incentivos (IRA 2022, Ley 2099 de Colombia 2021)"
+  - id: fin_incentivos
+    nombre: Recorte de incentivos
+    tipo: regulatorio
+    alcance: pais
+    prob_anual: 0.03
+    duracion_meses: { base: 1, supuesto: "Permanente" }
+    efectos:
+      regulacion: { credito_fiscal: 0.5 }
+    texto: "Recorte fiscal: los incentivos a la inversión renovable se reducen a la mitad."
+    supuesto: "Recortes retroactivos y fin de incentivos (España 2013, EE. UU. 2025)"
+
+gobiernos:
+  - id: pro_renovable
+    nombre: "Gobierno pro-renovables"
+    prob: 0.35
+    efectos: { carbono_usd_t: 5, plazo_permisos: 0.92, credito_fiscal: 1.2 }
+    texto: "promete acelerar la transición: permisos más ágiles, más incentivos y un precio al carbono."
+  - id: centro
+    nombre: "Gobierno de centro"
+    prob: 0.4
+    efectos: {}
+    texto: "mantiene las reglas del sector sin cambios importantes."
+  - id: pro_fosil
+    nombre: "Gobierno pro-combustibles fósiles"
+    prob: 0.25
+    efectos: { carbono_usd_t: -5, plazo_permisos: 1.1, credito_fiscal: 0.7 }
+    texto: "prioriza el gas y el petróleo: recorta incentivos renovables y endurece los trámites."
+supuesto_gobiernos: "Alternancia política típica; efectos de orden de magnitud sobre permisos, incentivos y carbono"
+
+seguros:
+  recargo: 1.6
+  tasa_minima: 0.0008
+  deducible_frac: 0.05
+  espera_dias: 30
+  lucro_factor_prima: 1.35
+  lucro_dias_max: 180
+  supuesto: "Seguros de catástrofe para renovables: prima ≈ pérdida esperada × 1,5–2 (Swiss Re sigma 2023), deducible ≈ 5 %, carencia de 30 días y lucro cesante hasta 6 meses"

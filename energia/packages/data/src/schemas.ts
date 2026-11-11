@@ -459,6 +459,64 @@ export const fuelSchema = withSource({
 });
 export const marketsFileSchema = z.object({ inflacion_usd: sourced, combustibles: z.array(fuelSchema).min(1) });
 
+// ───────────── Fase 5: mercado eléctrico, eventos del mundo y seguros ─────────────
+const h24 = z.array(z.number().min(-0.01).max(3)).length(24);
+const m12 = z.array(z.number().positive().max(3)).length(12);
+const ns = z.number().nonnegative();
+export const powerClassSchema = z.object({
+  nombre: z.string(), tipo: z.enum(['variable_solar', 'variable_eolica', 'base', 'hidro', 'termica']), fc: z.number().positive().max(1),
+  disponibilidad: prob01, credito_firme: prob01, combustible: z.string().optional(), heat_rate_btu_kwh: z.number().positive().optional(),
+  om_variable_usd_mwh: ns, tecnologias: z.array(z.string()),
+});
+export const powerCountrySchema = withSource({
+  forma_demanda: z.string(), perfil_demanda_mensual: m12.optional(), crecimiento_demanda: z.number().min(-0.05).max(0.15),
+  precio_techo_usd_mwh: z.number().positive(), precio_piso_usd_mwh: z.number().min(-500).max(100),
+  hidro_embalse_frac: prob01, sigma_hidrologia: z.number().min(0).max(0.6),
+  enso: z.object({ nino_hidro: z.number().positive().max(2), nina_hidro: z.number().positive().max(2), nino_demanda: z.number().positive().max(1.5).optional() }).optional(),
+  margen_reserva: z.number().min(1).max(2),
+  mezcla_termica: z.record(ns).optional(), mezcla_otros: z.record(ns).optional(), parque_mw: z.record(ns).optional(),
+  red: z.object({ limite_vre_frac: z.number().positive().max(3) }).optional(),
+  capacidad: z.object({ nombre: z.string(), precio_usd_kw_mes: sourced }).optional(),
+  servicios: z.object({ nombre: z.string(), requerimiento_frac_demanda: prob01, precio_usd_mw_h: sourced }).optional(),
+  elecciones: z.object({ cada_anos: z.number().int().min(2).max(10), proxima: z.number().int().min(2000).max(2100), mes: z.number().int().min(1).max(12) }).optional(),
+  riesgos: z.record(prob01).optional(),
+});
+export const powerFileSchema = z.object({
+  formas_demanda: z.record(withSource({ laborable: h24, finde: h24 })),
+  formas_recurso: withSource({ solar: h24, eolica: h24 }),
+  clases: z.record(z.union([powerClassSchema, z.string()])).refine((r) => typeof r.supuesto === 'string' || typeof r.fuente === 'string', srcMsg)
+    .transform((r) => Object.fromEntries(Object.entries(r).filter(([, v]) => typeof v !== 'string')) as Record<string, z.infer<typeof powerClassSchema>>),
+  clima: withSource({ prob_nino: prob01, prob_nina: prob01, persistencia: prob01 }),
+  valor_agua: withSource({ base: z.number().positive(), exponente: ns, min: ns, max: z.number().positive() }),
+  escasez: withSource({ umbral: prob01 }),
+  comprador: withSource({ prima_merchant: z.number().min(0).max(0.2), recorte_precio_merchant: z.number().min(0).max(0.5) }),
+  ppa_modalidades: z.object({ bloque: withSource({ prima: z.number().min(-0.2).max(0.3), cobertura: prob01 }), financiero: withSource({ prima: z.number().min(-0.2).max(0.3), cobertura: prob01 }) }),
+  terminacion_ppa_meses: z.number().nonnegative().max(60),
+  credito_firme_tecnologia: z.record(prob01),
+  paises: z.record(powerCountrySchema),
+});
+const eventEffects = z.object({
+  combustibles: z.record(z.number().positive().max(5)).optional(), demanda: z.number().positive().max(1.5).optional(),
+  capex: z.record(z.number().positive().max(3)).optional(), plazo_entrega: z.number().positive().max(5).optional(),
+  plazo_permisos: z.number().positive().max(5).optional(), arancel: z.number().min(0).max(1).optional(),
+  tipo_cambio: z.number().min(0).max(0.9).optional(), hidrologia: z.number().positive().max(2).optional(),
+  obras_paradas_dias: sourced.optional(),
+  danos: z.object({ vulnerabilidad: z.record(prob01), fraccion: sourced, dias: sourced, costo_frac_capex: sourced }).optional(),
+  regulacion: z.object({ carbono_usd_t: z.number().min(-100).max(200).optional(), plazo_permisos: z.number().positive().max(3).optional(), credito_fiscal: z.number().min(0).max(5).optional() }).optional(),
+  costo_tecnologia: z.record(z.number().positive().max(2)).optional(),
+});
+export const worldEventSchema = withSource({
+  id: z.string(), nombre: z.string(), tipo: z.enum(['economico', 'politico', 'regulatorio', 'conflicto', 'desastre', 'salud', 'tecnologia', 'social']),
+  alcance: z.enum(['global', 'pais']), paises: z.array(z.string().length(3)).optional(), amenaza: z.string().optional(),
+  prob_anual: prob01, duracion_meses: sourced, efectos: eventEffects, texto: z.string().min(1),
+});
+export const eventsFileSchema = z.object({
+  eventos: z.array(worldEventSchema).min(1),
+  gobiernos: z.array(z.object({ id: z.string(), nombre: z.string(), prob: prob01, efectos: z.object({ carbono_usd_t: z.number().optional(), plazo_permisos: z.number().positive().optional(), credito_fiscal: z.number().min(0).optional() }), texto: z.string() })).min(1),
+  supuesto_gobiernos: z.string().min(1),
+  seguros: withSource({ recargo: z.number().min(1).max(5), tasa_minima: ns, deducible_frac: prob01, espera_dias: z.number().int().nonnegative(), lucro_factor_prima: z.number().min(1).max(5), lucro_dias_max: z.number().int().positive() }),
+});
+
 const anchorLand = z.tuple([z.string(), z.number(), z.number(), z.number().nullable(), z.number().nullable(), z.number().nullable()]).rest(z.number());
 export const anchorsSchema = z.object({
   radio_defecto_km: z.number().positive(),

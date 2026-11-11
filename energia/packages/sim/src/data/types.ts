@@ -538,4 +538,148 @@ export interface SimData {
   competitors?: CompetitorsDef;
   /** Fase 4 (opcional): combustibles e inflación del USD. */
   markets?: MarketsDef;
+  /** Fase 5 (opcional): mercado eléctrico por país (parque, demanda horaria, clima, capacidad, servicios). Sin él: spot simple. */
+  power?: PowerDef;
+  /** Fase 5 (opcional): eventos del mundo, gobiernos y seguros. */
+  world?: WorldDef;
+}
+
+// ───────────────────────── Fase 5: mercado eléctrico ─────────────────────────
+
+/** Clase del parque existente de un país (agregado por tecnología). */
+export interface PowerClassDef {
+  nombre: string;
+  /** variable_solar | variable_eolica | base (geotermia, nuclear) | hidro | termica. */
+  tipo: 'variable_solar' | 'variable_eolica' | 'base' | 'hidro' | 'termica';
+  /** Factor de planta típico (para pasar de la participación en la generación a MW instalados). */
+  fc: number;
+  /** Disponibilidad (fallas y mantenimiento). */
+  disponibilidad: number;
+  /** Potencia firme reconocida por MW (margen de reserva y mercado de capacidad). */
+  credito_firme: number;
+  /** Térmicas: tipo de combustible (clave de `combustibles` del país: gas_natural, carbon, fueloil, uranio, biomasa). */
+  combustible?: string;
+  heat_rate_btu_kwh?: number;
+  om_variable_usd_mwh: number;
+  /** Tecnologías del juego que entran en esta clase cuando las construye un actor. */
+  tecnologias: string[];
+}
+
+export interface PowerCountryDef {
+  /** Forma horaria de la demanda (clave de `formas_demanda`). */
+  forma_demanda: string;
+  /** 12 multiplicadores de la demanda media (ene–dic); por defecto planos. */
+  perfil_demanda_mensual?: number[];
+  crecimiento_demanda: number;
+  precio_techo_usd_mwh: number;
+  precio_piso_usd_mwh: number;
+  /** Fracción de la hidro con embalse (el resto es de pasada). */
+  hidro_embalse_frac: number;
+  /** Variabilidad interanual de la hidrología (σ log-normal). */
+  sigma_hidrologia: number;
+  /** El Niño / La Niña: multiplicador de la hidrología y de la demanda. */
+  enso?: { nino_hidro: number; nina_hidro: number; nino_demanda?: number };
+  margen_reserva: number;
+  /** Mezcla de clases para las entradas genéricas de la matriz («termica», «otros»). */
+  mezcla_termica?: Record<string, number>;
+  mezcla_otros?: Record<string, number>;
+  /** MW por clase que reemplazan lo derivado de la matriz. */
+  parque_mw?: Record<string, number>;
+  /** Red: renovable variable que la red absorbe sin vertimiento (fracción de la demanda media). */
+  red?: { limite_vre_frac: number };
+  /** Mercado de capacidad/potencia firme (si el país lo tiene). */
+  capacidad?: { precio_usd_kw_mes: Dist; nombre: string };
+  /** Servicios complementarios (regulación de frecuencia/reserva). */
+  servicios?: { requerimiento_frac_demanda: number; precio_usd_mw_h: Dist; nombre: string };
+  /** Elecciones periódicas. */
+  elecciones?: { cada_anos: number; proxima: number; mes: number };
+  /** Probabilidad anual de cada amenaza natural (la usan los eventos y el precio de los seguros). */
+  riesgos?: Record<string, number>;
+}
+
+export interface PowerDef {
+  formas_demanda: Record<string, { laborable: number[]; finde: number[] }>;
+  /** Perfiles horarios típicos (24 valores; se normalizan a media 1). */
+  formas_recurso: { solar: number[]; eolica: number[] };
+  clases: Record<string, PowerClassDef>;
+  clima: { prob_nino: number; prob_nina: number; persistencia: number };
+  /** Valor del agua: precio de la hidro marginal como fracción del térmico más barato (seco → caro, húmedo → barato). */
+  valor_agua: { base: number; exponente: number; min: number; max: number };
+  /** Escasez: rampa del precio hacia el techo cuando la térmica disponible se agota. */
+  escasez: { umbral: number };
+  /** Cómo valora un comprador real un proyecto sin PPA (merchant). */
+  comprador: { prima_merchant: number; recorte_precio_merchant: number };
+  /** Modalidades de PPA: prima de precio y cobertura (fracción de la producción esperada comprometida). */
+  ppa_modalidades: Record<'bloque' | 'financiero', { prima: number; cobertura: number }>;
+  /** Terminar un PPA antes de tiempo: meses de ingresos del contrato como penalidad mínima. */
+  terminacion_ppa_meses: number;
+  /** Crédito de potencia firme por tecnología del juego (mercado de capacidad). */
+  credito_firme_tecnologia: Record<string, number>;
+  paises: Record<string, PowerCountryDef>;
+}
+
+// ───────────────────────── Fase 5: eventos del mundo ─────────────────────────
+
+export interface WorldEventEffects {
+  /** Multiplicador temporal del precio de cada índice de combustible (id de markets.yaml). */
+  combustibles?: Record<string, number>;
+  demanda?: number;
+  /** Multiplicador temporal del CAPEX por tecnología ('todas' = todas). */
+  capex?: Record<string, number>;
+  plazo_entrega?: number;
+  plazo_permisos?: number;
+  /** Arancel adicional (fracción) sobre los equipos importados. */
+  arancel?: number;
+  /** Devaluación inmediata (fracción). */
+  tipo_cambio?: number;
+  /** Multiplicador de la hidrología del año (sequía). */
+  hidrologia?: number;
+  /** Paro de obras en el país (días). */
+  obras_paradas_dias?: Dist;
+  /** Daños a plantas (desastres): probabilidad por planta = vulnerabilidad de su tecnología. */
+  danos?: { vulnerabilidad: Record<string, number>; fraccion: Dist; dias: Dist; costo_frac_capex: Dist };
+  /** Cambios permanentes de regulación. */
+  regulacion?: { carbono_usd_t?: number; plazo_permisos?: number; credito_fiscal?: number };
+  /** Cambio permanente del costo de una tecnología (avance tecnológico). */
+  costo_tecnologia?: Record<string, number>;
+}
+
+export interface WorldEventDef {
+  id: string;
+  nombre: string;
+  tipo: 'economico' | 'politico' | 'regulatorio' | 'conflicto' | 'desastre' | 'salud' | 'tecnologia' | 'social';
+  alcance: 'global' | 'pais';
+  /** Países candidatos (alcance país); por defecto todos. */
+  paises?: string[];
+  /** Amenaza natural: la probabilidad anual sale de `riesgos[amenaza]` del país (en vez de `prob_anual`). */
+  amenaza?: string;
+  prob_anual: number;
+  duracion_meses: Dist;
+  efectos: WorldEventEffects;
+  texto: string;
+}
+
+export interface GovernmentDef {
+  id: string;
+  nombre: string;
+  prob: number;
+  efectos: { carbono_usd_t?: number; plazo_permisos?: number; credito_fiscal?: number };
+  texto: string;
+}
+
+export interface WorldDef {
+  eventos: WorldEventDef[];
+  gobiernos: GovernmentDef[];
+  seguros: {
+    /** Recargo sobre la pérdida esperada (gastos y utilidad de la aseguradora). */
+    recargo: number;
+    /** Prima mínima anual (fracción del valor asegurado). */
+    tasa_minima: number;
+    deducible_frac: number;
+    /** Días de carencia desde la contratación. */
+    espera_dias: number;
+    /** Lucro cesante: recargo de la prima y días máximos cubiertos. */
+    lucro_factor_prima: number;
+    lucro_dias_max: number;
+  };
 }
