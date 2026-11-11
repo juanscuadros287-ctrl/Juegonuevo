@@ -32,9 +32,10 @@ export function findingCostUsd(f: FindingDef, mw: number): number {
 export interface StudyDraw { outcome: StudyOutcome; capexFactor?: number; findingId?: string }
 
 /** Resultado de un estudio que no es de medición de recurso. */
-export function drawStudyOutcome(rng: Rng, s: StudyDef, findings: Record<string, FindingDef>): StudyDraw {
+export function drawStudyOutcome(rng: Rng, s: StudyDef, findings: Record<string, FindingDef>, mod?: { block: number; worse: number }): StudyDraw {
   const u = rng.next();
-  const r = s.resultados;
+  // Fase 6: el equipo de recurso (geólogos, ingenieros de recurso) reduce bloqueos y sorpresas (mod ≤ 1).
+  const r = mod ? { ...s.resultados, bloqueo: s.resultados.bloqueo * mod.block, peor: s.resultados.peor * mod.worse } : s.resultados;
   if (u < r.bloqueo && s.hallazgos?.length) {
     const opts = s.hallazgos.map((id) => findings[id]).filter(Boolean);
     const total = opts.reduce((a, f) => a + f.peso, 0);
@@ -47,14 +48,27 @@ export function drawStudyOutcome(rng: Rng, s: StudyDef, findings: Record<string,
   return { outcome: 'normal' };
 }
 
+/** Fase 6: multiplicadores del equipo y la reputación sobre las probabilidades de una autoridad (renormalizadas). */
+export interface PermitProbMod { approve: number; reject: number; info: number }
+
+export function permitProbs(p: PermitDef, mod?: PermitProbMod): { aprobado: number; rechazado: number; info_adicional: number } {
+  if (!mod) return p.prob;
+  let a = p.prob.aprobado * mod.approve, r = p.prob.rechazado * Math.max(0, mod.reject), i = p.prob.info_adicional * Math.max(0, mod.info);
+  // La aprobación no pasa del 98 %: siempre queda riesgo regulatorio.
+  const tot = a + r + i;
+  a /= tot; r /= tot; i /= tot;
+  if (a > 0.98) { const rest = r + i; const f = rest > 0 ? 0.02 / rest : 0; a = 0.98; r *= f; i *= f; if (!rest) r = 0.02; }
+  return { aprobado: a, rechazado: r, info_adicional: i };
+}
+
 export type PermitDecision = 'aprobado' | 'rechazado' | 'info_adicional';
 
 /**
  * Decisión de la autoridad. Si ya se agotaron los pedidos de información, se renormaliza entre
  * aprobado y rechazado.
  */
-export function drawPermitDecision(rng: Rng, p: PermitDef, infoRequests: number): PermitDecision {
-  const { aprobado, rechazado, info_adicional } = p.prob;
+export function drawPermitDecision(rng: Rng, p: PermitDef, infoRequests: number, mod?: PermitProbMod): PermitDecision {
+  const { aprobado, rechazado, info_adicional } = permitProbs(p, mod);
   const allowInfo = infoRequests < p.max_intentos_info;
   const total = aprobado + rechazado + (allowInfo ? info_adicional : 0);
   const u = rng.next() * total;
@@ -64,9 +78,9 @@ export function drawPermitDecision(rng: Rng, p: PermitDef, infoRequests: number)
 }
 
 /** Probabilidad final de aprobación de una solicitud (con los pedidos de información incluidos). */
-export function permitApprovalProbability(p: PermitDef): number {
+export function permitApprovalProbability(p: PermitDef, mod?: PermitProbMod): number {
   // Cada pedido de info vuelve a sortear; tras max_intentos_info se renormaliza.
-  const { aprobado: a, rechazado: r, info_adicional: i } = p.prob;
+  const { aprobado: a, rechazado: r, info_adicional: i } = permitProbs(p, mod);
   let pInfoChain = 1, pa = 0;
   for (let k = 0; k < p.max_intentos_info; k++) { pa += pInfoChain * a; pInfoChain *= i; }
   pa += pInfoChain * (a / (a + r));

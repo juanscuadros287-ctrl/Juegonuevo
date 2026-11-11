@@ -105,7 +105,8 @@ describe('Comandos de proyecto', () => {
       errBefore += Math.abs(p.estimate.value / real - 1);
       step(s, [{ type: 'commissionStudy', projectId: p.id, studyId: 'medicion_solar_estacion' }], ctx);
       for (let d = 0; d < 430; d++) step(s, [], ctx);
-      expect(p.estimate.sigma).toBe(0.025);
+      // Fase 6: el ingeniero de recurso del equipo inicial reduce un poco la incertidumbre de la medición (≤ 20 %).
+      expect(p.estimate.sigma).toBeLessThanOrEqual(0.025); expect(p.estimate.sigma).toBeGreaterThanOrEqual(0.02);
       expect(p.estimate.source).toBe('medicion_solar_estacion');
       errAfter += Math.abs(p.estimate.value / real - 1);
     }

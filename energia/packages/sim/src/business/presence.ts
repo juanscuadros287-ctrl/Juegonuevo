@@ -74,6 +74,12 @@ export function applyPresenceCommand(state: GameState, ctx: SimContext | undefin
       status: 'en_tramite', level: 'representante', requestedTick: state.tick, readyTick: state.tick + days,
       setupCostUsd: e.constitucion_usd.base, monthlyCostUsd: e.representante_mensual_usd.base,
     };
+    // Fase 6: la empresa llega desconocida al país (reputación con gobierno y comunidad iniciales de team.yaml).
+    const t = ctx.data.team;
+    if (t && state.business.rep) {
+      state.business.rep.gobierno[c.iso3] ??= t.reputacion.inicial_pais_nuevo.base;
+      state.business.rep.comunidad[c.iso3] ??= t.reputacion.inicial_pais_nuevo.base;
+    }
     events.push({ type: 'presenceRequested', countryCode: c.iso3, severity: 'info', text: `Constitución de la sociedad en ${c.nombre} iniciada (${fmt(e.constitucion_usd.base)}, ~${days} días; luego ${fmt(e.representante_mensual_usd.base)}/mes de representante legal).` });
     return { ok: true };
   }
@@ -81,6 +87,11 @@ export function applyPresenceCommand(state: GameState, ctx: SimContext | undefin
   if (!p || p.status === 'cerrada') return { ok: false, error: 'No hay presencia en ese país.' };
   const busy = state.projects.some((x) => x.countryCode === cmd.countryCode && !isTerminal(x)) || state.business.contracts.some((k) => k.countryCode === cmd.countryCode && (k.status === 'sin_proyecto' || k.status === 'en_desarrollo' || k.status === 'operando'));
   if (busy) return { ok: false, error: `Hay proyectos o contratos activos en ${c.nombre}: no se puede cerrar la sociedad.` };
+  // Fase 6: primero hay que despedir o trasladar al personal basado en el país.
+  const staff = (state.business.team?.employees ?? []).filter((e) => e.countryCode === cmd.countryCode).length;
+  if (staff) return { ok: false, error: `Hay ${staff} persona(s) contratadas en ${c.nombre}: despídelas antes de cerrar la sociedad.` };
+  if (state.business.offices?.[cmd.countryCode]) delete state.business.offices[cmd.countryCode];
+  p.level = 'representante';
   p.status = 'cerrada';
   p.closedTick = state.tick;
   events.push({ type: 'presenceClosed', countryCode: c.iso3, severity: 'info', text: `Sociedad en ${c.nombre} cerrada.` });
