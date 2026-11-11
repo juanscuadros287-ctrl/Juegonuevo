@@ -373,10 +373,11 @@ async function waitPreview(page) {
   await page.getByTestId('site-preview').waitFor({ timeout: 15000 }).catch(async () => fail('sin vista previa: ' + (await page.getByTestId('develop-dialog').textContent()).slice(0, 400)));
   await page.waitForTimeout(700);
 }
-async function createAndClose(page) {
+async function createAndClose(page, name) {
   await page.getByTestId('create-project').click();
   await page.getByTestId('project-window').waitFor({ timeout: 5000 }).catch(() => fail('el proyecto no se creó'));
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(name ? 700 : 300);
+  if (name) await shot(page, name);
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
 }
@@ -439,7 +440,7 @@ if (!ONLY || ONLY === '4') {
   await waitPreview(page);
   await shot(page, '47-desarrollar-baterias.png');
   await at1280(page, '47-desarrollar-baterias-1280.png');
-  await createAndClose(page);
+  await createAndClose(page, '47-proyecto-baterias.png');
   // geotermia en el volcán Barú (Chiriquí)
   await developAt(page, 8.8, -82.55, 'geotermica', 20);
   await waitPreview(page);
