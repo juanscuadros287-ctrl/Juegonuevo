@@ -1,4 +1,4 @@
-import type { Command, FinancingPreview, GameState, SimEvent, ViabilityResult } from '@voltaje/sim';
+import type { Command, DispatchPolicy, FinancingPreview, PlantDispatchView, GameState, SimEvent, ViabilityResult } from '@voltaje/sim';
 import type { BusinessPanel, FromWorker, QuoteReply, QuoteRequest, SiteEstimate, ToWorker, Views } from './protocol';
 
 type Listener<T> = (v: T) => void;
@@ -42,7 +42,15 @@ export class SimClient {
   newGame(seed: number, companyName: string) { this.send({ t: 'new', seed, companyName }); }
   setSpeed(daysPerSecond: number) { this.send({ t: 'speed', daysPerSecond }); }
   command(cmd: Command) { this.send({ t: 'cmd', cmd }); }
-  focus(projectId: string | null) { this.send({ t: 'focus', projectId }); }
+  focus(projectId: string | null, tab?: string) { this.send({ t: 'focus', projectId, tab }); }
+  /** País de la ventana Mercado eléctrico. */
+  powerCountry(iso3: string) { this.send({ t: 'powerCountry', iso3 }); }
+  /** Vista previa de una política de despacho (no cambia la partida). */
+  async dispatchPreview(projectId: string, policy: DispatchPolicy): Promise<PlantDispatchView | null> {
+    return (await this.request<'dispatchPreview'>((reqId) => ({ t: 'dispatchPreview', reqId, projectId, policy }))).view;
+  }
+  /** Solo para la prueba de humo: fuerza un evento del mundo. */
+  debugWorldEvent(eventId: string, countries: string[] | null) { this.send({ t: 'debug', op: 'worldEvent', eventId, countries }); }
   quit() { this.state = null; this.views = null; this.send({ t: 'quit' }); }
 
   async save(): Promise<string> {

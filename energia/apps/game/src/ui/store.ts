@@ -6,7 +6,7 @@ import type { BusinessPanel, Views } from '../worker/protocol';
 
 export type ToastKind = 'info' | 'good' | 'warn' | 'bad';
 export type WindowId = 'projects' | 'finance' | 'events' | 'project' | BusinessPanel;
-const BUSINESS_PANELS = new Set<string>(['market', 'contracts', 'research', 'competitors', 'suppliers', 'countries', 'catalog']);
+const BUSINESS_PANELS = new Set<string>(['market', 'contracts', 'research', 'competitors', 'suppliers', 'countries', 'catalog', 'power', 'world']);
 /** Elegido especial de la ventana Países: la pestaña de combustibles. */
 export const FUELS_PICK = '@combustibles';
 
@@ -41,6 +41,8 @@ export interface UiState {
   log: LogEntry[];
   unread: number;
   toasts: { id: number; text: string; kind: ToastKind; projectId?: string; link?: UiLink }[];
+  /** Fase 5: avisos grandes de eventos graves del mundo (se cierran a mano o solos tras unos segundos). */
+  banners: { id: number; uid: number; title: string; text: string; scope: string }[];
 }
 
 let state: UiState = {
@@ -62,6 +64,7 @@ let state: UiState = {
   log: [],
   unread: 0,
   toasts: [],
+  banners: [],
 };
 const listeners = new Set<() => void>();
 let toastSeq = 0;
@@ -110,9 +113,25 @@ export const ui = {
     else ui.openPanel(link.window, link.id);
   },
   openProject(id: string, tab = 'resumen') {
-    sim.focus(id);
+    sim.focus(id, tab);
     sim.panel(null);
     ui.set({ window: 'project', projectId: id, projectTab: tab });
+  },
+  /** Cambia la pestaña del detalle (el worker calcula el despacho solo en las pestañas que lo usan). */
+  setProjectTab(tab: string) {
+    const id = ui.get().projectId;
+    if (id) sim.focus(id, tab);
+    ui.set({ projectTab: tab });
+  },
+  /** Mercado eléctrico de un país. */
+  openPowerMarket(iso3: string) {
+    sim.powerCountry(iso3);
+    ui.openPanel('power', iso3);
+  },
+  banner(b: { uid: number; title: string; text: string; scope: string }) {
+    const id = ++toastSeq;
+    ui.set((s) => ({ banners: [...s.banners.filter((x) => x.uid !== b.uid).slice(-1), { ...b, id }] }));
+    setTimeout(() => ui.set((s) => ({ banners: s.banners.filter((x) => x.id !== id) })), 14000);
   },
 };
 

@@ -1,11 +1,12 @@
 import type {
   BidQuoteView, BusinessSummary, Command, CompanyFinancials, CompetitorsOverview, ContractView, CountrySheet, CountrySummary, FinancingPreview, GameState,
   MyBidView, OpportunityView, ProjectDetail, ProjectSummary, ResearchTreeView, SimEvent, SitePreview, SupplierCatalog, SupplierCatalogItem, TechCatalogEntry,
-  ViabilityResult, selectFuelMarkets,
+  ViabilityResult, selectFuelMarkets, ClimateView, DispatchPolicy, PlantDispatchView, PowerMarketView, WorldEventView, WorldEventsOverview,
+  selectMarketShareHistory, selectPowerMarkets, selectRevenueBySource,
 } from '@voltaje/sim';
 
 /** Paneles de las Fases 3 y 4 cuyas vistas (más pesadas) solo se calculan mientras están abiertos. */
-export type BusinessPanel = 'market' | 'contracts' | 'research' | 'competitors' | 'suppliers' | 'countries' | 'catalog';
+export type BusinessPanel = 'market' | 'contracts' | 'research' | 'competitors' | 'suppliers' | 'countries' | 'catalog' | 'power' | 'world';
 
 export type FuelMarket = ReturnType<typeof selectFuelMarkets>[number];
 
@@ -38,6 +39,33 @@ export interface QuoteRequest {
 }
 export interface QuoteReply { quote: BidQuoteView | null; suppliers: SupplierCatalogItem[] }
 
+// ───────── Fase 5 ─────────
+export type PowerMarketRow = ReturnType<typeof selectPowerMarkets>[number];
+export type RevenueBySource = ReturnType<typeof selectRevenueBySource>;
+export type ShareHistory = ReturnType<typeof selectMarketShareHistory>;
+
+/** Marcador de una oportunidad abierta en el globo (`OpportunityView.location`, aproximada). */
+export interface OpportunityMark { id: string; lat: number; lon: number; clientName: string; countryCode: string; mw: number; techs: string[]; kind: string; daysLeft: number; myBid: boolean }
+
+/** Vistas de la Fase 5 (mercado eléctrico, mundo). Lo liviano siempre; el resto según la ventana abierta. */
+export interface PowerViews {
+  /** Eventos del mundo activos (barra, avisos y globo). */
+  worldActive: WorldEventView[];
+  /** Clima (El Niño/La Niña) e hidrología del país de origen. */
+  climate: ClimateView;
+  /** Ingresos de la empresa por fuente (finanzas). */
+  revenue: RevenueBySource;
+  /** Oportunidades abiertas con ubicación (globo). */
+  oppMarks: OpportunityMark[];
+  /** Ventana Mercado eléctrico: resumen por país y el país elegido. */
+  markets?: PowerMarketRow[];
+  market?: PowerMarketView | null;
+  /** Ventana Mundo. */
+  world?: WorldEventsOverview;
+  /** Ventana Competidores: cuota de mercado mensual. */
+  shareHistory?: ShareHistory;
+}
+
 /** Vistas calculadas en el worker con los selectores del motor (necesitan datos + grilla). */
 export interface Views {
   projects: ProjectSummary[];
@@ -45,6 +73,10 @@ export interface Views {
   /** Detalle del proyecto enfocado en la UI (null si no hay ventana abierta). */
   detail: ProjectDetail | null;
   business: BusinessViews | null;
+  /** Fase 5. */
+  power: PowerViews | null;
+  /** Despacho, ventas y seguro del proyecto enfocado (solo si opera o está en obra). */
+  dispatch: PlantDispatchView | null;
 }
 
 /** Estimación económica de un sitio antes de crear el proyecto (proyecto simulado sobre una copia del estado). */
@@ -66,7 +98,10 @@ export type ToWorker =
   | { t: 'speed'; daysPerSecond: number } // 0 = pausa
   | { t: 'cmd'; cmd: Command }
   | { t: 'save'; reqId: number }
-  | { t: 'focus'; projectId: string | null }
+  | { t: 'focus'; projectId: string | null; tab?: string }
+  | { t: 'powerCountry'; iso3: string }
+  | { t: 'dispatchPreview'; reqId: number; projectId: string; policy: DispatchPolicy }
+  | { t: 'debug'; op: 'worldEvent'; eventId: string; countries: string[] | null }
   | { t: 'preview'; reqId: number; techId: string; mw: number; lat: number; lon: number; to?: { lat: number; lon: number } }
   | { t: 'country'; iso3: string | null }
   | { t: 'viability'; reqId: number; projectId: string; runs: number }
@@ -84,4 +119,5 @@ export type FromWorker =
   | { t: 'preview'; reqId: number; estimate: SiteEstimate }
   | { t: 'viability'; reqId: number; result?: ViabilityResult; error?: string; ms: number }
   | { t: 'finPreview'; reqId: number; preview: FinancingPreview | null; error?: string }
-  | { t: 'quote'; reqId: number; reply: QuoteReply };
+  | { t: 'quote'; reqId: number; reply: QuoteReply }
+  | { t: 'dispatchPreview'; reqId: number; view: PlantDispatchView | null; error?: string };

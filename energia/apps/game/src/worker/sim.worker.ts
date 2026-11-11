@@ -7,10 +7,12 @@
 import {
   applyCommands, checkViability, createNewGame, deserialize, previewFinancing, previewSite, ResourceGrid, selectBidQuote, selectBusinessSummary,
   selectCompanyFinancials, selectCompetitors, selectContracts, selectMyBids, selectOpportunities, selectProjectDetail, selectProjects, selectResearchTree,
-  selectSupplierCatalog, serialize, step, PLAYER_ID, selectCountries, selectCountrySheet, selectFuelMarkets, selectTechCatalog, type TechCatalogEntry, type Command, type GameState, type GridMeta, type SimContext, type SimEvent,
+  selectSupplierCatalog, serialize, step, PLAYER_ID, selectCountries, selectCountrySheet, selectFuelMarkets, selectTechCatalog, type TechCatalogEntry,
+  opportunityLocation, selectClimate, selectMarketShareHistory, selectPlantDispatch, selectPowerMarket, selectPowerMarkets, selectRevenueBySource, selectWorldEvents,
+  triggerWorldEvent, type PlantDispatchView, type Command, type GameState, type GridMeta, type SimContext, type SimEvent,
 } from '@voltaje/sim';
 import { gameData } from '@voltaje/data';
-import type { BusinessPanel, BusinessViews, FromWorker, QuoteReply, QuoteRequest, SiteEstimate, ToWorker, Views } from './protocol';
+import type { BusinessPanel, BusinessViews, FromWorker, OpportunityMark, PowerViews, QuoteReply, QuoteRequest, SiteEstimate, ToWorker, Views } from './protocol';
 
 const post = (m: FromWorker) => (self as unknown as Worker).postMessage(m);
 
@@ -24,6 +26,13 @@ let last = performance.now();
 let focus: string | null = null;
 let panel: BusinessPanel | null = null;
 let country: string | null = null;
+/** Fase 5: país de la ventana Mercado eléctrico (por defecto el de origen). */
+let powerIso: string | null = null;
+/** Pestaña del proyecto enfocado: el despacho (más costoso) solo se calcula en las pestañas que lo usan. */
+let focusTab: string | null = null;
+const DISPATCH_TABS = new Set(['despacho', 'seguro', 'operacion']);
+/** Ubicación aproximada de cada oportunidad (determinista: se calcula una vez). */
+const oppLoc = new Map<string, { lat: number; lon: number } | null>();
 /** El catálogo (LCOE típico de 20 tecnologías × 13 países) cuesta: se recalcula al cambiar de mes o de I+D. */
 let catalogCache: { key: string; entries: TechCatalogEntry[] } | null = null;
 function catalog(s: GameState): TechCatalogEntry[] {
@@ -72,10 +81,46 @@ function businessViews(s: GameState): BusinessViews | null {
   return b;
 }
 
+/** Vistas de la Fase 5: eventos activos, clima, ingresos por fuente y marcadores siempre; mercado y mundo con su ventana. */
+function powerViews(s: GameState): PowerViews | null {
+  if (!s.market?.initialized) return null;
+  try {
+    const marks: OpportunityMark[] = [];
+    for (const o of s.market.opportunities) {
+      if (o.status !== 'abierta') continue;
+      let loc = oppLoc.get(o.id);
+      if (loc === undefined) { loc = opportunityLocation(ctx, o) ?? null; oppLoc.set(o.id, loc); }
+      if (!loc) continue;
+      marks.push({ id: o.id, lat: loc.lat, lon: loc.lon, clientName: o.clientName, countryCode: o.countryCode, mw: o.mw, techs: o.techs, kind: o.kind, daysLeft: o.deadlineTick - s.tick,
+        myBid: o.bids.some((b) => b.actorId === PLAYER_ID && b.status === 'presentada') });
+    }
+    const all = selectWorldEvents(s, ctx);
+    const v: PowerViews = { worldActive: all.active, climate: selectClimate(s, ctx, s.company.homeCountry), revenue: selectRevenueBySource(s), oppMarks: marks };
+    if (panel === 'power') { v.markets = selectPowerMarkets(s, ctx); v.market = selectPowerMarket(s, ctx, powerIso ?? s.company.homeCountry); }
+    if (panel === 'world') v.world = all;
+    if (panel === 'competitors') v.shareHistory = selectMarketShareHistory(s);
+    return v;
+  } catch (e) { console.error('Vista de la Fase 5:', e); return null; }
+}
+
+function dispatchView(s: GameState): PlantDispatchView | null {
+  if (!focus || !focusTab || !DISPATCH_TABS.has(focusTab)) return null;
+  const p = s.projects.find((x) => x.id === focus);
+  if (!p || (!p.operation && !p.construction)) return null;
+  try { return selectPlantDispatch(s, ctx, focus); } catch (e) { console.error('Despacho:', e); return null; }
+}
+
 function views(s: GameState): Views {
   let detail = null;
   if (focus) { try { detail = selectProjectDetail(s, ctx, focus); } catch { detail = null; } }
-  return { projects: selectProjects(s, ctx), finance: selectCompanyFinancials(s, ctx), detail, business: businessViews(s) };
+  return { projects: selectProjects(s, ctx), finance: selectCompanyFinancials(s, ctx), detail, business: businessViews(s), power: powerViews(s), dispatch: dispatchView(s) };
+}
+
+/** Vista previa de una política de despacho: la misma vista sobre una copia superficial del estado con la política nueva. */
+function dispatchPreview(projectId: string, policy: import('@voltaje/sim').DispatchPolicy): PlantDispatchView | null {
+  if (!state) return null;
+  const copy: GameState = { ...state, projects: state.projects.map((p) => (p.id === projectId ? { ...p, dispatch: policy, operation: p.operation && { ...p.operation, plan: undefined } } : p)) };
+  return selectPlantDispatch(copy, ctx, projectId);
 }
 
 function snapshot(force = true) {
@@ -218,7 +263,25 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
       break;
     case 'focus':
       focus = m.projectId;
+      focusTab = m.tab ?? null;
       snapshot();
+      break;
+    case 'powerCountry':
+      powerIso = m.iso3;
+      if (panel === 'power') snapshot();
+      break;
+    case 'dispatchPreview':
+      try { post({ t: 'dispatchPreview', reqId: m.reqId, view: dispatchPreview(m.projectId, m.policy) }); }
+      catch (err) { post({ t: 'dispatchPreview', reqId: m.reqId, view: null, error: (err as Error).message }); }
+      break;
+    case 'debug':
+      // solo para la prueba de humo: forzar un evento del mundo (triggerWorldEvent del motor, no es un comando de juego)
+      if (state && m.op === 'worldEvent') {
+        const ev: SimEvent[] = [];
+        triggerWorldEvent(state, ctx, m.eventId, m.countries, ev);
+        if (ev.length) post({ t: 'events', events: ev });
+        snapshot();
+      }
       break;
     case 'preview':
       post({ t: 'preview', reqId: m.reqId, estimate: estimateSite(m.techId, m.mw, m.lat, m.lon, m.to) });
@@ -256,7 +319,7 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
       if (state) post({ t: 'saved', reqId: m.reqId, text: serialize(state) });
       break;
     case 'quit':
-      state = null; daysPerSecond = 0; pending = []; focus = null;
+      state = null; daysPerSecond = 0; pending = []; focus = null; powerIso = null; oppLoc.clear();
       break;
   }
 };

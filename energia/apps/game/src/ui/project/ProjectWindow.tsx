@@ -12,8 +12,10 @@ import { CommercialTab } from './CommercialTab';
 import { FinancingTab } from './FinancingTab';
 import { ConstructionTab } from './ConstructionTab';
 import { OperationTab } from './OperationTab';
+import { DispatchTab } from './DispatchTab';
+import { InsuranceTab } from './InsuranceTab';
 
-type TabId = 'resumen' | 'estudios' | 'permisos' | 'comercial' | 'financiacion' | 'construccion' | 'operacion';
+type TabId = 'resumen' | 'estudios' | 'permisos' | 'comercial' | 'financiacion' | 'construccion' | 'operacion' | 'despacho' | 'seguro';
 
 export function cmd(c: Parameters<typeof sim.command>[0]) { sim.command(c); }
 
@@ -41,6 +43,10 @@ export function ProjectWindow() {
     { id: 'construccion', label: 'Construcción' },
     { id: 'operacion', label: 'Operación' },
   ];
+  // Fase 5: despacho y mercado solo en operación; seguro desde la obra
+  const raw = ui.get().game?.projects.find((p) => p.id === pid);
+  if (d.operation) tabs.push({ id: 'despacho', label: 'Despacho y venta', badge: raw?.codBlocked ? dot(1, 'var(--bad)') : undefined });
+  if (d.operation || d.construction) tabs.push({ id: 'seguro', label: 'Seguro', badge: raw && !raw.insurance ? <span className="tab-dot" style={{ background: 'var(--text-dim)' }}>!</span> : undefined });
   const runViability = async () => {
     setViab({ id: pid, tick, busy: true });
     const r = await sim.viability(pid, 500);
@@ -65,7 +71,7 @@ export function ProjectWindow() {
         </div>
       )}
     >
-      <Tabs tabs={tabs} value={tab} onChange={(t) => ui.set({ projectTab: t })} />
+      <Tabs tabs={tabs} value={tab} onChange={(t) => ui.setProjectTab(t)} />
       <div className="window-body scroll">
         {viab && viab.id === pid && <ViabilityCard v={viab} d={d} onClose={() => setViab(null)} stale={viab.tick !== tick} />}
         {tab === 'resumen' && <SummaryTab d={d} />}
@@ -75,6 +81,8 @@ export function ProjectWindow() {
         {tab === 'financiacion' && <FinancingTab d={d} />}
         {tab === 'construccion' && <ConstructionTab d={d} />}
         {tab === 'operacion' && <OperationTab d={d} />}
+        {tab === 'despacho' && <DispatchTab d={d} />}
+        {tab === 'seguro' && <InsuranceTab d={d} />}
       </div>
     </Window>
   );

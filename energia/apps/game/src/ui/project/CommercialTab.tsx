@@ -3,6 +3,8 @@ import { ui, useUi } from '../store';
 import { Pill, Section, Stat } from '../common';
 import { dateOfTick, fmtDate, fmtMoney, fmtNum, fmtPct } from '../format';
 import { cmd } from './ProjectWindow';
+import { useState } from 'react';
+import { SettlementPicker, type Settlement } from './DispatchTab';
 
 export function CommercialTab({ d }: { d: ProjectDetail }) {
   const g = useUi((s) => s.game);
@@ -10,6 +12,7 @@ export function CommercialTab({ d }: { d: ProjectDetail }) {
   const pid = d.summary.id;
   const ppa = d.ppa;
   const e = d.economics;
+  const [settlement, setSettlement] = useState<Settlement>('produccion');
   return (
     <>
       <div className="stats-row">
@@ -46,6 +49,12 @@ export function CommercialTab({ d }: { d: ProjectDetail }) {
         </Section>
       )}
       <Section title="Canales de venta de energía">
+        {!ppa || ppa.status === 'fallido' ? (
+          <div style={{ marginBottom: 10 }}>
+            <div className="stat-label" style={{ marginBottom: 4 }}>Modalidad del PPA</div>
+            <SettlementPicker value={settlement} onChange={setSettlement} />
+          </div>
+        ) : null}
         <table className="grid-table">
           <thead><tr><th>Canal</th><th className="num">Precio (US$/MWh)</th><th className="num">Plazo</th><th className="num">Prob. de éxito</th><th className="num">Costo de ofertar</th><th>Disponibilidad</th><th /></tr></thead>
           <tbody>
@@ -57,7 +66,7 @@ export function CommercialTab({ d }: { d: ProjectDetail }) {
                 <td className="num mono">{fmtPct(c.probability, 0)}</td>
                 <td className="num mono">{fmtMoney(c.costUsd)}</td>
                 <td>{c.available ? <Pill tone="good">Disponible</Pill> : <span style={{ color: 'var(--warn)', fontSize: 12 }}>{c.reason}</span>}</td>
-                <td className="num">{c.available && d.summary.active && <button className="primary" disabled={cash < c.costUsd} onClick={() => cmd({ type: 'seekPpa', projectId: pid, channelId: c.id })}>Presentar oferta</button>}</td>
+                <td className="num">{c.available && d.summary.active && <button className="primary" disabled={cash < c.costUsd} onClick={() => cmd({ type: 'seekPpa', projectId: pid, channelId: c.id, ...(settlement !== 'produccion' ? { settlement } : {}) })}>Presentar oferta</button>}</td>
               </tr>
             ))}
           </tbody>

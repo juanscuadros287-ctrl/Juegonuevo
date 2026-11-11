@@ -299,3 +299,28 @@ i.lg-crit { display: inline-block; width: 16px; height: 3px; background: var(--a
   .catalog-side { width: 320px; }
   .sheet-grid { gap: 12px; }
 }
+
+/* ---------- Fase 5: mercado eléctrico, despacho, seguros, mundo ---------- */
+.dispatch-grid { display: grid; grid-template-columns: minmax(380px, 0.85fr) minmax(0, 1.15fr); gap: 16px; }
+.policy-box { background: rgba(255,255,255,.03); border: 1px solid rgba(140,180,220,.1); border-radius: 8px; padding: 10px 12px; }
+.policy-field { margin-bottom: 10px; }
+.policy-field input[type=range] { margin: 4px 0 2px; }
+.policy-preview { margin-top: 8px; padding: 8px 12px; border: 1px dashed rgba(255,203,61,.45); border-radius: 8px; background: rgba(255,203,61,.05); }
+.policy-preview table.kv td:last-child { white-space: normal; }
+.market-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.market-side { width: 300px; flex: none; }
+.world-chip { white-space: nowrap; }
+.world-chip .wc-text { font-size: 12px; }
+.banners { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); display: grid; gap: 6px; z-index: 6; width: min(640px, calc(100vw - 24px)); pointer-events: none; }
+.banner { pointer-events: auto; display: flex; gap: 12px; align-items: flex-start; padding: 10px 14px; border-left: 4px solid var(--bad); background: rgba(40, 14, 18, .94); cursor: pointer; }
+.banner .banner-title { font-weight: 700; font-size: 14px; }
+.banner .banner-icon { font-size: 24px; line-height: 1; }
+.event-card { border: 1px solid var(--panel-border); border-left: 4px solid var(--text-dim); border-radius: 8px; padding: 9px 12px; margin-bottom: 8px; background: rgba(255,255,255,.03); }
+.event-card.selected { border-color: var(--accent); }
+.event-card ul { margin: 4px 0 0; padding-left: 18px; font-size: 12px; }
+.opp-tip { position: absolute; pointer-events: none; z-index: 4; padding: 6px 9px; font-size: 12px; max-width: 280px; }
+@media (max-width: 1440px) {
+  .dispatch-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .market-side { width: 260px; }
+}
+@media (max-width: 1360px) { .world-chip .wc-text { display: none; } }
