@@ -8,13 +8,13 @@ import { fmtMoney, fmtNum, fmtPct } from './format';
 
 const ORDER: ProjectStage[] = ['identificado', 'estudios', 'permisos', 'cierre_financiero', 'construccion', 'puesta_en_marcha', 'operacion'];
 
-/** Avance global del ciclo 0–1: etapa + avance de obra. */
-export function lifecycleProgress(p: ProjectSummary): number {
-  const i = ORDER.indexOf(p.stage);
-  if (i < 0) return 0;
-  if (p.stage === 'operacion') return 1;
-  const within = p.stage === 'construccion' ? p.buildProgress : 0;
-  return (i + within) / (ORDER.length - 1);
+/** Qué mide `stageProgress` según la etapa. */
+export function stageProgressLabel(p: ProjectSummary): string {
+  if (p.stage === 'operacion') return 'en operación';
+  if (p.stage === 'construccion') return 'obra';
+  if (p.stage === 'puesta_en_marcha') return 'puesta en marcha';
+  if (ORDER.indexOf(p.stage) < 0) return '';
+  return 'desarrollo';
 }
 
 type Filter = 'activos' | 'desarrollo' | 'obra' | 'operacion' | 'cerrados' | 'todos';
@@ -61,7 +61,7 @@ export function ProjectsPanel() {
           <table className="grid-table">
             <thead>
               <tr>
-                <th>Proyecto</th><th>Etapa</th><th style={{ width: 120 }}>Avance</th><th>Próximo paso</th>
+                <th>Proyecto</th><th>Etapa</th><th style={{ width: 130 }}>Avance</th><th>Próximo paso</th>
                 <th className="num">FC P50</th><th className="num">TIR capital</th><th className="num">VAN capital</th><th>Alertas</th>
               </tr>
             </thead>
@@ -73,7 +73,10 @@ export function ProjectsPanel() {
                     <div className="dim" style={{ fontSize: 11 }}>{p.techName} · {fmtNum(p.mw, 0)} MW</div>
                   </td>
                   <td><StageBadge stage={p.stage} label={p.stageLabel} /></td>
-                  <td><Bar value={lifecycleProgress(p)} color={STAGE_COLORS[p.stage]} /></td>
+                  <td title={`Avance de la etapa: ${stageProgressLabel(p)}`}>
+                    <Bar value={p.active ? p.stageProgress : 0} color={STAGE_COLORS[p.stage]} />
+                    {p.active && <div className="dim mono" style={{ fontSize: 10.5, marginTop: 2 }}>{fmtPct(p.stageProgress, 0)} {stageProgressLabel(p)}</div>}
+                  </td>
                   <td className="ellipsis" style={{ maxWidth: 260 }} title={p.nextStep}>{p.nextStep}</td>
                   <td className="num mono">{p.active ? fmtPct(p.fcP50) : '—'}</td>
                   <td className="num mono" style={{ color: p.irrEquity !== null && p.irrEquity < 0.1 ? 'var(--warn)' : undefined }}>{p.active ? fmtPct(p.irrEquity) : '—'}</td>

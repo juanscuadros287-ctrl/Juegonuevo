@@ -102,15 +102,18 @@ function ViabilityCard({ v, d, onClose, stale }: { v: { busy: boolean; result?: 
       {r && (
         <div className="viab-grid">
           <div className="viab-big">
-            <div className="stat-label">Probabilidad de llegar a operación</div>
+            <div className="stat-label">Prob. de llegar a operación</div>
             <div className="mono" style={{ fontSize: 34, fontWeight: 800, color: r.probCod >= 0.6 ? 'var(--good)' : r.probCod >= 0.35 ? 'var(--warn)' : 'var(--bad)' }}>{fmtPct(r.probCod, 0)}</div>
             <div className="dim" style={{ fontSize: 11 }}>Estimación del motor sin simular: {fmtPct(d.successProbability, 0)}</div>
+            <div className="dim" style={{ fontSize: 11 }}>Precio supuesto: {r.ppaChannelId ? `PPA (${d.ppa?.channelName ?? r.ppaChannelId})` : 'spot'}</div>
           </div>
           <table className="kv"><tbody>
             <tr><td>Meses hasta operar (P50 / P90)</td><td>{r.monthsToCodP50 !== null ? `${fmtNum(r.monthsToCodP50, 0)} / ${fmtNum(r.monthsToCodP90 ?? 0, 0)}` : '—'}</td></tr>
             <tr><td>Costo por gastar (P50 / P90)</td><td>{fmtMoney(r.costP50Usd)} / {fmtMoney(r.costP90Usd)}</td></tr>
             <tr><td>TIR del capital (P50 / P10)</td><td>{fmtPct(r.irrEquityP50)} / {fmtPct(r.irrEquityP10)}</td></tr>
-            <tr><td>VAN esperado del capital</td><td style={{ color: r.npvExpectedUsd < 0 ? 'var(--bad)' : 'var(--good)' }}>{fmtMoney(r.npvExpectedUsd)}</td></tr>
+            <tr><td>VAN esperado del capital (con riesgo)</td><td style={{ color: r.npvExpectedUsd < 0 ? 'var(--bad)' : 'var(--good)' }}>{fmtMoney(r.npvExpectedUsd)}</td></tr>
+            <tr><td>VAN si todo sale bien (misma base)</td><td>{fmtMoney(r.npvDeterministicUsd)}</td></tr>
+            <tr><td>Costo del riesgo</td><td style={{ color: r.npvDeterministicUsd - r.npvExpectedUsd > 0 ? 'var(--warn)' : undefined }}>{fmtMoney(r.npvDeterministicUsd - r.npvExpectedUsd)}</td></tr>
           </tbody></table>
           <div>
             <div className="stat-label" style={{ marginBottom: 4 }}>Principales causas de fracaso</div>

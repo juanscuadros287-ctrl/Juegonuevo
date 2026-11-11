@@ -1,16 +1,16 @@
 import { useMemo } from 'react';
-import { daysInMonth, type ProjectDetail } from '@voltaje/sim';
+import type { ProjectDetail } from '@voltaje/sim';
 import { useUi } from '../store';
 import { Empty, Section, Stat } from '../common';
 import { Chart, CHART, baseOption } from '../Chart';
-import { fmtDate, fmtMoney, fmtNum, fmtPct, monthLabel } from '../format';
+import { fmtDate, fmtMoney, fmtNum, fmtPct, MONTHS_SHORT, monthLabel } from '../format';
 import { cmd } from './ProjectWindow';
 
 export function OperationTab({ d }: { d: ProjectDetail }) {
   const op = d.operation;
   const raw = useUi((s) => s.game?.projects.find((p) => p.id === d.summary.id));
   const hist = op?.history ?? [];
-  const expectedYear = d.resource.energyP50MwhYear;
+  const expected = op?.expectedMonthlyMwh ?? d.resource.monthlyMwh;
   const histKey = hist.length ? `${hist.length}-${hist[hist.length - 1].energyMwh}` : '0';
   const energyOpt = useMemo(() => {
     const last = hist.slice(-36);
@@ -19,11 +19,24 @@ export function OperationTab({ d }: { d: ProjectDetail }) {
       ...o,
       series: [
         { name: 'Producción real', type: 'bar', data: last.map((h) => Math.round(h.energyMwh)), itemStyle: { color: CHART.good, borderRadius: [3, 3, 0, 0] } },
-        // P50 sin perfil mensual (el motor no expone el perfil estacional): referencia plana por días del mes
-        { name: 'Esperada P50', type: 'line', data: last.map((h) => Math.round((expectedYear * daysInMonth(h.year, h.month)) / 365)), lineStyle: { color: CHART.accent, type: 'dashed' }, itemStyle: { color: CHART.accent }, symbol: 'none' },
+        // perfil estacional del país (P50 y P90 por mes calendario, con degradación)
+        { name: 'Esperada P50', type: 'line', data: last.map((h) => Math.round(expected[h.month - 1]?.p50Mwh ?? 0)), lineStyle: { color: CHART.accent, type: 'dashed' }, itemStyle: { color: CHART.accent }, symbol: 'none' },
+        { name: 'P90', type: 'line', data: last.map((h) => Math.round(expected[h.month - 1]?.p90Mwh ?? 0)), lineStyle: { color: CHART.bad, type: 'dotted' }, itemStyle: { color: CHART.bad }, symbol: 'none' },
       ],
     };
-  }, [histKey, expectedYear]);
+  }, [histKey, expected]);
+  // sin operación: perfil esperado del año tipo
+  const profileOpt = useMemo(() => {
+    const m = d.resource.monthlyMwh;
+    const o = baseOption(m.map((x) => MONTHS_SHORT[x.month - 1]), { unit: ' MWh' });
+    return {
+      ...o,
+      series: [
+        { name: 'Esperada P50', type: 'bar', data: m.map((x) => Math.round(x.p50Mwh)), itemStyle: { color: CHART.accent, borderRadius: [3, 3, 0, 0] } },
+        { name: 'P90', type: 'line', data: m.map((x) => Math.round(x.p90Mwh)), lineStyle: { color: CHART.bad, type: 'dotted' }, itemStyle: { color: CHART.bad }, symbol: 'circle', symbolSize: 4 },
+      ],
+    };
+  }, [d.resource.monthlyMwh]);
   const moneyOpt = useMemo(() => {
     const last = hist.slice(-36);
     const o = baseOption(last.map((h) => monthLabel(h.year, h.month)), { money: true });
@@ -38,8 +51,13 @@ export function OperationTab({ d }: { d: ProjectDetail }) {
     };
   }, [histKey]);
 
-  if (!op) return <Empty>La planta aún no está en operación. Aquí verás su producción mensual, factor de capacidad real, fallas y mantenimiento.</Empty>;
-  const failures = d.timeline.filter((t) => t.kind === 'malo');
+  if (!op) return (
+    <>
+      <Empty>La planta aún no está en operación. Aquí verás su producción mensual, factor de capacidad real, fallas y mantenimiento.</Empty>
+      <Section title="Producción esperada por mes (perfil estacional del país)"><Chart option={profileOpt} height={240} /></Section>
+    </>
+  );
+  const failures = op.failureLog;
   const outages = raw?.operation?.outages ?? [];
   const lost = outages.reduce((a, o) => a + o.fraction, 0);
 
@@ -69,10 +87,17 @@ export function OperationTab({ d }: { d: ProjectDetail }) {
             ))}
           </div>
         </Section>
-        <Section title="Fallas e incidentes">
-          {failures.length === 0 ? <div className="dim">Sin incidentes registrados.</div> : (
-            <div className="timeline scroll" style={{ maxHeight: 160 }}>
-              {[...failures].reverse().map((t, i) => <div key={i} className="tl-item malo"><span className="mono dim tl-date">{fmtDate(t.date)}</span><span>{t.text}</span></div>)}
+        <Section title={`Fallas (${failures.length})`}>
+          {failures.length === 0 ? <div className="dim">Sin fallas registradas.</div> : (
+            <div className="scroll" style={{ maxHeight: 180 }}>
+              <table className="grid-table">
+                <thead><tr><th>Fecha</th><th className="num">Capacidad perdida</th><th className="num">Días</th><th className="num">Reparación</th></tr></thead>
+                <tbody>
+                  {[...failures].reverse().map((f, i) => (
+                    <tr key={i}><td className="mono">{fmtDate(f.date)}</td><td className="num mono">{fmtPct(f.fractionLost, 0)}</td><td className="num mono">{f.days}</td><td className="num mono">{fmtMoney(f.costUsd)}</td></tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </Section>

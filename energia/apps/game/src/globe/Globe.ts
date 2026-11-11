@@ -99,7 +99,9 @@ export class Globe {
 
   constructor(private canvas: HTMLCanvasElement, private world: World) {
     const g = theme.globe;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    // `?aa=0` (prueba de humo en CPU): sin antialias, que en swiftshader es lo más caro de cada cuadro
+    const params = new URLSearchParams(location.search);
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: params.get('aa') !== '0', alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
@@ -107,7 +109,9 @@ export class Globe {
     this.camera.position.set(0, 0, 3.2);
 
     // Texturas de mapa: 8192 px en Apple Silicon (costas nítidas al acercarse), 4096 si la GPU no da más.
-    const texSize = Math.min(8192, this.renderer.capabilities.maxTextureSize);
+    // `?tex=4096` (prueba de humo en CPU) baja la resolución para cargar más rápido.
+    const texParam = Number(params.get('tex')) || 8192;
+    const texSize = Math.min(texParam, 8192, this.renderer.capabilities.maxTextureSize);
     this.material = new THREE.ShaderMaterial({
       vertexShader: vertex,
       fragmentShader: fragment,
@@ -139,7 +143,8 @@ export class Globe {
     this.controls.minDistance = 1.08;
     this.controls.maxDistance = 6;
     this.controls.zoomSpeed = 0.8;
-    this.controls.addEventListener('start', () => (this.flight = null));
+    this.controls.addEventListener('start', () => { this.flight = null; this.lastInput = performance.now(); });
+    this.controls.addEventListener('change', () => (this.lastInput = performance.now()));
 
     canvas.addEventListener('pointerdown', this.handleDown);
     canvas.addEventListener('pointerup', this.handleUp);
@@ -215,9 +220,16 @@ export class Globe {
 
   private lastDist = -1;
   private lastFrame = performance.now();
+  private lastInput = 0;
+  /**
+   * Con una ventana grande abierta el globo casi no se ve: se dibuja como mucho cada `throttleMs`
+   * (salvo durante un vuelo de cámara o mientras el jugador lo mueve). Ahorra CPU/batería.
+   */
+  throttleMs = 0;
   private loop = () => {
     this.raf = requestAnimationFrame(this.loop);
     const now = performance.now();
+    if (this.throttleMs > 0 && !this.flight && now - this.lastInput > 800 && now - this.lastFrame < this.throttleMs) return;
     const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
     this.lastFrame = now;
     const dist = this.camera.position.length();

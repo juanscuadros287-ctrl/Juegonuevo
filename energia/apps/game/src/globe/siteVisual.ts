@@ -16,6 +16,10 @@ export interface SiteView {
   seed: number;
   /** Planta con una falla en curso (salida forzada). */
   failing?: boolean;
+  /** Avance dentro de la etapa (ProjectSummary.stageProgress): llena el anillo durante el desarrollo. */
+  stageProgress?: number;
+  /** Planta de un competidor: anillo de este color (en lugar del color de etapa) y doble. */
+  rivalColor?: string;
 }
 
 export interface SiteVisual {
@@ -55,23 +59,30 @@ function toPlantState(v: SiteView) {
   return { kind, capacityMw: v.capacityMw, stage: visualStage(v.stage, v.failing), progress, seed: v.seed };
 }
 
-/** Fracción del anillo: avance de obra; completo en operación; un cuarto mientras se desarrolla. */
+/** Fracción del anillo: avance de obra; completo en operación; madurez del desarrollo (o un cuarto si no se conoce). */
 function ringFraction(v: SiteView): number {
   if (v.stage === 'operacion') return 1;
   if (v.stage === 'construccion' || v.stage === 'puesta_en_marcha') return Math.max(0.03, v.progress);
-  return 0.25;
+  return v.stageProgress !== undefined ? Math.max(0.06, Math.min(1, v.stageProgress)) : 0.25;
 }
 
 export function createSiteVisual(view: SiteView): SiteVisual {
   const root = new THREE.Group();
   const plant: PlantObject = createPlant(toPlantState(view));
   const bgMat = new THREE.MeshBasicMaterial({ color: 0x0b1b2b, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
-  const ringMat = new THREE.MeshBasicMaterial({ color: STAGE_COLORS[view.stage], side: THREE.DoubleSide, depthWrite: false });
+  const ringMat = new THREE.MeshBasicMaterial({ color: view.rivalColor ?? STAGE_COLORS[view.stage], side: THREE.DoubleSide, depthWrite: false });
   const ringBg = new THREE.Mesh(new THREE.RingGeometry(RING_IN, RING_OUT, 48), bgMat);
   const ring = new THREE.Mesh(new THREE.RingGeometry(RING_IN, RING_OUT, 48), ringMat);
   for (const m of [ringBg, ring]) { m.rotation.x = -Math.PI / 2; m.position.y = 0.03; m.renderOrder = 2; }
   ring.position.y = 0.032;
   root.add(plant, ringBg, ring);
+  // competidores: un segundo anillo exterior completo con su color, para distinguirlos de las plantas propias
+  let outer: THREE.Mesh | null = null;
+  if (view.rivalColor) {
+    outer = new THREE.Mesh(new THREE.RingGeometry(RING_OUT + 0.04, RING_OUT + 0.1, 48), new THREE.MeshBasicMaterial({ color: view.rivalColor, side: THREE.DoubleSide, depthWrite: false, transparent: true, opacity: 0.85 }));
+    outer.rotation.x = -Math.PI / 2; outer.position.y = 0.031; outer.renderOrder = 2;
+    root.add(outer);
+  }
   let ringKey = '';
   let detail = -1;
 
@@ -83,7 +94,7 @@ export function createSiteVisual(view: SiteView): SiteVisual {
       const key = `${v.stage}|${Math.round(frac * 100)}`;
       if (key === ringKey) return;
       ringKey = key;
-      ringMat.color.set(STAGE_COLORS[v.stage]);
+      ringMat.color.set(v.rivalColor ?? STAGE_COLORS[v.stage]);
       ring.geometry.dispose();
       // el anillo empieza al norte (−Z) y avanza en sentido horario visto desde arriba
       ring.geometry = new THREE.RingGeometry(RING_IN, RING_OUT, 48, 1, Math.PI / 2, -Math.PI * 2 * frac);
@@ -101,6 +112,7 @@ export function createSiteVisual(view: SiteView): SiteVisual {
       plant.dispose();
       ring.geometry.dispose(); ringMat.dispose();
       ringBg.geometry.dispose(); bgMat.dispose();
+      if (outer) { outer.geometry.dispose(); (outer.material as THREE.Material).dispose(); }
       root.removeFromParent();
     },
   };
