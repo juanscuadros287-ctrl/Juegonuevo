@@ -462,7 +462,6 @@ if (!ONLY || ONLY === '4') {
   for (const c of [
     { techId: 'hidro_pasada', mw: 20, lat: 8.85, lon: -82.15 }, { techId: 'gas_natural', mw: 300, lat: 9.3, lon: -79.9 },
     { techId: 'biomasa', mw: 25, lat: 8.0, lon: -80.6 }, { techId: 'eolica_tierra', mw: 50, lat: 8.5, lon: -80.75 },
-    { techId: 'eolica_marina', mw: 300, lat: 7.6, lon: -79.7 },
   ]) await page.evaluate((cmd) => window.__voltaje.command({ type: 'createProject', ...cmd }), c);
   await page.waitForTimeout(800);
   await page.keyboard.press('Escape');

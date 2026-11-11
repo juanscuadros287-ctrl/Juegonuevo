@@ -291,3 +291,11 @@ i.lg-crit { display: inline-block; width: 16px; height: 3px; background: var(--a
 .develop table.kv td:last-child { white-space: normal; }
 .develop .tech-item { padding: 2px 8px; margin-bottom: 2px; font-size: 12px; min-height: 26px; }
 .develop .tech-list .field-label { margin: 4px 0 3px !important; font-size: 10px; }
+.catalog-side { width: 370px; }
+.lock-hint { display: none; color: var(--warn); }
+@media (max-width: 1440px) {
+  .catalog-table .col-estado { display: none; }
+  .lock-hint { display: inline; }
+  .catalog-side { width: 320px; }
+  .sheet-grid { gap: 12px; }
+}

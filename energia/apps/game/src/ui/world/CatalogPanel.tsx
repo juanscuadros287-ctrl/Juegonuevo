@@ -91,7 +91,7 @@ function CatalogTable({ list, country, sel, onPick, sort, setSort }: { list: Tec
     <table className="grid-table catalog-table">
       <thead>
         <tr>
-          {th('nombre', 'Tecnología', '')}<th>Estado</th>{th('capex', 'CAPEX US$/kW')}<th className="num">O&M fijo</th><th className="num">FC ref.</th>
+          {th('nombre', 'Tecnología', '')}<th className="col-estado">Estado</th>{th('capex', 'CAPEX US$/kW')}<th className="num">O&M fijo</th><th className="num">FC ref.</th>
           <th className="num">Vida · obra</th>{th('emisiones', 'gCO₂/kWh')}{th('lcoe', 'LCOE típico')}<th className="num">TIR</th>
         </tr>
       </thead>
@@ -104,9 +104,9 @@ function CatalogTable({ list, country, sel, onPick, sort, setSort }: { list: Tec
             <tr key={e.id} className={`clickable ${sel === e.id ? 'selected' : ''}`} data-tech={e.id} onClick={() => onPick(e.id)}>
               <td style={{ maxWidth: 210 }}>
                 <div className="row" style={{ gap: 7 }}><span className="tech-icon">{TECH_ICON[e.id]}</span><b className="ellipsis">{e.nombre}</b></div>
-                <div className="dim" style={{ fontSize: 11, marginLeft: 29 }}>{MODE_LABEL[e.mode]}</div>
+                <div className="dim" style={{ fontSize: 11, marginLeft: 29 }}>{MODE_LABEL[e.mode]}<span className="lock-hint">{e.unlocked ? '' : ' · requiere I+D'}</span></div>
               </td>
-              <td>{e.unlocked ? <Pill tone="good">Investigada</Pill> : <span className="dim ellipsis" style={{ fontSize: 11, display: 'block', maxWidth: 120 }} title={`Requiere I+D: ${e.unlockNode?.nombre ?? '—'}`}>I+D: {e.unlockNode?.nombre ?? '—'}</span>}</td>
+              <td className="col-estado">{e.unlocked ? <Pill tone="good">Investigada</Pill> : <span className="dim ellipsis" style={{ fontSize: 11, display: 'block', maxWidth: 120 }} title={`Requiere I+D: ${e.unlockNode?.nombre ?? '—'}`}>I+D: {e.unlockNode?.nombre ?? '—'}</span>}</td>
               <td className="num mono">{fmtNum(e.params.capexUsdKw.base, 0)}<div className="dim" style={{ fontSize: 10.5 }}>{fmtNum(e.params.capexUsdKw.min, 0)}–{fmtNum(e.params.capexUsdKw.max, 0)}</div></td>
               <td className="num mono">{fmtNum(e.params.omFixedUsdKwYear, 0)}<div className="dim" style={{ fontSize: 10.5 }}>+{fmtNum(e.params.omVarUsdMwh, 1)}/MWh</div></td>
               <td className="num mono">{e.mode === 'transmision' || e.mode === 'eficiencia' ? <span className="dim">—</span> : fmtPct(e.params.fcRef, 0)}</td>
@@ -168,7 +168,7 @@ function TechCard({ e, country }: { e: TechCatalogEntry; country: string }) {
   if (p.savingsPriceUsdMwh) rows.push(['Ahorro', `${fmtNum(p.savingsPriceUsdMwh, 0)} US$/MWh · garantizado ${fmtPct(p.guaranteedSavings, 0)}`]);
   const h2 = e.mode === 'hidrogeno';
   return (
-    <div className="side-card scroll" data-testid="tech-card" style={{ width: 370 }}>
+    <div className="side-card scroll catalog-side" data-testid="tech-card">
       <div className="row" style={{ gap: 8 }}>
         <span className="tech-icon" style={{ fontSize: 20 }}>{TECH_ICON[e.id]}</span>
         <div style={{ minWidth: 0 }}>
