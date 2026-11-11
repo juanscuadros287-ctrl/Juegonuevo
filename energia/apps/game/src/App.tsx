@@ -23,6 +23,10 @@ import { SuppliersPanel } from './ui/business/SuppliersPanel';
 import { BidDialog } from './ui/business/BidDialog';
 import { CatalogPanel } from './ui/world/CatalogPanel';
 import { CountriesPanel } from './ui/world/CountriesPanel';
+import { PowerMarketPanel } from './ui/power/PowerMarketPanel';
+import { WorldPanel } from './ui/power/WorldPanel';
+import { Banners } from './ui/power/Banners';
+import { isGrave } from './ui/power/worldLabels';
 import { FUELS_PICK, ui, useUi, type LogEntry, type ToastKind, type UiLink } from './ui/store';
 import { sim } from './worker/client';
 import { loadGame, saveGame } from './ui/session';
@@ -31,10 +35,12 @@ import { fmtMoney } from './ui/format';
 const KIND: Record<string, ToastKind> = { info: 'info', bueno: 'good', malo: 'bad' };
 /** Eventos informativos que también merecen notificación (el resto va solo al registro). */
 const TOAST_INFO = new Set(['projectCreated', 'studyCompleted', 'permitDecided', 'commissioningStarted', 'saleStarted', 'bidSubmitted', 'contractSigned', 'researchStarted', 'contractProjectAssigned',
-  'presenceRequested', 'presenceOpened', 'presenceClosed', 'wellsDrilled']);
+  'presenceRequested', 'presenceOpened', 'presenceClosed', 'wellsDrilled', 'insuranceChanged', 'dispatchPolicyChanged', 'climateOutlook', 'worldEvent']);
 
 /** A qué ventana lleva un evento de negocio (Fase 3). */
 function businessLink(e: SimEvent): UiLink | undefined {
+  // Fase 5: eventos del mundo y clima → ventana Mundo
+  if (e.type === 'worldEvent' || e.type === 'worldEventEnded' || e.type === 'climateOutlook') return { window: 'world' };
   if ('opportunityId' in e && (e.type.startsWith('bid') || e.type.startsWith('opportunity'))) return { window: 'market', id: e.opportunityId };
   if ('contractId' in e) return { window: 'contracts', id: e.contractId };
   if ('nodeId' in e) return { window: 'research', id: e.nodeId };
@@ -67,6 +73,16 @@ function useGameEvents() {
         // el motor publica también la firma de contratos de la IA (ids «C2-K1»): no son del jugador
         if ('contractId' in e && /^C\d+-/.test(e.contractId)) continue;
         const link = businessLink(e);
+        // Fase 5: los eventos graves del mundo además muestran un aviso grande
+        if (e.type === 'worldEvent') {
+          const v = sim.views?.power?.worldActive.find((x) => x.uid === e.uid);
+          const kind = v?.kind ?? gameData.simData.world?.eventos.find((x) => x.id === e.eventId)?.tipo ?? '';
+          if (isGrave({ id: e.eventId, kind })) {
+            ui.banner({ uid: e.uid, title: v?.name ?? e.text, text: e.text, scope: v?.scopeLabel ?? '' });
+            log.push({ tick, date, text: e.text, severity: e.severity, link: link! });
+            continue;
+          }
+        }
         if (link && 'text' in e && 'severity' in e) {
           log.push({ tick, date, text: e.text, severity: e.severity, link });
           if (e.severity !== 'info' || TOAST_INFO.has(e.type)) ui.toast(e.text, KIND[e.severity], undefined, link);
@@ -124,6 +140,8 @@ function useKeyboard() {
       if (k === 'v') ui.openWindow('suppliers');
       if (k === 'x') ui.openWindow('countries');
       if (k === 't') ui.openWindow('catalog');
+      if (k === 'l') ui.openWindow('power');
+      if (k === 'w') ui.openWindow('world');
       if (e.key === 'Escape') {
         if (s.dialog) ui.set({ dialog: null });
         else if (s.bidFor) ui.set({ bidFor: null });
@@ -153,6 +171,8 @@ function Windows() {
   if (w === 'suppliers') return <SuppliersPanel />;
   if (w === 'countries') return <CountriesPanel />;
   if (w === 'catalog') return <CatalogPanel />;
+  if (w === 'power') return <PowerMarketPanel />;
+  if (w === 'world') return <WorldPanel />;
   return null;
 }
 
@@ -168,7 +188,8 @@ export function App() {
   useEffect(() => {
     const w = window as unknown as { __voltaje?: object };
     w.__voltaje = Object.assign(w.__voltaje ?? {}, { saveText: () => sim.save(), loadText: (t: string) => loadGame(t), command: (c: Parameters<typeof sim.command>[0]) => sim.command(c),
-      select: (lat: number, lon: number) => { ui.openWindow(null); ui.set({ selected: { lat, lon } }); } });
+      select: (lat: number, lon: number) => { ui.openWindow(null); ui.set({ selected: { lat, lon } }); },
+      worldEvent: (id: string, countries: string[] | null) => sim.debugWorldEvent(id, countries) });
   }, []);
 
   useEffect(() => {
@@ -188,6 +209,7 @@ export function App() {
           {!win && <LayerPanel />}
           {!win && <Inspector world={world} />}
           <ZoomButtons />
+          <Banners />
           <Windows />
           <DevelopDialog world={world} />
           <BidDialog />

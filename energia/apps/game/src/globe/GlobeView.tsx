@@ -6,6 +6,7 @@ import { ui } from '../ui/store';
 import { SiteLayer } from './sites';
 import { lonLatToVec3 } from './geo';
 import { CountryHighlight, type CountryMark } from './countries';
+import { WorldMarks } from './worldMarks';
 
 let globeRef: Globe | null = null;
 let sitesRef: SiteLayer | null = null;
@@ -29,12 +30,19 @@ export function GlobeView({ world }: { world: World }) {
     sitesRef = sites;
     sites.onPick = (id) => { if (ui.get().screen === 'game') ui.openProject(id); };
     sites.onPickRival = (id) => { if (ui.get().screen === 'game') ui.openPanel('competitors', id); };
+    // Fase 5: oportunidades y eventos del mundo (los sitios tienen prioridad en el clic)
+    const marks = new WorldMarks(g, world);
+    marks.onPickOpportunity = (id) => { if (ui.get().screen === 'game') ui.openPanel('market', id); };
+    marks.onPickEvent = () => { if (ui.get().screen === 'game') ui.openPanel('world'); };
+    const sitesPick = g.onPickScreen;
+    g.onPickScreen = (x, y) => sitesPick(x, y) || (ui.get().screen === 'game' && marks.pickAt(x, y));
     // gancho para la prueba de humo (tools/screenshots.mjs): mover la cámara y ubicar sitios
     const w = window as unknown as { __voltaje?: object };
     w.__voltaje = Object.assign(w.__voltaje ?? {}, {
       flyTo: (lat: number, lon: number, d: number, s = 0.1) => g.flyTo(lat, lon, d, s),
       siteScreenPos: (id: string) => sites.screenPos(id),
       rivalSites: () => sites.rivalIds(),
+      oppScreenPos: (id: string) => marks.oppScreenPos(id),
       geoScreenPos: (lat: number, lon: number) => g.toScreen(lonLatToVec3(lon, lat, 1)),
     });
     const highlight = new CountryHighlight(g.scene, world.shapes);
@@ -82,12 +90,17 @@ export function GlobeView({ world }: { world: World }) {
         }
         highlight.set(marks);
       }
+      if (s.views?.power !== prev.views?.power || s.screen !== prev.screen) {
+        const p = s.screen === 'game' ? s.views?.power : null;
+        marks.setOpportunities(p?.oppMarks ?? []);
+        marks.setEvents(p?.worldActive ?? []);
+      }
       if (s.views !== prev.views || s.screen !== prev.screen || planChanged) sites.sync(s.screen === 'game' ? s.views?.projects ?? [] : [], s.game, s.screen === 'game' ? s.views?.business?.competitors : null);
       prev = s;
     };
     sync();
     const unsub = ui.subscribe(sync);
-    return () => { unsub(); sites.dispose(); highlight.dispose(); g.dispose(); globeRef = null; sitesRef = null; };
+    return () => { unsub(); marks.dispose(); sites.dispose(); highlight.dispose(); g.dispose(); globeRef = null; sitesRef = null; };
   }, [world]);
 
   return <canvas ref={canvas} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', cursor: 'grab' }} />;

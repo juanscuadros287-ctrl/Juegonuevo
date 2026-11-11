@@ -4,6 +4,7 @@ import { currentDate, formatDate } from '@voltaje/sim';
 import { FUELS_PICK, ui, useUi, type WindowId } from './store';
 import { fmtMoney, fmtNum } from './format';
 import { riskLevel } from './FinancePanel';
+import { isGrave } from './power/worldLabels';
 
 function NavButton({ id, label, keyHint, badge, tone, title }: { id: WindowId; label: string; keyHint: string; badge?: number; tone?: string; title?: string }) {
   const open = useUi((s) => s.window === id || (id === 'projects' && s.window === 'project'));
@@ -20,7 +21,7 @@ function MoreMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const win = useUi((s) => s.window);
-  const active = win === 'competitors' || win === 'suppliers' || win === 'countries' || win === 'catalog';
+  const active = win === 'competitors' || win === 'suppliers' || win === 'countries' || win === 'catalog' || win === 'power' || win === 'world';
   useEffect(() => {
     if (!open) return;
     const off = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
@@ -34,11 +35,14 @@ function MoreMenu() {
   );
   return (
     <div className="menu-wrap" ref={ref}>
-      <button className={active ? 'active' : ''} data-nav="more" onClick={() => setOpen(!open)} title="Países, tecnologías, competidores y proveedores">
+      <button className={active ? 'active' : ''} data-nav="more" onClick={() => setOpen(!open)} title="Mercado eléctrico, mundo, países, tecnologías, competidores y proveedores">
         Más ▾
       </button>
       {open && (
         <div className="panel menu">
+          {item('power', 'Mercado eléctrico', 'L', 'spot horario, oferta, previsión, clima')}
+          {item('world', 'Mundo', 'W', 'eventos, gobiernos, regulación')}
+          <div className="menu-sep" />
           {item('countries', 'Países y expansión', 'X', 'presencia, moneda, permisos, mercados')}
           {item('catalog', 'Tecnologías', 'T', 'catálogo comparativo y LCOE por país')}
           <button className="menu-item" data-nav="fuels" onClick={() => { setOpen(false); ui.openPanel('countries', FUELS_PICK); }}>
@@ -84,6 +88,7 @@ export function TopBar() {
         <MoreMenu />
       </div>
       <div className="spacer" />
+      <WorldChip />
       <div className="mono date" title={formatDate(date)}><span className="date-long" data-testid="date">{formatDate(date)}</span><span className="date-short">{formatDate(date, true)}</span></div>
       <div className="row" style={{ gap: 4 }}>
         <button className={speedId === null ? 'active' : ''} onClick={() => ui.setSpeed(null)} title="Pausa (Espacio)">❚❚</button>
@@ -105,5 +110,23 @@ export function TopBar() {
         <button onClick={() => ui.set({ dialog: 'menu' })}>Menú</button>
       </div>
     </div>
+  );
+}
+
+/** Clima del año y eventos activos del mundo (clic → Mundo). */
+function WorldChip() {
+  const p = useUi((s) => s.views?.power);
+  const open = useUi((s) => s.window === 'world');
+  if (!p) return null;
+  const grave = p.worldActive.filter(isGrave).length;
+  const n = p.worldActive.length;
+  const enso = p.climate.enso;
+  return (
+    <button className={`world-chip ${open ? 'active' : ''}`} data-nav="world-chip" onClick={() => ui.openWindow('world')}
+      title={`Mundo (W): ${n} evento(s) activo(s)${grave ? `, ${grave} grave(s)` : ''} · ${p.climate.ensoLabel} · ${p.climate.hydrologyLabel.toLowerCase()} en el país de origen`} style={{ position: 'relative' }}>
+      <span style={{ color: open ? 'inherit' : enso === 'nino' ? 'var(--warn)' : enso === 'nina' ? 'var(--info)' : 'var(--text-dim)' }}>{enso === 'neutral' ? '◌' : '●'}</span>
+      <span className="wc-text"> {p.climate.ensoLabel}{n ? ` · ${n} evento${n > 1 ? 's' : ''}` : ''}</span>
+      {grave > 0 && <span className="nav-badge" style={{ background: 'var(--bad)' }}>{grave}</span>}
+    </button>
   );
 }
