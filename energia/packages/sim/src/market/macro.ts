@@ -5,6 +5,7 @@ import { Rng, seedStream } from '../core/rng';
 import { fromEpochDay } from '../core/calendar';
 import type { CountrySimDef } from '../data/types';
 import { drawDist } from '../project/outcomes';
+import { worldFuelFactor } from '../world/events';
 
 /**
  * Fase 4: macroeconomía por país y combustibles.
@@ -141,7 +142,7 @@ export function fuelPriceUsdMmbtu(state: Pick<GameState, 'market'> | null, ctx: 
   const id = map?.indice ?? fuelType;
   const f = ctx.data.markets?.combustibles.find((x) => x.id === id);
   if (!f) return 0;
-  return f.precio_usd_mmbtu.base * fuelIndex(state, id) * (map?.factor ?? 1);
+  return f.precio_usd_mmbtu.base * fuelIndex(state, id) * (map?.factor ?? 1) * worldFuelFactor(state, id, c.iso3);
 }
 
 export function fuelEmissionsKgMmbtu(ctx: SimContext, c: CountrySimDef, fuelType: string): number {

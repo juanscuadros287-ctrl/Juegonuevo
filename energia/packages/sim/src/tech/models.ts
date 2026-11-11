@@ -3,6 +3,7 @@ import type { SimContext } from '../core/context';
 import type { CountrySimDef, GeothermalDef, TechnologyDef } from '../data/types';
 import type { SiteExtras } from '../project/types';
 import { normalizedProfile, spotPrice } from '../market/spot';
+import { worldCarbonAddUsdT } from '../world/events';
 import { carbonPriceUsdT, fuelEmissionsKgMmbtu, fuelPriceUsdMmbtu, fxReal, usdInflation, usdInflationGlobal } from '../market/macro';
 
 /**
@@ -185,7 +186,7 @@ export function variableTerms(state: Pick<GameState, 'market'> | null, ctx: SimC
       if (t.recurso === 'biomasa' && resourceValue !== undefined) price *= biomassLogisticsFactor(resourceValue);
       const fuel = mmbtuPerMwh * price;
       const co2 = mmbtuPerMwh * fuelEmissionsKgMmbtu(ctx, c, t.combustible.tipo) / 1000;
-      const carbon = co2 * carbonPriceUsdT(c, yearsFromStart);
+      const carbon = co2 * Math.max(0, carbonPriceUsdT(c, yearsFromStart) + worldCarbonAddUsdT(state, c.iso3));
       return { varUsdMwh: fuel + carbon, fuelUsdMwh: fuel, carbonUsdMwh: carbon, co2TPerMwh: co2 };
     }
     case 'almacenamiento': {

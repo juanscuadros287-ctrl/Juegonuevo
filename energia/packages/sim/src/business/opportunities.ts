@@ -140,7 +140,9 @@ function award(state: GameState, ctx: SimContext, o: Opportunity, events: SimEve
   for (const e of valid) {
     if (e.external) { winner = e; break; }
     const b = o.bids.find((x) => x.id === e.bidId)!;
-    const signed = withActor(state, e.actorId, (v) => signContract(v, ctx, o, b, events));
+    // Los eventos de contrato de la IA quedan en su registro interno (no en el del jugador): lo público es competitorWonTender.
+    const sink = e.actorId === PLAYER_ID ? events : [];
+    const signed = withActor(state, e.actorId, (v) => signContract(v, ctx, o, b, sink));
     if (signed) { winner = e; break; }
     // No pudo constituir la garantía de cumplimiento: pierde la de seriedad y se pasa al siguiente.
     e.disq = 'no constituyó la garantía de cumplimiento';

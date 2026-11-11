@@ -17,6 +17,8 @@ import { equipmentIndex, epcIndex, supplierLeadFactor, supplierPriceFactor, supp
 import { contractValue } from './business/contracts';
 import { PLAYER_ID, type Bid, type ContractStatus, type Opportunity, type RankingEntry } from './business/types';
 import type { ContractKind, ResearchBranch } from './data/types';
+import type { ProjectStage } from './project/types';
+import { hashString } from './core/rng';
 
 const dateOf = (s: GameState, tick: number): GameDate => fromEpochDay(s.startEpochDay + tick);
 
@@ -62,6 +64,27 @@ export interface OpportunityView {
   canBid: { ok: boolean; techId?: string; blockers: string[] };
   myBid?: Bid;
   result?: { ranking: RankingEntry[]; winnerName?: string; winnerPrice?: number; date: GameDate; reason?: string };
+  /**
+   * Pedido de la UI: ubicación aproximada para marcarla en el globo (sitio candidato público del país y la tecnología,
+   * con un desplazamiento determinista por oportunidad; si no hay, el centro de la zona habilitada del país).
+   */
+  location?: { lat: number; lon: number; approximate: true };
+}
+
+/** Ubicación aproximada de una oportunidad (pública y determinista). */
+export function opportunityLocation(ctx: SimContext, o: Pick<Opportunity, 'id' | 'countryCode' | 'techs'>): { lat: number; lon: number; approximate: true } | undefined {
+  const sites = ctx.data.competitors?.sitios_candidatos ?? [];
+  const inCountry = sites.filter((s) => s.pais === o.countryCode);
+  const pool = inCountry.filter((s) => o.techs.includes(s.tecnologia));
+  const list = pool.length ? pool : inCountry;
+  const h = hashString(o.id);
+  if (list.length) {
+    const s = list[h % list.length];
+    return { lat: s.lat + ((h >>> 8) % 21 - 10) * 0.01, lon: s.lon + ((h >>> 16) % 21 - 10) * 0.01, approximate: true };
+  }
+  const z = ctx.data.countries[o.countryCode]?.zona;
+  if (z) return { lat: (z.lat_min + z.lat_max) / 2, lon: (z.lon_min + z.lon_max) / 2, approximate: true };
+  return undefined;
 }
 
 function oppView(state: GameState, ctx: SimContext, o: Opportunity): OpportunityView {
@@ -83,6 +106,7 @@ function oppView(state: GameState, ctx: SimContext, o: Opportunity): Opportunity
     requirements: { minExperienceMw: o.minExperienceMw, minEquityUsd: o.minEquityUsd, penaltyUsdMwMonth: o.penaltyUsdMwMonth, maxDelayMonths: o.maxDelayMonths },
     canBid: { ok: blockers.length === 0, techId: firstTech, blockers }, myBid: pub.myBid,
     result: closed && o.result ? { ranking: o.result.ranking, winnerName: o.result.winnerName, winnerPrice: o.result.winnerPrice, date: dateOf(state, o.result.tick), reason: o.result.reason } : undefined,
+    location: opportunityLocation(ctx, o),
   };
 }
 
@@ -176,7 +200,11 @@ export interface ContractView {
   bondUsd: number;
   penaltiesUsd: number;
   revenueUsd: number;
-  project?: { id: string; name: string; stage: string; buildProgress: number };
+  project?: { id: string; name: string; stage: string; stageId: ProjectStage; buildProgress: number };
+  /** Pedido de la UI: país del contrato. */
+  countryCode: string;
+  /** Pedido de la UI: proyectos propios que se pueden asignar (contratos «sin proyecto»: misma tecnología y país, 0,9–1,5× MW). */
+  eligibleProjects: { id: string; name: string; mw: number; stage: string; stageId: ProjectStage }[];
   epc?: { progress: number; budgetUsd: number; spentUsd: number; collectedUsd: number; overrunUsd: number; ldUsd: number; contractValueUsd: number; expectedMarginUsd: number };
   /** Obligaciones y lo que hay que hacer, en texto. */
   obligations: string[];
@@ -204,7 +232,13 @@ export function selectContracts(state: GameState, ctx: SimContext): ContractView
       terminationDate: dateOf(state, k.terminationTick), assignDeadlineDate: k.assignDeadlineTick !== undefined ? dateOf(state, k.assignDeadlineTick) : undefined,
       daysToCod: k.codDeadlineTick - state.tick, late: active && k.status !== 'operando' && state.tick > k.codDeadlineTick,
       bondUsd: k.bondUsd, penaltiesUsd: k.penaltiesUsd, revenueUsd: k.revenueUsd,
-      project: p ? { id: p.id, name: p.name, stage: STAGE_LABELS[p.stage], buildProgress: p.operation ? 1 : p.construction?.progress ?? 0 } : undefined,
+      project: p ? { id: p.id, name: p.name, stage: STAGE_LABELS[p.stage], stageId: p.stage, buildProgress: p.operation ? 1 : p.construction?.progress ?? 0 } : undefined,
+      countryCode: k.countryCode,
+      eligibleProjects: k.status !== 'sin_proyecto' || k.kind === 'epc' ? [] : (() => {
+        const need = k.kind === 'potencia' ? nameplateMw(ctx, { contract: 'potencia', mw: k.mw }, k.techId) : k.mw;
+        return state.projects.filter((x) => !isTerminal(x) && x.techId === k.techId && x.countryCode === k.countryCode && !x.contractId && (!x.ppa || x.ppa.status === 'fallido') && !x.construction && !x.operation && x.mw >= 0.9 * need && x.mw <= 1.5 * need)
+          .map((x) => ({ id: x.id, name: x.name, mw: x.mw, stage: STAGE_LABELS[x.stage], stageId: x.stage }));
+      })(),
       epc: e ? { progress: e.progress, budgetUsd: e.budgetUsd, spentUsd: e.spentUsd, collectedUsd: e.collectedUsd, overrunUsd: e.overrunUsd, ldUsd: e.ldUsd, contractValueUsd: value, expectedMarginUsd: value - e.budgetUsd - e.ldUsd } : undefined,
       obligations: ob, active,
     };
@@ -226,7 +260,7 @@ export interface CompetitorView {
   experienceMw: number;
   operatingMw: number;
   /** Proyectos visibles (desde permisos en trámite: registros públicos) con ubicación. */
-  visibleProjects: { id: string; name: string; techId: string; mw: number; stage: string; lat: number; lon: number; buildProgress: number }[];
+  visibleProjects: { id: string; name: string; techId: string; mw: number; stage: string; stageId: ProjectStage; lat: number; lon: number; buildProgress: number }[];
   bidsWon: number;
   bidsLost: number;
   /** Cuota del mercado (MW renovables en operación de las empresas del juego en el país de origen). */
@@ -256,7 +290,7 @@ export function selectCompetitors(state: GameState, ctx: SimContext): Competitor
         id: c.id, name: c.name, apparentStrategy: def?.estrategia_aparente ?? '', description: def?.descripcion ?? '', status: c.status,
         reputation: c.business.reputation, experienceMw: experienceMw(v), operatingMw: mw,
         visibleProjects: c.projects.filter((p) => visibleStages.has(p.stage)).map((p) => ({
-          id: p.id, name: p.name, techId: p.techId, mw: p.mw, stage: STAGE_LABELS[p.stage], lat: p.site.lat, lon: p.site.lon, buildProgress: p.operation ? 1 : p.construction?.progress ?? 0,
+          id: p.id, name: p.name, techId: p.techId, mw: p.mw, stage: STAGE_LABELS[p.stage], stageId: p.stage, lat: p.site.lat, lon: p.site.lon, buildProgress: p.operation ? 1 : p.construction?.progress ?? 0,
         })),
         bidsWon: c.business.bidsWon, bidsLost: c.business.bidsLost, marketShare: total > 0 ? mw / total : 0,
       };
@@ -396,4 +430,15 @@ export function selectBusinessSummary(state: GameState, _ctx: SimContext): Busin
     activeContracts: b.contracts.filter((k) => k.status === 'sin_proyecto' || k.status === 'en_desarrollo' || k.status === 'operando').length,
     researchBudgetUsdMonth: b.research.budgetUsdMonth, equityUsd: balanceSheet(state).equityUsd,
   };
+}
+
+/** Pedido de la UI: historial mensual de cuota de mercado (MW en operación de cada empresa del juego y su fracción). */
+export function selectMarketShareHistory(state: GameState): { year: number; month: number; totalMw: number; actors: { id: string; name: string; mw: number; share: number }[] }[] {
+  return (state.market.shareHistory ?? []).map((h) => {
+    const total = Object.values(h.mw).reduce((a, b) => a + b, 0);
+    return {
+      year: h.year, month: h.month, totalMw: total,
+      actors: Object.entries(h.mw).map(([id, mw]) => ({ id, name: id === PLAYER_ID ? state.company.name : state.competitors.find((c) => c.id === id)?.name ?? id, mw, share: total > 0 ? mw / total : 0 })),
+    };
+  });
 }

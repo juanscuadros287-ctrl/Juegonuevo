@@ -15,6 +15,9 @@ import { financingBlockers, openFindings, permitBlockers, permitGroupApplicable,
 import { DAYS_PER_MONTH, fmtUsd, isTerminal, note, payDev, updateStage } from './helpers';
 import { bookValue } from './valuation';
 import type { Project } from './types';
+import type { DispatchPolicy } from '../market/dispatch';
+import { insurancePremium, insuredValueUsd, worldLeadTimeFactor, worldPermitFactor, type InsuranceCoverage } from '../world/events';
+import { ppaTerminationPenalty } from './economics';
 
 export type ProjectCommand =
   | {
@@ -24,7 +27,11 @@ export type ProjectCommand =
   }
   | { type: 'commissionStudy'; projectId: string; studyId: string }
   | { type: 'applyPermit'; projectId: string; permitId: string }
-  | { type: 'seekPpa'; projectId: string; channelId: string }
+  | {
+    type: 'seekPpa'; projectId: string; channelId: string;
+    /** Fase 5: modalidad del PPA (por defecto 'produccion'). */
+    settlement?: 'produccion' | 'bloque' | 'financiero';
+  }
   | { type: 'mitigateFinding'; projectId: string; findingId: string }
   | { type: 'selectSuppliers'; projectId: string; equipmentId: string; epcId: string; inverterId?: string; logisticsId?: string }
   | { type: 'arrangeFinancing'; projectId: string; lenderId: string; debtFraction: number; partnerShare: number }
@@ -32,7 +39,13 @@ export type ProjectCommand =
   | { type: 'setMaintenancePolicy'; projectId: string; policy: 'preventivo' | 'correctivo' }
   | { type: 'sellProject'; projectId: string }
   | { type: 'abandonProject'; projectId: string }
-  | { type: 'decommissionProject'; projectId: string };
+  | { type: 'decommissionProject'; projectId: string }
+  // Fase 5
+  | { type: 'setDispatchPolicy'; projectId: string; policy: DispatchPolicy }
+  | { type: 'buyInsurance'; projectId: string; coverage: InsuranceCoverage }
+  | { type: 'cancelInsurance'; projectId: string }
+  /** Termina el PPA antes de tiempo (pasa a vender al spot) pagando la penalidad de terminación. */
+  | { type: 'terminatePpa'; projectId: string };
 
 export type Result = { ok: true } | { ok: false; error: string };
 const fail = (error: string): Result => ({ ok: false, error });
@@ -54,7 +67,7 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
   const p = findProject(state, cmd.projectId);
   if (!p) return fail('Proyecto inexistente.');
   if (isTerminal(p)) return fail('El proyecto ya está cerrado.');
-  if (p.sale?.status === 'en_proceso' && cmd.type !== 'setMaintenancePolicy') return fail('El proyecto está en venta.');
+  if (p.sale?.status === 'en_proceso' && cmd.type !== 'setMaintenancePolicy' && cmd.type !== 'setDispatchPolicy') return fail('El proyecto está en venta.');
   const c = ctx.data.countries[p.countryCode];
   const tech = ctx.data.technologies[p.techId];
   const r = ((): Result => {
@@ -81,7 +94,7 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         const cost = permitCostUsd(d, p.mw);
         if (!canPay(state, cost)) return noCash(cost);
         payDev(state, p, cost, d.nombre);
-        const days = Math.max(1, Math.round(drawDays(rng, d.duracion_dias) * researchEffects(state, ctx).permitTimeMult));
+        const days = Math.max(1, Math.round(drawDays(rng, d.duracion_dias) * researchEffects(state, ctx).permitTimeMult * worldPermitFactor(state, p.countryCode)));
         const prev = p.permits[d.id];
         p.permits[d.id] = { permitId: d.id, status: 'en_tramite', startTick: state.tick, endTick: state.tick + days, costUsd: (prev?.costUsd ?? 0) + cost, infoRequests: 0, applications: (prev?.applications ?? 0) + 1 };
         events.push(note(state, p, 'permitRequested', `Solicitado: ${d.nombre} ante ${d.autoridad} (${fmtUsd(cost)}).`, 'info', { permitId: d.id }));
@@ -99,7 +112,10 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         if (!canPay(state, cost)) return noCash(cost);
         payDev(state, p, cost, `Oferta ${ch.nombre}`);
         const days = drawDays(rng, ch.duracion_dias);
-        p.ppa = { channelId: ch.id, status: 'en_proceso', startTick: state.tick, endTick: state.tick + days, priceUsdMwh: 0, years: ch.plazo_anos, indexation: ch.indexacion_anual, codDeadlineTick: 0, penaltyUsdMwMonth: ch.multa_usd_mw_mes, costUsd: cost };
+        if (cmd.settlement && !['produccion', 'bloque', 'financiero'].includes(cmd.settlement)) return fail('Modalidad de PPA desconocida.');
+        if (cmd.settlement && cmd.settlement !== 'produccion' && !ctx.data.power) return fail('Modalidad no disponible sin mercado eléctrico.');
+        p.ppa = { channelId: ch.id, status: 'en_proceso', startTick: state.tick, endTick: state.tick + days, priceUsdMwh: 0, years: ch.plazo_anos, indexation: ch.indexacion_anual, codDeadlineTick: 0, penaltyUsdMwMonth: ch.multa_usd_mw_mes, costUsd: cost,
+          ...(cmd.settlement && cmd.settlement !== 'produccion' ? { settlement: cmd.settlement } : {}) };
         events.push(note(state, p, 'processStarted', `Buscando PPA: ${ch.nombre} (~${days} días).`, 'info', { process: 'ppa' }));
         return OK;
       }
@@ -186,7 +202,7 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         const log = p.suppliers.logisticsId ? ctx.data.suppliers[p.suppliers.logisticsId] : undefined;
         // Plazo: el del proveedor × cola de pedidos y demanda mundial (Fase 3) × operador logístico.
         let lead = eq.plazo_entrega_dias ? drawDays(rng, eq.plazo_entrega_dias) : 90;
-        lead = Math.round(lead * supplierLeadFactor(state, ctx, eq.id) * (log?.factor_plazo_entrega ?? 1));
+        lead = Math.round(lead * supplierLeadFactor(state, ctx, eq.id) * (log?.factor_plazo_entrega ?? 1) * worldLeadTimeFactor(state));
         let late = 0;
         const reliability = supplierReliability(state, ctx, eq.id) * (log ? 0.5 + 0.5 * log.confiabilidad / 0.85 : 1);
         if (rng.chance(1 - Math.min(0.99, reliability))) { late = Math.round(lead * (rng.triangular(1.1, 1.3, 1.8) - 1)); lead += late; }
@@ -213,6 +229,47 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         if (!p.operation) return fail('La planta no está en operación.');
         p.operation.maintenance = cmd.policy;
         p.timeline.push({ tick: state.tick, text: `Mantenimiento ${cmd.policy}.`, kind: 'info' });
+        return OK;
+      }
+      case 'setDispatchPolicy': {
+        const e = dispatchPolicyErrors(tech, cmd.policy);
+        if (e) return fail(e);
+        const clean: DispatchPolicy = {};
+        for (const [k, v] of Object.entries(cmd.policy)) if (v !== undefined && v !== null) (clean as Record<string, unknown>)[k] = v;
+        p.dispatch = Object.keys(clean).length ? clean : undefined;
+        events.push(note(state, p, 'dispatchPolicyChanged', `Reglas de despacho actualizadas: ${describePolicy(clean)}.`, 'info'));
+        return OK;
+      }
+      case 'buyInsurance': {
+        if (!ctx.data.world) return fail('Seguros no disponibles.');
+        if (cmd.coverage !== 'danos' && cmd.coverage !== 'danos_lucro') return fail('Cobertura desconocida.');
+        if (!p.operation && !p.construction) return fail('Solo se aseguran obras y plantas en operación.');
+        if (insuredValueUsd(p) <= 0) return fail('Sin valor asegurable.');
+        const pr = insurancePremium(ctx, p, cmd.coverage);
+        const first = pr.premiumUsdYear / 12;
+        if (!canPay(state, first)) return noCash(first);
+        postCash(state, 'seguro', -first, `${p.name}: primera prima del seguro de catástrofe`);
+        // Cambiar de cobertura reinicia la carencia (no se puede ampliar justo antes de un desastre).
+        p.insurance = { coverage: cmd.coverage, startTick: state.tick, premiumUsdYear: pr.premiumUsdYear, claims: p.insurance?.claims ?? [] };
+        events.push(note(state, p, 'insuranceChanged', `Seguro de catástrofe contratado (${cmd.coverage === 'danos_lucro' ? 'daños + lucro cesante' : 'daños'}): prima ${fmtUsd(pr.premiumUsdYear)}/año (${(pr.rate * 100).toFixed(2)} % del valor), cubre desde dentro de ${ctx.data.world.seguros.espera_dias} días.`, 'info', { coverage: cmd.coverage, premiumUsdYear: pr.premiumUsdYear }));
+        return OK;
+      }
+      case 'cancelInsurance': {
+        if (!p.insurance) return fail('El proyecto no tiene seguro.');
+        p.insurance = undefined;
+        events.push(note(state, p, 'insuranceChanged', 'Seguro de catástrofe cancelado.', 'info', { coverage: null, premiumUsdYear: 0 }));
+        return OK;
+      }
+      case 'terminatePpa': {
+        if (p.ppa?.status !== 'firmado') return fail('No hay un PPA firmado.');
+        if (p.contractId) return fail('El PPA viene de una licitación: terminarlo es un incumplimiento del contrato.');
+        const pen = ppaTerminationPenalty(state, ctx, p);
+        if (!canPay(state, pen)) return noCash(pen);
+        postCash(state, 'multas', -pen, `${p.name}: terminación anticipada del PPA`);
+        p.ppa.status = 'fallido';
+        p.ppa.endTick = state.tick;
+        p.ppa.startTick = state.tick;
+        events.push(note(state, p, 'ppaTerminated', `PPA terminado anticipadamente: penalidad ${fmtUsd(pen)}. La planta vende ahora al spot.`, 'malo', { penaltyUsd: pen }));
         return OK;
       }
       case 'sellProject': {
@@ -307,3 +364,29 @@ function createProject(state: GameState, ctx: SimContext, cmd: Extract<ProjectCo
   return OK;
 }
 
+
+/** Validación de una política de despacho (umbrales coherentes y aplicables a la tecnología). */
+export function dispatchPolicyErrors(tech: { almacenamiento?: unknown; hidrogeno?: unknown }, d: DispatchPolicy): string | undefined {
+  if (!d || typeof d !== 'object') return 'Política inválida.';
+  const nums: (keyof DispatchPolicy)[] = ['cargarBajo', 'descargarSobre', 'reservaMin', 'precioMinimo', 'fraccionServicios', 'compraMaxima'];
+  for (const k of nums) if (d[k] !== undefined && (typeof d[k] !== 'number' || !Number.isFinite(d[k] as number))) return `Valor inválido: ${k}.`;
+  if (d.reservaMin !== undefined && (d.reservaMin < 0 || d.reservaMin > 0.9)) return 'La reserva mínima debe estar entre 0 y 90 %.';
+  if (d.fraccionServicios !== undefined && (d.fraccionServicios < 0 || d.fraccionServicios > 0.8)) return 'La fracción en servicios debe estar entre 0 y 80 %.';
+  if (d.cargarBajo !== undefined && d.descargarSobre !== undefined && d.cargarBajo >= d.descargarSobre) return 'El umbral de carga debe ser menor que el de descarga.';
+  if ((d.cargarBajo !== undefined || d.descargarSobre !== undefined || d.reservaMin !== undefined) && !tech.almacenamiento) return 'Los umbrales de carga y descarga son solo para almacenamiento.';
+  if (d.compraMaxima !== undefined && !tech.hidrogeno) return 'El precio máximo de compra es solo para hidrógeno.';
+  if (d.prioridad !== undefined && d.prioridad !== 'ppa' && d.prioridad !== 'spot') return 'Prioridad desconocida.';
+  return undefined;
+}
+
+export function describePolicy(d: DispatchPolicy): string {
+  const parts: string[] = [];
+  if (d.cargarBajo !== undefined) parts.push(`carga bajo ${d.cargarBajo} USD/MWh`);
+  if (d.descargarSobre !== undefined) parts.push(`descarga sobre ${d.descargarSobre} USD/MWh`);
+  if (d.reservaMin) parts.push(`reserva ${(d.reservaMin * 100).toFixed(0)} %`);
+  if (d.precioMinimo !== undefined) parts.push(`no produce bajo ${d.precioMinimo} USD/MWh`);
+  if (d.prioridad) parts.push(d.prioridad === 'ppa' ? 'prioridad PPA' : 'prioridad spot');
+  if (d.servicios) parts.push(`servicios complementarios ${(((d.fraccionServicios ?? 0.3)) * 100).toFixed(0)} %`);
+  if (d.compraMaxima !== undefined) parts.push(`compra electricidad bajo ${d.compraMaxima} USD/MWh`);
+  return parts.length ? parts.join(', ') : 'despacho automático por precio';
+}

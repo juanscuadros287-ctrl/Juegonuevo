@@ -109,6 +109,11 @@ export function projectDaily(state: GameState, ctx: SimContext, p: Project, rng:
     if (rng.chance(ch.prob_exito)) {
       p.ppa.status = 'firmado';
       p.ppa.priceUsdMwh = drawDist(rng, ch.precio_usd_mwh);
+      const mod = p.ppa.settlement && p.ppa.settlement !== 'produccion' ? ctx.data.power?.ppa_modalidades[p.ppa.settlement] : undefined;
+      if (mod) {
+        p.ppa.priceUsdMwh *= 1 + mod.prima;
+        p.ppa.committedMwhYear = projectEconomics(state, ctx, p, { merchant: true }).energyP50MwhYear * mod.cobertura;
+      }
       p.ppa.codDeadlineTick = t + Math.round(ch.plazo_cod_meses * DAYS_PER_MONTH);
       if (contractCurrency(c, ch.moneda) === 'local') { p.ppa.currency = 'local'; p.ppa.fxAtSigning = fxNominal(state, ctx, p.countryCode); }
       events.push(note(state, p, 'ppaResult', `PPA firmado (${ch.nombre}): ${p.ppa.priceUsdMwh.toFixed(1)} USD/MWh por ${ch.plazo_anos} años. Operación comercial exigida en ${ch.plazo_cod_meses} meses.`, 'bueno', { channelId: ch.id, success: true, priceUsdMwh: p.ppa.priceUsdMwh }));

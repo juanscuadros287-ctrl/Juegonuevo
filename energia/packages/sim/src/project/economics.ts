@@ -294,3 +294,22 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
     ...(tech.hidrogeno ? { lcohUsdKg: model.lcoeUsdMwh / (1000 / tech.hidrogeno.kwh_por_kg.base) } : {}),
   };
 }
+
+/**
+ * Fase 5: penalidad por terminar un PPA antes de tiempo = máx(`terminacion_ppa_meses` de ingresos del contrato,
+ * valor para el comprador de lo que pierde: Σ años restantes (spot previsto − precio del PPA)⁺ × energía, descontado).
+ */
+export function ppaTerminationPenalty(state: GameState, ctx: SimContext, p: Project): number {
+  if (p.ppa?.status !== 'firmado') return 0;
+  const eco = projectEconomics(state, ctx, p);
+  const yearsOp = p.operation ? (state.tick - p.operation.codTick) / 365.25 : 0;
+  const left = Math.max(0, p.ppa.years - yearsOp);
+  const price = p.ppa.priceUsdMwh * ppaFxFactor(state, ctx, p.countryCode, p.ppa);
+  const months = ctx.data.power?.terminacion_ppa_meses ?? 12;
+  const minimum = eco.energyP50MwhYear * price * Math.min(left, months / 12);
+  const spot = projectEconomics(state, ctx, p, { merchant: true }).priceUsdMwh;
+  const gap = Math.max(0, spot - price) * eco.energyP50MwhYear;
+  const r = 0.08;
+  const pvGap = gap * (1 - Math.pow(1 + r, -left)) / r;
+  return Math.max(minimum, pvGap);
+}

@@ -18,6 +18,7 @@ import { bidBlockers, nameplateMw, quoteBid, realisticDeliveryMonths } from '../
 import { publicOpportunity } from '../business/opportunities';
 import type { Opportunity } from '../business/types';
 import type { Project } from '../project/types';
+import { insurancePremium } from '../world/events';
 
 /**
  * Toma de decisiones de un competidor IA. Recibe SU vista de actor y devuelve comandos normales
@@ -202,6 +203,16 @@ export function decideCompetitor(view: GameState, ctx: SimContext, ai: AiContext
   // Proyectos
   const active = view.projects.filter((p) => !isTerminal(p));
   for (const p of active) cmds.push(...projectSteps(view, ctx, p, ai, budget));
+  // Fase 5: las prudentes aseguran sus plantas contra catástrofes donde el riesgo es apreciable (mismo comando que el jugador).
+  if (ctx.data.world && (def.estrategia === 'conservadora' || def.estrategia === 'estatal' || def.estrategia === 'fondo')) {
+    for (const p of active) {
+      if (!p.operation || p.insurance) continue;
+      const pr = insurancePremium(ctx, p, 'danos');
+      if (pr.expectedLossFrac < 0.002 || budget.cash < pr.premiumUsdYear) continue;
+      budget.cash -= pr.premiumUsdYear / 12;
+      cmds.push({ type: 'buyInsurance', projectId: p.id, coverage: 'danos' });
+    }
+  }
   if (crisis && def.vende !== 'nunca') {
     const dev = active.find((p) => !p.construction && !p.operation && p.sale?.status !== 'en_proceso' && p.devCostUsd > 50_000);
     if (dev) cmds.push({ type: 'sellProject', projectId: dev.id });

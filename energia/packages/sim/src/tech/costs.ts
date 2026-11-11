@@ -3,6 +3,7 @@ import type { CountrySimDef, SupplierDef, TechnologyDef } from '../data/types';
 import type { GameState } from '../core/state';
 import { equipmentIndex, epcIndex, supplierPriceFactor } from '../supply/supply';
 import { researchEffects } from '../business/research';
+import { worldCapexFactor } from '../world/events';
 
 export interface CapexInput {
   techId: string;
@@ -81,7 +82,8 @@ export function dynamicCapexInput(state: GameState, ctx: SimContext, i: CapexInp
     equipmentIndex: i.equipmentIndex ?? equipmentIndex(state, ctx, i.techId),
     epcIndex: i.epcIndex ?? epcIndex(state, ctx, i.techId),
     priceFactors: i.priceFactors ?? { equipment: pf(i.equipmentId), inverter: pf(i.inverterId), epc: pf(i.epcId) },
-    costMultiplier: i.costMultiplier ?? researchEffects(state, ctx).capexMult(i.techId),
+    // Fase 5: eventos del mundo (sobreoferta, conflictos, aranceles) y avances tecnológicos permanentes.
+    costMultiplier: i.costMultiplier ?? researchEffects(state, ctx).capexMult(i.techId) * worldCapexFactor(state, i.techId, i.countryCode),
   };
 }
 

@@ -614,3 +614,30 @@ export function storageDay(prices: number[], o: { hours: number; eff: number; cy
 }
 
 export { ym as yearMonthIndex, fromYm as yearMonthFromIndex };
+
+/** Banda de la previsión (P10–P90 aproximados): año húmedo y combustibles baratos frente a año seco y combustibles caros. */
+export function forecastBand(state: GameState, ctx: SimContext, iso: string, year: number, month: number): { p10: number; p90: number } | undefined {
+  const pc = powerCountry(ctx, iso);
+  const ps = state.market?.power;
+  if (!pc || !ps) return undefined;
+  const base = stateInputs(state, ctx, ps, iso, year, month, true);
+  const z = 1.2816 * pc.sigma_hidrologia;
+  const k = calibrationFactor(ctx, iso);
+  const lo = computeMonthPrices(ctx, iso, { ...base, hydrology: base.hydrology * Math.exp(z), fuelPrice: (f) => base.fuelPrice(f) * 0.85 }, k).avg;
+  const hi = computeMonthPrices(ctx, iso, { ...base, hydrology: base.hydrology * Math.exp(-z), fuelPrice: (f) => base.fuelPrice(f) * 1.2 }, k).avg;
+  return { p10: Math.min(lo, hi), p90: Math.max(lo, hi) };
+}
+
+/** MW disponibles por clase en el país (parque existente que crece con la demanda + plantas de los actores). */
+export function countryFleetMw(state: GameState, ctx: SimContext, iso: string): Record<string, { existingMw: number; actorsMw: number }> {
+  const out: Record<string, { existingMw: number; actorsMw: number }> = {};
+  const pc = powerCountry(ctx, iso);
+  if (!pc) return out;
+  const scale = Math.pow(1 + pc.crecimiento_demanda, Math.max(0, fromYm(currentYm(state)).year - startYearOf(state)));
+  for (const [cls, mw] of Object.entries(baseFleet(ctx, iso))) out[cls] = { existingMw: mw * scale, actorsMw: 0 };
+  const f = state.market?.power?.fleet[iso] ?? fleetSnapshots(state, ctx)[iso];
+  for (const [cls, mw] of Object.entries(f?.mw ?? {})) (out[cls] ??= { existingMw: 0, actorsMw: 0 }).actorsMw += mw;
+  for (const t of f?.thermal ?? []) { const cls = techClass(ctx, t.techId) ?? t.techId; (out[cls] ??= { existingMw: 0, actorsMw: 0 }).actorsMw += t.mw; }
+  if (f && f.storage.mw > 0) (out.almacenamiento ??= { existingMw: 0, actorsMw: 0 }).actorsMw += f.storage.mw;
+  return out;
+}
