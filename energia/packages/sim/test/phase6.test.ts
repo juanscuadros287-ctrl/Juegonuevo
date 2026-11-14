@@ -6,6 +6,7 @@ import {
   selectLaborMarket, selectOffices, selectProjectTeam, selectReputation, selectTeam, selectWorkload, serialize, severanceUsd, stateHash, step, studyModifiers,
   technicalScore, seedStream, type Employee, type GameState, type Opportunity,
 } from '../src';
+import { selectCompetitors, selectCountrySheet, selectProjects, selectTechCatalog, typicalEconomics } from '../src';
 import { ctx, data, newGame, SITES } from './helpers';
 
 const team = data.team!;
@@ -388,4 +389,39 @@ describe('Fase 6: IA, selectores, guardado y rendimiento', () => {
     expect(performance.now() - t0).toBeLessThan(8000);
     expect(Object.keys(s.market.labor!.candidates).length).toBe(Object.keys(data.countries).length);
   }, 30_000);
+});
+
+describe('Fase 6: pedidos de la UI de la Fase 4', () => {
+  it('LCOE de catálogo a factor de planta de referencia: gas en Chile en rango Lazard/IEA (el del despacho previsto se mantiene aparte)', () => {
+    const s = newGame(1, undefined, false);
+    step(s, [], ctx);
+    const g = typicalEconomics(s, ctx, 'gas_natural', 'CHL')!;
+    expect(g.dispatch).toBeLessThan(0.9);
+    expect(g.lcoeRefUsdMwh).toBeGreaterThan(45);
+    expect(g.lcoeRefUsdMwh).toBeLessThan(115); // Lazard LCOE+ 2024 ciclo combinado 45–108 (+GNL importado)
+    expect(g.lcoeUsdMwh).toBeGreaterThan(g.lcoeRefUsdMwh);
+    const cat = selectTechCatalog(s, ctx, {});
+    const gas = cat.find((t) => t.id === 'gas_natural')!.byCountry.find((b) => b.countryCode === 'CHL')!;
+    expect(gas.typical!.lcoeRefUsdMwh).toBeLessThan(115);
+    // Solar (generación): la referencia coincide con el LCOE
+    const sol = typicalEconomics(s, ctx, 'solar_fv', 'CHL')!;
+    expect(sol.lcoeRefUsdMwh).toBeCloseTo(sol.lcoeUsdMwh, 6);
+  });
+
+  it('visualKind y país en los proyectos visibles de la IA; exclusiones y ruta crítica de permisos; extremo de las líneas', () => {
+    const s = newGame(2, 2e9, true);
+    for (let d = 0; d < 365 * 3; d++) step(s, [], ctx);
+    const vis = selectCompetitors(s, ctx).competitors.flatMap((c) => c.visibleProjects);
+    for (const v of vis) { expect(v.visualKind).toBeTruthy(); expect(v.countryCode).toMatch(/^[A-Z]{3}$/); }
+    const sheet = selectCountrySheet(s, ctx, 'PAN')!;
+    expect(sheet.permits.nodes.every((n) => Array.isArray(n.excludes))).toBe(true);
+    const path = sheet.permitPaths.find((x) => x.techId === 'solar_fv')!;
+    expect(path.criticalPath.length).toBeGreaterThan(0);
+    for (const id of path.criticalPath) expect(sheet.permits.nodes.some((n) => n.id === id)).toBe(true);
+    s.business.research.completed.push('tec_transmision');
+    const r = applyCommand(s, { type: 'createProject', techId: 'linea_transmision', mw: 100, lat: 8.6, lon: -80.3, toLat: 8.2, toLon: -80.7 }, ctx);
+    expect(r.ok ? "" : r.error).toBe("");
+    const sum = selectProjects(s, ctx).find((x) => x.techId === 'linea_transmision')!;
+    expect(sum.to!.km).toBeGreaterThan(20);
+  }, 60_000);
 });
