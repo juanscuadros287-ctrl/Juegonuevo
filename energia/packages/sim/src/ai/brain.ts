@@ -21,6 +21,7 @@ import type { Project } from '../project/types';
 import { insurancePremium } from '../world/events';
 import { actorIdOf } from '../business/actor';
 import { decideTeam } from './team';
+import { saleValuation } from '../project/valuation';
 
 /**
  * Toma de decisiones de un competidor IA. Recibe SU vista de actor y devuelve comandos normales
@@ -113,11 +114,18 @@ function projectSteps(view: GameState, ctx: SimContext, p: Project, ai: AiContex
   // PPA del canal genérico de la Fase 2 si no hay contrato de licitación (los agresivos prueban el spot)
   if (!p.contractId && (!p.ppa || (p.ppa.status === 'fallido' && def.estrategia !== 'agresiva' && p.ppa.startTick > 0 && view.tick - p.ppa.endTick > 200))) {
     const c = ctx.data.countries[p.countryCode];
-    const ch = !sellsEnergy(ctx.data.technologies[p.techId]) ? undefined : c.ppa.canales.find((x) => (!x.tecnologias || x.tecnologias.includes(p.techId)) && p.mw >= x.mw_min && p.mw <= x.mw_max && x.requiere_permisos.every((g) => !applicablePermits(ctx, p).some((d) => d.grupo === g) || Object.values(p.permits).some((r) => r.status === 'aprobado' && c.permisos.find((y) => y.id === r.permitId)?.grupo === g)));
+    // Fase 6 (balance): entre los canales posibles elige el de mayor probabilidad de cierre (antes: el primero de la lista).
+    const ch = !sellsEnergy(ctx.data.technologies[p.techId]) ? undefined : [...c.ppa.canales].sort((a, b) => b.prob_exito - a.prob_exito || a.id.localeCompare(b.id)).find((x) => (!x.tecnologias || x.tecnologias.includes(p.techId)) && p.mw >= x.mw_min && p.mw <= x.mw_max && x.requiere_permisos.every((g) => !applicablePermits(ctx, p).some((d) => d.grupo === g) || Object.values(p.permits).some((r) => r.status === 'aprobado' && c.permisos.find((y) => y.id === r.permitId)?.grupo === g)));
     if (ch && (def.estrategia !== 'agresiva' || !p.ppa) && spend(ch.costo_usd.base)) out.push({ type: 'seekPpa', projectId: id, channelId: ch.id });
   }
   if (blockers.length) return out;
-  if (def.vende === 'listo_para_construir' && !p.contractId && !p.financing) return [...out, { type: 'sellProject', projectId: id }];
+  // Fase 6 (balance): vende el proyecto listo para construir solo si el comprador paga al menos 1,1 × lo invertido
+  // (en la práctica, con PPA firmado: un proyecto merchant vale poco para un comprador); si no, sigue buscando PPA y,
+  // tras 5 años, lo vende igual.
+  if (def.vende === 'listo_para_construir' && !p.contractId && !p.financing) {
+    if (saleValuation(view, ctx, p).valueUsd >= 1.1 * p.devCostUsd || view.tick - p.createdTick > 365 * 5) return [...out, { type: 'sellProject', projectId: id }];
+    if (p.ppa?.status !== 'firmado') return out;
+  }
   if (p.ppa?.status === 'en_proceso') return out;
   if (!p.suppliers) {
     const eq = supplierPick(ctx, p.techId, 'equipos', def.proveedores), epc = supplierPick(ctx, p.techId, 'epc', def.proveedores);

@@ -657,7 +657,7 @@ export interface PowerDef {
   /** Escasez: rampa del precio hacia el techo cuando la térmica disponible se agota. */
   escasez: { umbral: number };
   /** Cómo valora un comprador real un proyecto sin PPA (merchant). */
-  comprador: { prima_merchant: number; recorte_precio_merchant: number };
+  comprador: { prima_merchant: number; recorte_precio_merchant: number; /** Fase 6: prima de retorno por riesgo de obra (proyecto sin construir / en obra). */ prima_desarrollo?: number; prima_construccion?: number };
   /** Modalidades de PPA: prima de precio y cobertura (fracción de la producción esperada comprometida). */
   ppa_modalidades: Record<'bloque' | 'financiero', { prima: number; cobertura: number }>;
   /** Terminar un PPA antes de tiempo: meses de ingresos del contrato como penalidad mínima. */

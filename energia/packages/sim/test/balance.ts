@@ -15,7 +15,7 @@ export type Strategy = 'pasivo' | 'solar_conservador' | 'agresivo' | 'diversific
 export const STRATEGIES: Strategy[] = ['pasivo', 'solar_conservador', 'agresivo', 'diversificado'];
 
 const baseDef = (o: Partial<CompetitorDef>): CompetitorDef => ({
-  id: 'bot', nombre: 'Bot', estrategia: 'conservadora', estrategia_aparente: '', descripcion: '', caja_inicial_usd: 750_000, gastos_fijos_mensuales_usd: 18_500,
+  id: 'bot', nombre: 'Bot', estrategia: 'conservadora', estrategia_aparente: '', descripcion: '', caja_inicial_usd: 1_200_000, gastos_fijos_mensuales_usd: 18_500,
   reputacion_inicial: 25, experiencia_mw_inicial: 0, tecnologias: ['solar_fv'], margen_objetivo: 0.12, tasa_descuento: 0.09, apalancamiento: 0.65, socio: 0.5,
   max_proyectos: 1, mw: { min: 5, max: 15 }, proveedores: 'calidad', prob_ofertar: 0.3, ofertar_epc: false, dias_decision: 14, reserva_meses: 6, vende: 'nunca',
   investigacion: { presupuesto_mensual_usd: 0, prioridades: [] }, ...o,
@@ -24,19 +24,18 @@ const baseDef = (o: Partial<CompetitorDef>): CompetitorDef => ({
 /** Definición de cada estrategia simple del jugador (perfiles comparables a los de la IA). */
 export const BOT_DEFS: Record<Exclude<Strategy, 'pasivo'>, CompetitorDef> = {
   solar_conservador: baseDef({
-    estrategia: 'conservadora', tecnologias: ['solar_fv'], margen_objetivo: 0.14, tasa_descuento: 0.1, apalancamiento: 0.6, socio: 0.6, max_proyectos: 1, mw: { min: 5, max: 12 },
-    proveedores: 'calidad', prob_ofertar: 0.25, reserva_meses: 8, vende: 'nunca',
+    estrategia: 'conservadora', tecnologias: ['solar_fv'], margen_objetivo: 0.14, tasa_descuento: 0.1, apalancamiento: 0.6, socio: 0.6, max_proyectos: 1, mw: { min: 10, max: 15 },
+    proveedores: 'calidad', prob_ofertar: 0.25, reserva_meses: 8, vende: 'listo_para_construir',
   }),
   agresivo: baseDef({
-    estrategia: 'agresiva', tecnologias: ['solar_fv', 'eolica_tierra'], margen_objetivo: 0.02, tasa_descuento: 0.07, apalancamiento: 0.8, socio: 0.3, max_proyectos: 4, mw: { min: 15, max: 60 },
-    proveedores: 'baratos', prob_ofertar: 0.9, ofertar_epc: true, reserva_meses: 2, vende: 'en_crisis', dias_decision: 10,
-    investigacion: { presupuesto_mensual_usd: 10_000, prioridades: ['contrato_ppa_corporativo', 'ef_compras_globales'] },
+    estrategia: 'agresiva', tecnologias: ['solar_fv', 'eolica_tierra'], margen_objetivo: 0.03, tasa_descuento: 0.075, apalancamiento: 0.8, socio: 0.4, max_proyectos: 2, mw: { min: 20, max: 50 },
+    proveedores: 'baratos', prob_ofertar: 0.9, ofertar_epc: true, reserva_meses: 4, vende: 'en_crisis', dias_decision: 10,
   }),
   diversificado: baseDef({
-    estrategia: 'fondo', tecnologias: ['solar_fv', 'eolica_tierra'], margen_objetivo: 0.08, tasa_descuento: 0.085, apalancamiento: 0.7, socio: 0.6, max_proyectos: 3, mw: { min: 8, max: 30 },
+    estrategia: 'fondo', tecnologias: ['solar_fv', 'eolica_tierra'], margen_objetivo: 0.08, tasa_descuento: 0.085, apalancamiento: 0.7, socio: 0.6, max_proyectos: 1, mw: { min: 15, max: 30 },
     proveedores: 'equilibrados', prob_ofertar: 0.5, reserva_meses: 5, vende: 'listo_para_construir',
-    investigacion: { presupuesto_mensual_usd: 15_000, prioridades: ['mercado_regional', 'mercado_costa_rica', 'mercado_rep_dominicana', 'mercado_colombia', 'contrato_ppa_corporativo'] },
-    expansion: { paises: ['CRI', 'DOM', 'COL'], caja_min_usd: 900_000 },
+    investigacion: { presupuesto_mensual_usd: 4_000, prioridades: ['mercado_regional', 'mercado_rep_dominicana', 'mercado_costa_rica', 'mercado_colombia', 'contrato_ppa_corporativo'] },
+    expansion: { paises: ['DOM', 'CRI', 'COL'], caja_min_usd: 2_500_000 },
   }),
 };
 

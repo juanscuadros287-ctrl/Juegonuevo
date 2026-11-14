@@ -489,7 +489,7 @@ export const powerFileSchema = z.object({
   clima: withSource({ prob_nino: prob01, prob_nina: prob01, persistencia: prob01 }),
   valor_agua: withSource({ base: z.number().positive(), exponente: ns, min: ns, max: z.number().positive() }),
   escasez: withSource({ umbral: prob01 }),
-  comprador: withSource({ prima_merchant: z.number().min(0).max(0.2), recorte_precio_merchant: z.number().min(0).max(0.5) }),
+  comprador: withSource({ prima_merchant: z.number().min(0).max(0.2), recorte_precio_merchant: z.number().min(0).max(0.5), prima_desarrollo: z.number().min(0).max(0.2).optional(), prima_construccion: z.number().min(0).max(0.2).optional() }),
   ppa_modalidades: z.object({ bloque: withSource({ prima: z.number().min(-0.2).max(0.3), cobertura: prob01 }), financiero: withSource({ prima: z.number().min(-0.2).max(0.3), cobertura: prob01 }) }),
   terminacion_ppa_meses: z.number().nonnegative().max(60),
   credito_firme_tecnologia: z.record(prob01),

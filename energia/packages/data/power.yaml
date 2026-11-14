@@ -48,7 +48,7 @@ clima:
 valor_agua: { base: 0.55, exponente: 0.8, min: 0.25, max: 0.97, supuesto: "Precio de la hidro marginal ≈ 50 % del térmico más barato en un mes normal; sube en la estación seca (CND y XM: costo de oportunidad del agua)" }
 escasez: { umbral: 0.95, supuesto: "Sobre 95 % de uso de la térmica disponible el precio sube hacia el techo (curva de demanda de reserva, ERCOT ORDC)" }
 
-comprador: { prima_merchant: 0.03, recorte_precio_merchant: 0.12, supuesto: "Los compradores de proyectos sin PPA exigen 2–4 pp más de retorno y descuentan 10–15 % la curva de precios (Lazard, IEA Cost of Capital Observatory 2024; prácticas de M&A de renovables merchant)" }
+comprador: { prima_merchant: 0.03, recorte_precio_merchant: 0.12, prima_desarrollo: 0.005, prima_construccion: 0.0025, supuesto: "Fase 6 (balance): un proyecto listo para construir paga ≈ 0,5 pp más (riesgo de obra, sobrecostos y conexión) y uno en obra ≈ 0,25 pp; así los proyectos RTB con PPA se venden a ≈ 60–100 kUSD/MW como en el mercado de M&A latinoamericano. Los compradores de proyectos sin PPA exigen 2–4 pp más de retorno y descuentan 10–15 % la curva de precios (Lazard, IEA Cost of Capital Observatory 2024; prácticas de M&A de renovables merchant)" }
 
 ppa_modalidades:
   bloque: { prima: 0.04, cobertura: 0.9, supuesto: "PPA físico en bloque: se compromete ≈ 90 % de la producción P50; el comprador paga ≈ 3–5 % más por la firmeza" }

@@ -6,7 +6,7 @@ const config: SimConfig = {
   dataVersion: 1,
   startDate: '2026-01-01',
   startCountry: 'PAN',
-  company: { cashUsd: 750_000, monthlyFixedCostUsd: 18_500 },
+  company: { cashUsd: 1_200_000, monthlyFixedCostUsd: 18_500 },
 };
 
 function run(days: number, seed = 123, commandsAt: Record<number, Command[]> = {}) {
@@ -29,7 +29,7 @@ describe('Calendario', () => {
 describe('Economía base', () => {
   it('cobra los gastos fijos cada mes (nada es gratis)', () => {
     const s = run(365);
-    expect(s.company.cashUsd).toBe(750_000 - 12 * 18_500);
+    expect(s.company.cashUsd).toBe(1_200_000 - 12 * 18_500);
   });
   it('avisa cuando la caja queda negativa', () => {
     const s = createNewGame(config, { seed: 1, companyName: 'X Corp' });
