@@ -12,6 +12,7 @@ import {
   triggerWorldEvent, type PlantDispatchView, type Command, type GameState, type GridMeta, type SimContext, type SimEvent,
 } from '@voltaje/sim';
 import { gameData } from '@voltaje/data';
+import { runAutopilot } from './devPilot';
 import type { BusinessPanel, BusinessViews, FromWorker, OpportunityMark, PowerViews, QuoteReply, QuoteRequest, SiteEstimate, ToWorker, Views } from './protocol';
 
 const post = (m: FromWorker) => (self as unknown as Worker).postMessage(m);
@@ -280,6 +281,10 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
         const ev: SimEvent[] = [];
         triggerWorldEvent(state, ctx, m.eventId, m.countries, ev);
         if (ev.length) post({ t: 'events', events: ev });
+        snapshot();
+      }
+      if (state && m.op === 'autopilot') {
+        runAutopilot(state, ctx, m.maxDays ?? 2400, m.extraDays ?? 120);
         snapshot();
       }
       break;

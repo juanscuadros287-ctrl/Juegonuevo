@@ -102,6 +102,7 @@ export type ToWorker =
   | { t: 'powerCountry'; iso3: string }
   | { t: 'dispatchPreview'; reqId: number; projectId: string; policy: DispatchPolicy }
   | { t: 'debug'; op: 'worldEvent'; eventId: string; countries: string[] | null }
+  | { t: 'debug'; op: 'autopilot'; maxDays?: number; extraDays?: number }
   | { t: 'preview'; reqId: number; techId: string; mw: number; lat: number; lon: number; to?: { lat: number; lon: number } }
   | { t: 'country'; iso3: string | null }
   | { t: 'viability'; reqId: number; projectId: string; runs: number }

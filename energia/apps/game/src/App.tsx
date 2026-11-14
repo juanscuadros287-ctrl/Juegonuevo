@@ -189,7 +189,9 @@ export function App() {
     const w = window as unknown as { __voltaje?: object };
     w.__voltaje = Object.assign(w.__voltaje ?? {}, { saveText: () => sim.save(), loadText: (t: string) => loadGame(t), command: (c: Parameters<typeof sim.command>[0]) => sim.command(c),
       select: (lat: number, lon: number) => { ui.openWindow(null); ui.set({ selected: { lat, lon } }); },
-      worldEvent: (id: string, countries: string[] | null) => sim.debugWorldEvent(id, countries) });
+      worldEvent: (id: string, countries: string[] | null) => sim.debugWorldEvent(id, countries),
+      autopilot: (maxDays?: number, extraDays?: number) => sim.debugAutopilot(maxDays, extraDays),
+      oppMarks: () => ui.get().views?.power?.oppMarks ?? [] });
   }, []);
 
   useEffect(() => {

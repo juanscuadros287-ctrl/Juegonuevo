@@ -51,6 +51,8 @@ export class SimClient {
   }
   /** Solo para la prueba de humo: fuerza un evento del mundo. */
   debugWorldEvent(eventId: string, countries: string[] | null) { this.send({ t: 'debug', op: 'worldEvent', eventId, countries }); }
+  /** Solo para la prueba de humo: piloto automático hasta que los proyectos operen. */
+  debugAutopilot(maxDays?: number, extraDays?: number) { this.send({ t: 'debug', op: 'autopilot', maxDays, extraDays }); }
   quit() { this.state = null; this.views = null; this.send({ t: 'quit' }); }
 
   async save(): Promise<string> {

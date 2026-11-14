@@ -482,6 +482,134 @@ if (!ONLY || ONLY === '4') {
   console.log('Fase 4:', n);
 }
 
+// ---------------------------------------------------------------- Fase 5: mercado eléctrico, despacho, seguros, mundo
+// Atajo de prueba: I+D de baterías y Chile, presencia en Chile y caja en el JSON de la partida; luego un piloto automático
+// en el worker (`__voltaje.autopilot`, los mismos comandos que la UI) lleva una solar en Panamá y una batería en Chile a
+// operación (≈ 4 años de juego) y un año más de historial. Los eventos del mundo se fuerzan con `__voltaje.worldEvent`.
+const P5_NODES = ['tec_baterias', 'mercado_regional', 'mercado_colombia', 'mercado_chile'];
+const BATTERY = { lat: -33.45, lon: -70.75 };
+if (!ONLY || ONLY === '5') {
+  const page = await newPage(1600, 960);
+  await page.getByText('Nueva partida').click();
+  await page.getByText('Fundar empresa').click();
+  await page.waitForTimeout(2500);
+  const file = JSON.parse(await page.evaluate(() => window.__voltaje.saveText()));
+  const st = file.state;
+  st.business.research.completed.push(...P5_NODES.filter((n) => !st.business.research.completed.includes(n)));
+  st.business.presence = { ...(st.business.presence ?? {}), CHL: { status: 'activa', level: 'representante', requestedTick: st.tick, readyTick: st.tick, setupCostUsd: 0, monthlyCostUsd: 0 } };
+  st.company.cashUsd = 3e8;
+  await page.evaluate((t) => window.__voltaje.loadText(t), JSON.stringify(file));
+  await page.waitForTimeout(2000);
+  await page.evaluate(({ a, b }) => {
+    window.__voltaje.command({ type: 'createProject', techId: 'solar_fv', mw: 20, ...a });
+    window.__voltaje.command({ type: 'createProject', techId: 'baterias', mw: 40, ...b });
+  }, { a: SITE, b: BATTERY });
+  await page.waitForTimeout(1200);
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => window.__voltaje.autopilot(2600, 420));
+  await page.waitForFunction(() => /20(29|3\d)/.test(document.querySelector('[data-testid=date]')?.textContent ?? ''), null, { timeout: 90000 }).catch(() => fail('el piloto automático no avanzó'));
+  await page.waitForTimeout(1500);
+  const nav = await page.evaluate(() => document.querySelector('[data-nav=projects]')?.textContent);
+  console.log('Fase 5:', await page.getByTestId('date').textContent(), '·', nav);
+
+  // oportunidades en el globo (clic en un marcador → Mercado)
+  const marks = await page.evaluate(() => window.__voltaje.oppMarks());
+  console.log('Oportunidades con ubicación:', marks.length);
+  const pan = marks.find((m) => m.countryCode === 'PAN') ?? marks[0];
+  if (pan) {
+    await page.evaluate((m) => window.__voltaje.flyTo(m.lat, m.lon, 1.55, 0.1), pan);
+    await page.waitForTimeout(1300);
+    await shot(page, '60-oportunidades-globo.png');
+    const pos = await page.evaluate((id) => window.__voltaje.oppScreenPos(id), pan.id);
+    if (pos) {
+      await page.mouse.click(pos.x, pos.y);
+      await page.getByTestId('market-panel').waitFor({ timeout: 3000 }).catch(() => fail('el marcador de la oportunidad no abrió el Mercado'));
+      await page.keyboard.press('Escape');
+    }
+  }
+
+  // mercado eléctrico
+  await key(page, 'l', 'power-panel');
+  await page.waitForTimeout(700);
+  await shot(page, '61-mercado-electrico.png');
+  await at1280(page, '61-mercado-electrico-1280.png');
+  await tab(page, 'prevision'); await page.waitForTimeout(500);
+  await shot(page, '62-mercado-prevision.png');
+  await tab(page, 'parque'); await page.waitForTimeout(500);
+  await shot(page, '63-mercado-parque.png');
+  await tab(page, 'comparar'); await page.waitForTimeout(500);
+  await shot(page, '64-mercado-paises.png');
+  await page.getByTestId('power-country').selectOption('CHL');
+  await tab(page, 'mes'); await page.waitForTimeout(900);
+  await shot(page, '65-mercado-chile.png');
+
+  // batería en Chile: operación, despacho y política editada
+  await key(page, 'p', 'projects-panel');
+  await page.locator('[data-project=P2]').click();
+  await page.getByTestId('project-window').waitFor();
+  await tab(page, 'operacion'); await page.waitForTimeout(700);
+  await shot(page, '66-operacion.png');
+  await tab(page, 'despacho');
+  await page.getByTestId('dispatch-policy').waitFor({ timeout: 5000 }).catch(() => fail('no cargó el despacho de la batería'));
+  await page.waitForTimeout(600);
+  await shot(page, '67-despacho.png');
+  await page.getByTestId('pol-cargar-on').check();
+  await page.getByTestId('pol-cargar').fill('30');
+  await page.getByTestId('pol-descargar-on').check();
+  await page.getByTestId('pol-descargar').fill('70');
+  if (await page.getByTestId('pol-servicios').count()) { await page.getByTestId('pol-servicios').check(); await page.getByTestId('pol-fraccion').fill('0.25'); }
+  await page.getByTestId('policy-preview').getByText('Reglas').waitFor({ timeout: 8000 }).catch(() => fail('sin vista previa de la política'));
+  await page.waitForTimeout(500);
+  await shot(page, '68-despacho-politica.png');
+  await at1280(page, '68-despacho-politica-1280.png');
+  await page.getByTestId('apply-policy').click();
+  await page.waitForTimeout(800);
+  const pol = await page.getByTestId('dispatch-policy').locator('..').textContent();
+  if (!/carga bajo 30/.test(pol)) await fail('la política no se aplicó: ' + pol.slice(0, 200));
+
+  // solar en Panamá: venta (merchant y PPA) y seguro
+  await key(page, 'p', 'projects-panel');
+  await page.locator('[data-project=P1]').click();
+  await page.getByTestId('project-window').waitFor();
+  await tab(page, 'despacho'); await page.waitForTimeout(800);
+  await page.locator('[data-settlement=bloque]').first().click().catch(() => {});
+  await page.waitForTimeout(300);
+  await shot(page, '69-despacho-solar.png');
+  await tab(page, 'seguro');
+  await page.getByTestId('insurance-quotes').waitFor({ timeout: 5000 }).catch(() => fail('sin cotizaciones de seguro'));
+  await page.waitForTimeout(400);
+  await shot(page, '70-seguro.png');
+  await page.getByTestId('insurance-quotes').getByRole('button', { name: 'Contratar' }).last().click();
+  await page.getByTestId('insurance-quotes').getByRole('button', { name: 'Confirmar' }).click();
+  await page.waitForTimeout(900);
+  const ins = await page.getByTestId('project-window').textContent();
+  if (!/carencia|Vigente/.test(ins)) await fail('el seguro no quedó contratado');
+  await shot(page, '71-seguro-contratado.png');
+  await page.keyboard.press('Escape');
+
+  // eventos del mundo: huracán en Panamá (grave → aviso) y sequía en Chile
+  await page.evaluate(() => { window.__voltaje.worldEvent('huracan', ['PAN']); window.__voltaje.worldEvent('sequia', ['CHL']); });
+  await page.getByTestId('world-banner').first().waitFor({ timeout: 5000 }).catch(() => fail('sin aviso del evento grave'));
+  await page.evaluate(() => window.__voltaje.flyTo(-5, -76, 2.3, 0.1));
+  await page.waitForTimeout(1400);
+  await shot(page, '72-evento-globo.png');
+  await key(page, 'w', 'world-panel');
+  await page.waitForTimeout(500);
+  const wtxt = await page.getByTestId('world-panel').textContent();
+  if (!/Huracán/.test(wtxt)) await fail('el huracán no aparece en Mundo');
+  await shot(page, '73-mundo.png');
+  await at1280(page, '73-mundo-1280.png');
+  await tab(page, 'gobiernos'); await page.waitForTimeout(400);
+  await shot(page, '74-mundo-gobiernos.png');
+  await key(page, 'r', 'competitors-panel');
+  await page.waitForTimeout(500);
+  await shot(page, '75-competidores-cuota.png');
+  await key(page, 'f', 'finance-panel');
+  await page.waitForTimeout(600);
+  await page.getByTestId('revenue-sources').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  await shot(page, '76-finanzas-fuentes.png');
+}
 
 if (errors.length) await fail('errores en consola:\n' + errors.join('\n'));
 console.log('Capturas en docs/capturas/');
