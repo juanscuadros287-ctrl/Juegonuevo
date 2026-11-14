@@ -54,11 +54,10 @@ export interface PermitProbMod { approve: number; reject: number; info: number }
 export function permitProbs(p: PermitDef, mod?: PermitProbMod): { aprobado: number; rechazado: number; info_adicional: number } {
   if (!mod) return p.prob;
   let a = p.prob.aprobado * mod.approve, r = p.prob.rechazado * Math.max(0, mod.reject), i = p.prob.info_adicional * Math.max(0, mod.info);
-  // La aprobación no pasa del 98 %: siempre queda riesgo regulatorio.
+  // La aprobación final no pasa del 98 %: en cada decisión aprobado/(aprobado + rechazado) ≤ 0,98 (siempre queda riesgo regulatorio).
+  if (a / (a + r) > 0.98) r = a * 0.02 / 0.98;
   const tot = a + r + i;
-  a /= tot; r /= tot; i /= tot;
-  if (a > 0.98) { const rest = r + i; const f = rest > 0 ? 0.02 / rest : 0; a = 0.98; r *= f; i *= f; if (!rest) r = 0.02; }
-  return { aprobado: a, rechazado: r, info_adicional: i };
+  return { aprobado: a / tot, rechazado: r / tot, info_adicional: i / tot };
 }
 
 export type PermitDecision = 'aprobado' | 'rechazado' | 'info_adicional';
