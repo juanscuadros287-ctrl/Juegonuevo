@@ -55,9 +55,9 @@ export class SimClient {
     if (m.error) throw new Error(m.error);
   }
 
-  async preview(techId: string, mw: number, lat: number, lon: number): Promise<SiteEstimate> {
+  async preview(techId: string, mw: number, lat: number, lon: number, to?: { lat: number; lon: number }): Promise<SiteEstimate> {
     await this.ready;
-    return (await this.request<'preview'>((reqId) => ({ t: 'preview', reqId, techId, mw, lat, lon }))).estimate;
+    return (await this.request<'preview'>((reqId) => ({ t: 'preview', reqId, techId, mw, lat, lon, to }))).estimate;
   }
 
   async viability(projectId: string, runs = 500): Promise<{ result?: ViabilityResult; error?: string; ms: number }> {
@@ -76,6 +76,8 @@ export class SimClient {
 
   /** Panel de negocio abierto (el worker solo calcula sus vistas mientras esté abierto). */
   panel(panel: BusinessPanel | null) { this.send({ t: 'panel', panel }); }
+  /** País de la ficha (ventana Países). */
+  country(iso3: string | null) { this.send({ t: 'country', iso3 }); }
 
   onState(l: Listener<{ state: GameState; views: Views }>) { this.stateListeners.add(l); return () => void this.stateListeners.delete(l); }
   onEvents(l: Listener<SimEvent[]>) { this.eventListeners.add(l); return () => void this.eventListeners.delete(l); }

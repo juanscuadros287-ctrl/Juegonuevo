@@ -18,6 +18,7 @@ function rating(layer: LayerDef, v: number): { text: string; color: string; scor
 export function Inspector({ world }: { world: World }) {
   const sel = useUi((s) => s.selected);
   const layerId = useUi((s) => s.layerId);
+  const countries = useUi((s) => s.views?.business?.countries);
   const projects = useUi((s) => s.views?.projects);
   if (!sel) return null;
   const cell = world.grid.cell(sel.lat, sel.lon);
@@ -27,7 +28,12 @@ export function Inspector({ world }: { world: World }) {
   const best = rated.filter((x) => x.r.score >= 0.5);
   const country = cell.country;
   const cdata = country ? gameData.countries[country.code] : undefined;
-  const canDevelop = cell.land && !!country && !!gameData.simData.countries[country.code];
+  // en el mar: eólica marina frente a la costa de un país con datos
+  const seaCountry = !cell.land ? world.grid.nearestCountry(cell.lat, cell.lon, 6)?.country : undefined;
+  const devCountry = cell.land ? country : seaCountry;
+  const canDevelop = !!devCountry && !!gameData.simData.countries[devCountry.code];
+  const sheetCode = devCountry && gameData.simData.countries[devCountry.code] ? devCountry.code : null;
+  const cmark = countries?.find((c) => c.iso3 === sheetCode);
   const half = world.grid.res / 2;
   const here = (projects ?? []).filter((p) => p.active && Math.abs(p.lat - cell.lat) <= half && Math.abs(p.lon - cell.lon) <= half);
 
@@ -46,9 +52,14 @@ export function Inspector({ world }: { world: World }) {
       <div style={{ marginBottom: 12 }}>
         <button className="primary" style={{ width: '100%' }} data-testid="develop" disabled={!canDevelop}
           onClick={() => ui.set({ developAt: { lat: cell.lat, lon: cell.lon } })}>Desarrollar proyecto aquí</button>
+        {sheetCode && (
+          <button style={{ width: '100%', marginTop: 6 }} data-testid="country-sheet" onClick={() => ui.openCountry(sheetCode)} title="También: doble clic sobre el país">
+            Ficha de {devCountry!.nombre}{cmark ? ` · ${cmark.presence === 'origen' ? 'origen' : cmark.presence === 'activa' ? 'con presencia' : cmark.presence === 'en_tramite' ? 'en trámite' : cmark.unlocked ? 'desbloqueado' : 'cerrado'}` : ''} →
+          </button>
+        )}
         {!canDevelop && (
           <div className="dim" style={{ fontSize: 11, marginTop: 4 }}>
-            {!cell.land ? 'Solo en tierra firme (eólica marina en una fase posterior).' : `Mercado de ${country?.nombre ?? 'esta zona'} aún no disponible.`}
+            {!cell.land ? 'Mar abierto: la eólica marina se desarrolla cerca de la costa de un país con mercado.' : `Mercado de ${country?.nombre ?? 'esta zona'} aún no disponible.`}
           </div>
         )}
         {here.map((p) => (
