@@ -306,6 +306,7 @@ i.lg-crit { display: inline-block; width: 16px; height: 3px; background: var(--a
 .policy-field { margin-bottom: 10px; }
 .policy-field input[type=range] { margin: 4px 0 2px; }
 .policy-preview { margin-top: 8px; padding: 8px 12px; border: 1px dashed rgba(255,203,61,.45); border-radius: 8px; background: rgba(255,203,61,.05); }
+.policy-preview table.kv td:first-child { white-space: nowrap; padding-right: 10px; }
 .policy-preview table.kv td:last-child { white-space: normal; }
 .market-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .market-side { width: 300px; flex: none; }
@@ -323,4 +324,4 @@ i.lg-crit { display: inline-block; width: 16px; height: 3px; background: var(--a
   .dispatch-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .market-side { width: 260px; }
 }
-@media (max-width: 1360px) { .world-chip .wc-text { display: none; } }
+@media (max-width: 1720px) { .world-chip .wc-text { display: none; } .topbar .company { display: none; } .topbar .date-long { display: none; } .topbar .date-short { display: inline; } .topbar .date { min-width: 0; } }

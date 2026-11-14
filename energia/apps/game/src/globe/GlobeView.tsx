@@ -35,7 +35,8 @@ export function GlobeView({ world }: { world: World }) {
     marks.onPickOpportunity = (id) => { if (ui.get().screen === 'game') ui.openPanel('market', id); };
     marks.onPickEvent = () => { if (ui.get().screen === 'game') ui.openPanel('world'); };
     const sitesPick = g.onPickScreen;
-    g.onPickScreen = (x, y) => sitesPick(x, y) || (ui.get().screen === 'game' && marks.pickAt(x, y));
+    // un marcador justo bajo el cursor (9 px: el tamaño del ícono) gana; si no, los sitios; si no, la celda
+    g.onPickScreen = (x, y) => (ui.get().screen === 'game' && marks.pickAt(x, y, 9)) || sitesPick(x, y);
     // gancho para la prueba de humo (tools/screenshots.mjs): mover la cámara y ubicar sitios
     const w = window as unknown as { __voltaje?: object };
     w.__voltaje = Object.assign(w.__voltaje ?? {}, {
@@ -43,6 +44,7 @@ export function GlobeView({ world }: { world: World }) {
       siteScreenPos: (id: string) => sites.screenPos(id),
       rivalSites: () => sites.rivalIds(),
       oppScreenPos: (id: string) => marks.oppScreenPos(id),
+      eventScreenPos: () => marks.eventScreenPos(),
       geoScreenPos: (lat: number, lon: number) => g.toScreen(lonLatToVec3(lon, lat, 1)),
     });
     const highlight = new CountryHighlight(g.scene, world.shapes);

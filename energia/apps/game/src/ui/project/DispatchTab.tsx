@@ -110,7 +110,7 @@ function DispatchBody({ d, v }: { d: ProjectDetail; v: PlantDispatchView }) {
       ...base,
       grid: { left: 56, right: 60, top: 34, bottom: 28 },
       tooltip: { ...(base.tooltip as object), valueFormatter: undefined },
-      yAxis: [(base as { yAxis: object }).yAxis, { type: 'value', name: 'US$/MWh', nameTextStyle: { color: CHART.text }, splitLine: { show: false }, axisLabel: { color: CHART.text } }],
+      yAxis: [(base as { yAxis: object }).yAxis, { type: 'value', splitLine: { show: false }, axisLabel: { color: CHART.text, formatter: (x: number) => `${x} $` } }],
       series,
     };
   }, [hourKey]);
@@ -142,7 +142,7 @@ function DispatchBody({ d, v }: { d: ProjectDetail; v: PlantDispatchView }) {
     <>
       {v.codBlocked && <div className="notice bad">La planta terminó la puesta en marcha pero no puede operar: faltan permisos para operar (licencia, conexión o acceso a la red). Revisa la pestaña Permisos.</div>}
       <div className="stats-row">
-        <Stat label="Venta" value={v.sales.mode === 'ppa' ? 'PPA' : 'Merchant (spot)'} hint={v.sales.ppa?.status === 'firmado' ? settlementInfo(v.sales.ppa.settlement).label : 'sin contrato'} tone={v.sales.mode === 'ppa' ? 'good' : undefined} />
+        <Stat label="Venta" value={v.sales.mode === 'ppa' ? 'PPA' : 'Merchant'} hint={v.sales.ppa?.status === 'firmado' ? settlementInfo(v.sales.ppa.settlement).label : 'sin contrato: vende al spot'} tone={v.sales.mode === 'ppa' ? 'good' : undefined} />
         <Stat label={`Spot medio · ${v.month.label}`} value={usd(plan?.avgSpotUsdMwh, 1)} hint="US$/MWh" />
         <Stat label={isStorage ? 'Precio de descarga' : 'Precio capturado'} value={usd(plan?.captureUsdMwh, 1)} hint={plan && plan.avgSpotUsdMwh > 0 ? `${fmtPct(plan.captureUsdMwh / plan.avgSpotUsdMwh, 0)} del spot medio` : 'US$/MWh'} tone={plan && plan.captureUsdMwh < plan.avgSpotUsdMwh * 0.85 ? 'warn' : undefined} />
         {isStorage || plan?.chargeUsdMwh ? <Stat label="Costo de la carga" value={usd(plan?.chargeUsdMwh, 1)} hint="US$/MWh comprado" /> : null}

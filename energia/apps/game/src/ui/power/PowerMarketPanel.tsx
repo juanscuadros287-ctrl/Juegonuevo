@@ -3,7 +3,7 @@ import type { PowerMarketView } from '@voltaje/sim';
 import { ui, useUi } from '../store';
 import { Empty, Pill, Section, Stat, Tabs, Window } from '../common';
 import { Chart, CHART, baseOption } from '../Chart';
-import { fmtNum, fmtPct, monthLabel } from '../format';
+import { fmtMoney, fmtNum, fmtPct, monthLabel } from '../format';
 import { getGlobe, countryCenter } from '../../globe/GlobeView';
 
 type Tab = 'mes' | 'prevision' | 'parque' | 'comparar';
@@ -96,19 +96,19 @@ function MonthTab({ m }: { m: PowerMarketView }) {
         symbol: 'none', silent: true,
         data: [
           { xAxis: Math.round(dMax), label: { formatter: `Punta ${fmtNum(dMax, 0)} MW`, color: '#e6eef7' }, lineStyle: { color: '#e6eef7', type: 'solid', width: 2 } },
-          { xAxis: Math.round(dMin), label: { formatter: `Valle ${fmtNum(dMin, 0)} MW`, color: CHART.text }, lineStyle: { color: CHART.text, type: 'dashed' } },
+          { xAxis: Math.round(dMin), label: { formatter: `Valle ${fmtNum(dMin, 0)} MW`, color: CHART.text, position: 'middle' }, lineStyle: { color: CHART.text, type: 'dashed' } },
           { yAxis: +m.avgUsdMwh.toFixed(1), label: { formatter: `Precio medio ${fmtNum(m.avgUsdMwh, 0)}`, color: CHART.accent, position: 'insideStartTop' }, lineStyle: { color: CHART.accent, type: 'dashed', width: 2 } },
         ],
       },
     });
     return {
       backgroundColor: 'transparent', animation: false, textStyle: { color: CHART.text },
-      grid: { left: 56, right: 24, top: 50, bottom: 36 },
+      grid: { left: 56, right: 24, top: 74, bottom: 36 },
       legend: { top: 0, textStyle: { color: CHART.text, fontSize: 11 }, itemWidth: 12, itemHeight: 8, data: [...byLabel.keys()] },
       tooltip: { trigger: 'item', backgroundColor: '#0f1d2e', borderColor: 'rgba(140,180,220,0.3)', textStyle: { color: '#e6eef7' },
         formatter: (p: { seriesName: string; value: [number, number] }) => `${p.seriesName}<br/>${fmtNum(p.value[1], 1)} US$/MWh · hasta ${fmtNum(p.value[0], 0)} MW` },
       xAxis: { type: 'value', min: 0, max: Math.ceil(total * 1.02), name: 'MW acumulados', nameLocation: 'middle', nameGap: 24, nameTextStyle: { color: CHART.text }, splitLine: { lineStyle: { color: CHART.grid } }, axisLabel: { color: CHART.text } },
-      yAxis: { type: 'value', min: Math.min(0, m.priceFloorUsdMwh), max: Math.ceil(yMax / 10) * 10, name: 'US$/MWh', nameTextStyle: { color: CHART.text }, splitLine: { lineStyle: { color: CHART.grid } }, axisLabel: { color: CHART.text } },
+      yAxis: { type: 'value', min: Math.min(0, m.priceFloorUsdMwh), max: Math.ceil(yMax / 10) * 10, splitLine: { lineStyle: { color: CHART.grid } }, axisLabel: { color: CHART.text } },
       series,
     };
   }, [key]);
@@ -116,9 +116,9 @@ function MonthTab({ m }: { m: PowerMarketView }) {
     const lab = m.hours.filter((h) => h.dayType === 'laborable'), fin = m.hours.filter((h) => h.dayType === 'finde');
     const o = baseOption(lab.map((h) => `${h.hour} h`), { unit: ' US$/MWh' }) as Record<string, unknown>;
     return {
-      ...o, grid: { left: 56, right: 64, top: 34, bottom: 28 },
+      ...o, grid: { left: 84, right: 70, top: 50, bottom: 28 },
       tooltip: { ...(o.tooltip as object), valueFormatter: (v: unknown) => (typeof v === 'number' ? fmtNum(v, 1) : String(v)) },
-      yAxis: [{ ...(o.yAxis as object), name: 'US$/MWh', nameTextStyle: { color: CHART.text } }, { type: 'value', name: 'MW', nameTextStyle: { color: CHART.text }, splitLine: { show: false }, axisLabel: { color: CHART.text } }],
+      yAxis: [o.yAxis, { type: 'value', splitLine: { show: false }, axisLabel: { color: CHART.text, formatter: (v: number) => `${fmtNum(v, 0)} MW` } }],
       series: [
         { name: 'Demanda laborable', type: 'line', yAxisIndex: 1, data: lab.map((h) => Math.round(h.demandMw)), lineStyle: { color: 'rgba(230,238,247,.45)' }, itemStyle: { color: 'rgba(230,238,247,.45)' }, areaStyle: { color: 'rgba(230,238,247,.06)' }, symbol: 'none' },
         { name: 'Demanda fin de semana', type: 'line', yAxisIndex: 1, data: fin.map((h) => Math.round(h.demandMw)), lineStyle: { color: 'rgba(230,238,247,.35)', type: 'dotted' }, itemStyle: { color: 'rgba(230,238,247,.35)' }, symbol: 'none' },
@@ -131,7 +131,7 @@ function MonthTab({ m }: { m: PowerMarketView }) {
   const curt = m.hours.some((h) => h.curtailFrac > 0.001);
   return (
     <div className="market-grid">
-      <Section title="Curva de oferta (orden de mérito) y demanda" right={<span className="dim" style={{ fontSize: 11 }}>costo marginal por bloque · la unidad marginal fija el precio</span>}>
+      <Section title="Curva de oferta (orden de mérito) y demanda" right={<span className="dim" style={{ fontSize: 11 }}>US$/MWh por bloque · la unidad marginal fija el precio</span>}>
         <Chart option={curveOpt} height={340} />
       </Section>
       <Section title="Precios por hora del día tipo" right={<span className="dim" style={{ fontSize: 11 }}>{curt ? 'hay vertimiento de renovables' : 'sin vertimiento'}</span>}>
@@ -216,7 +216,7 @@ function FleetTab({ m }: { m: PowerMarketView }) {
             <table className="kv"><tbody>
               <tr><td>Mecanismo</td><td style={{ whiteSpace: 'normal', fontFamily: 'inherit' }}>{m.capacityMarket.name}</td></tr>
               <tr><td>Precio de la potencia</td><td>{fmtNum(m.capacityMarket.priceUsdKwMonth, 1)} US$/kW-mes</td></tr>
-              <tr><td>Por MW firme al año</td><td>{fmtNum(m.capacityMarket.priceUsdKwMonth * 12, 0)} k US$</td></tr>
+              <tr><td>Por MW firme al año</td><td>{fmtMoney(m.capacityMarket.priceUsdKwMonth * 12 * 1000)}</td></tr>
             </tbody></table>
           ) : <div className="dim">Sin mercado de capacidad: solo se paga la energía (mercado de solo energía).</div>}
           <div className="dim" style={{ fontSize: 11.5, marginTop: 6 }}>Se paga por el crédito firme de cada tecnología × MW × disponibilidad: baterías, hidro y térmicas cobran mucho más que solar o eólica.</div>

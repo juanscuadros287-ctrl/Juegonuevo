@@ -1,4 +1,4 @@
-# UI de las Fases 2, 3 y 4 — pantallas y flujos
+# UI de las Fases 2, 3, 4 y 5 — pantallas y flujos
 
 Todo en `apps/game/src`. Estilo de juego de gestión: ventanas grandes sobre el globo, tablas, KPI y gráficas (ECharts modular, `ui/Chart.tsx`). Colores y medidas en `theme/theme.css` (sección «Fase 2»); color por etapa en `globe/siteVisual.ts` (`STAGE_COLORS`, compartido con la UI).
 
@@ -43,7 +43,7 @@ La tarjeta de viabilidad muestra probabilidad de llegar a operación, meses P50/
 - `Globe.ts` expone `scene`, `camera`, `frameHooks`, `onPickScreen` y `toScreen()`.
 
 ## Atajos
-Espacio pausa/reanuda · 1–5 velocidades · P proyectos · M mercado · C contratos · I investigación (I+D) · F finanzas · E eventos · R competidores · V proveedores · X países · T tecnologías · Esc cierra (diálogo → oferta → elegir punto final de una línea → desarrollar → ventana → selección) · ⌘/Ctrl+S guardar · +/− zoom. Con un deslizador enfocado los atajos siguen funcionando; en campos de texto solo Esc.
+Espacio pausa/reanuda · 1–5 velocidades · P proyectos · M mercado · C contratos · I investigación (I+D) · F finanzas · E eventos · R competidores · V proveedores · X países · T tecnologías · L mercado eléctrico · W mundo · Esc cierra (diálogo → oferta → elegir punto final de una línea → desarrollar → ventana → selección) · ⌘/Ctrl+S guardar · +/− zoom. Con un deslizador enfocado los atajos siguen funcionando; en campos de texto solo Esc.
 
 ## Fase 3: mercado, contratos, I+D, competidores y proveedores
 Todo en `ui/business/`. Las vistas vienen de `selectorsBusiness.ts` y se calculan en el worker:
@@ -105,3 +105,30 @@ Otros cambios:
 
 ### Prueba de humo (Fase 4)
 `SCREENS_ONLY=4` corre solo esta parte (≈ 1 min). Atajo de prueba como en las pruebas del motor: se lee la partida (`__voltaje.saveText`), se agregan nodos de I+D (baterías, geotermia, líneas, mercados regional/Costa Rica/Colombia…) y caja, y se carga (`__voltaje.loadText`). Luego: ×8 unos meses → Países → ficha de Costa Rica con el grafo de permisos (hidro de pasada) → abrir presencia → Tecnologías (tabla y gráfica de LCOE en Chile) → Combustibles → desarrollar baterías (Panamá) y geotermia (Barú) con vista previa → línea Coclé → ciudad de Panamá con el punto final elegido en el globo → más proyectos por comando (`__voltaje.command`) → globo con los modelos, la línea y los países resaltados. Capturas `40`–`53`. Ganchos nuevos solo para la prueba: `saveText`, `loadText`, `command`, `select`, `geoScreenPos`.
+
+## Fase 5: mercado eléctrico, despacho, seguros y mundo
+Vistas de `selectorsPower.ts` calculadas en el worker (`Views.power` y `Views.dispatch`, `worker/protocol.ts`):
+- **Siempre** (livianas): `worldActive` (eventos activos: barra, avisos y globo), `climate` (ENSO e hidrología del país de origen), `revenue` (`selectRevenueBySource`) y `oppMarks` (oportunidades abiertas con `opportunityLocation`, caché por id).
+- Ventana Mercado eléctrico (`sim.panel('power')`): `markets` (`selectPowerMarkets`) y `market` (`selectPowerMarket` del país elegido con `sim.powerCountry(iso)`, por defecto el de origen). Ventana Mundo (`'world'`): `world` (`selectWorldEvents`). Competidores: `shareHistory` (`selectMarketShareHistory`).
+- `dispatch` (`selectPlantDispatch`) solo del proyecto enfocado, en obra u operación, y solo en las pestañas Operación, Despacho y venta, y Seguro (`sim.focus(id, tab)`; `ui.setProjectTab`).
+- Bajo pedido: `dispatchPreview` = `selectPlantDispatch` sobre una copia superficial del estado con la política nueva (el plan del mes se recalcula; la partida no se toca).
+
+| Pantalla | Archivo | Contenido |
+|---|---|---|
+| Mercado eléctrico (L, «Más ▾») | `ui/power/PowerMarketPanel.tsx` | país elegible y «⌖» al globo; KPI (spot medio vs histórico, punta/valle, mín./máx. con piso/techo, valor del agua, clima e hidrología, cambio a 12 meses); **Mes en curso**: curva de oferta (merit order) en bloques coloreados por tecnología con la demanda de punta/valle y el precio medio, y precios por hora del día tipo (laborable/fin de semana, demanda y vertimiento); **Previsión e historial**: 12 meses con banda P10–P90, punta y valle, e historial (rango horario e hidrología); **Parque, capacidad y servicios**: MW por tecnología (existente vs empresas del juego), mercado de capacidad, servicios complementarios (requerimiento vs ofrecido) y clima; **Comparar países**: barras y tabla |
+| Despacho y venta (pestaña, solo en operación) | `ui/project/DispatchTab.tsx` | KPI (venta PPA/merchant, spot medio, precio capturado o de descarga con % del spot, costo de carga, despacho y vertimiento, ingresos 12 meses); **reglas** según `policyOptions` (cargar bajo / descargar sobre / reserva mínima, precio mínimo, prioridad PPA/spot, servicios y fracción, compra máxima de H₂), cada una con «automático»; vista previa del mes (antes → después) y línea discontinua en la gráfica; **perfil horario** del mes (generación/descarga, carga bajo cero, precio); **ingresos por fuente** 24 meses (PPA, spot, capacidad, servicios, compras) y tabla de 12 meses; **PPA o merchant**: con PPA, modalidad, volumen, años y **Terminar PPA** con la penalidad (confirmación en línea); sin PPA, valor de venta con descuento merchant y **Buscar PPA** con modalidad (según producción / bloque físico / financiero, explicadas con los parámetros de `power.yaml`) |
+| Seguro (pestaña, en obra u operación) | `ui/project/InsuranceTab.tsx` | KPI (estado/carencia, valor asegurado, pérdida esperada, prima, indemnizaciones); cotizaciones daños y daños + lucro cesante (prima anual y %, primera prima, deducible, carencia, días de lucro), **Contratar** / cambiar cobertura (reinicia la carencia) con confirmación; riesgos naturales del país; póliza vigente con siniestros y **Cancelar seguro**; aviso si hay un desastre activo en el país |
+| Mundo (W, «Más ▾» y chip «Mundo» de la barra) | `ui/power/WorldPanel.tsx` | KPI (activos, graves, ENSO, próxima elección, regulación modificada, avances); **Eventos** activos y pasados filtrables por país: tipo, nombre, alcance, fechas y días restantes, texto, efectos, daños, «te afecta», «⌖ globo»; **Gobiernos y regulación** (gobierno, próxima elección, carbono, plazo de permisos, crédito fiscal, ficha del país); **Avances y costos** |
+| Avisos | `ui/power/Banners.tsx` | evento grave (`worldEvent` de tipo desastre, conflicto, salud, crisis petrolera o cambiaria): aviso rojo bajo la barra (14 s o ✕); clic → Mundo |
+
+Otros cambios:
+- **Barra**: chip «Mundo» con el color de ENSO y el nº de eventos activos (rojo si hay graves); bajo 1720 px fecha corta y sin nombre de empresa. «Más ▾» = Mercado eléctrico (L), Mundo (W), Países (X), Tecnologías (T), Combustibles, Competidores (R), Proveedores (V).
+- **Globo** (`globe/worldMarks.ts`): rombos de las oportunidades abiertas (celeste; ámbar con ✓ si ya ofertaste) → clic abre Mercado con la oportunidad; eventos por país: contorno pulsante y halo del color del tipo + ícono → clic abre Mundo. Un marcador a ≤ 9 px gana el clic; si no, los sitios y la celda.
+- **Comercial**: selector de modalidad del PPA. **Mercado**: «⌖ globo» en la ficha de la oportunidad.
+- **Competidores**: cuota de mercado histórica apilada y `stageId` (fichas y globo).
+- **Contratos**: país del contrato y **Asignar proyecto** con `ContractView.eligibleProjects` (ya no replica el filtro).
+- **Finanzas**: ingresos por fuente (12 meses y mensual) en el Resumen; las categorías nuevas salen solas en P&G y flujo.
+- **Eventos**: `worldEvent`, `worldEventEnded` y `climateOutlook` enlazan a Mundo; `plantDamaged`, `insuranceChanged`, `dispatchPolicyChanged`, `ppaTerminated`, `operationBlocked` al proyecto (badge rojo en «Despacho y venta» si `codBlocked`). Filtro «Mundo, países, monedas y combustibles».
+
+### Prueba de humo (Fase 5)
+`SCREENS_ONLY=5` (≈ 1 min). Semilla 7; atajo de prueba en el JSON (I+D de baterías y Chile, presencia en Chile, caja) y luego `__voltaje.autopilot(maxDías, díasExtra)`: piloto automático en el worker (`worker/devPilot.ts`, solo para la prueba; los mismos comandos que la UI, como `operatingPlant` de las pruebas del motor) que lleva una solar de 20 MW en Coclé y una batería de 40 MW cerca de Santiago a operación (≈ 4 años) y ~14 meses más. Luego: oportunidad en el globo (clic → Mercado) → Mercado eléctrico (4 pestañas, Chile) → batería: Operación con datos, Despacho, política editada con vista previa y aplicada → solar: Despacho → Seguro (contratar daños + lucro) → `__voltaje.worldEvent('huracan', ['PAN'])` y sequía en Chile → avisos y globo → Mundo → Gobiernos → Competidores (cuota) → Finanzas (ingresos por fuente). Capturas `60`–`76`. Ganchos nuevos solo para la prueba: `autopilot`, `worldEvent`, `oppMarks`, `oppScreenPos`, `eventScreenPos`.

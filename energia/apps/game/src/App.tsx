@@ -78,7 +78,9 @@ function useGameEvents() {
           const v = sim.views?.power?.worldActive.find((x) => x.uid === e.uid);
           const kind = v?.kind ?? gameData.simData.world?.eventos.find((x) => x.id === e.eventId)?.tipo ?? '';
           if (isGrave({ id: e.eventId, kind })) {
-            ui.banner({ uid: e.uid, title: v?.name ?? e.text, text: e.text, scope: v?.scopeLabel ?? '' });
+            const def = gameData.simData.world?.eventos.find((x) => x.id === e.eventId);
+            const scope = e.countryCode ? gameData.simData.countries[e.countryCode]?.nombre ?? e.countryCode : 'Mundial';
+            ui.banner({ uid: e.uid, title: v?.name ?? def?.nombre ?? 'Evento del mundo', text: e.text, scope: v?.scopeLabel ?? scope });
             log.push({ tick, date, text: e.text, severity: e.severity, link: link! });
             continue;
           }

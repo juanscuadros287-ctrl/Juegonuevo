@@ -125,8 +125,9 @@ function WorldChip() {
     <button className={`world-chip ${open ? 'active' : ''}`} data-nav="world-chip" onClick={() => ui.openWindow('world')}
       title={`Mundo (W): ${n} evento(s) activo(s)${grave ? `, ${grave} grave(s)` : ''} · ${p.climate.ensoLabel} · ${p.climate.hydrologyLabel.toLowerCase()} en el país de origen`} style={{ position: 'relative' }}>
       <span style={{ color: open ? 'inherit' : enso === 'nino' ? 'var(--warn)' : enso === 'nina' ? 'var(--info)' : 'var(--text-dim)' }}>{enso === 'neutral' ? '◌' : '●'}</span>
-      <span className="wc-text"> {p.climate.ensoLabel}{n ? ` · ${n} evento${n > 1 ? 's' : ''}` : ''}</span>
-      {grave > 0 && <span className="nav-badge" style={{ background: 'var(--bad)' }}>{grave}</span>}
+      <span className="wc-text"> {p.climate.ensoLabel}</span>
+      <span> Mundo</span>
+      {n > 0 && <span className="nav-badge" style={{ background: grave ? 'var(--bad)' : 'var(--info)' }}>{n}</span>}
     </button>
   );
 }

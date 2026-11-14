@@ -8,6 +8,7 @@ Juego independiente de Dinastía (el juego Godot de la raíz del repo). Vive en 
 - **Fase 3 (motor) lista**: licitaciones y clientes, ofertas por puntaje, contratos con garantías y penalidades, EPC para terceros, cadena de suministro dinámica, 5 competidores IA con los mismos comandos, árbol de I+D. Detalle en `docs/MOTOR_FASE3.md`.
 - **Fase 4 (motor) lista**: 18 tecnologías nuevas (geotermia con pozos secos, hidro pasada/embalse/bombeo, CSP, eólica marina, biomasa, biogás, gas, carbón, petróleo, nuclear, SMR, baterías, H2 verde, líneas, interconexiones, ESCO), 12 países con permisos propios, presencia por país, tipo de cambio y combustibles, catálogo y fichas de país. Detalle en `docs/MOTOR_FASE4.md`. Siguiente: UI de la Fase 4.
 - **Fase 5 (motor) lista**: mercado eléctrico horario por país (merit order con días tipo, clima/El Niño, capacidad y servicios), despacho de plantas con reglas configurables, PPA en bloque/financiero, permisos para operar, eventos del mundo (crisis, guerras, pandemias, desastres, elecciones, regulación, avances), seguros, valoración merchant del comprador (balance de la IA otra vez < 6×). Detalle en `docs/MOTOR_FASE5.md`. Siguiente: UI de la Fase 5.
+- **Fase 5 (UI) lista**: ventana Mercado eléctrico (curva de oferta, 48 h tipo, previsión P10–P90, historial, parque, capacidad y servicios, comparativa), pestañas Despacho y venta (reglas con vista previa, perfil horario, ingresos por fuente, terminar/buscar PPA con modalidad) y Seguro, ventana Mundo (eventos, gobiernos, regulación) con avisos de eventos graves, oportunidades y eventos en el globo, cuota histórica, `eligibleProjects`, ingresos por fuente en Finanzas. Detalle en `docs/UI.md`. Siguiente: Fase 6.
 - **Fase 4 (UI) lista**: desarrollar cualquiera de las 20 tecnologías (disponibilidad por I+D/país/sitio, vista previa por modo económico, punto final de líneas en el globo con la ruta dibujada), `visualKind` en el globo (propias y de la IA), trazados de líneas, países resaltados por presencia/desbloqueo, ventana Tecnologías (catálogo y LCOE por país), ventana Países (lista, ficha con moneda, mercado, grafo de permisos con ruta crítica, abrir/cerrar presencia, combustibles), eventos y finanzas nuevas. Detalle en `docs/UI.md`. Siguiente: Fase 5.
 - **Fase 3 (UI) lista**: Mercado (oportunidades, armar oferta con cotización y puntaje, mis ofertas y resultados con ranking), Contratos (obligaciones, asignar proyecto), I+D (árbol con prerrequisitos, presupuesto, cola), Competidores (tabla, fichas, gráfica, plantas en el globo), Proveedores (catálogo, índices), inversores/logística en Construcción, `previewFinancing`, perfil estacional, `stageProgress`. Detalle en `docs/UI.md`.
 - **Fase 2 (UI) lista**: desarrollar en un sitio, panel y detalle de proyectos (Gantt, estudios, permisos, PPA, financiación, construcción, operación, viabilidad), finanzas de la empresa, registro de eventos, quiebra, sitios 3D en el globo. Detalle en `docs/UI.md`.
@@ -49,7 +50,8 @@ apps/game       Vite + React + Three.js
   worker/       el GameState vive solo en un Web Worker (carga la grilla y calcula las vistas de los selectores); la UI recibe instantáneas + vistas y envía comandos
   globe/        Globe.ts (shader propio: mapa base, capa, máscara de costa, cuadrícula, selección, facetas); sites.ts + siteVisual.ts (adaptador único a models/)
   ui/           paneles React; store.ts = estado de UI (no de juego); project/ = pestañas del detalle de proyecto; business/ = mercado, oferta, contratos, I+D, competidores, proveedores;
-                world/ = Fase 4: países (ficha, grafo de permisos, combustibles) y catálogo de tecnologías; tech.ts = íconos/modos
+                world/ = Fase 4: países (ficha, grafo de permisos, combustibles) y catálogo de tecnologías; tech.ts = íconos/modos;
+                power/ = Fase 5: mercado eléctrico, mundo, avisos; project/DispatchTab + InsuranceTab; globe/worldMarks.ts = oportunidades y eventos en el globo
   globe/        (Fase 4) routes.ts = trazados de líneas (createTransmissionLine radial); countries.ts = contornos por presencia/desbloqueo
   storage/      partidas en IndexedDB + exportar/importar .json
   theme/        theme.ts (colores del globo) y theme.css (UI): el estilo se cambia aquí
@@ -119,14 +121,16 @@ Reglas:
 | 2026-11-11 | UI Fase 4: Países (X) y Tecnologías (T) en «Más ▾» junto con Combustibles; catálogo calculado en el worker solo con la ventana abierta y con caché mensual; ficha de país solo del país elegido. |
 | 2026-11-11 | UI Fase 4: la disponibilidad de cada tecnología en el sitio se calcula en la UI con `evaluateSite` sobre la grilla de la UI (sin ida y vuelta al worker); la vista previa estima aunque falte I+D o presencia (copia del estado con esos accesos) para decidir si conviene abrir el mercado. |
 | 2026-11-11 | UI Fase 4: líneas = subestación en el origen + trazado de gran círculo con torres según el avance; punto final con un segundo clic (`ui.pickingRoute`). Doble clic en un país con datos → su ficha. |
+| 2026-11-14 | UI Fase 5: Mercado eléctrico (L) y Mundo (W) en «Más ▾»; chip «Mundo» en la barra (ENSO + nº de eventos, rojo si hay graves). Vistas de mercado/mundo solo con su ventana; despacho solo en las pestañas que lo usan; vista previa de la política sobre una copia superficial del estado. |
+| 2026-11-14 | UI Fase 5: prueba de humo con un piloto automático de prueba en el worker (`worker/devPilot.ts`, mismos comandos que la UI) para tener plantas en operación; eventos forzados con `triggerWorldEvent` (gancho de prueba, no es un comando). |
 | 2026-11-11 | Prueba de humo Fase 4 con atajo de prueba (I+D y caja editados en el JSON de la partida vía `__voltaje.saveText/loadText`), como en las pruebas del motor; total ≈ 3 min. |
 
 ## Pendientes conocidos
 - Motor: cuando la IA gana una licitación, `signContract` publica `contractSigned` (ids `C1-K1`) en los eventos del jugador; la UI los descarta por el prefijo. Debería ir al `sink` de la IA.
-- Motor (para la UI): ubicación de las oportunidades (marcadores en el globo), historial de cuota de mercado, país en `ContractView`, proyectos elegibles por contrato (hoy la UI replica el filtro de `assignContractProject`).
+- (Resuelto en la Fase 5) Ubicación de oportunidades, cuota histórica, país y proyectos elegibles en `ContractView`: la UI ya los usa.
 - La prueba de humo pierde la licitación (empresa nueva: reputación y experiencia bajas); la ventana Contratos solo se capturó vacía.
 - Fase 3: precios de licitaciones, garantías y pesos aproximados (`supuesto`); la IA empieza sin plantas (su experiencia histórica solo da puntaje).
-- Falta una captura de una planta en operación (requiere años de juego); la pestaña Operación solo se probó vacía.
+- (Resuelto en la UI de la Fase 5) Captura de plantas en operación: `66-operacion.png` (batería en Chile) con el piloto de prueba.
 - Permisos, plazos y probabilidades de Panamá son aproximados (marcados `supuesto`); calibrar con desarrolladores locales si se consigue información.
 - Reemplazar sol y viento por NASA POWER cuando haya red (script por escribir).
 - El `.dmg` solo se ha configurado, no se ha compilado aquí (este entorno es Linux). Revisar el primer run de GitHub Actions.
@@ -140,6 +144,9 @@ Reglas:
 - Motor (para la UI, Fase 4): `visualKind` y país en `CompetitorView.visibleProjects` (hoy la UI usa `visualKindOf`); `excluye` de los permisos en `PermitGraphNode` (la UI solo filtra por tecnologías y MW); ruta crítica como lista de ids en `permitPaths` (la UI la recalcula con la duración base); extremo de las líneas en `ProjectSummary` (hoy se lee de `site.extras.to` del estado).
 - UI Fase 4: los modelos del globo en la prueba de humo están en prospección (sin años de juego no hay obras ni plantas en operación propias); las etapas avanzadas se ven en `models.html`.
 - Fase 4: el LCOE típico del gas en Chile (~540 US$/MWh con despacho bajo) parece alto; revisar el despacho del catálogo con GNL caro.
+
+- UI Fase 5: `PlantDispatchView` no trae la severidad de los eventos ni `WorldEventView.severity`: la UI decide «grave» por tipo (`ui/power/worldLabels.ts`). Pedidos al motor: severidad en `WorldEventView`, `nombre` del evento en el `SimEvent` `worldEvent`, ingresos por fuente en `PlantDispatchView` para la previsión del mes (hoy solo el plan), ubicación/región de los eventos (hoy el centro del país), y si `selectPlantDispatch` pudiera aceptar una política sin copiar el estado.
+- UI Fase 5: los halos de eventos en el globo usan el centro del polígono más grande del país (Chile queda en el centro-sur); los contornos son líneas de 1 px.
 
 ## Preferencias del usuario
 - Respuestas cortas y al punto.

@@ -491,6 +491,7 @@ const BATTERY = { lat: -33.45, lon: -70.75 };
 if (!ONLY || ONLY === '5') {
   const page = await newPage(1600, 960);
   await page.getByText('Nueva partida').click();
+  await page.locator('form input[type=number]').fill('7');
   await page.getByText('Fundar empresa').click();
   await page.waitForTimeout(2500);
   const file = JSON.parse(await page.evaluate(() => window.__voltaje.saveText()));
@@ -553,10 +554,13 @@ if (!ONLY || ONLY === '5') {
   await page.getByTestId('dispatch-policy').waitFor({ timeout: 5000 }).catch(() => fail('no cargó el despacho de la batería'));
   await page.waitForTimeout(600);
   await shot(page, '67-despacho.png');
+  // umbrales según la escala del deslizador (1,3 × el precio máximo del mes): cargar bajo ≈ 65 % y descargar sobre ≈ 85 % del máximo
+  const smax = Number(await page.getByTestId('pol-cargar').getAttribute('max'));
+  const lo = Math.round(smax * 0.5), hi = Math.round(smax * 0.65);
   await page.getByTestId('pol-cargar-on').check();
-  await page.getByTestId('pol-cargar').fill('30');
+  await page.getByTestId('pol-cargar').fill(String(lo));
   await page.getByTestId('pol-descargar-on').check();
-  await page.getByTestId('pol-descargar').fill('70');
+  await page.getByTestId('pol-descargar').fill(String(hi));
   if (await page.getByTestId('pol-servicios').count()) { await page.getByTestId('pol-servicios').check(); await page.getByTestId('pol-fraccion').fill('0.25'); }
   await page.getByTestId('policy-preview').getByText('Reglas').waitFor({ timeout: 8000 }).catch(() => fail('sin vista previa de la política'));
   await page.waitForTimeout(500);
@@ -565,7 +569,7 @@ if (!ONLY || ONLY === '5') {
   await page.getByTestId('apply-policy').click();
   await page.waitForTimeout(800);
   const pol = await page.getByTestId('dispatch-policy').locator('..').textContent();
-  if (!/carga bajo 30/.test(pol)) await fail('la política no se aplicó: ' + pol.slice(0, 200));
+  if (!new RegExp(`carga bajo ${lo}`).test(pol)) await fail('la política no se aplicó: ' + pol.slice(0, 200));
 
   // solar en Panamá: venta (merchant y PPA) y seguro
   await key(page, 'p', 'projects-panel');
@@ -590,7 +594,14 @@ if (!ONLY || ONLY === '5') {
   // eventos del mundo: huracán en Panamá (grave → aviso) y sequía en Chile
   await page.evaluate(() => { window.__voltaje.worldEvent('huracan', ['PAN']); window.__voltaje.worldEvent('sequia', ['CHL']); });
   await page.getByTestId('world-banner').first().waitFor({ timeout: 5000 }).catch(() => fail('sin aviso del evento grave'));
-  await page.evaluate(() => window.__voltaje.flyTo(-5, -76, 2.3, 0.1));
+  await page.evaluate(() => window.__voltaje.flyTo(-28, -66, 2.5, 0.1));
+  await page.waitForTimeout(1400);
+  const icons = await page.evaluate(() => window.__voltaje.eventScreenPos());
+  if (!icons.length) await fail('sin íconos de eventos en el globo');
+  await shot(page, '72-evento-aviso.png');
+  // sin los avisos: Panamá con el huracán (halo + ícono) y las oportunidades
+  while (await page.getByTestId('world-banner').count()) { await page.getByTestId('world-banner').first().getByRole('button', { name: '✕' }).click(); await page.waitForTimeout(100); }
+  await page.evaluate(() => window.__voltaje.flyTo(5, -79, 1.75, 0.1));
   await page.waitForTimeout(1400);
   await shot(page, '72-evento-globo.png');
   await key(page, 'w', 'world-panel');
@@ -602,6 +613,7 @@ if (!ONLY || ONLY === '5') {
   await tab(page, 'gobiernos'); await page.waitForTimeout(400);
   await shot(page, '74-mundo-gobiernos.png');
   await key(page, 'r', 'competitors-panel');
+  await page.getByText('Cuota de mercado histórica').scrollIntoViewIfNeeded();
   await page.waitForTimeout(500);
   await shot(page, '75-competidores-cuota.png');
   await key(page, 'f', 'finance-panel');
