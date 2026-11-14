@@ -141,7 +141,7 @@ export function teamMonthly(state: GameState, ctx: SimContext, year: number, mon
     const drift = lvl ? officeLevelDef(ctx, lvl)?.reputacion_gobierno_mes ?? 0 : 0;
     if (drift) changeRep(state, ctx, 'gobierno', iso, drift, 'oficina', 'presencia de la oficina');
   }
-  // Plantas operando sin problemas: un pequeño aporte anual (en enero).
+  // Plantas operando sin problemas: un pequeño aporte anual (al cerrar diciembre).
   if (month === 12) {
     const byCountry = new Map<string, number>();
     for (const p of state.projects) if (p.operation && !isTerminal(p)) byCountry.set(p.countryCode, (byCountry.get(p.countryCode) ?? 0) + 1);
