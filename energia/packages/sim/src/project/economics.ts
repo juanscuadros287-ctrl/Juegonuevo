@@ -69,6 +69,8 @@ export interface EconomicsOptions {
   staticMarket?: boolean;
   /** Fase 5: recorte del precio spot (valoración de un comprador de proyectos merchant). */
   spotHaircut?: number;
+  /** Fase 6: fija el despacho (0–1) en vez del previsto (LCOE de referencia de térmicas a plena carga del factor de referencia). */
+  dispatchOverride?: number;
 }
 
 export interface Economics {
@@ -210,7 +212,7 @@ export function projectEconomics(state: GameState, ctx: SimContext, p: Project, 
   // Fase 5: la economía de largo plazo usa la previsión «normal» (sin el clima ni los eventos del año en curso), como lo
   // haría un banco o un comprador: un año seco o una crisis petrolera no se extrapolan a toda la vida de la planta.
   const terms = projectTerms(state, ctx, p, currentYear(state), resP50, undefined, opts.staticMarket, true);
-  let disp = terms.dispatch;
+  let disp = opts.dispatchOverride ?? terms.dispatch;
   let energyP50 = p.mw * 8760 * fcP50 * avail * disp;
   let energyP90 = p.mw * 8760 * fcP90 * avail * disp;
   const capex = opts.capexUsd ?? constructionBudget(ctx, p, state);

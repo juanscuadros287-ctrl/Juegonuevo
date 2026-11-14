@@ -1,3 +1,4 @@
+import { bidModifiers, repOf } from '../team/team';
 import type { GameState } from '../core/state';
 import type { SimContext } from '../core/context';
 import type { SimEvent } from '../core/events';
@@ -123,7 +124,8 @@ export function maturity(ctx: SimContext, p: GameState['projects'][number]): num
 
 /** Puntaje técnico (0–100): base 50 + madurez del proyecto, medición bancable, proveedores, esfuerzo e I+D. */
 export function technicalScore(state: GameState, ctx: SimContext, opp: Opportunity, b: { techId: string; projectId?: string; effort?: 'estandar' | 'reforzada'; deliveryMonths?: number; equipmentId?: string; epcId?: string }): number {
-  let t = 50 + researchEffects(state, ctx).technicalScoreBonus + EFFORT_SCORE[b.effort ?? 'estandar'];
+  // Fase 6: + hasta 10 puntos por el equipo comercial (ofertas).
+  let t = 50 + researchEffects(state, ctx).technicalScoreBonus + EFFORT_SCORE[b.effort ?? 'estandar'] + bidModifiers(state, ctx, opp.countryCode).technicalBonus;
   const p = b.projectId ? state.projects.find((x) => x.id === b.projectId) : undefined;
   if (p) {
     t += 25 * maturity(ctx, p);
@@ -138,10 +140,21 @@ export function technicalScore(state: GameState, ctx: SimContext, opp: Opportuni
   return Math.max(0, Math.min(100, t));
 }
 
-/** Experiencia y reputación (0–100): base 30 + 35 por MW de experiencia frente al tamaño pedido + 0,35 × reputación. */
-export function experienceScore(state: GameState, opp: Pick<Opportunity, 'mw'>): number {
+/**
+ * Experiencia y reputación (0–100): base 30 + 35 por MW de experiencia frente al tamaño pedido + 0,35 × reputación.
+ * Fase 6: la reputación es la de clientes, mezclada con la del gobierno del país (licitación pública: 60/40) o la de la
+ * comunidad (privada: 80/20); una invitación directa suma 8 puntos (relación previa con el cliente).
+ */
+export function experienceScore(state: GameState, opp: Pick<Opportunity, 'mw'> & Partial<Pick<Opportunity, 'countryCode' | 'kind' | 'invitedActorId'>>, ctx?: SimContext): number {
   const exp = experienceMw(state);
-  return 30 + 35 * Math.min(1, exp / Math.max(2 * opp.mw, 20)) + 0.35 * (state.business?.reputation ?? 0);
+  return 30 + 35 * Math.min(1, exp / Math.max(2 * opp.mw, 20)) + 0.35 * blendedReputation(state, opp, ctx) + (opp.invitedActorId && opp.invitedActorId === actorIdOf(state) ? 8 : 0);
+}
+
+/** Reputación que ve un cliente (Fase 6): clientes mezclada con gobierno (pública) o comunidad (privada) del país. */
+export function blendedReputation(state: GameState, opp: Partial<Pick<Opportunity, 'countryCode' | 'kind'>>, ctx?: SimContext): number {
+  const cl = state.business?.reputation ?? 0;
+  if (!ctx?.data.team || !opp.countryCode) return cl;
+  return opp.kind === 'solicitud_privada' ? 0.8 * cl + 0.2 * repOf(state, ctx, 'comunidad', opp.countryCode) : 0.6 * cl + 0.4 * repOf(state, ctx, 'gobierno', opp.countryCode);
 }
 
 /** Cotización: costo de equilibrio y precio sugerido (misma función para jugador e IA). No usa información oculta. */
@@ -153,7 +166,7 @@ export function quoteBid(state: GameState, ctx: SimContext, opp: Opportunity, o:
   const blank: BidQuote = {
     ok: false, unit, breakEvenPrice: 0, suggestedPrice: 0, marginPct: margin, capexUsd: 0, capexUsdKw: 0, fcP50: 0, energyMwhYear: 0, nameplateMw: 0, discountRate: 0,
     bidBondUsd: opp.bidBondUsd, performanceBondUsd: opp.performanceBondUsd, prepCostUsd: opp.prepCostUsd, prepCostReforzadaUsd: opp.prepCostUsd * EFFORT_COST_MULT.reforzada,
-    technicalScore: 0, experienceScore: experienceScore(state, opp), realisticDeliveryMonths: opp.codMonths,
+    technicalScore: 0, experienceScore: experienceScore(state, opp, ctx), realisticDeliveryMonths: opp.codMonths,
   };
   if (!tech) return { ...blank, error: 'Tecnología sin modelo todavía.' };
   if (!c) return { ...blank, error: 'País sin datos.' };
@@ -216,6 +229,7 @@ export function bidBlockers(state: GameState, ctx: SimContext, opp: Opportunity 
   const me = actorIdOf(state);
   if (opp.status !== 'abierta' || state.tick >= opp.deadlineTick) out.push('El plazo para ofertar ya cerró.');
   if (opp.bids.some((x) => x.actorId === me && x.status === 'presentada')) out.push('Ya presentaste una oferta.');
+  if (opp.invitedActorId && opp.invitedActorId !== me) out.push('Solicitud privada directa a otra empresa.');
   if (!contractUnlocked(state, ctx, opp.contractType)) out.push(`Requiere investigación: ${unlockingNode(ctx, 'contratos', opp.contractType)?.nombre ?? opp.contractType}.`);
   if (!countryUnlocked(state, ctx, opp.countryCode)) out.push(`Mercado cerrado: ${opp.countryCode}.`);
   else if (!hasPresence(state, opp.countryCode)) out.push(`Sin presencia en ${ctx.data.countries[opp.countryCode]?.nombre ?? opp.countryCode}: abre antes una sociedad local.`);
@@ -244,7 +258,7 @@ export function bidBlockers(state: GameState, ctx: SimContext, opp: Opportunity 
     }
   }
   for (const id of [b.equipmentId, b.epcId]) if (id && (!ctx.data.suppliers[id] || !ctx.data.suppliers[id].tecnologias.includes(b.techId))) out.push('Proveedor inválido para esa tecnología.');
-  const cost = opp.prepCostUsd * EFFORT_COST_MULT[b.effort ?? 'estandar'] + opp.bidBondUsd * (ctx.data.clients?.garantias.colateral_frac ?? 1);
+  const cost = opp.prepCostUsd * EFFORT_COST_MULT[b.effort ?? 'estandar'] * bidModifiers(state, ctx, opp.countryCode).prepCost + opp.bidBondUsd * (ctx.data.clients?.garantias.colateral_frac ?? 1);
   if (state.company.cashUsd < cost) out.push(`Caja insuficiente: preparar la oferta y su garantía cuesta ${fmt(cost)}.`);
   return out;
 }
@@ -268,7 +282,8 @@ export function applyBidCommand(state: GameState, ctx: SimContext | undefined, c
   if (blockers.length) return { ok: false, error: blockers.join(' ') };
   const o = opp!;
   const effort = cmd.effort ?? 'estandar';
-  const prep = o.prepCostUsd * EFFORT_COST_MULT[effort];
+  // Fase 6: el equipo comercial abarata la preparación.
+  const prep = o.prepCostUsd * EFFORT_COST_MULT[effort] * bidModifiers(state, ctx, o.countryCode).prepCost;
   postCash(state, 'licitaciones', -prep, `Oferta para ${o.clientName}`);
   postBond(state, ctx, o.bidBondUsd, `Garantía de seriedad (${o.clientName})`);
   const bid: Bid = {

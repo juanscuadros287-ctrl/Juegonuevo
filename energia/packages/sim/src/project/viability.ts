@@ -11,6 +11,7 @@ import type { PpaChannelDef } from '../data/types';
 import { projectEconomics } from './economics';
 import { geoWellCount, geoWellProbabilities, siteCapexFactor } from '../tech/models';
 import { drawWells } from './outcomes';
+import { buildModifiers, devCostMult, permitModifiers, ppaModifiers, studyModifiers, type PermitMod } from '../team/team';
 
 function siteFactorOf(ctx: SimContext, p: Project): { siteFactor?: number } {
   const f = siteCapexFactor(ctx.data.technologies[p.techId], p.site.extras, p.estimate.value);
@@ -96,6 +97,10 @@ function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng, channe
   let dev = 0;
   let capexFactor = p.capexFactor;
   const fail = (reason: string): RunOut => ({ ok: false, reason, days: 0, cost: dev, irr: null, npv: -dev });
+  // Fase 6: mismos modificadores del equipo, la reputación y la oficina que la simulación.
+  const sm = studyModifiers(state, ctx, p), bm = buildModifiers(state, ctx, p), ppm = ppaModifiers(state, ctx, p), dcm = devCostMult(state, ctx, p.countryCode);
+  const pmods = new Map<string, PermitMod>();
+  const pmod = (d: Parameters<typeof permitModifiers>[3] & { id: string }) => { let m = pmods.get(d.id); if (!m) { m = permitModifiers(state, ctx, p, d); pmods.set(d.id, m); } return m; };
 
   /** Mitiga un hallazgo (hasta 2 intentos). Devuelve días o null si fracasa. */
   const mitigate = (findingId: string): number | null => {
@@ -134,19 +139,19 @@ function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng, channe
     const s = running ? ctx.data.studies[running.studyId] : bankableStudy(ctx, p, g);
     let start = 0;
     if (!running) for (const req of s.requiere) start = Math.max(start, studyGroupFinish(req));
-    if (!running) dev += studyCostUsd(s, p.mw);
+    if (!running) dev += studyCostUsd(s, p.mw) * dcm;
     let end = running ? Math.max(0, running.endTick - t0) : start + drawDays(rng, s.duracion_dias);
     if (s.pozos_exploratorios && tech.geotermia) {
       // Misma regla que la simulación, con la estimación del jugador: todos los pozos secos ⇒ hallazgo.
       const pr = geoWellProbabilities(tech, p.estimate.value);
-      const w = drawWells(rng, s.pozos_exploratorios, pr.dry, pr.low);
+      const w = drawWells(rng, s.pozos_exploratorios, pr.dry * sm.dry, pr.low);
       if (w.productive + w.low === 0) {
         const m = mitigate(s.hallazgo_pozos_secos ?? 'reservorio_no_comercial');
         if (m === null) blocker = 'hallazgo';
         else end += m;
       }
     } else if (s.sigma_recurso === undefined) {
-      const d = drawStudyOutcome(rng, s, ctx.data.findings);
+      const d = drawStudyOutcome(rng, s, ctx.data.findings, sm);
       if (d.outcome === 'peor') capexFactor *= d.capexFactor ?? 1;
       if (d.outcome === 'bloqueo') {
         const m = mitigate(d.findingId!);
@@ -178,15 +183,15 @@ function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng, channe
     let tries = 0;
     let info = rec?.status === 'en_tramite' ? rec.infoRequests : 0;
     if (rec?.status === 'en_tramite') time = Math.max(time, rec.endTick - t0);
-    else { dev += permitCostUsd(d, p.mw); time += drawDays(rng, d.duracion_dias); }
+    else { dev += permitCostUsd(d, p.mw) * dcm; time += drawDays(rng, d.duracion_dias) * pmod(d).time; }
     for (;;) {
-      const dec = drawPermitDecision(rng, d, info);
+      const dec = drawPermitDecision(rng, d, info, pmod(d));
       if (dec === 'aprobado') break;
       if (dec === 'info_adicional') { info++; dev += d.info_adicional.costo_usd.base; time += drawDays(rng, d.info_adicional.retraso_dias); continue; }
       if (!d.reintentable || tries >= 1) { blocker = 'permiso'; break; }
       tries++; info = 0;
-      dev += permitCostUsd(d, p.mw);
-      time += drawDays(rng, d.duracion_dias);
+      dev += permitCostUsd(d, p.mw) * dcm;
+      time += drawDays(rng, d.duracion_dias) * pmod(d).time;
     }
     permitDone.set(g, time);
     return time;
@@ -207,7 +212,7 @@ function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng, channe
       let time = p.ppa?.status === 'en_proceso' ? Math.max(0, p.ppa.endTick - t0) : start + drawDays(rng, ch.duracion_dias);
       if (p.ppa?.status !== 'en_proceso') dev += ch.costo_usd.base;
       for (let k = 0; k < 2 && ppaPrice === undefined; k++) {
-        if (rng.chance(ch.prob_exito)) ppaPrice = drawDist(rng, ch.precio_usd_mwh);
+        if (rng.chance(Math.min(Math.max(ch.prob_exito, 0.95), ch.prob_exito * ppm.success))) ppaPrice = drawDist(rng, ch.precio_usd_mwh) * ppm.price;
         else if (k === 0) { dev += ch.costo_usd.base; time += drawDays(rng, ch.duracion_dias); }
       }
       ppaEnd = time;
@@ -246,7 +251,7 @@ function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng, channe
   const months = consDays / DAYS_PER_MONTH;
   const ro = tech.riesgo_obra;
   for (let m = 0; m < Math.ceil(months); m++) {
-    if (ro && rng.chance(ro.retraso_prob_mensual)) consDays += drawDays(rng, ro.retraso_dias);
+    if (ro && rng.chance(ro.retraso_prob_mensual * bm.stoppage)) consDays += drawDays(rng, ro.retraso_dias);
     if (rng.chance(c.construccion.huelga_prob_mensual)) consDays += drawDays(rng, c.construccion.huelga_duracion_dias);
     if (rng.chance(c.construccion.clima_extremo_prob_mensual * rainyFrac)) consDays += drawDays(rng, c.construccion.clima_extremo_dias);
   }
@@ -266,14 +271,15 @@ function runOnce(state: GameState, ctx: SimContext, p: Project, rng: Rng, channe
   for (const m of tech.hitos_construccion) {
     const done = k?.milestones.find((x) => x.id === m.id)?.done;
     if (done) continue;
-    if (rng.chance(Math.min(0.95, (epc?.prob_sobrecosto_hito ?? 0.15) * (ro?.sobrecosto_prob_factor ?? 1)))) overrun += rng.triangular(0.02, 0.06, 0.2) * (ro?.sobrecosto_magnitud_factor ?? 1) * m.fraccion * budget;
+    if (rng.chance(Math.min(0.95, (epc?.prob_sobrecosto_hito ?? 0.15) * (ro?.sobrecosto_prob_factor ?? 1) * bm.overrunProb))) overrun += rng.triangular(0.02, 0.06, 0.2) * (ro?.sobrecosto_magnitud_factor ?? 1) * bm.overrunSize * m.fraccion * budget;
   }
   // Geotermia: pozos de desarrollo secos o menos MW por pozo de lo estimado ⇒ pozos extra.
   if (tech.geotermia && !k?.wells?.drilled) {
     const g = tech.geotermia;
     const res = p.estimate.value * Math.max(0.3, 1 + p.estimate.sigma * rng.normal());
     const est = geoWellCount(g, p.mw, geoWellProbabilities(tech, p.estimate.value).mwPerWell);
-    const pr = geoWellProbabilities(tech, res, true);
+    const pr0 = geoWellProbabilities(tech, res, true);
+    const pr = { ...pr0, dry: pr0.dry * sm.dry };
     const need = Math.max(1, Math.ceil(p.mw / Math.max(0.5, pr.mwPerWell)));
     let prod = 0, drilled = 0;
     while (prod < need && drilled < need * 4) { drilled++; if (!rng.chance(pr.dry)) prod++; }

@@ -78,6 +78,8 @@ export interface ProjectSummary {
   /** Fase 4: tipo de modelo 3D (PlantKind de apps/game/src/models). */
   visualKind: string;
   countryCode: string;
+  /** Fase 6 (pedido de la UI): extremo del trazado de líneas e interconexiones. */
+  to?: { lat: number; lon: number; km: number; countryCode?: string };
 }
 
 function safeEconomics(state: GameState, ctx: SimContext, p: Project): Economics | null {
@@ -138,6 +140,7 @@ export function selectProjects(state: GameState, ctx: SimContext): ProjectSummar
       fcP50: eco?.fcP50 ?? 0, irrEquity: eco?.model.irrEquity ?? null, npvEquityUsd: eco?.npvEquityUsd ?? 0,
       warnings, active: !TERMINAL_STAGES.includes(p.stage),
       visualKind: visualKindOf(tech), countryCode: p.countryCode,
+      ...(p.site.extras?.to ? { to: { lat: p.site.extras.to.lat, lon: p.site.extras.to.lon, km: p.site.extras.to.km, countryCode: p.site.extras.to.countryCode } } : {}),
     };
   });
 }

@@ -18,6 +18,7 @@ import type { Project } from './types';
 import type { DispatchPolicy } from '../market/dispatch';
 import { insurancePremium, insuredValueUsd, worldLeadTimeFactor, worldPermitFactor, type InsuranceCoverage } from '../world/events';
 import { ppaTerminationPenalty } from './economics';
+import { devCostMult, financeModifiers, permitModifiers, repCause } from '../team/team';
 
 export type ProjectCommand =
   | {
@@ -78,7 +79,8 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         if (b.length) return fail(b.join(' '));
         if (!studyUnlocked(state, ctx, cmd.studyId)) return fail(`Requiere investigación: ${unlockingNode(ctx, 'estudios', cmd.studyId)?.nombre ?? 'I+D'}.`);
         const s = ctx.data.studies[cmd.studyId];
-        const cost = studyCostUsd(s, p.mw);
+        // Fase 6: sin oficina local los estudios cuestan más (consultores de afuera); con sede, menos.
+        const cost = studyCostUsd(s, p.mw) * devCostMult(state, ctx, p.countryCode);
         if (!canPay(state, cost)) return noCash(cost);
         payDev(state, p, cost, s.nombre);
         const days = drawDays(rng, s.duracion_dias);
@@ -91,10 +93,11 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         const b = permitBlockers(ctx, p, cmd.permitId);
         if (b.length) return fail(b.join(' '));
         const d = c.permisos.find((x) => x.id === cmd.permitId)!;
-        const cost = permitCostUsd(d, p.mw);
+        const cost = permitCostUsd(d, p.mw) * devCostMult(state, ctx, p.countryCode);
         if (!canPay(state, cost)) return noCash(cost);
         payDev(state, p, cost, d.nombre);
-        const days = Math.max(1, Math.round(drawDays(rng, d.duracion_dias) * researchEffects(state, ctx).permitTimeMult * worldPermitFactor(state, p.countryCode)));
+        // Fase 6: el abogado y el especialista social acortan el trámite (permitModifiers().time ≤ 1).
+        const days = Math.max(1, Math.round(drawDays(rng, d.duracion_dias) * researchEffects(state, ctx).permitTimeMult * worldPermitFactor(state, p.countryCode) * permitModifiers(state, ctx, p, d).time));
         const prev = p.permits[d.id];
         p.permits[d.id] = { permitId: d.id, status: 'en_tramite', startTick: state.tick, endTick: state.tick + days, costUsd: (prev?.costUsd ?? 0) + cost, infoRequests: 0, applications: (prev?.applications ?? 0) + 1 };
         events.push(note(state, p, 'permitRequested', `Solicitado: ${d.nombre} ante ${d.autoridad} (${fmtUsd(cost)}).`, 'info', { permitId: d.id }));
@@ -174,11 +177,14 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         if (l.requiere_ppa && p.ppa?.status !== 'firmado') return fail(`${l.nombre} exige un PPA firmado.`);
         if (p.estimate.sigma > l.sigma_recurso_max + 1e-9) return fail(`${l.nombre} exige una medición de recurso bancable (incertidumbre ≤ ${(l.sigma_recurso_max * 100).toFixed(1)} %; hoy ${(p.estimate.sigma * 100).toFixed(1)} %).`);
         if (budget * cmd.debtFraction < l.monto_min_usd) return fail(`${l.nombre} no presta menos de ${fmtUsd(l.monto_min_usd)}.`);
-        const cost = l.costo_asesores_usd.base;
+        // Fase 6: el financiero propio abarata asesores, acorta la due diligence y baja el spread; con bancos de desarrollo
+        // cuenta además la relación con el gobierno.
+        const fm = financeModifiers(state, ctx, p, l.tipo);
+        const cost = l.costo_asesores_usd.base * fm.fees;
         if (!canPay(state, cost)) return noCash(cost);
         payDev(state, p, cost, `Asesores de financiamiento (${l.nombre})`);
-        const days = drawDays(rng, l.diligencia_dias);
-        const rate = c.finanzas.tasa_libre_riesgo.base + drawDist(rng, l.spread);
+        const days = Math.max(1, Math.round(drawDays(rng, l.diligencia_dias) * fm.days));
+        const rate = c.finanzas.tasa_libre_riesgo.base + drawDist(rng, l.spread) * fm.spread;
         p.financing = {
           status: 'en_proceso', lenderId: l.id, startTick: state.tick, endTick: state.tick + days, requestedDebtFraction: cmd.debtFraction,
           partnerShare: cmd.partnerShare, rate, tenorYears: l.plazo_anos, dscrTarget: p.ppa?.status === 'firmado' ? l.dscr_ppa : l.dscr_merchant,
@@ -284,6 +290,8 @@ export function applyProjectCommand(state: GameState, ctx: SimContext | undefine
         const book = bookValue(p);
         accrue(state, 'castigos', -book);
         if (p.debt) p.debt.outstandingUsd = 0;
+        // Fase 6: abandonar cuesta reputación (más si ya había obra).
+        repCause(state, ctx, p.construction ? 'abandono_en_obra' : 'abandono', p.countryCode, `abandono de ${p.name}`, events, p.construction || Object.keys(p.permits).length ? 1 : 0.3);
         p.stage = 'abandonado';
         p.endTick = state.tick;
         events.push(note(state, p, 'projectAbandoned', `Proyecto abandonado. Se castigan ${fmtUsd(book)} invertidos.`, 'malo', { writeOffUsd: book }));

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import type { SimConfig, SimData, CountrySimDef, TechnologyDef, StudyDef, SupplierDef, FindingDef, SupplyDef, ResearchDef, ClientsDef, CompetitorsDef, MarketsDef, PowerDef, WorldDef } from '@voltaje/sim';
+import type { SimConfig, SimData, CountrySimDef, TechnologyDef, StudyDef, SupplierDef, FindingDef, SupplyDef, ResearchDef, ClientsDef, CompetitorsDef, MarketsDef, PowerDef, WorldDef, TeamDef } from '@voltaje/sim';
 import {
-  countrySchema, gameSchema, layerSchema, studiesFileSchema, suppliersFileSchema, technologySchema, researchFileSchema, clientsFileSchema, competitorsFileSchema, marketsFileSchema, powerFileSchema, eventsFileSchema,
+  countrySchema, gameSchema, layerSchema, studiesFileSchema, suppliersFileSchema, technologySchema, researchFileSchema, clientsFileSchema, competitorsFileSchema, marketsFileSchema, powerFileSchema, eventsFileSchema, teamFileSchema,
   type CountryDef, type GameYaml, type LayerDef,
 } from './schemas';
 
@@ -41,6 +41,8 @@ export interface RawGameData {
   /** Fase 5 */
   power?: unknown;
   events?: unknown;
+  /** Fase 6 */
+  team?: unknown;
 }
 
 function byId<T extends { id: string }>(items: T[], file: string): Record<string, T> {
@@ -95,6 +97,8 @@ export function buildGameData(raw: RawGameData): GameData {
   const power: PowerDef | undefined = raw.power !== undefined ? check(powerFileSchema, raw.power, 'power.yaml') as unknown as PowerDef : undefined;
   const world: WorldDef | undefined = raw.events !== undefined ? check(eventsFileSchema, raw.events, 'events.yaml') as unknown as WorldDef : undefined;
 
+  const team: TeamDef | undefined = raw.team !== undefined ? check(teamFileSchema, raw.team, 'team.yaml') as unknown as TeamDef : undefined;
+
   const simCountries: Record<string, CountrySimDef> = {};
   for (const c of Object.values(countries)) {
     // Inflación de los precios en USD: la local si la moneda está fija al USD; si no, la del USD (paridad de poder de compra).
@@ -102,7 +106,7 @@ export function buildGameData(raw: RawGameData): GameData {
     simCountries[c.iso3] = { ...c, inflacion_usd_anual: pegged ? c.inflacion_anual.base : markets?.inflacion_usd.base ?? 0.025 };
   }
 
-  const simData: SimData = { technologies, studies, findings, suppliers, countries: simCountries, supply, research, clients, competitors, markets, power, world };
+  const simData: SimData = { technologies, studies, findings, suppliers, countries: simCountries, supply, research, clients, competitors, markets, power, world, team };
   checkReferences(simData);
 
   return {
@@ -146,6 +150,32 @@ export function checkReferences(d: SimData) {
   checkPhase3References(d);
   checkPhase4References(d);
   checkPhase5References(d);
+  checkPhase6References(d);
+}
+
+/** Referencias de la Fase 6: roles de los equipos iniciales y objetivos, países del mercado laboral, idiomas con nombres, regiones. */
+export function checkPhase6References(d: SimData) {
+  const t = d.team;
+  if (!t) return;
+  const fail = (msg: string) => { throw new DataError(msg); };
+  const roles = new Set(t.roles.map((r) => r.id));
+  if (roles.size !== t.roles.length) fail('team.yaml: roles duplicados');
+  for (const r of t.roles) if (!Object.values(r.areas).some((w) => (w ?? 0) > 0)) fail(`team.yaml/roles.${r.id}: sin áreas`);
+  const seeds = [...t.equipo_inicial_jugador, ...Object.values(t.ia.equipo_inicial).flat()];
+  for (const s of seeds) if (!roles.has(s!.rol)) fail(`team.yaml: equipo inicial con rol inexistente "${s!.rol}"`);
+  for (const [k, o] of Object.entries(t.ia.objetivos)) for (const r of o!.roles) if (!roles.has(r)) fail(`team.yaml/ia.objetivos.${k}: rol inexistente "${r}"`);
+  for (const r of t.roles_locales) if (!roles.has(r)) fail(`team.yaml/roles_locales: rol inexistente "${r}"`);
+  for (const iso of Object.keys(d.countries)) if (!t.paises[iso]) fail(`team.yaml: falta el mercado laboral de ${iso}`);
+  for (const [iso, c] of Object.entries(t.paises)) {
+    if (!d.countries[iso] && Object.keys(d.countries).length > 1) fail(`team.yaml/paises: país inexistente "${iso}"`);
+    if (!t.nombres[c.idioma]) fail(`team.yaml/paises.${iso}: sin nombres para el idioma "${c.idioma}"`);
+  }
+  for (const [r, list] of Object.entries(t.oficinas.regiones)) for (const iso of list) if (!d.countries[iso] && Object.keys(d.countries).length > 1) fail(`team.yaml/regiones.${r}: país inexistente "${iso}"`);
+  const ids = t.oficinas.niveles.map((l) => l.id).join(',');
+  if (ids !== 'representante,oficina,sede') fail('team.yaml/oficinas.niveles: deben ser representante, oficina y sede en ese orden');
+  const ext = t.puntaje_externo.base;
+  if (!(ext >= 0 && ext < 100)) fail('team.yaml: puntaje_externo fuera de rango');
+  for (const [id, e] of Object.entries(t.efectos)) if (id !== 'ofertas_puntaje' && e.base > 1) fail(`team.yaml/efectos.${id}: debe ser ≤ 1 (fracción)`);
 }
 
 /** Tipos de modelo 3D (PlantKind de apps/game/src/models/types.ts). */

@@ -66,6 +66,12 @@ export interface TypicalEconomics {
   fuelCostUsdMwh: number;
   dispatch: number;
   priceUsdMwh: number;
+  /**
+   * Fase 6 (pedido de la UI): LCOE a factor de planta de referencia (despacho pleno sobre el FC de referencia del YAML),
+   * comparable con Lazard/IEA. `lcoeUsdMwh` es el del despacho previsto en el país (puede ser muy alto si casi no despacha).
+   */
+  lcoeRefUsdMwh: number;
+  fcRef: number;
 }
 
 /**
@@ -84,7 +90,12 @@ export function typicalEconomics(state: GameState, ctx: SimContext, techId: stri
   const capex = currentCapex(state, ctx, { techId, mw, countryCode: iso3, ...(sf !== 1 ? { siteFactor: sf } : {}) }).totalUsd;
   let eco: Economics;
   try { eco = projectEconomics(state, ctx, p, { capexUsd: capex, stage: 'operacion', staticMarket: true }); } catch { return null; }
+  let lcoeRef = eco.lcoeUsdMwh;
+  if (eco.dispatch < 0.999 && eco.mode === 'termica') {
+    try { lcoeRef = projectEconomics(state, ctx, p, { capexUsd: capex, stage: 'operacion', staticMarket: true, dispatchOverride: 1 }).lcoeUsdMwh; } catch { /* sin referencia */ }
+  }
   return {
+    lcoeRefUsdMwh: lcoeRef, fcRef: eco.mode === 'termica' ? capacityFactor(t, resource, 22, extras) : capacityFactor(t, resource, 22, extras) * eco.dispatch,
     countryCode: iso3, resource, fc: capacityFactor(t, resource, 22, extras), capexUsdKw: capex / (mw * 1000), lcoeUsdMwh: eco.lcoeUsdMwh, lcohUsdKg: eco.lcohUsdKg,
     irrEquity: eco.model.irrEquity, fuelCostUsdMwh: eco.fuelCostUsdMwh, dispatch: eco.dispatch, priceUsdMwh: eco.priceUsdMwh,
   };
@@ -162,6 +173,8 @@ export interface PermitGraphNode {
   costFixedUsd: number; costUsdMw: number;
   requiresStudies: string[]; requiresPermits: string[];
   retryable: boolean;
+  /** Fase 6 (pedido de la UI): tecnologías excluidas del permiso. */
+  excludes: string[];
 }
 
 export interface PermitGraph {
@@ -177,7 +190,7 @@ export function permitGraph(c: CountrySimDef, filter?: { techId: string; mw: num
     techs: d.aplica.tecnologias ?? null, mwMin: d.aplica.mw_min, mwMax: d.aplica.mw_max,
     durationDays: rng3(d.duracion_dias), probs: { aprobado: d.prob.aprobado, rechazado: d.prob.rechazado, info_adicional: d.prob.info_adicional },
     approvalProbability: permitApprovalProbability(d), costFixedUsd: d.costo_fijo_usd.base, costUsdMw: d.costo_usd_mw.base,
-    requiresStudies: d.requiere.estudios, requiresPermits: d.requiere.permisos, retryable: d.reintentable,
+    requiresStudies: d.requiere.estudios, requiresPermits: d.requiere.permisos, retryable: d.reintentable, excludes: d.aplica.excluye ?? [],
   }));
   const edges: { from: string; to: string }[] = [];
   for (const n of nodes) for (const g of n.requiresPermits) for (const m of nodes) if (m.grupo === g) edges.push({ from: m.id, to: n.id });
@@ -188,7 +201,7 @@ export function permitGraph(c: CountrySimDef, filter?: { techId: string; mw: num
  * Ruta crítica esperada de los permisos de un proyecto (días, con los pedidos de información esperados) y probabilidad
  * de aprobar todos al primer intento. Supone los estudios ya hechos.
  */
-export function expectedPermitPath(c: CountrySimDef, techId: string, mw: number): { days: number; approvalAll: number; permits: number; costUsd: number } {
+export function expectedPermitPath(c: CountrySimDef, techId: string, mw: number): { days: number; approvalAll: number; permits: number; costUsd: number; criticalPath: string[] } {
   const ps = c.permisos.filter((d) => applies(d.aplica, techId, mw));
   const memo = new Map<string, number>();
   const groupEnd = (g: string, depth = 0): number => {
@@ -204,9 +217,17 @@ export function expectedPermitPath(c: CountrySimDef, techId: string, mw: number)
     memo.set(g, end);
     return end;
   };
-  let days = 0, prob = 1, cost = 0;
-  for (const d of ps) { days = Math.max(days, groupEnd(d.grupo)); prob *= permitApprovalProbability(d); cost += permitCostUsd(d, mw); }
-  return { days, approvalAll: prob, permits: ps.length, costUsd: cost };
+  let days = 0, prob = 1, cost = 0, last: string | undefined;
+  for (const d of ps) { const e = groupEnd(d.grupo); if (e > days) { days = e; last = d.grupo; } prob *= permitApprovalProbability(d); cost += permitCostUsd(d, mw); }
+  // Fase 6 (pedido de la UI): ruta crítica como lista de ids (del primero al último), siguiendo el requisito más tardío.
+  const criticalPath: string[] = [];
+  for (let g = last, guard = 0; g && guard < 30; guard++) {
+    const d = ps.find((x) => x.grupo === g);
+    if (!d) break;
+    criticalPath.unshift(d.id);
+    g = d.requiere.permisos.filter((r) => ps.some((x) => x.grupo === r)).sort((a, b) => groupEnd(b) - groupEnd(a))[0];
+  }
+  return { days, approvalAll: prob, permits: ps.length, costUsd: cost, criticalPath };
 }
 
 // ───────────────────────── Ficha de país ─────────────────────────
@@ -232,7 +253,7 @@ export interface CountrySheet {
   ppaChannels: { id: string; nombre: string; descripcion: string; priceUsdMwh: number; years: number; probability: number; currency: 'USD' | 'local'; techs: string[] | null }[];
   permits: PermitGraph;
   /** Ruta crítica esperada de permisos por tecnología (tamaño típico). */
-  permitPaths: { techId: string; days: number; approvalAll: number; permits: number; costUsd: number }[];
+  permitPaths: { techId: string; days: number; approvalAll: number; permits: number; costUsd: number; criticalPath: string[] }[];
 }
 
 export function selectCountrySheet(state: GameState, ctx: SimContext, iso3: string): CountrySheet | null {

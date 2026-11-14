@@ -8,7 +8,7 @@ import type { SimContext } from './core/context';
 import { fromEpochDay, type GameDate } from './core/calendar';
 import { balanceSheet } from './finance/company';
 import { isTerminal } from './project/helpers';
-import { STAGE_LABELS } from './selectors';
+import { STAGE_LABELS, visualKindOf } from './selectors';
 import { actorView, experienceMw } from './business/actor';
 import { bidBlockers, nameplateMw, PRICE_UNITS, quoteBid, type BidQuote } from './business/bids';
 import { publicOpportunity } from './business/opportunities';
@@ -260,7 +260,7 @@ export interface CompetitorView {
   experienceMw: number;
   operatingMw: number;
   /** Proyectos visibles (desde permisos en trámite: registros públicos) con ubicación. */
-  visibleProjects: { id: string; name: string; techId: string; mw: number; stage: string; stageId: ProjectStage; lat: number; lon: number; buildProgress: number }[];
+  visibleProjects: { id: string; name: string; techId: string; mw: number; stage: string; stageId: ProjectStage; lat: number; lon: number; buildProgress: number; /** Fase 6 (pedido de la UI): modelo 3D y país. */ visualKind: string; countryCode: string }[];
   bidsWon: number;
   bidsLost: number;
   /** Cuota del mercado (MW renovables en operación de las empresas del juego en el país de origen). */
@@ -291,6 +291,7 @@ export function selectCompetitors(state: GameState, ctx: SimContext): Competitor
         reputation: c.business.reputation, experienceMw: experienceMw(v), operatingMw: mw,
         visibleProjects: c.projects.filter((p) => visibleStages.has(p.stage)).map((p) => ({
           id: p.id, name: p.name, techId: p.techId, mw: p.mw, stage: STAGE_LABELS[p.stage], stageId: p.stage, lat: p.site.lat, lon: p.site.lon, buildProgress: p.operation ? 1 : p.construction?.progress ?? 0,
+          visualKind: visualKindOf(ctx.data.technologies[p.techId]), countryCode: p.countryCode,
         })),
         bidsWon: c.business.bidsWon, bidsLost: c.business.bidsLost, marketShare: total > 0 ? mw / total : 0,
       };

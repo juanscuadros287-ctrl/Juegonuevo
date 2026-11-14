@@ -95,6 +95,24 @@ export type BusinessEvent =
   // Fase 5
   | B<'climateOutlook', { enso: 'nino' | 'nina' | 'neutral' }>
   | B<'worldEvent', { eventId: string; uid: number; countryCode?: string }>
-  | B<'worldEventEnded', { eventId: string; uid: number; countryCode?: string }>;
+  | B<'worldEventEnded', { eventId: string; uid: number; countryCode?: string }>
+  // Fase 6
+  | B<'employeeHired', { employeeId: string; countryCode: string }>
+  | B<'hireRejected', { candidateId: string }>
+  | B<'employeeFired', { employeeId: string; severanceUsd: number }>
+  | B<'employeeQuit', { employeeId: string; reason: 'moral' | 'oferta' }>
+  | B<'employeePoached', { employeeId: string; fromActorId: string; toActorId: string }>
+  | B<'poachRejected', { employeeId: string }>
+  | B<'employeeAssigned', { employeeId: string }>
+  | B<'salaryChanged', { employeeId: string; salaryUsdMonth: number }>
+  | B<'trainingStarted', { employeeId: string }>
+  | B<'trainingCompleted', { employeeId: string; skill: number }>
+  | B<'officeUpgradeStarted', { countryCode: string; level: string }>
+  | B<'officeChanged', { countryCode: string; level: string }>
+  | B<'reputationChanged', { axis: 'gobierno' | 'comunidad' | 'clientes'; countryCode?: string; delta: number; cause: string }>
+  | B<'communityInvestment', { countryCode: string; amountUsd: number; points: number }>
+  | B<'directInvitation', { opportunityId: string; countryCode: string }>
+  | P<'communityConflict', { days: number; costUsd: number }>
+  | P<'constructionAccident', { days: number; costUsd: number }>;
 
 export type ProjectEvent = Extract<SimEvent, { projectId: string }>;

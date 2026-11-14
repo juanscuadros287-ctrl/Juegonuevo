@@ -107,7 +107,9 @@ export function saleValuation(state: GameState, ctx: SimContext, p: Project): { 
   let age = 0;
   if (p.operation) age = Math.floor((state.tick - p.operation.codTick) / 365);
   const opsFlows = [0, ...eco.model.projectFlows.slice(1 + age, 1 + life)];
-  const rate = eco.wacc + (merchant ? buyer!.prima_merchant : 0);
+  // Fase 6 (balance): el comprador exige además una prima por el riesgo de obra si el proyecto no opera todavía.
+  const stagePremium = p.operation ? 0 : p.construction ? buyer?.prima_construccion ?? 0 : buyer?.prima_desarrollo ?? 0;
+  const rate = eco.wacc + (merchant ? buyer!.prima_merchant : 0) + stagePremium;
   const pvOps = npv(rate, opsFlows);
   const remainingCapex = p.operation ? 0 : p.construction ? Math.max(0, p.construction.budgetUsd + p.construction.overrunUsd - p.construction.spentUsd) : eco.investmentUsd;
   const remainingDev = remainingDevCostUsd(ctx, p).totalUsd;

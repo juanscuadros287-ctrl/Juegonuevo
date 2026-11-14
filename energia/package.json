@@ -11,6 +11,7 @@
     "build": "npm run build -w @voltaje/game",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json",
+    "balance": "BALANCE_REPORT=1 vitest run packages/sim/test/balance-report.test.ts --silent=false",
     "resources": "tsx tools/build-resources.ts",
     "screens": "node tools/screenshots.mjs",
     "mac": "npm run tauri -w @voltaje/game -- build --target aarch64-apple-darwin --bundles dmg"

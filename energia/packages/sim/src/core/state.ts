@@ -10,9 +10,10 @@ import { newBusinessState, newMarketState, type BusinessState, type CompetitorSt
  * v3 (Fase 3): licitaciones, contratos, I+D, cadena de suministro y competidores IA.
  * v4 (Fase 4): presencia por país, tipos de cambio, combustibles y datos extra de sitio.
  * v5 (Fase 5): mercado eléctrico (clima, precios horarios), eventos del mundo, despacho, seguros y modalidades de PPA.
+ * v6 (Fase 6): equipo, mercado laboral, reputación por eje (gobierno y comunidad por país), oficinas e invitaciones directas.
  * Las partidas anteriores se migran (ver save.ts).
  */
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 /** Movimiento contable de caja de la empresa. */
 export interface LedgerEntry { day: number; concept: string; amountUsd: number }
@@ -80,10 +81,12 @@ export interface GameState {
    * Nunca se guarda: en la partida es siempre `undefined` (= jugador).
    */
   actorId?: string;
+  /** Solo en vistas de actor (Fase 6): la partida completa (para ofertas a personal de otros actores). Nunca se guarda. */
+  root?: GameState;
 }
 
 /** `supply`, `tenders` y `business` se agregaron en la Fase 3 (la migración 2→3 los siembra). */
-export const RNG_STREAMS = ['world', 'market', 'projects', 'events', 'ai', 'supply', 'tenders', 'business', 'fx', 'fuels'] as const;
+export const RNG_STREAMS = ['world', 'market', 'projects', 'events', 'ai', 'supply', 'tenders', 'business', 'fx', 'fuels', 'labor', 'team'] as const;
 
 export function newFinanceState(): FinanceState {
   return { month: {}, statements: [], taxLossCarryforwardUsd: 0, taxCreditUsd: 0, emergencyDebtUsd: 0, negativeCashMonths: 0, bankrupt: false };

@@ -1,0 +1,212 @@
+# Fase 6: equipo, reputación y oficinas (ver docs/MOTOR_FASE6.md).
+#
+# EFECTO DEL EQUIPO. Para cada área (permisos, social, recurso, obra, finanzas, ofertas, mercado, operación) el motor calcula
+# un puntaje 0–100 por proyecto con las personas que lo atienden y su carga. Sin personal propio el puntaje es el de los
+# consultores externos (`puntaje_externo`), que ya están pagados dentro del costo de estudios, permisos y asesores: con ese
+# puntaje TODOS los efectos valen 1 (los datos de los países y tecnologías son los de un desarrollador típico con asesores
+# externos). Un equipo propio mejora desde ahí; ganancia g = (puntaje − externo)/(100 − externo) ∈ [0, 1] y cada efecto es
+# 1 ± k·g con k acotado (abajo). Un equipo sobrecargado se diluye hacia el externo; nunca empeora por debajo de él.
+puntaje_externo: { base: 35, supuesto: "Consultores externos contratados por proyecto (calidad media-baja, sin memoria institucional)" }
+# Puntaje combinado de un área: la mejor persona pesa 1, la segunda 0,35 y la tercera 0,15 (sobre el externo).
+pesos_equipo: [1, 0.35, 0.15]
+# Experiencia: habilidad efectiva = habilidad × (0,85 + 0,15 × mín(1, años/15)).
+experiencia_anos_plena: 15
+
+roles:
+  - { id: ing_electrico, nombre: "Ingeniero eléctrico", areas: { operacion: 1, obra: 0.3 }, capacidad: 4, factor_salario: 1.0, supuesto: "Protecciones, subestaciones y O&M; atiende varias plantas en operación" }
+  - { id: ing_civil, nombre: "Ingeniero civil", areas: { obra: 1 }, capacidad: 2, factor_salario: 0.95, supuesto: "Supervisión de obra civil (fundaciones, caminos, presas)" }
+  - { id: ing_recurso, nombre: "Ingeniero de recurso", areas: { recurso: 1 }, capacidad: 4, factor_salario: 1.05, supuesto: "Evaluación de recurso solar/eólico/hídrico, P50/P90" }
+  - { id: geologo, nombre: "Geólogo / geofísico", areas: { recurso: 0.9, obra: 0.2 }, capacidad: 3, factor_salario: 1.05, supuesto: "Geotecnia, geotermia (MT, pozos), hidrogeología" }
+  - { id: abogado, nombre: "Abogado ambiental y regulatorio", areas: { permisos: 1, social: 0.3 }, capacidad: 4, factor_salario: 1.15, supuesto: "Expedientes ambientales, concesiones, contratos" }
+  - { id: social, nombre: "Especialista social y comunitario", areas: { social: 1, permisos: 0.3 }, capacidad: 3, factor_salario: 0.8, supuesto: "Relacionamiento, consulta previa, planes de reasentamiento" }
+  - { id: financiero, nombre: "Financiero / estructurador", areas: { finanzas: 1 }, capacidad: 5, factor_salario: 1.25, supuesto: "Project finance, modelos, negociación con bancos" }
+  - { id: gerente_proyecto, nombre: "Gerente de proyecto", areas: { obra: 1, permisos: 0.2 }, capacidad: 2, factor_salario: 1.2, supuesto: "Dirección de obra, cronograma, contratistas EPC" }
+  - { id: comercial, nombre: "Comercial / ofertas", areas: { ofertas: 1, mercado: 0.3 }, capacidad: 6, factor_salario: 1.0, supuesto: "Licitaciones, PPA corporativos, relación con clientes" }
+  - { id: analista, nombre: "Analista de mercado", areas: { mercado: 1, ofertas: 0.3 }, capacidad: 6, factor_salario: 0.9, supuesto: "Precios spot, curvas de largo plazo, regulación de mercados" }
+
+# k de cada efecto (multiplicador = 1 ± k·g). Rangos de mejora documentados en la industria (ver MOTOR_FASE6.md).
+efectos:
+  permisos_aprobacion: { base: 0.15, supuesto: "Un buen expediente sube la probabilidad de aprobación hasta +15 % (relativo); IFC 2012 Performance Standards, experiencia de desarrolladores" }
+  permisos_rechazo: { base: 0.4, supuesto: "Rechazos −40 % con expedientes completos" }
+  permisos_info: { base: 0.35, supuesto: "Pedidos de información −35 %" }
+  permisos_tiempo: { base: 0.2, supuesto: "Plazos −20 % con seguimiento propio" }
+  social_aprobacion: { base: 0.25, supuesto: "Consulta previa y licencia social: relacionamiento temprano sube la aprobación hasta +25 % (relativo)" }
+  social_conflicto: { base: 0.6, supuesto: "Conflictos en obra −60 % con equipo social (Franks et al. 2014, costo de conflictos)" }
+  recurso_bloqueo: { base: 0.3, supuesto: "Hallazgos bloqueantes −30 % con mejor selección de sitio" }
+  recurso_peor: { base: 0.25, supuesto: "Sorpresas de CAPEX −25 %" }
+  recurso_sigma: { base: 0.2, supuesto: "Incertidumbre de la medición −20 % con análisis propio (MCP, correcciones)" }
+  recurso_pozo_seco: { base: 0.25, supuesto: "Tasa de pozos secos −25 % relativo (IFC 2013: el éxito sube de ~50 % a ~70–80 % con experiencia)" }
+  obra_sobrecosto_prob: { base: 0.35, supuesto: "Hitos con sobrecosto −35 % con gerencia propia (Flyvbjerg 2014: buena gobernanza reduce desvíos)" }
+  obra_sobrecosto_magnitud: { base: 0.25, supuesto: "Magnitud de sobrecostos −25 %" }
+  obra_paros: { base: 0.3, supuesto: "Paros técnicos y climáticos −30 % (planificación)" }
+  obra_accidentes: { base: 0.5, supuesto: "Accidentes graves −50 % con supervisión HSE" }
+  finanzas_spread: { base: 0.15, supuesto: "Spread −15 % con estructuración propia (orden de 30–60 pb sobre ~300 pb)" }
+  finanzas_costos: { base: 0.3, supuesto: "Asesores externos −30 %" }
+  finanzas_plazo: { base: 0.25, supuesto: "Due diligence −25 % de tiempo" }
+  ofertas_puntaje: { base: 10, supuesto: "Hasta +10 puntos técnicos (propuesta mejor armada)" }
+  ofertas_preparacion: { base: 0.25, supuesto: "Costo de preparación −25 % (plantillas, experiencia)" }
+  mercado_ppa_exito: { base: 0.2, supuesto: "Probabilidad de cerrar un PPA +20 % (relativo, tope 95 %)" }
+  mercado_ppa_precio: { base: 0.04, supuesto: "Precio del PPA hasta +4 % con buena lectura del mercado" }
+  operacion_fallas: { base: 0.3, supuesto: "Fallas −30 % con ingeniería propia (mantenimiento basado en condición)" }
+  operacion_reparacion: { base: 0.2, supuesto: "Costo de reparación −20 %" }
+
+# Grupos de permisos «sociales» (consulta, tierras comunitarias, participación): usan el área social y la reputación comunitaria.
+permisos_sociales: [consulta_indigena, consulta_previa, tierras, evaluacion_social, participacion_ciudadana]
+
+# Fuera de su país: los roles con conocimiento local (abogado, social) rinden menos; sin el idioma, todos rinden menos.
+factor_fuera_pais: { base: 0.6, supuesto: "Derecho administrativo y relaciones locales no se trasladan" }
+factor_fuera_pais_region: { base: 0.8, supuesto: "Con sede regional en la región del proyecto" }
+roles_locales: [abogado, social]
+factor_sin_idioma: { base: 0.75, supuesto: "Trabajo con autoridades, contratistas y comunidades en otro idioma" }
+factor_sin_idioma_local: { base: 0.5, supuesto: "Abogado o especialista social sin el idioma del país" }
+
+# Salarios: salario bruto mensual (USD) de un profesional de nivel medio (habilidad 50, 8 años) por país; cargas sociales del
+# empleador sobre el bruto; indemnización por despido sin causa (meses de salario por año trabajado, mínimo y tope).
+mercado_laboral:
+  candidatos_por_pais: { base: 7, supuesto: "Profesionales del sector disponibles al mes en una búsqueda activa" }
+  vigencia_dias: { min: 45, base: 75, max: 120, supuesto: "Tiempo que un candidato espera antes de aceptar otra oferta" }
+  habilidad: { min: 20, base: 50, max: 92, supuesto: "Distribución triangular de habilidad" }
+  experiencia_anos: { min: 1, base: 8, max: 28, supuesto: "Años de experiencia (correlacionados con la habilidad)" }
+  reclutamiento_frac_anual: { base: 0.2, supuesto: "Honorario de reclutamiento ≈ 20 % del salario anual (headhunters 15–25 %)" }
+  oferta_minima_frac: { base: 0.9, supuesto: "Nadie acepta menos del 90 % de lo que pide" }
+  rotacion_base_mensual: { base: 0.006, supuesto: "≈ 7 % anual de rotación voluntaria con moral normal (sector energía, LinkedIn 2023 ≈ 8–10 %)" }
+  rotacion_moral_baja: { base: 0.08, supuesto: "Hasta +8 %/mes con moral 0 (renuncia casi segura en un año)" }
+  moral_inercia: { base: 0.3, supuesto: "La moral recorre el 30 % de la distancia a su objetivo cada mes" }
+  moral_salario: { base: 120, supuesto: "Puntos de moral por cada 100 % de diferencia con el salario de mercado" }
+  moral_sobrecarga: { base: 25, supuesto: "Puntos de moral perdidos por cada 100 % de sobrecarga" }
+  capacitacion_costo_usd: { min: 3000, base: 8000, max: 15000, supuesto: "Curso técnico o certificación (PMP, CFA, NABCEP, GWO)" }
+  capacitacion_dias: { min: 15, base: 30, max: 60, supuesto: "Días fuera del trabajo" }
+  capacitacion_ganancia: { base: 10, supuesto: "+10 × (1 − habilidad/100) puntos de habilidad" }
+  aumento_anual_experiencia: { base: 1, supuesto: "Un año de experiencia por año trabajado" }
+
+paises:
+  PAN: { salario_usd: 3500, cargas: 0.25, indemnizacion_meses_ano: 0.8, indemnizacion_min_meses: 1, indemnizacion_max_meses: 12, idioma: es, ingles: 0.4, oficina_indice: 1.0, supuesto: "Código de Trabajo de Panamá art. 225 (3,4 semanas/año), CSS 12,25 % + décimo tercer mes; salarios de ingenieros ≈ 2.500–4.500 USD" }
+  CRI: { salario_usd: 3200, cargas: 0.27, indemnizacion_meses_ano: 0.7, indemnizacion_min_meses: 1, indemnizacion_max_meses: 8, idioma: es, ingles: 0.45, oficina_indice: 0.95, supuesto: "Código de Trabajo CR (cesantía con tope de 8 años), CCSS 26,7 %" }
+  COL: { salario_usd: 2200, cargas: 0.52, indemnizacion_meses_ano: 0.7, indemnizacion_min_meses: 1, indemnizacion_max_meses: 12, idioma: es, ingles: 0.3, oficina_indice: 0.75, supuesto: "CST art. 64 (30 días el primer año + 20 por año), prestaciones y parafiscales ≈ 52 %" }
+  DOM: { salario_usd: 2000, cargas: 0.22, indemnizacion_meses_ano: 0.75, indemnizacion_min_meses: 1, indemnizacion_max_meses: 12, idioma: es, ingles: 0.3, oficina_indice: 0.8, supuesto: "Código de Trabajo RD (auxilio de cesantía 21–23 días/año), TSS ≈ 16 % + regalía" }
+  CHL: { salario_usd: 3300, cargas: 0.1, indemnizacion_meses_ano: 1.0, indemnizacion_min_meses: 1, indemnizacion_max_meses: 11, idioma: es, ingles: 0.4, oficina_indice: 1.0, supuesto: "Código del Trabajo art. 163 (30 días por año, tope 11), cotizaciones mayormente del trabajador" }
+  MEX: { salario_usd: 2500, cargas: 0.35, indemnizacion_meses_ano: 0.67, indemnizacion_min_meses: 3, indemnizacion_max_meses: 20, idioma: es, ingles: 0.3, oficina_indice: 0.85, supuesto: "LFT art. 50 (3 meses + 20 días por año), IMSS/INFONAVIT/SAR ≈ 30–35 %" }
+  BRA: { salario_usd: 2600, cargas: 0.7, indemnizacion_meses_ano: 0.45, indemnizacion_min_meses: 1, indemnizacion_max_meses: 12, idioma: pt, ingles: 0.3, oficina_indice: 0.9, supuesto: "CLT: multa de 40 % del FGTS + aviso previo; encargos ≈ 70 % (INSS, FGTS, 13.º, férias)" }
+  KEN: { salario_usd: 1500, cargas: 0.12, indemnizacion_meses_ano: 0.5, indemnizacion_min_meses: 1, indemnizacion_max_meses: 12, idioma: en, ingles: 1.0, oficina_indice: 0.7, supuesto: "Employment Act 2007 (15 días por año de servicio), NSSF + vivienda" }
+  ISL: { salario_usd: 7500, cargas: 0.2, indemnizacion_meses_ano: 0.0, indemnizacion_min_meses: 3, indemnizacion_max_meses: 3, idioma: is, ingles: 0.95, oficina_indice: 1.6, supuesto: "Sin indemnización legal: preaviso de 3 meses; cargas ≈ 20 % (pensión + tryggingagjald)" }
+  ESP: { salario_usd: 4200, cargas: 0.31, indemnizacion_meses_ano: 1.1, indemnizacion_min_meses: 1, indemnizacion_max_meses: 24, idioma: es, ingles: 0.5, oficina_indice: 1.3, supuesto: "ET art. 56 (33 días por año, tope 24 mensualidades), Seguridad Social ≈ 31 %" }
+  IDN: { salario_usd: 1400, cargas: 0.12, indemnizacion_meses_ano: 1.2, indemnizacion_min_meses: 2, indemnizacion_max_meses: 19, idioma: id, ingles: 0.4, oficina_indice: 0.7, supuesto: "PP 35/2021 (pesangon + penghargaan masa kerja), BPJS ≈ 12 %" }
+  PHL: { salario_usd: 1300, cargas: 0.12, indemnizacion_meses_ano: 0.5, indemnizacion_min_meses: 1, indemnizacion_max_meses: 12, idioma: en, ingles: 1.0, oficina_indice: 0.7, supuesto: "Labor Code art. 298 (medio mes por año), SSS/PhilHealth/Pag-IBIG ≈ 12 %" }
+  USA: { salario_usd: 9500, cargas: 0.25, indemnizacion_meses_ano: 0.25, indemnizacion_min_meses: 0.5, indemnizacion_max_meses: 6, idioma: en, ingles: 1.0, oficina_indice: 1.8, supuesto: "Empleo a voluntad (sin indemnización legal; práctica ≈ 1–2 semanas por año); beneficios ≈ 25 %. Houston/Austin" }
+
+# Segunda lengua común por país (además del inglés): probabilidad de que un candidato la hable.
+otras_lenguas:
+  USA: { es: 0.2 }
+  BRA: { es: 0.3 }
+  ESP: { pt: 0.05 }
+
+nombres:
+  es: { nombres: [Ana, Carlos, María, José, Lucía, Andrés, Valentina, Diego, Camila, Javier, Sofía, Miguel, Daniela, Luis, Paula, Ricardo, Isabel, Fernando, Gabriela, Alejandro, Natalia, Raúl, Mariana, Tomás], apellidos: [González, Rodríguez, Pérez, Martínez, Gómez, Herrera, Castillo, Vargas, Morales, Ríos, Mendoza, Rojas, Navarro, Ortega, Delgado, Cruz, Arias, Méndez, Solís, Quintero, Barrios, Salazar] }
+  pt: { nombres: [João, Ana, Pedro, Mariana, Lucas, Beatriz, Rafael, Camila, Gustavo, Larissa, Thiago, Fernanda, Bruno, Juliana], apellidos: [Silva, Santos, Oliveira, Souza, Lima, Pereira, Costa, Ferreira, Almeida, Carvalho, Ribeiro, Barbosa] }
+  en: { nombres: [James, Mary, John, Grace, Michael, Faith, David, Joy, Daniel, Mercy, Paul, Sarah, Kevin, Emily, Mark, Ruth], apellidos: [Smith, Johnson, Brown, Otieno, Kamau, Wanjiru, Reyes, Santos, Garcia, Walker, Mwangi, Bautista, Miller, Davis, Ochieng, Mendoza] }
+  is: { nombres: [Jón, Guðrún, Sigurður, Anna, Gunnar, Kristín, Ólafur, Helga, Einar, Sigríður], apellidos: [Jónsson, Sigurðardóttir, Guðmundsson, Jónsdóttir, Einarsson, Ólafsdóttir, Magnússon, Stefánsdóttir] }
+  id: { nombres: [Budi, Siti, Agus, Dewi, Rizky, Putri, Hendra, Ayu, Andi, Rina], apellidos: [Santoso, Wijaya, Saputra, Hidayat, Kusuma, Pratama, Nugroho, Lestari] }
+
+# Oficinas por país. Nivel 0 = presencia de la Fase 4 (representante legal). El país de origen arranca con oficina local
+# (su costo ya está en los gastos fijos de la empresa).
+oficinas:
+  niveles:
+    - id: representante
+      nombre: "Representante legal"
+      capacidad_personal: 2
+      costo_inicial_usd: 0
+      costo_mensual_usd: 0
+      dias: 0
+      costo_desarrollo_frac: 0
+      reputacion_gobierno_mes: 0
+      invitaciones_privadas: false
+      supuesto: "Sociedad y representante de la Fase 4 (sus costos están en countries/*.yaml → expansion)"
+    - id: oficina
+      nombre: "Oficina local"
+      capacidad_personal: 15
+      costo_inicial_usd: 60000
+      costo_mensual_usd: 9000
+      dias: 60
+      costo_desarrollo_frac: -0.05
+      reputacion_gobierno_mes: 0.1
+      invitaciones_privadas: true
+      supuesto: "Arriendo 150–250 m², recepción, contador y TI (× índice del país); estudios y permisos −5 % por proveedores locales"
+    - id: sede
+      nombre: "Sede regional"
+      capacidad_personal: 45
+      costo_inicial_usd: 250000
+      costo_mensual_usd: 32000
+      dias: 120
+      costo_desarrollo_frac: -0.08
+      reputacion_gobierno_mes: 0.2
+      invitaciones_privadas: true
+      costo_desarrollo_vecinos_frac: -0.03
+      supuesto: "Oficina de 600–1.000 m² con dirección regional, legal, finanzas y compras compartidas; −3 % en los países vecinos de la región"
+  requisitos_sede: { personal_min: 4, supuesto: "Sin masa crítica de personal no hay sede regional" }
+  regiones:
+    centroamerica_caribe: [PAN, CRI, DOM, MEX]
+    sudamerica: [COL, CHL, BRA]
+    norteamerica: [USA, MEX]
+    europa: [ESP, ISL]
+    africa_oriental: [KEN]
+    sudeste_asiatico: [IDN, PHL]
+
+reputacion:
+  inicial_pais_nuevo: { base: 30, supuesto: "Empresa desconocida en un país nuevo" }
+  reversion_mensual: { base: 0.01, supuesto: "La reputación vuelve 1 %/mes hacia el valor neutro (memoria institucional limitada)" }
+  neutro: { base: 40, supuesto: "Valor al que tiende sin noticias" }
+  # Cambios por causa (puntos sobre 100).
+  causas:
+    obra_a_tiempo: { gobierno: 2, comunidad: 1, clientes: 1 }
+    obra_atrasada: { gobierno: -1, clientes: -1 }
+    permiso_aprobado: { gobierno: 0.3 }
+    permiso_rechazado: { gobierno: -1 }
+    abandono: { gobierno: -2, comunidad: -2 }
+    abandono_en_obra: { gobierno: -5, comunidad: -4, clientes: -3 }
+    conflicto: { comunidad: -6, gobierno: -1 }
+    accidente: { gobierno: -3, comunidad: -3 }
+    multa: { clientes: -1 }
+    inversion_social: { comunidad: 1 }
+    planta_operando_anual: { comunidad: 0.5, gobierno: 0.3 }
+    despido_masivo: { gobierno: -1 }
+  supuesto: "Magnitudes relativas de juego; dirección según la literatura de licencia social (Prno & Slocombe 2012)"
+  # Efectos (multiplicador = 1 + k·(reputación − 50)/50, acotado):
+  efectos:
+    social_aprobacion: { base: 0.15, supuesto: "Consulta y licencia social ±15 %" }
+    conflicto: { base: 0.5, supuesto: "Probabilidad de conflicto ∓50 %" }
+    banca_desarrollo_spread: { base: 0.2, supuesto: "Bancos de desarrollo: spread ∓20 % según la relación con el gobierno" }
+    invitacion_prob_mes: { base: 0.04, supuesto: "Con oficina y clientes ≥ 50: hasta 4 %/mes de solicitud privada directa por país" }
+  inversion_social:
+    usd_por_punto: { base: 40000, supuesto: "Programas comunitarios (becas, agua, caminos): ~40 kUSD por punto, rendimiento decreciente" }
+    tope_anual_puntos: { base: 15, supuesto: "No se compra la confianza: tope anual" }
+
+# Riesgos de obra que dependen del equipo social, la reputación y la supervisión.
+riesgos_obra:
+  conflicto_mensual: { base: 0.012, supuesto: "≈ 14 %/año de conflicto comunitario en obra con reputación neutra y sin equipo social (Davis & Franks 2014)" }
+  conflicto_dias: { min: 15, base: 45, max: 150, supuesto: "Bloqueos y paros por conflicto" }
+  conflicto_costo_frac: { min: 0.002, base: 0.008, max: 0.03, supuesto: "Costos de negociación, seguridad y compensaciones (fracción del presupuesto)" }
+  accidente_mensual: { base: 0.003, supuesto: "≈ 3,5 %/año de accidente grave por obra grande" }
+  accidente_dias: { min: 5, base: 20, max: 60, supuesto: "Paro e investigación" }
+  accidente_costo_frac: { min: 0.001, base: 0.003, max: 0.01, supuesto: "Multas, indemnizaciones y reparaciones" }
+
+# Equipo inicial del jugador (integra el «fundador + 2 técnicos» de los gastos fijos de game.yaml).
+equipo_inicial_jugador:
+  - { rol: ing_recurso, habilidad: 48, experiencia: 6 }
+  - { rol: gerente_proyecto, habilidad: 45, experiencia: 9 }
+
+# La IA arma su equipo con la misma lógica (contrata del mercado laboral con los mismos comandos).
+ia:
+  equipo_inicial:
+    agresiva: [{ rol: comercial, habilidad: 60, experiencia: 10 }, { rol: financiero, habilidad: 55, experiencia: 8 }, { rol: gerente_proyecto, habilidad: 50, experiencia: 9 }]
+    conservadora: [{ rol: gerente_proyecto, habilidad: 62, experiencia: 15 }, { rol: ing_electrico, habilidad: 60, experiencia: 14 }, { rol: abogado, habilidad: 55, experiencia: 12 }]
+    estatal: [{ rol: abogado, habilidad: 65, experiencia: 16 }, { rol: social, habilidad: 60, experiencia: 12 }, { rol: gerente_proyecto, habilidad: 58, experiencia: 14 }, { rol: ing_electrico, habilidad: 60, experiencia: 15 }]
+    fondo: [{ rol: financiero, habilidad: 70, experiencia: 14 }, { rol: analista, habilidad: 60, experiencia: 8 }]
+    especialista: [{ rol: ing_recurso, habilidad: 62, experiencia: 9 }, { rol: geologo, habilidad: 58, experiencia: 10 }, { rol: comercial, habilidad: 50, experiencia: 6 }]
+  # Roles que cada estrategia busca, en orden; uno por cada `por_proyectos` proyectos activos.
+  objetivos:
+    agresiva: { roles: [comercial, financiero, gerente_proyecto, abogado, ing_civil], por_proyectos: 2, max: 9 }
+    conservadora: { roles: [gerente_proyecto, ing_electrico, abogado, ing_recurso, financiero], por_proyectos: 2, max: 8 }
+    estatal: { roles: [abogado, social, gerente_proyecto, ing_electrico, ing_civil], por_proyectos: 2, max: 10 }
+    fondo: { roles: [financiero, analista, ing_electrico, gerente_proyecto], por_proyectos: 3, max: 6 }
+    especialista: { roles: [ing_recurso, geologo, comercial, gerente_proyecto, abogado], por_proyectos: 2, max: 8 }
+  supuesto: "Equipos de 2–10 personas para desarrolladores medianos; el costo de estas personas se descontó de los gastos fijos de competitors.yaml"

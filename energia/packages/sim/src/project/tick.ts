@@ -26,6 +26,7 @@ import { yearMonthIndex } from '../market/power';
 import { h2KgPerMwh } from '../tech/models';
 import { insuranceMonthly, worldCreditFactor } from '../world/events';
 import { operatingPermitBlockers } from './requirements';
+import { buildModifiers, omModifiers, permitModifiers, ppaModifiers, repCause, studyModifiers } from '../team/team';
 
 /** Avance diario de un proyecto (`day` = día que acaba de transcurrir). */
 export function projectDaily(state: GameState, ctx: SimContext, p: Project, rng: Rng, day: GameDate, events: SimEvent[]) {
@@ -44,18 +45,20 @@ export function projectDaily(state: GameState, ctx: SimContext, p: Project, rng:
     }
     if (s.sigma_recurso !== undefined) {
       const real = p.site.cellValue * p.site.realFactor;
-      const measured = real * (1 + s.sigma_recurso * Math.max(-3, Math.min(3, rng.normal())));
+      // Fase 6: el análisis propio (ingeniero de recurso) reduce la incertidumbre de la medición.
+      const sig = s.sigma_recurso * studyModifiers(state, ctx, p).sigma;
+      const measured = real * (1 + sig * Math.max(-3, Math.min(3, rng.normal())));
       r.measured = measured;
       const prev = p.estimate.value;
-      const better = s.sigma_recurso < p.estimate.sigma;
-      if (better) p.estimate = { value: measured, sigma: s.sigma_recurso, source: s.id };
+      const better = sig < p.estimate.sigma;
+      if (better) p.estimate = { value: measured, sigma: sig, source: s.id };
       r.outcome = better && measured < prev * 0.97 ? 'peor' : 'normal';
       const delta = ((measured / prev - 1) * 100).toFixed(1);
       const unit = LAYER_UNITS[p.site.layer] ?? '';
-      events.push(note(state, p, 'studyCompleted', `${s.nombre}: recurso ${measured.toFixed(2)} ${unit} (${+delta >= 0 ? '+' : ''}${delta} % frente a la estimación previa, ±${(s.sigma_recurso * 100).toFixed(1)} %).`,
+      events.push(note(state, p, 'studyCompleted', `${s.nombre}: recurso ${measured.toFixed(2)} ${unit} (${+delta >= 0 ? '+' : ''}${delta} % frente a la estimación previa, ±${(sig * 100).toFixed(1)} %).`,
         r.outcome === 'peor' ? 'malo' : 'bueno', { studyId: s.id, outcome: r.outcome }));
     } else {
-      const d = drawStudyOutcome(rng, s, ctx.data.findings);
+      const d = drawStudyOutcome(rng, s, ctx.data.findings, studyModifiers(state, ctx, p));
       r.outcome = d.outcome;
       if (d.outcome === 'peor') {
         r.capexFactor = d.capexFactor;
@@ -86,9 +89,10 @@ export function projectDaily(state: GameState, ctx: SimContext, p: Project, rng:
   for (const r of Object.values(p.permits)) {
     if (r.status !== 'en_tramite' || t < r.endTick) continue;
     const d = c.permisos.find((x) => x.id === r.permitId)!;
-    const dec = drawPermitDecision(rng, d, r.infoRequests);
+    const mod = permitModifiers(state, ctx, p, d);
+    const dec = drawPermitDecision(rng, d, r.infoRequests, mod);
     if (dec === 'info_adicional') {
-      const delay = drawDays(rng, d.info_adicional.retraso_dias);
+      const delay = Math.max(1, Math.round(drawDays(rng, d.info_adicional.retraso_dias) * mod.time));
       const cost = d.info_adicional.costo_usd.base;
       r.infoRequests += 1;
       r.endTick = t + delay;
@@ -99,6 +103,7 @@ export function projectDaily(state: GameState, ctx: SimContext, p: Project, rng:
     } else {
       r.status = dec;
       const ok = dec === 'aprobado';
+      repCause(state, ctx, ok ? 'permiso_aprobado' : 'permiso_rechazado', p.countryCode, `${d.nombre} ${ok ? 'aprobado' : 'rechazado'}`, events);
       events.push(note(state, p, 'permitDecided', ok ? `Aprobado: ${d.nombre} (${d.autoridad}).` : `Rechazado: ${d.nombre} (${d.autoridad}).${d.reintentable ? ' Se puede volver a solicitar.' : ''}`, ok ? 'bueno' : 'malo', { permitId: d.id, approved: ok }));
     }
   }
@@ -106,9 +111,10 @@ export function projectDaily(state: GameState, ctx: SimContext, p: Project, rng:
   // PPA
   if (p.ppa?.status === 'en_proceso' && t >= p.ppa.endTick) {
     const ch = c.ppa.canales.find((x) => x.id === p.ppa!.channelId)!;
-    if (rng.chance(ch.prob_exito)) {
+    const pm = ppaModifiers(state, ctx, p);
+    if (rng.chance(Math.min(Math.max(ch.prob_exito, 0.95), ch.prob_exito * pm.success))) {
       p.ppa.status = 'firmado';
-      p.ppa.priceUsdMwh = drawDist(rng, ch.precio_usd_mwh);
+      p.ppa.priceUsdMwh = drawDist(rng, ch.precio_usd_mwh) * pm.price;
       const mod = p.ppa.settlement && p.ppa.settlement !== 'produccion' ? ctx.data.power?.ppa_modalidades[p.ppa.settlement] : undefined;
       if (mod) {
         p.ppa.priceUsdMwh *= 1 + mod.prima;
@@ -252,8 +258,9 @@ function constructionDaily(state: GameState, ctx: SimContext, p: Project, rng: R
     const epc = ctx.data.suppliers[p.suppliers!.epcId];
     if (tech.geotermia && k.wells && /perfor/.test(m.id)) drillProductionWells(state, ctx, p, rng, events);
     const ro = tech.riesgo_obra;
-    if (rng.chance(Math.min(0.95, (epc.prob_sobrecosto_hito ?? 0.15) * (ro?.sobrecosto_prob_factor ?? 1)))) {
-      const amt = rng.triangular(0.02, 0.06, 0.2) * (ro?.sobrecosto_magnitud_factor ?? 1) * m.fraction * k.budgetUsd;
+    const bm = buildModifiers(state, ctx, p);
+    if (rng.chance(Math.min(0.95, (epc.prob_sobrecosto_hito ?? 0.15) * (ro?.sobrecosto_prob_factor ?? 1) * bm.overrunProb))) {
+      const amt = rng.triangular(0.02, 0.06, 0.2) * (ro?.sobrecosto_magnitud_factor ?? 1) * bm.overrunSize * m.fraction * k.budgetUsd;
       k.overrunUsd += amt;
       k.monthOverrunUsd += amt;
       k.spentUsd += amt;
@@ -314,6 +321,8 @@ function startOperation(state: GameState, ctx: SimContext, p: Project, rng: Rng,
   const inc = c.incentivos[p.techId];
   if (inc) state.finance.taxCreditUsd += inc.credito_fiscal_frac_inversion.base * worldCreditFactor(state, p.countryCode) * (k.spentUsd);
   const months = Math.round((state.tick - k.startTick) / DAYS_PER_MONTH);
+  // Fase 6: entregar a tiempo (≤ 60 días de atraso) mejora la relación con gobierno, comunidad y clientes.
+  repCause(state, ctx, k.delayDays <= 60 ? 'obra_a_tiempo' : 'obra_atrasada', p.countryCode, `${p.name} ${k.delayDays <= 60 ? 'a tiempo' : `con ${k.delayDays} días de atraso`}`, events);
   events.push(note(state, p, 'projectOperational', `¡Operación comercial! Obra en ${months} meses (${k.delayDays} días de retraso), costo ${fmtUsd(k.spentUsd)} (${k.overrunUsd > 0 ? `+${fmtUsd(k.overrunUsd)} de sobrecostos` : 'sin sobrecostos'}).`, 'bueno'));
 }
 
@@ -328,11 +337,13 @@ function operationDaily(state: GameState, ctx: SimContext, p: Project, rng: Rng,
   for (const o of op.outages) o.daysLeft--;
   op.outages = op.outages.filter((o) => o.daysLeft > 0);
   const pf = op.maintenance === 'preventivo' ? tech.mantenimiento.preventivo_fallas_factor : 1;
-  const ratePerDay = tech.fallas.eventos_ano_por_mw.base * p.mw * pf * op.failureMultiplier / 365;
+  // Fase 6: la ingeniería propia (ingeniero eléctrico) reduce fallas y costo de reparación.
+  const om = omModifiers(state, ctx, p);
+  const ratePerDay = tech.fallas.eventos_ano_por_mw.base * p.mw * pf * op.failureMultiplier * om.failures / 365;
   if (rng.chance(Math.min(0.5, ratePerDay))) {
     const frac = drawDist(rng, tech.fallas.fraccion_afectada);
     const days = drawDays(rng, tech.fallas.duracion_dias);
-    const cost = drawDist(rng, tech.fallas.costo_reparacion_usd_kw) * frac * p.mw * 1000;
+    const cost = drawDist(rng, tech.fallas.costo_reparacion_usd_kw) * frac * p.mw * 1000 * om.repair;
     op.outages.push({ fraction: frac, daysLeft: days });
     op.month.repairUsd += cost;
     (op.failures ??= []).push({ tick: state.tick, fraction: frac, days, costUsd: cost });
@@ -432,7 +443,7 @@ export function projectMonthly(state: GameState, ctx: SimContext, p: Project, rn
         events.push(note(state, p, 'constructionDelay', `Huelga y cierre de vías: la obra se detiene ${d} días.`, 'malo', { reason: 'huelga', days: d }));
       }
       const ro = tech.riesgo_obra;
-      if (ro && rng.chance(ro.retraso_prob_mensual)) {
+      if (ro && rng.chance(ro.retraso_prob_mensual * buildModifiers(state, ctx, p).stoppage)) {
         const d = drawDays(rng, ro.retraso_dias);
         k.stoppedDays += d;
         events.push(note(state, p, 'constructionDelay', `Problema técnico de obra (${tech.nombre}): ${d} días de retraso.`, 'malo', { reason: 'tecnico', days: d }));
@@ -596,7 +607,7 @@ function geothermalExploration(state: GameState, ctx: SimContext, p: Project, st
   const r = p.studies[studyId];
   const real = p.site.cellValue * p.site.realFactor;
   const pr = geoWellProbabilities(tech, real);
-  const w = drawWells(rng, s.pozos_exploratorios!, pr.dry, pr.low);
+  const w = drawWells(rng, s.pozos_exploratorios!, pr.dry * studyModifiers(state, ctx, p).dry, pr.low);
   const txt = `${s.nombre}: ${w.productive} productivo(s), ${w.low} de baja entalpía y ${w.dry} seco(s) de ${s.pozos_exploratorios}.`;
   if (w.productive + w.low === 0) {
     r.outcome = 'bloqueo';
@@ -629,7 +640,8 @@ function drillProductionWells(state: GameState, ctx: SimContext, p: Project, rng
   const k = p.construction!;
   const w = k.wells!;
   const real = p.site.cellValue * p.site.realFactor;
-  const pr = geoWellProbabilities(tech, real, true);
+  const pr0 = geoWellProbabilities(tech, real, true);
+  const pr = { ...pr0, dry: pr0.dry * studyModifiers(state, ctx, p).dry };
   const needProducers = Math.max(1, Math.ceil(p.mw / Math.max(0.5, pr.mwPerWell)));
   let producers = 0, drilled = 0, dry = 0;
   while (producers < needProducers && drilled < needProducers * 4) {

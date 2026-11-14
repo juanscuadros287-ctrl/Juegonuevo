@@ -489,7 +489,7 @@ export const powerFileSchema = z.object({
   clima: withSource({ prob_nino: prob01, prob_nina: prob01, persistencia: prob01 }),
   valor_agua: withSource({ base: z.number().positive(), exponente: ns, min: ns, max: z.number().positive() }),
   escasez: withSource({ umbral: prob01 }),
-  comprador: withSource({ prima_merchant: z.number().min(0).max(0.2), recorte_precio_merchant: z.number().min(0).max(0.5) }),
+  comprador: withSource({ prima_merchant: z.number().min(0).max(0.2), recorte_precio_merchant: z.number().min(0).max(0.5), prima_desarrollo: z.number().min(0).max(0.2).optional(), prima_construccion: z.number().min(0).max(0.2).optional() }),
   ppa_modalidades: z.object({ bloque: withSource({ prima: z.number().min(-0.2).max(0.3), cobertura: prob01 }), financiero: withSource({ prima: z.number().min(-0.2).max(0.3), cobertura: prob01 }) }),
   terminacion_ppa_meses: z.number().nonnegative().max(60),
   credito_firme_tecnologia: z.record(prob01),
@@ -523,6 +523,57 @@ export const anchorsSchema = z.object({
   tierra: z.array(anchorLand),
   mar: z.array(z.tuple([z.string(), z.number(), z.number(), z.number()]).rest(z.number())),
   geotermia: z.array(z.tuple([z.string(), z.number(), z.number(), z.number(), z.number()])),
+});
+
+// ───────────────────────── Fase 6: equipo, reputación y oficinas ─────────────────────────
+const nn6 = z.number().nonnegative();
+const teamMember = z.object({ rol: z.string(), habilidad: z.number().min(0).max(100), experiencia: nn6 });
+const officeLevel = withSource({
+  id: z.enum(['representante', 'oficina', 'sede']), nombre: z.string(), capacidad_personal: z.number().int().positive(), costo_inicial_usd: nn6, costo_mensual_usd: nn6,
+  dias: z.number().int().nonnegative(), costo_desarrollo_frac: z.number().min(-0.5).max(0), reputacion_gobierno_mes: nn6, invitaciones_privadas: z.boolean(),
+  costo_desarrollo_vecinos_frac: z.number().min(-0.5).max(0).optional(),
+});
+const repDelta = z.object({ gobierno: z.number().optional(), comunidad: z.number().optional(), clientes: z.number().optional() });
+const aiStrategies = ['agresiva', 'conservadora', 'estatal', 'fondo', 'especialista'] as const;
+const teamAreas = z.enum(['permisos', 'social', 'recurso', 'obra', 'finanzas', 'ofertas', 'mercado', 'operacion']);
+export const teamFileSchema = z.object({
+  puntaje_externo: sourced,
+  pesos_equipo: z.array(z.number().min(0).max(1)).min(1),
+  experiencia_anos_plena: z.number().positive(),
+  roles: z.array(withSource({ id: z.string(), nombre: z.string(), areas: z.record(teamAreas, z.number().min(0).max(1)), capacidad: z.number().int().positive(), factor_salario: z.number().positive() })).min(8),
+  /** k de cada efecto: fracciones ≤ 1, salvo el puntaje técnico (puntos ≤ 20). */
+  efectos: z.record(sourced.refine((v) => v.base >= 0 && v.base <= 20, { message: 'Efecto fuera de rango' })),
+  permisos_sociales: z.array(z.string()),
+  factor_fuera_pais: sourced, factor_fuera_pais_region: sourced, roles_locales: z.array(z.string()), factor_sin_idioma: sourced, factor_sin_idioma_local: sourced,
+  mercado_laboral: z.object({
+    candidatos_por_pais: sourced, vigencia_dias: sourced, habilidad: sourced, experiencia_anos: sourced, reclutamiento_frac_anual: sourced, oferta_minima_frac: sourced,
+    rotacion_base_mensual: sourced, rotacion_moral_baja: sourced, moral_inercia: sourced, moral_salario: sourced, moral_sobrecarga: sourced,
+    capacitacion_costo_usd: sourced, capacitacion_dias: sourced, capacitacion_ganancia: sourced, aumento_anual_experiencia: sourced,
+  }),
+  paises: z.record(withSource({
+    salario_usd: z.number().positive(), cargas: z.number().min(0).max(1.5), indemnizacion_meses_ano: nn6, indemnizacion_min_meses: nn6, indemnizacion_max_meses: nn6,
+    idioma: z.string(), ingles: z.number().min(0).max(1), oficina_indice: z.number().positive(),
+  })),
+  otras_lenguas: z.record(z.record(z.number().min(0).max(1))).optional(),
+  nombres: z.record(z.object({ nombres: z.array(z.string()).min(3), apellidos: z.array(z.string()).min(3) })),
+  oficinas: z.object({
+    niveles: z.array(officeLevel).length(3),
+    requisitos_sede: withSource({ personal_min: z.number().int().nonnegative() }),
+    regiones: z.record(z.array(z.string().length(3))),
+  }),
+  reputacion: z.object({
+    inicial_pais_nuevo: sourced, reversion_mensual: sourced, neutro: sourced,
+    causas: z.record(repDelta), supuesto: z.string().min(1),
+    efectos: z.object({ social_aprobacion: sourced, conflicto: sourced, banca_desarrollo_spread: sourced, invitacion_prob_mes: sourced }),
+    inversion_social: z.object({ usd_por_punto: sourced, tope_anual_puntos: sourced }),
+  }),
+  riesgos_obra: z.object({ conflicto_mensual: sourced, conflicto_dias: sourced, conflicto_costo_frac: sourced, accidente_mensual: sourced, accidente_dias: sourced, accidente_costo_frac: sourced }),
+  equipo_inicial_jugador: z.array(teamMember),
+  ia: z.object({
+    equipo_inicial: z.record(z.enum(aiStrategies), z.array(teamMember)),
+    objetivos: z.record(z.enum(aiStrategies), z.object({ roles: z.array(z.string()).min(1), por_proyectos: z.number().positive(), max: z.number().int().positive() })),
+    supuesto: z.string().min(1),
+  }),
 });
 
 export type GameYaml = z.infer<typeof gameSchema>;

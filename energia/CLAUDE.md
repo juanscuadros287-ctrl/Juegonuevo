@@ -9,6 +9,7 @@ Juego independiente de Dinastía (el juego Godot de la raíz del repo). Vive en 
 - **Fase 4 (motor) lista**: 18 tecnologías nuevas (geotermia con pozos secos, hidro pasada/embalse/bombeo, CSP, eólica marina, biomasa, biogás, gas, carbón, petróleo, nuclear, SMR, baterías, H2 verde, líneas, interconexiones, ESCO), 12 países con permisos propios, presencia por país, tipo de cambio y combustibles, catálogo y fichas de país. Detalle en `docs/MOTOR_FASE4.md`. Siguiente: UI de la Fase 4.
 - **Fase 5 (motor) lista**: mercado eléctrico horario por país (merit order con días tipo, clima/El Niño, capacidad y servicios), despacho de plantas con reglas configurables, PPA en bloque/financiero, permisos para operar, eventos del mundo (crisis, guerras, pandemias, desastres, elecciones, regulación, avances), seguros, valoración merchant del comprador (balance de la IA otra vez < 6×). Detalle en `docs/MOTOR_FASE5.md`. Siguiente: UI de la Fase 5.
 - **Fase 5 (UI) lista**: ventana Mercado eléctrico (curva de oferta, 48 h tipo, previsión P10–P90, historial, parque, capacidad y servicios, comparativa), pestañas Despacho y venta (reglas con vista previa, perfil horario, ingresos por fuente, terminar/buscar PPA con modalidad) y Seguro, ventana Mundo (eventos, gobiernos, regulación) con avisos de eventos graves, oportunidades y eventos en el globo, cuota histórica, `eligibleProjects`, ingresos por fuente en Finanzas. Detalle en `docs/UI.md`. Siguiente: Fase 6.
+- **Fase 6 (motor) lista**: equipo (10 roles, mercado laboral por país, salarios/cargas/indemnizaciones, moral y rotación, ofertas entre empresas, capacitación) con efectos acotados en permisos, estudios, pozos, obra, financiamiento, ofertas, PPA y O&M; reputación por eje (clientes global, gobierno y comunidad por país) con causas, conflictos y accidentes de obra, invitaciones directas; oficinas (representante → oficina local → sede regional); IA con equipo; balance global con arnés de estrategias (`npm run balance`). Detalle en `docs/MOTOR_FASE6.md` y `docs/BALANCE.md`. Siguiente: UI de la Fase 6.
 - **Fase 4 (UI) lista**: desarrollar cualquiera de las 20 tecnologías (disponibilidad por I+D/país/sitio, vista previa por modo económico, punto final de líneas en el globo con la ruta dibujada), `visualKind` en el globo (propias y de la IA), trazados de líneas, países resaltados por presencia/desbloqueo, ventana Tecnologías (catálogo y LCOE por país), ventana Países (lista, ficha con moneda, mercado, grafo de permisos con ruta crítica, abrir/cerrar presencia, combustibles), eventos y finanzas nuevas. Detalle en `docs/UI.md`. Siguiente: Fase 5.
 - **Fase 3 (UI) lista**: Mercado (oportunidades, armar oferta con cotización y puntaje, mis ofertas y resultados con ranking), Contratos (obligaciones, asignar proyecto), I+D (árbol con prerrequisitos, presupuesto, cola), Competidores (tabla, fichas, gráfica, plantas en el globo), Proveedores (catálogo, índices), inversores/logística en Construcción, `previewFinancing`, perfil estacional, `stageProgress`. Detalle en `docs/UI.md`.
 - **Fase 2 (UI) lista**: desarrollar en un sitio, panel y detalle de proyectos (Gantt, estudios, permisos, PPA, financiación, construcción, operación, viabilidad), finanzas de la empresa, registro de eventos, quiebra, sitios 3D en el globo. Detalle en `docs/UI.md`.
@@ -20,6 +21,7 @@ Juego independiente de Dinastía (el juego Godot de la raíz del repo). Vive en 
 | `npm run dev` | juego en el navegador (http://localhost:5173) |
 | `npm test` | pruebas del motor y de los datos (Vitest) |
 | `npm run typecheck` | TypeScript estricto |
+| `npm run balance` | reporte de balance (estrategias automáticas × semillas, 15 años; ver docs/BALANCE.md) |
 | `npm run build && npm run screens` | prueba de humo de la UI + capturas en `docs/capturas/` |
 | `npm run resources` | regenera la grilla de recursos |
 | `npm run mac` | `.dmg` Apple Silicon (solo en macOS; también lo hace GitHub Actions) |
@@ -44,7 +46,9 @@ packages/sim    motor puro TS: sin DOM, sin Math.random/Date.now. Determinista.
   selectorsWorld.ts     vistas de la Fase 4 (catálogo de tecnologías con LCOE típico por país, ficha de país con permisos como grafo, países, combustibles)
   world/events.ts       Fase 5: eventos del mundo, elecciones, regulación por país, daños y seguros
   selectorsPower.ts     vistas de la Fase 5 (mercado por país, despacho de una planta, ingresos por fuente, eventos del mundo, clima)
-packages/data   YAML editables + esquemas Zod (game, layers, countries/*, technologies/*, studies, suppliers, research, clients, competitors, markets, power, events, resources/anclas)
+  team/                 Fase 6: equipo, mercado laboral, reputación por eje, oficinas (team.ts = fórmulas y modificadores; commands.ts; tick.ts)
+  selectorsTeam.ts      vistas de la Fase 6 (mercado laboral, equipo, equipo por proyecto, carga, reputación, oficinas, resumen global)
+packages/data   YAML editables + esquemas Zod (game, layers, countries/*, technologies/*, studies, suppliers, research, clients, competitors, markets, power, events, team, resources/anclas)
   generated/    grid.bin, grid.json, world.json (salida de tools/build-resources.ts; se sirven como estáticos)
 apps/game       Vite + React + Three.js
   worker/       el GameState vive solo en un Web Worker (carga la grilla y calcula las vistas de los selectores); la UI recibe instantáneas + vistas y envía comandos
@@ -61,7 +65,7 @@ tools/          build-resources.ts, screenshots.mjs
 Reglas:
 - Todo cambio de estado pasa por un `Command` (`applyCommand` / `step`). La IA usará los mismos comandos.
 - En pausa los comandos se aplican con `applyCommands` sin avanzar el tiempo.
-- Un flujo de RNG por subsistema (`world`, `market` (clima, Fase 5), `projects`, `events` (eventos del mundo, Fase 5), `ai`, `supply`, `tenders`, `business`, `fx`, `fuels`, y `ai_<id>` por competidor).
+- Un flujo de RNG por subsistema (`world`, `market` (clima, Fase 5), `projects`, `events` (eventos del mundo, Fase 5), `ai`, `supply`, `tenders`, `business`, `fx`, `fuels`, `labor` y `team` (Fase 6), y `ai_<id>` por competidor).
 - Actores: el jugador (raíz del estado) y cada competidor (`state.competitors[i]`) tienen empresa, finanzas, proyectos y `business`. La IA usa `actorView` y corre exactamente el mismo código; nunca agregar reglas solo para la IA. La IA solo lee información pública (`publicOpportunity`, `p.estimate`); hay prueba.
 - El mundo de la Fase 3 se inicializa perezosamente en el primer `step`/`applyCommands` con datos (`business/world.ts`).
 - Precios de equipos: usar `currentCapex(state, ctx, …)` (índices, proveedores, relación, I+D), no `capexBreakdown` directo.
@@ -78,6 +82,11 @@ Reglas:
 - Fase 5: el spot sale solo de `market/power.ts` (`monthPrices`, `spotMonthUsd`, `spotYearUsd`); `spotPrice` (YAML) queda como referencia histórica y para la calibración. La economía usa la previsión de largo plazo (`longRun`); la operación, los precios del mes. El despacho de cualquier planta, solo con `planOnPrices`/`currentPlan`.
 - Fase 5: los efectos de los eventos del mundo se leen con `world*Factor` (combustibles, demanda, hidrología, CAPEX, plazos, carbono, crédito fiscal) y valen igual para todos los actores; los daños recorren jugador e IA.
 - Fase 5: la foto del parque (`fleetSnapshots`) y las cachés de previsión dependen solo de lo guardado en el estado al inicio del mes (versión del mercado): guardar/cargar a mitad de mes da el mismo resultado.
+
+- Fase 6: efectos del equipo, la reputación y las oficinas solo con los modificadores de `team/team.ts` (`permitModifiers`, `studyModifiers`, `buildModifiers`, `financeModifiers`, `bidModifiers`, `ppaModifiers`, `omModifiers`, `devCostMult`), los mismos en la simulación y en el Monte Carlo. Sin personal propio todo vale 1 (consultor externo).
+- Fase 6: la reputación de clientes es `business.reputation` (alias de la única de la Fase 3); gobierno y comunidad por país en `business.rep`. Cambios con causa: `changeRep`/`repCause`.
+- Fase 6: las vistas de actor llevan `root` (partida completa) para ofertas a personal ajeno; nunca se guarda. Los avisos al jugador desde vistas de la IA van por `market.labor.notices`.
+- Fase 6: el balance se verifica con `test/balance-strategies.test.ts`; cualquier cambio de datos o de la IA que mueva la economía debe correr `npm run balance` y actualizar `docs/BALANCE.md`.
 
 ## Decisiones
 | Fecha | Decisión |
@@ -118,6 +127,11 @@ Reglas:
 | 2026-11-11 | Fase 5: economía, bancos y compradores usan la previsión «de largo plazo» (sin el clima ni los eventos del año); el comprador de un proyecto merchant recorta 12 % el precio y pide +3 pp. La prueba de balance de la IA vuelve a < 6×. |
 | 2026-11-11 | Fase 5: SAVE_VERSION 5 con migración desde v4 (mercado y eventos se inicializan en el próximo paso). |
 | 2026-11-11 | Fase 5: el LCOE de catálogo (`typicalEconomics`) sigue con el mercado de referencia de la Fase 4 (`staticMarket`) para comparar con Lazard/NREL. |
+| 2026-11-14 | Fase 6: sin personal propio los efectos son neutros (consultor externo, puntaje 35); el equipo mejora con 1 ± k·g acotado. El equipo inicial es explícito y su costo se descuenta de los gastos fijos. |
+| 2026-11-14 | Fase 6: reputación en tres ejes; `business.reputation` queda como la de clientes (alias). Oficinas: representante (Fase 4) → oficina local → sede regional. |
+| 2026-11-14 | Fase 6 (balance): capital inicial 1,2 MUSD (antes 750 k); el comprador exige +0,5 pp a un proyecto listo para construir y +0,25 pp en obra; la IA vende RTB solo si recupera ≥ 1,1 × lo invertido y elige el canal de PPA más probable. |
+| 2026-11-14 | Fase 6: SAVE_VERSION 6 con migración desde v5 (equipo, mercado laboral y reputación por eje se crean en el próximo paso). |
+| 2026-11-14 | Fase 6: LCOE de catálogo de térmicas también a plena carga del FC de referencia (`lcoeRefUsdMwh`), comparable con Lazard; el del despacho previsto se mantiene. |
 | 2026-11-11 | UI Fase 4: Países (X) y Tecnologías (T) en «Más ▾» junto con Combustibles; catálogo calculado en el worker solo con la ventana abierta y con caché mensual; ficha de país solo del país elegido. |
 | 2026-11-11 | UI Fase 4: la disponibilidad de cada tecnología en el sitio se calcula en la UI con `evaluateSite` sobre la grilla de la UI (sin ida y vuelta al worker); la vista previa estima aunque falte I+D o presencia (copia del estado con esos accesos) para decidir si conviene abrir el mercado. |
 | 2026-11-11 | UI Fase 4: líneas = subestación en el origen + trazado de gran círculo con torres según el avance; punto final con un segundo clic (`ui.pickingRoute`). Doble clic en un país con datos → su ficha. |
@@ -147,6 +161,8 @@ Reglas:
 
 - UI Fase 5: `PlantDispatchView` no trae la severidad de los eventos ni `WorldEventView.severity`: la UI decide «grave» por tipo (`ui/power/worldLabels.ts`). Pedidos al motor: severidad en `WorldEventView`, `nombre` del evento en el `SimEvent` `worldEvent`, ingresos por fuente en `PlantDispatchView` para la previsión del mes (hoy solo el plan), ubicación/región de los eventos (hoy el centro del país), y si `selectPlantDispatch` pudiera aceptar una política sin copiar el estado.
 - UI Fase 5: los halos de eventos en el globo usan el centro del polígono más grande del país (Chile queda en el centro-sur); los contornos son líneas de 1 px.
+- Fase 6: la UI debe usar `selectLaborMarket`, `selectTeam`, `selectProjectTeam`, `selectWorkload`, `selectReputation`, `selectOffices`, `selectCompanyOverview`; comandos `hireCandidate`, `fireEmployee`, `assignEmployee`, `setSalary`, `trainEmployee`, `poachEmployee`, `upgradeOffice`, `downgradeOffice`, `investInCommunity`. Eventos `employeeQuit`, `reputationChanged`, `directInvitation`, `communityConflict`, `constructionAccident`.
+- Fase 6: balance con bots que usan las reglas de la IA: ≈ la mitad de las partidas de desarrollador pequeño fracasa (ver docs/BALANCE.md); k de efectos, salarios e indemnizaciones aproximados (`supuesto`).
 
 ## Preferencias del usuario
 - Respuestas cortas y al punto.

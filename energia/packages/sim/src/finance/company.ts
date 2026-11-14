@@ -55,6 +55,10 @@ export const CATEGORIES = {
   ingresos_servicios: { pnl: true, cash: 'operating', label: 'Servicios complementarios' },
   compras_energia: { pnl: true, cash: 'operating', label: 'Compras de energía al spot (contratos)' },
   indemnizaciones: { pnl: true, cash: 'operating', label: 'Indemnizaciones de seguros' },
+  // Fase 6
+  personal: { pnl: true, cash: 'operating', label: 'Personal (salarios, cargas, reclutamiento, capacitación, despidos)' },
+  oficinas: { pnl: true, cash: 'operating', label: 'Oficinas (apertura y costo mensual)' },
+  inversion_social: { pnl: true, cash: 'operating', label: 'Inversión social en comunidades' },
 } as const;
 export type Category = keyof typeof CATEGORIES;
 
